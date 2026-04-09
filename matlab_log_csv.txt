@@ -1,0 +1,90 @@
+=== E-SAT Australia: Data Download ===
+
+Downloading US Real GDP (Bil. 2017$) ... OK via curl (316 obs)
+Downloading US GDP Deflator (Index 2017=100) ... OK via curl (316 obs)
+Downloading US Potential GDP (Bil. 2017$) ... OK via curl (352 obs)
+Downloading AU Real GDP (IMF, level) ... OK via curl (266 obs)
+Downloading AU CPI (OECD, quarterly index) ... OK via curl (307 obs)
+Downloading AU 3-month interbank rate (monthly) ... OK via curl (698 obs)
+
+Downloading RBA data...
+  Cash rate (F1.1) ... OK via curl
+  Inflation expectations (G3) ... OK via curl
+
+Parsing RBA F1.1 (cash rate)...
+
+=== Constructing quarterly series ===
+Sample: 01-Jan-1993 to 01-Oct-2024 (128 quarters)
+AU Real GDP: 128 obs aligned
+AU CPI (deflator proxy): 128 obs aligned
+AU Interest rate (3m interbank): 128 obs aligned
+US Real GDP: 128 obs aligned
+US Potential GDP: 128 obs aligned
+US GDP Deflator: 128 obs aligned
+
+=== Computing derived series ===
+AU output gap computed (HP filter, lambda=1600)
+US output gap computed (CBO potential)
+AU inflation (GDP deflator, qoq): computed
+US inflation (GDP deflator, qoq): computed
+AU interest rate: already loaded from FRED (128 obs)
+AU LR inflation expectations: to be parsed from RBA G3
+
+=== Long-run anchors ===
+  i_bar = 4.20% (annualized, sample mean of cash rate)
+  pi_bar_AU = 2.50% (annualized)
+  pi_bar_US = 2.00% (annualized)
+  LR interest rate anchor: HP trend of quarterly rate
+
+Data saved to C:\Users\david\french_model\data.mat
+
+Exporting to dataset.csv ...
+Exported 128 rows to C:\Users\david\french_model\dataset.csv
+=== Data download complete ===
+
+
+--- Now testing CSV reload ---
+=== E-SAT Australia: Data Download ===
+
+Downloading US Real GDP (Bil. 2017$) ... OK via curl (316 obs)
+Downloading US GDP Deflator (Index 2017=100) ... OK via curl (316 obs)
+Downloading US Potential GDP (Bil. 2017$) ... OK via curl (352 obs)
+Downloading AU Real GDP (IMF, level) ... OK via curl (266 obs)
+Downloading AU CPI (OECD, quarterly index) ... OK via curl (307 obs)
+Downloading AU 3-month interbank rate (monthly) ... OK via curl (698 obs)
+
+Downloading RBA data...
+  Cash rate (F1.1) ... OK via curl
+  Inflation expectations (G3) ... OK via curl
+
+Parsing RBA F1.1 (cash rate)...
+
+=== Constructing quarterly series ===
+Sample: 01-Jan-1993 to 01-Oct-2024 (128 quarters)
+AU Real GDP: 128 obs aligned
+AU CPI (deflator proxy): 128 obs aligned
+AU Interest rate (3m interbank): 128 obs aligned
+US Real GDP: 128 obs aligned
+US Potential GDP: 128 obs aligned
+US GDP Deflator: 128 obs aligned
+
+=== Computing derived series ===
+AU output gap computed (HP filter, lambda=1600)
+US output gap computed (CBO potential)
+AU inflation (GDP deflator, qoq): computed
+US inflation (GDP deflator, qoq): computed
+AU interest rate: already loaded from FRED (128 obs)
+AU LR inflation expectations: to be parsed from RBA G3
+
+=== Long-run anchors ===
+  i_bar = 4.20% (annualized, sample mean of cash rate)
+  pi_bar_AU = 2.50% (annualized)
+  pi_bar_US = 2.00% (annualized)
+  LR interest rate anchor: HP trend of quarterly rate
+
+Data saved to C:\Users\david\french_model\data.mat
+
+Exporting to dataset.csv ...
+Exported 128 rows to C:\Users\david\french_model\dataset.csv
+=== Data download complete ===
+RELOAD TEST PASSED

@@ -1,0 +1,7 @@
+Switched to a new branch 'main'
+---
+bash: powershell: command not found
+---
+bash: powershell: command not found
+---
+bash: powershell: command not found

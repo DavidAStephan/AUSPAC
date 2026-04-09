@@ -1,0 +1,7 @@
+=== E-SAT Australia: Data Download ===
+
+USE_LOCAL_CSV = 1
+
+Loading data from C:\Users\david\french_model\dataset.csv ...
+Loaded 128 quarters from CSV. Saved to data.mat.
+=== Data load from CSV complete ===

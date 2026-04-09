@@ -1,0 +1,2 @@
+.git
+REPO_OK

@@ -1,0 +1,106 @@
+=== E-SAT Australia: Data Download ===
+
+USE_LOCAL_CSV = 1
+
+Loading data from C:\Users\david\french_model\dataset.csv ...
+Loaded 128 quarters from CSV. Saved to data.mat.
+=== Data load from CSV complete ===
+=== E-SAT Australia: Parameter Estimation ===
+
+Estimation sample: 01-Jul-1993 to 01-Oct-2024 (126 obs)
+
+--- Eq 2: Australian IS curve ---
+  delta    = 0.1997
+  lambda_q = 0.4572
+  sigma_q  = 0.0862
+  sigma_eps_q = 0.7673
+  R2 = 0.449
+
+--- Eq 3: Taylor rule (RBA) ---
+  lambda_i = 0.8210
+  alpha    = 0.2305
+  beta     = 0.0894
+  sigma_eps_i = 0.0960
+  R2 = 0.774
+
+--- Eq 4: Australian Phillips curve ---
+  lambda_pi = 0.2576
+  kappa_pi  = -0.0304
+  sigma_eps_pi = 0.5722
+  Implied Phillips slope (annual) = -0.164
+  R2 = 0.061
+
+--- Eq 5: US IS curve (AR1) ---
+  lambda_q_us = 0.8274
+  sigma_eps_q_us = 1.0924
+  R2 = 0.666
+
+--- Eq 6: US Phillips curve ---
+  lambda_pi_us = 0.7105
+  kappa_pi_us  = -0.0087
+  sigma_eps_pi_us = 0.2590
+  R2 = 0.477
+
+--- Eqs 7-9: Long-run anchor persistence ---
+  lambda_ibar = 0.985 (calibrated)
+  lambda_pibar_AU = 0.930 (calibrated)
+  lambda_pibar_US = 0.930 (calibrated)
+
+=== Sanity checks ===
+  WARNING: kappa_pi = -0.0304 < 0. Setting to 0.05.
+  All checks passed.
+
+Parameters saved to C:\Users\david\french_model\params.mat
+
+=== Parameter Summary ===
+Parameter             Australia    France*
+---------             ---------    -------
+delta                    0.1997     0.0800
+lambda_q                 0.4572     0.7300
+sigma_q                  0.0862     0.2800
+lambda_i                 0.8210     0.9200
+alpha                    0.2305     1.1900
+beta                     0.0894     0.0900
+lambda_pi                0.2576     0.5800
+kappa_pi                 0.0500     0.0800
+lambda_q_us              0.8274     0.9300
+lambda_pi_us             0.7105     0.3500
+kappa_pi_us             -0.0087     0.0400
+* France values are posterior means from WP #736, Table 3.1.1
+  (EA replaces US in French model; Taylor rule reacts to EA not domestic)
+=== E-SAT Australia: Model & Impulse Responses ===
+
+Loaded estimated parameters from params.mat
+
+Building structural matrices A and B...
+Computing reduced-form matrix H = A\B ...
+
+Eigenvalues of H:
+   1:   0.2368              (|.| = 0.2368)
+   2:   0.4827              (|.| = 0.4827)
+   3:   0.8162              (|.| = 0.8162)
+   4:   0.9300              (|.| = 0.9300)
+   5:   0.7105              (|.| = 0.7105)
+   6:   0.9300              (|.| = 0.9300)
+   7:   0.9850              (|.| = 0.9850)
+   8:   1.0000              (|.| = 1.0000)
+   9:   0.8274              (|.| = 0.8274)
+
+Max eigenvalue modulus (excl. intercept): 0.985000
+  => STABLE (all dynamic eigenvalues inside unit circle)
+
+--- Computing IRF: Interest rate shock (+1pp annualized) ---
+--- Computing IRF: US output gap shock (+1pp) ---
+Saved: irf_interest_rate.png
+Saved: irf_us_output_gap.png
+
+=== Key Diagnostics ===
+  Max eigenvalue modulus:        0.9850
+  AU Phillips slope (annual):    0.269  [kappa/(1-lambda_pi)*4]
+  Interest rate persistence:     0.821
+  AU-US output co-movement:      0.200
+  IR shock -> AU output gap trough: -0.028 pp at Q2
+  IR shock -> AU inflation trough:  -0.007 pp (ann.) at Q4
+  US shock -> AU output gap peak:   0.256 pp at Q1
+
+=== E-SAT Model complete ===

@@ -1,0 +1,2 @@
+FILES_COPIED
+bash: find: command not found

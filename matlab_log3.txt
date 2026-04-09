@@ -1,0 +1,109 @@
+========================================
+ E-SAT Structural VAR for Australia
+ (adapted from Banque de France WP #736)
+========================================
+
+>>> STEP 1: Downloading and processing data...
+    (requires internet connection)
+
+=== E-SAT Australia: Data Download ===
+
+Downloading US Real GDP (Bil. 2017$) ... OK via curl (316 obs)
+Downloading US GDP Deflator (Index 2017=100) ... OK via curl (316 obs)
+Downloading US Potential GDP (Bil. 2017$) ... OK via curl (352 obs)
+Downloading AU Real GDP (IMF, level) ... OK via curl (266 obs)
+Downloading AU CPI (OECD, quarterly index) ... OK via curl (307 obs)
+Downloading AU 3-month interbank rate (monthly) ... OK via curl (698 obs)
+
+Downloading RBA data...
+  Cash rate (F1.1) ... OK via curl
+  Inflation expectations (G3) ... OK via curl
+
+Parsing RBA F1.1 (cash rate)...
+
+=== Constructing quarterly series ===
+Sample: 01-Jan-1993 to 01-Oct-2024 (128 quarters)
+AU Real GDP: 128 obs aligned
+AU CPI (deflator proxy): 128 obs aligned
+AU Interest rate (3m interbank): 128 obs aligned
+US Real GDP: 128 obs aligned
+US Potential GDP: 128 obs aligned
+US GDP Deflator: 128 obs aligned
+
+=== Computing derived series ===
+AU output gap computed (HP filter, lambda=1600)
+US output gap computed (CBO potential)
+AU inflation (GDP deflator, qoq): computed
+US inflation (GDP deflator, qoq): computed
+AU interest rate: to be parsed from RBA data
+AU LR inflation expectations: to be parsed from RBA G3
+
+Attempting to parse RBA cash rate from F1.1...
+
+=== Long-run anchors ===
+  i_bar = 4.50% (annualized, calibrated fallback)
+  pi_bar_AU = 2.50% (annualized)
+  pi_bar_US = 2.00% (annualized)
+
+Data saved to C:\Users\david\french_model\data.mat
+=== Data download complete ===
+
+>>> Step 1 COMPLETE
+
+>>> STEP 2: Estimating model parameters...
+
+=== E-SAT Australia: Parameter Estimation ===
+
+
+>>> Step 2 FAILED: Insufficient valid data for estimation. Check data download.
+    Step 3 will use calibrated defaults instead.
+
+>>> STEP 3: Building model and computing IRFs...
+
+=== E-SAT Australia: Model & Impulse Responses ===
+
+params.mat not found. Using calibrated defaults.
+
+Building structural matrices A and B...
+Computing reduced-form matrix H = A\B ...
+
+Eigenvalues of H:
+   1:   0.4172              (|.| = 0.4172)
+   2:   0.8664 +   0.1088i  (|.| = 0.8732)
+   3:   0.8664 +  -0.1088i  (|.| = 0.8732)
+   4:   0.9300              (|.| = 0.9300)
+   5:   0.3500              (|.| = 0.3500)
+   6:   0.9300              (|.| = 0.9300)
+   7:   0.9850              (|.| = 0.9850)
+   8:   1.0000              (|.| = 1.0000)
+   9:   0.9000              (|.| = 0.9000)
+
+Max eigenvalue modulus (excl. intercept): 0.985000
+  => STABLE (all dynamic eigenvalues inside unit circle)
+
+--- Computing IRF: Interest rate shock (+1pp annualized) ---
+--- Computing IRF: US output gap shock (+1pp) ---
+Saved: irf_interest_rate.png
+Saved: irf_us_output_gap.png
+
+=== Key Diagnostics ===
+  Max eigenvalue modulus:        0.9850
+  AU Phillips slope (annual):    0.640  [kappa/(1-lambda_pi)*4]
+  Interest rate persistence:     0.920
+  AU-US output co-movement:      0.080
+  IR shock -> AU output gap trough: -0.169 pp at Q6
+  IR shock -> AU inflation trough:  -0.104 pp (ann.) at Q8
+  US shock -> AU output gap peak:   0.183 pp at Q4
+
+=== E-SAT Model complete ===
+
+>>> Step 3 COMPLETE
+
+========================================
+ All steps complete.
+ Output files:
+   data.mat   - Processed quarterly data
+   params.mat - Estimated/calibrated parameters
+   irf_interest_rate.png  - IRF plot
+   irf_us_output_gap.png  - IRF plot
+========================================
