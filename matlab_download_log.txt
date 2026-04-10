@@ -1,0 +1,26 @@
+=== Downloading extended Australian data ===
+
+Downloading AU Unemployment rate (%, SA, quarterly) ... OK via curl (238 obs)
+Downloading AU Employment (thousands, SA, quarterly) ... OK via curl (236 obs)
+Downloading AU CPI (index, SA, quarterly) ... OK via curl (307 obs)
+Downloading AU Private Consumption (vol, SA, quarterly) ... OK via curl (255 obs)
+Downloading AU Gross Fixed Capital Formation (vol, SA, quarterly) ... OK via curl (255 obs)
+Downloading AU Exports (vol, SA, quarterly) ... FAILED: Downloaded HTML error page, not CSV
+Downloading AU Imports (vol, SA, quarterly) ... FAILED: Downloaded HTML error page, not CSV
+Downloading AU 10-year govt bond yield (%, quarterly) ... OK via curl (226 obs)
+
+Aligning to 128 quarters (01-Jan-1993 to 01-Oct-2024)
+AU Unemployment: 128 obs
+AU Employment: 128 obs
+AU CPI index: 128 obs
+AU Unit Labour Cost (synthetic CPI*emp): 128 obs
+AU Consumption: 123 obs
+AU GFCF: 123 obs
+AU GFCF split: dwelling 30% / non-dwelling 70%
+AU 10Y Bond: 128 obs
+
+Saving extended dataset...
+Saved 128 rows to C:\Users\david\french_model\data\extended_dataset.csv
+Saved extended_data.mat
+
+=== Extended data download complete ===

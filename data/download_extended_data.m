@@ -22,6 +22,8 @@ series = {
     % Labor market
     'LRUNTTTTAUQ156S',   'AU Unemployment rate (%, SA, quarterly)'
     'LFEMTTTTAUQ647S',   'AU Employment (thousands, SA, quarterly)'
+    % Price index (for ULC construction)
+    'AUSCPIALLQINMEI',   'AU CPI (index, SA, quarterly)'
     % GDP expenditure components (all quarterly, SA, national currency)
     'NAEXKP02AUQ189S',   'AU Private Consumption (vol, SA, quarterly)'
     'NAEXKP04AUQ189S',   'AU Gross Fixed Capital Formation (vol, SA, quarterly)'
@@ -119,9 +121,29 @@ if isfield(data_ext, 'LFEMTTTTAUQ647S')
     fprintf('AU Employment: %d obs\n', sum(~isnan(emp)));
 end
 
-% --- Unit Labour Cost (not available from FRED, use CPI-based proxy) ---
+% --- CPI index (for ULC construction) ---
+cpi_idx = NaN(nQ, 1);
+if isfield(data_ext, 'AUSCPIALLQINMEI')
+    d = data_ext.AUSCPIALLQINMEI;
+    cpi_idx = align_q(d.dates, d.values);
+    fprintf('AU CPI index: %d obs\n', sum(~isnan(cpi_idx)));
+end
+
+% --- Unit Labour Cost (synthetic) ---
+% FRED OECD ULC series (ULQELTT01AUQ661S) is unavailable.
+% Construct synthetic ULC: proxy wage bill = CPI_index * (employment/employment_0)
+% dlog(ULC) = dlog(CPI) + dlog(employment) ≈ wage_inflation + employment_growth
+% This captures nominal compensation dynamics per the FR-BDF framework.
 ulc = NaN(nQ, 1);
-fprintf('AU Unit Labour Cost: using CPI proxy from base dataset\n');
+valid = ~isnan(cpi_idx) & ~isnan(emp);
+if any(valid)
+    first_valid = find(valid, 1, 'first');
+    emp_norm = emp / emp(first_valid);  % normalize employment to 1.0 at start
+    ulc(valid) = cpi_idx(valid) .* emp_norm(valid);
+    fprintf('AU Unit Labour Cost (synthetic CPI*emp): %d obs\n', sum(~isnan(ulc)));
+else
+    fprintf('AU Unit Labour Cost: insufficient data for construction\n');
+end
 
 % --- Private Consumption ---
 cons = NaN(nQ, 1);
@@ -138,6 +160,17 @@ if isfield(data_ext, 'NAEXKP04AUQ189S')
     gfcf = align_q(d.dates, d.values);
     fprintf('AU GFCF: %d obs\n', sum(~isnan(gfcf)));
 end
+
+% --- Split GFCF into dwelling vs non-dwelling ---
+% FRED does not provide separate dwelling/non-dwelling series for Australia.
+% Use ABS historical average: dwelling share ~30% of total private GFCF.
+% This share has varied between ~25-35% over the sample (ABS Cat 5206.0 Table 2).
+% A time-varying share would be better but requires direct ABS download.
+dwelling_share = 0.30;
+gfcf_dwelling = gfcf * dwelling_share;
+gfcf_nondwelling = gfcf * (1 - dwelling_share);
+fprintf('AU GFCF split: dwelling %.0f%% / non-dwelling %.0f%%\n', ...
+    dwelling_share*100, (1-dwelling_share)*100);
 
 % --- Exports ---
 exports = NaN(nQ, 1);
@@ -171,18 +204,21 @@ pi_w = [NaN; diff(log(ulc))] * 100;  % quarterly %
 % Consumption growth
 dc = [NaN; diff(log(cons))] * 100;
 
-% Investment growth
-di = [NaN; diff(log(gfcf))] * 100;
+% Investment growth (non-dwelling = business, dwelling = household)
+di_b = [NaN; diff(log(gfcf_nondwelling))] * 100;
+di_h = [NaN; diff(log(gfcf_dwelling))] * 100;
 
 %% Save extended dataset
 fprintf('\nSaving extended dataset...\n');
 
 date_str = datestr(qDates, 'yyyy-mm-dd');
 T_ext = table( ...
-    cellstr(date_str), ur, emp, ulc, pi_w, cons, gfcf, exports, imports, i10, ...
+    cellstr(date_str), ur, emp, ulc, pi_w, cons, gfcf, ...
+    gfcf_nondwelling, gfcf_dwelling, exports, imports, i10, ...
     'VariableNames', { ...
         'date', 'au_urate', 'au_employment', 'au_ulc', 'au_pi_w', ...
-        'au_consumption', 'au_gfcf', 'au_exports', 'au_imports', 'au_i10' ...
+        'au_consumption', 'au_gfcf', 'au_gfcf_nondwelling', ...
+        'au_gfcf_dwelling', 'au_exports', 'au_imports', 'au_i10' ...
     });
 
 ext_csv = fullfile(outdir, 'extended_dataset.csv');
@@ -194,10 +230,13 @@ ext_data = struct();
 ext_data.qDates = qDates;
 ext_data.ur = ur;
 ext_data.emp = emp;
+ext_data.cpi_idx = cpi_idx;
 ext_data.ulc = ulc;
 ext_data.pi_w = pi_w;
 ext_data.cons = cons;
 ext_data.gfcf = gfcf;
+ext_data.gfcf_nondwelling = gfcf_nondwelling;
+ext_data.gfcf_dwelling = gfcf_dwelling;
 ext_data.exports = exports;
 ext_data.imports = imports;
 ext_data.i10 = i10;

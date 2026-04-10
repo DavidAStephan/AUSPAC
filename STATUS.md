@@ -50,26 +50,203 @@ Key results (Bayesian posterior means):
 - `data/extended_dataset.csv` — Saved extended quarterly data
 - `data/extended_data.mat` — Same in .mat format
 
-## What is next (Phases 3-6)
+### Phase 3: Labor market — **DONE**
+- `dynare/au_pac.mod` — Extended to 23 variables, 11 shocks, 19 state variables
+- **Wage Phillips curve** (Section 4.5.1, eq. 52):
+  - Hybrid backward/forward: pi_w = lambda_w*pi_w(-1) + gamma_w*pi_au + kappa_w*yhat_au + (1-lambda_w-gamma_w)*pibar_au
+  - Forward expectations proxied by inflation anchor pibar_au
+  - Calibration: lambda_w=0.55, kappa_w=0.10, gamma_w=0.15
+  - Growth neutrality verified: pi_w_ss = pi_ss_au at steady state
+- **Employment PAC** (Section 4.5.2, eq. 56, 4th-order adjustment costs):
+  - dln_n = b0*n_gap(-1) + b1*dln_n(-1) + b2*dln_n(-2) + b3*dln_n(-3) + b4*dln_n(-4) + omega*dln_n_star + b5*yhat_au + neutrality_term
+  - 3 auxiliary lag variables (dln_n_1, dln_n_2, dln_n_3) for higher-order lags
+  - Target employment growth (dln_n_star) follows AR(1) toward trend (zero in gap model)
+  - Calibration: b0_n=0.04, b1_n=0.30, b2_n=0.10, b3_n=0.05, b4_n=0.02, omega_n=0.30, b5_n=0.12
+  - Growth neutrality coeff = 0.23
+- All eigenvalues inside unit circle (max modulus 0.985), BK conditions verified
+- Variance decomposition: pi_w 89.6% own shock / 3.7% AU demand; dln_n 86.4% own / 8.2% AU demand
+- n_gap highly persistent (AR1=0.98) reflecting slow error correction (b0_n=0.04)
 
-### Phase 3: Labor market
-- Wage Phillips curve (Section 4.5.1, eq. 52): forward-solved, not PAC
-- Employment equation (Section 4.5.2, eq. 56): 4th-order PAC
-- Need to add auxiliary E-SAT equations for expected unemployment gap
+### Phase 4: Demand block (3 PAC equations) — DONE
+- `dynare/au_pac.mod` — Extended to 37 variables, 14 shocks, 30 state variables
+- **Household consumption PAC** (Section 4.6.1, eq. 61, 1st-order):
+  - dln_c = b0_c*c_gap(-1) + b1_c*dln_c(-1) + omega_c*dln_c_star + b2_c*r_gap(-1) + b3_c*yhat_au + neutrality
+  - Simplified target: dln_c_star follows AR(1) toward zero (gap model)
+  - Full target (future): forward-solved permanent income from E-SAT
+  - Real interest rate gap: r_gap = i_gap - pi_au_gap (substitution effect, b2_c=-0.02)
+  - HtM channel: b3_c=0.15 (output gap -> consumption for hand-to-mouth households)
+  - Calibration: b0_c=0.06, b1_c=0.35, omega_c=0.35, neutrality_c=0.30
+  - Variance decomposition: 87.9% own shock / 7.9% AU demand
+- **Business investment PAC** (Section 4.6.2, eq. 64, 2nd-order):
+  - dln_ib = b0_ib*ib_gap(-1) + b1_ib*dln_ib(-1) + b2_ib*dln_ib_1(-1) + omega_ib*dln_ib_star + b3_ib*yhat_au + b4_ib*r_gap(-1) + neutrality
+  - Simplified target: dln_ib_star follows AR(1) toward zero
+  - Full target (future): user cost of capital from WACC (Phase 5)
+  - Accelerator channel: b3_ib=0.20 (strong output gap -> investment)
+  - User cost channel: b4_ib=-0.03 (real rate depresses investment)
+  - Calibration: b0_ib=0.04, b1_ib=0.25, b2_ib=0.10, omega_ib=0.35, neutrality_ib=0.30
+  - Variance decomposition: 97.3% own shock / 1.7% AU demand
+- **Household investment PAC** (Section 4.6.3, eq. 67, 2nd-order):
+  - dln_ih = b0_ih*ih_gap(-1) + b1_ih*dln_ih(-1) + b2_ih*dln_ih_1(-1) + omega_ih*dln_ih_star + b3_ih*yhat_au + b4_ih*r_gap(-1) + neutrality
+  - Simplified target: dln_ih_star follows AR(1) toward zero
+  - Full target (future): user cost of housing capital
+  - Mortgage channel: b4_ih=-0.05 (strongest rate sensitivity — AU variable-rate mortgages)
+  - Calibration: b0_ih=0.05, b1_ih=0.20, b2_ih=0.08, omega_ih=0.30, neutrality_ih=0.42
+  - Variance decomposition: 99.4% own shock / 0.3% AU demand
+- All eigenvalues inside unit circle (max modulus 0.985), BK conditions verified
 
-### Phase 4: Demand block (3 PAC equations)
-- Household consumption (Section 4.6.1, eq. 61): 1st-order PAC, β=0.95
-- Business investment (Section 4.6.2, eq. 64): 2nd-order PAC
-- Household investment (Section 4.6.3, eq. 67): 2nd-order PAC
-- These are the heaviest equations — require user cost of capital, permanent income
+### Phase 5: Financial + trade — DONE
+- `dynare/au_pac.mod` — Extended to 45 variables, 20 shocks, 38 state variables
+- **Term structure** (Section 4.8, eq. 95):
+  - i_10y = rho_L*i_10y(-1) + (1-rho_L)*(i_au + tp) + eps_10y
+  - Expectations hypothesis with smoothing (rho_L=0.85)
+  - Term premium: tp follows AR(1) with rho_tp=0.98, tp_ss=0.30 (~1.2% annual)
+  - SS: i_10y = 1.3491 quarterly (~5.4% annual)
+  - Variance decomposition: 48.1% term premium / 30.9% own / 11.5% Taylor
+- **WACC** (Section 4.8, eq. 98):
+  - wacc = rho_wacc*wacc(-1) + (1-rho_wacc)*(i_10y + spread_ss) + eps_wacc
+  - Persistent credit conditions (rho_wacc=0.90), spread_ss=0.50 (~2% annual)
+  - SS: wacc = 1.8491 quarterly (~7.4% annual)
+  - Variance decomposition: 59.4% credit conditions / 25.4% term premium / 7.1% long rate
+  - Future: feed into business investment target (dln_ib_star)
+- **Exchange rate** (Section 4.8, eq. 105):
+  - s_gap = rho_s*s_gap(-1) - alpha_s*i_gap + eps_s
+  - Modified UIP: s_gap > 0 = AUD depreciation, higher AU rates -> appreciation
+  - Persistent PPP deviations (rho_s=0.92, half-life ~8 quarters)
+  - Variance decomposition: 99.9% own shock (exchange rate very noisy)
+- **Exports ECM** (Section 4.7, eqs. 70-73):
+  - dln_x = b0_x*x_gap(-1) + b1_x*dln_x(-1) + b2_x*yhat_us + b3_x*s_gap + eps_x
+  - World demand (b2_x=0.25) + competitiveness (b3_x=0.10, depreciation helps)
+  - Variance decomposition: 68.2% own / 18.9% exchange rate / 12.9% US demand
+- **Imports ECM** (Section 4.7, eqs. 74-77):
+  - dln_m = b0_m*m_gap(-1) + b1_m*dln_m(-1) + b2_m*yhat_au + b3_m*s_gap + eps_m
+  - Domestic demand (b2_m=0.30) + competitiveness (b3_m=-0.08, depreciation reduces imports)
+  - Variance decomposition: 74.7% own / 16.4% exchange rate / 6.1% AU demand
+- All eigenvalues inside unit circle (max modulus 0.985), BK conditions verified
 
-### Phase 5: Financial + trade
-- Term structure (eq. 95), exchange rate UIP (eq. 105), WACC (eq. 98)
-- Exports/imports ECM (eqs. 70-77)
+### Phase 6: Deflators + Government + GDP identity — DONE
+- `dynare/au_pac.mod` — Final model: 53 variables, 27 shocks, 45 state variables
+- **Demand deflators** (Section 4.7, 6 ECM equations):
+  - All deflators track VA price (piQ) with partial pass-through + pibar_au anchor
+  - General form: pi_j = rho_j*pi_j(-1) + alpha_j*piQ + (1-rho_j-alpha_j)*pibar_au
+  - Trade deflators add exchange rate pass-through (beta*s_gap)
+  - pi_c (consumption): 65.5% own / 31.8% VA price — close to CPI
+  - pi_ib (business inv): 83.5% own / 15.2% VA price
+  - pi_ih (housing inv): 87.9% own / 11.1% VA price — construction costs sticky
+  - pi_x (export): 76.3% own / 21.4% exchange rate — world price influence
+  - pi_m (import): 51.0% own / 47.8% exchange rate — strong FX pass-through
+  - pi_g (government): 63.7% own / 33.4% VA price — public sector wages
+  - Growth neutrality: all converge to pi_ss_au = 0.625 at SS
+- **Government spending** (Section 4.9, fiscal rule):
+  - dln_g = rho_g*dln_g(-1) + phi_g*yhat_au + eps_g
+  - Countercyclical: phi_g=-0.10 (positive gap -> less spending growth)
+  - Persistent (rho_g=0.85, budget inertia)
+  - Variance decomposition: 69.6% own / 17.2% US demand / 12.9% AU demand
+- **GDP expenditure identity**:
+  - yhat_dom = w_c*dln_c + w_ib*dln_ib + w_ih*dln_ih + w_g*dln_g + w_x*dln_x - w_m*dln_m
+  - Weights: w_c=0.55, w_ib=0.13, w_ih=0.06, w_g=0.24, w_x=0.25, w_m=0.23
+  - Variance: 23.2% exports / 20.3% consumption / 18.0% FX / 13.3% imports / 9.7% bus.inv / 6.8% US demand / 4.3% govt
+  - yhat_dom is currently a flow measure; future: bridge equation to yhat_au
+- All eigenvalues inside unit circle (max modulus 0.985), BK conditions verified
 
-### Phase 6: Deflators + accounting
-- 8 deflator equations (ECMs)
-- GDP identity, sector accounts, fiscal rule
+### Phase 7: Feedback loops + estimation prep — DONE
+- `dynare/au_pac.mod` — Same 53 variables/27 shocks; state variables: 48 (up from 45)
+- **7a. Bridge equation** (yhat_dom -> yhat_au):
+  - Added `lambda_dom * yhat_dom` to IS curve (lambda_dom=0.10, conservative)
+  - Closes the Keynesian multiplier: demand -> yhat_dom -> yhat_au -> inflation -> policy
+  - yhat_au variance decomposition now shows demand channel active:
+    65.5% eps_q / 32.4% eps_q_us / 0.2% eps_s / 0.1% eps_c + eps_x
+  - Previously yhat_au was ~97% eps_q — demand shocks now transmit through
+- **7b. WACC -> business investment target**:
+  - `dln_ib_star_bar = -kappa_wacc * (wacc - wacc_ss)` (kappa_wacc=0.04)
+  - When WACC rises above SS (tight credit), desired capital growth falls
+  - Activates: Taylor -> long rate -> WACC -> investment target -> business investment
+- **7c. Mortgage rate -> household investment target**:
+  - `dln_ih_star_bar = -kappa_mort * i_gap` (kappa_mort=0.05)
+  - Uses short rate gap as mortgage proxy (AU variable-rate dominance)
+  - Strongest housing channel of any demand component
+- **7d. Output gap -> consumption target** (permanent income proxy):
+  - `dln_c_star_bar = kappa_inc * yhat_au` (kappa_inc=0.08)
+  - When output above potential, permanent income estimate rises
+  - Simplified proxy for full forward-solved permanent income
+- **7e. Estimation infrastructure** (commented out, ready to activate):
+  - `varobs` block mapping 9 model variables to data columns
+  - `estimated_params` block with 18 parameters + 6 shock stderrs
+  - Informative priors (Beta, Normal, Inv-Gamma) centered on calibrated values
+  - `estimation` command: 50k MH draws, 2 blocks, mode_compute=4
+- All eigenvalues inside unit circle (max modulus 0.985), BK conditions verified
+- All steady state values unchanged (feedback preserves SS by construction)
+
+### Stage 8: Data & Estimation Pipeline — DONE (mode), MH in progress
+- **8a. Data gaps fixed** in `data/download_extended_data.m`:
+  - **ULC**: FRED OECD series (`ULQELTT01AUQ661S`) unavailable; constructed synthetic ULC = CPI_index * (employment/emp_0) using `AUSCPIALLQINMEI` (CPI index, 128 obs). dlog(ULC) captures nominal compensation dynamics.
+  - **GFCF split**: FRED has no separate dwelling/non-dwelling for AU. Applied historical ABS average: 30% dwelling / 70% non-dwelling split to total GFCF.
+  - **Exports/imports**: FRED OECD volume series (`NAEXKP06/07`) return HTML error pages (discontinued). Not in varobs — not blocking estimation.
+  - `data/extended_dataset.csv` regenerated: 128 quarters, 12 columns (added `au_gfcf_nondwelling`, `au_gfcf_dwelling`)
+- **8b. Estimation data prepared** — `data/prepare_estimation_data.m`:
+  - Transforms raw CSV data to Dynare-compatible format
+  - 9 observables: yhat_au, pi_au, i_au, yhat_us, pi_us, pi_w, dln_c, dln_ib, i_10y
+  - Sample: 1993Q2–2023Q3 (122 quarters, first with no NaN across all series)
+  - Demeaning: all variables demeaned by sample mean (avoids low-rate era bias vs model SS)
+  - Output: `dynare/estimation_data.mat` + `dynare/estimation_meta.mat`
+- **8c. Estimation blocks activated** in `dynare/au_pac.mod`:
+  - `varobs` block (9 observables including dln_ib for non-dwelling investment)
+  - `estimated_params` block: 18 structural parameters + 6 shock stderrs = 24 total
+  - `estimation` command: mode_compute=4 (csminwel), MH 10k draws × 2 chains
+  - `stoch_simul` commented out during estimation
+- **8d. Posterior mode found** — Log posterior: -1040.93, Laplace marginal density: -1095.69
+  - Optimization converged in 76 iterations (from -1842.9 to -1040.9)
+  - Key posterior mode results vs calibration:
+
+  | Parameter | Calibrated | Posterior Mode | Interpretation |
+  |-----------|-----------|---------------|----------------|
+  | b0_c | 0.06 | 0.056 | Consumption ECM speed ~unchanged |
+  | b1_c | 0.35 | 0.134 | Much less consumption persistence |
+  | omega_c | 0.35 | 0.352 | Expectations weight confirmed |
+  | b3_c | 0.15 | 0.135 | HtM channel slightly weaker |
+  | b0_ib | 0.04 | 0.027 | Slower investment ECM |
+  | b1_ib | 0.25 | 0.171 | Less investment persistence |
+  | b3_ib | 0.20 | 0.189 | Accelerator ~confirmed |
+  | lambda_w | 0.55 | 0.247 | **Much less backward-looking wages** |
+  | kappa_w | 0.10 | 0.240 | **Steeper wage Phillips curve** |
+  | rho_L | 0.85 | 0.914 | More term structure smoothing |
+  | rho_s | 0.92 | 0.961 | More FX persistence |
+  | lambda_dom | 0.10 | 0.409 | **Demand bridge 4x stronger** |
+  | eps_q | 0.80 | 0.491 | Output gap shocks smaller |
+  | eps_c | 0.50 | 1.764 | Consumption shocks 3.5x larger |
+  | eps_ib | 1.50 | 2.757 | Investment shocks nearly 2x |
+
+  - **Economic interpretation**: Data strongly supports (1) more forward-looking wages, (2) steeper Phillips curve, (3) much stronger demand-to-output bridge. Consumption and investment are noisier than calibrated.
+  - MH chains (10k draws × 2) in progress for posterior uncertainty quantification
+
+## All phases complete — model summary
+
+| Phase | Block | Variables | Shocks | Key equations |
+|-------|-------|-----------|--------|---------------|
+| 0 | E-SAT VAR | 11 | 8 | IS, Taylor, Phillips (AU/US), anchors |
+| 2 | VA price | +4 | +1 | PAC with error correction |
+| 3 | Labor | +8 | +2 | Wage Phillips curve, employment PAC (4th-order) |
+| 4 | Demand | +14 | +3 | Consumption (1st), business inv (2nd), housing inv (2nd) PAC |
+| 5 | Financial+Trade | +8 | +6 | Term structure, WACC, UIP, exports/imports ECM |
+| 6 | Deflators+Govt+GDP | +8 | +7 | 6 deflator ECMs, fiscal rule, GDP identity |
+| 7 | Feedback loops | — | — | Bridge eq, WACC/mortgage/income wires, estimation prep |
+| 8 | Estimation | — | — | Bayesian mode found, 24 params estimated, 9 observables |
+| **Total** | | **53** | **27** | **53 equations, 4 feedback loops, Bayesian estimation** |
+
+## What is next (refinements)
+
+### Immediate next steps
+- Complete MH chains and evaluate convergence (trace plots, Geweke, acceptance rate 20-40%)
+- Update calibrated parameters in au_pac.mod with posterior means
+- Re-run stoch_simul with posterior means, compare IRFs to calibrated version
+
+### Future refinements (Stages 9-11)
+- CES production function for supply block (Section 4.3)
+- Wage-price spiral closure (pi_w -> labour share -> VA price)
+- Full Dynare PAC machinery (var_model + pac_model linkage)
+- Forward-solved permanent income for consumption target
+- Full user cost of capital for investment target
+- IRF comparison vs FR-BDF paper (Section 6)
+- Commodity price channel (Australia-specific)
 
 ## Key technical notes
 

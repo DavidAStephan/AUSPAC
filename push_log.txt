@@ -1,3 +1,0 @@
-Cloning into 'c:/Users/david/AUSPAC_repo'...
-warning: You appear to have cloned an empty repository.
-CLONE_EXIT=0

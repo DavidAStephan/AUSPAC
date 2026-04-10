@@ -1,0 +1,46 @@
+=== Preparing estimation data ===
+
+Loading data sources...
+  dataset.csv: 128 obs (01-Jan-1993 to 01-Oct-2024)
+  extended_dataset.csv: 128 obs (01-Jan-1993 to 01-Oct-2024)
+  Date vectors aligned: 128 quarters
+
+Transforming variables...
+  yhat_au: 128 valid obs
+  pi_au:   127 valid obs
+  i_au:    128 valid obs
+  yhat_us: 128 valid obs
+  pi_us:   127 valid obs
+  pi_w:    127 valid obs
+  dln_c:   122 valid obs
+  dln_ib:  122 valid obs
+  i_10y:   128 valid obs
+
+Common sample: obs 2 to 123 (01-Apr-1993 to 01-Jul-2023) = 122 quarters
+
+Demeaning (subtracting sample means for all variables)...
+  yhat_au mean: 0.0129 (subtracting)
+  pi_au mean: 0.6584 (subtracting)
+  i_au mean: 0.2610 (subtracting)
+  yhat_us mean: -0.5526 (subtracting)
+  pi_us mean: 0.5397 (subtracting)
+  pi_w mean: 1.1611 (subtracting)
+  dln_c mean: 0.7682 (subtracting)
+  dln_ib mean: 1.0118 (subtracting)
+  i_10y mean: 1.2130 (subtracting)
+
+--- Demeaned data summary (T=122) ---
+Variable       Mean      Std      Min      Max
+yhat_au      0.0000   1.0442  -7.2841   1.3623
+pi_au        0.0000   0.5966  -2.5632   3.1157
+i_au        -0.0000   0.1301  -0.2602   0.2510
+yhat_us      0.0000   1.8824  -8.6924   3.0042
+pi_us        0.0000   0.3630  -0.9385   1.6953
+pi_w         0.0000   1.1604  -8.6761   3.7789
+dln_c       -0.0000   1.7757 -14.4573   6.6965
+dln_ib       0.0000   2.7873 -10.8792   6.0307
+i_10y       -0.0000   0.5337  -0.9935   1.3720
+
+Saved 122 obs x 9 variables to C:\Users\david\french_model\data\..\dynare\estimation_data.mat
+
+=== Estimation data preparation complete ===
