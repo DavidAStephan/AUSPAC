@@ -782,4 +782,190 @@ eps_i          0.1000   0.0797  0.0111   invg    Inf
 eps_pi         0.6000   0.7224  0.0462   invg    Inf 
 eps_c          0.5000   1.7643  0.1173   invg    Inf 
 eps_ib         1.5000   2.7573  0.1779   invg    Inf 
-eps_ih         2.0000   0.9269  0.
+eps_ih         2.0000   0.9269  0.3831   invg    Inf 
+
+
+Log data density [Laplace approximation] is -1095.690742.
+
+Estimation::mcmc: Multiple chains mode.
+Estimation::mcmc: Searching for initial values...
+Estimation::mcmc: Initial values found!
+
+Estimation::mcmc: Write details about the MCMC... Ok!
+Estimation::mcmc: Details about the MCMC are available in au_pac/metropolis\au_pac_mh_history_0.mat
+
+
+Estimation::mcmc: Number of mh files: 1 per block.
+Estimation::mcmc: Total number of generated files: 2.
+Estimation::mcmc: Total number of iterations: 50000.
+Estimation::mcmc: Current acceptance ratio per chain:
+                                                       Chain  1: 46.262%
+                                                       Chain  2: 46.104%
+Estimation::mcmc: Total number of MH draws per chain: 50000.
+Estimation::mcmc: Total number of generated MH files: 1.
+Estimation::mcmc: I'll use mh-files 1 to 1.
+Estimation::mcmc: In MH-file number 1 I'll start at line 25001.
+Estimation::mcmc: Finally I keep 25000 draws per chain.
+
+
+
+MCMC Inefficiency factors per block
+Parameter        Block 1     Block 2
+SE_eps_q         119.309     142.260
+SE_eps_i          97.486     109.544
+SE_eps_pi         87.865     108.971
+SE_eps_c         100.885      95.072
+SE_eps_ib        108.592      67.562
+SE_eps_ih        440.161     527.160
+b0_c             132.334     103.269
+b1_c             119.019     107.722
+omega_c           59.225      99.052
+b3_c             105.517      92.976
+b0_ib             90.948      77.096
+b1_ib             99.140     115.276
+b3_ib            111.261      78.494
+b0_ih            113.125     111.146
+b1_ih            117.779     123.478
+lambda_w          81.398      91.294
+kappa_w           78.595      88.504
+b0_n             183.914     113.810
+rho_L            128.777      94.844
+rho_s            180.568     210.521
+lambda_dom        87.574     129.415
+kappa_wacc        86.589      88.186
+kappa_mort        76.625      65.052
+kappa_inc         84.280     105.105
+
+
+
+Convergence diagnostics results for chain 1.
+
+Geweke (1992) Convergence Tests, based on means of draws 25000 to 30000 vs 37500 to 50000 for chain 1.
+p-values are for Chi2-test for equality of means.
+Parameter          Post. Mean        Post. Std   p-val No Taper   p-val 4% Taper   p-val 8% Taper  p-val 15% Taper
+SE_eps_q                0.506            0.050            0.000            0.540            0.563            0.529
+SE_eps_i                0.082            0.011            0.000            0.254            0.248            0.214
+SE_eps_pi               0.731            0.047            0.000            0.234            0.255            0.267
+SE_eps_c                1.793            0.120            0.000            0.569            0.567            0.547
+SE_eps_ib               2.810            0.180            0.000            0.098            0.106            0.071
+SE_eps_ih               1.887            1.376            0.000            0.346            0.440            0.469
+b0_c                    0.059            0.017            0.000            0.187            0.243            0.237
+b1_c                    0.148            0.047            0.000            0.620            0.661            0.685
+omega_c                 0.369            0.103            0.366            0.907            0.913            0.908
+b3_c                    0.138            0.049            0.000            0.704            0.733            0.739
+b0_ib                   0.030            0.012            0.000            0.282            0.218            0.207
+b1_ib                   0.182            0.049            0.000            0.102            0.105            0.091
+b3_ib                   0.191            0.073            0.702            0.968            0.971            0.971
+b0_ih                   0.051            0.020            0.000            0.167            0.156            0.104
+b1_ih                   0.207            0.080            0.000            0.682            0.701            0.704
+lambda_w                0.247            0.035            0.000            0.201            0.233            0.212
+kappa_w                 0.239            0.036            0.000            0.376            0.391            0.394
+b0_n                    0.041            0.021            0.117            0.884            0.888            0.894
+rho_L                   0.899            0.037            0.000            0.509            0.495            0.488
+rho_s                   0.948            0.022            0.546            0.956            0.960            0.960
+lambda_dom              0.401            0.045            0.000            0.014            0.015            0.004
+kappa_wacc              0.038            0.020            0.000            0.530            0.538            0.525
+kappa_mort              0.049            0.020            0.000            0.179            0.169            0.141
+kappa_inc               0.049            0.039            0.000            0.617            0.623            0.619
+
+
+
+
+Convergence diagnostics results for chain 2.
+
+Geweke (1992) Convergence Tests, based on means of draws 25000 to 30000 vs 37500 to 50000 for chain 2.
+p-values are for Chi2-test for equality of means.
+Parameter          Post. Mean        Post. Std   p-val No Taper   p-val 4% Taper   p-val 8% Taper  p-val 15% Taper
+SE_eps_q                0.505            0.049            0.818            0.980            0.982            0.983
+SE_eps_i                0.082            0.011            0.000            0.475            0.490            0.501
+SE_eps_pi               0.728            0.045            0.535            0.944            0.945            0.944
+SE_eps_c                1.792            0.121            0.000            0.137            0.153            0.111
+SE_eps_ib               2.798            0.183            0.260            0.875            0.869            0.846
+SE_eps_ih               1.728            1.048            0.000            0.453            0.573            0.646
+b0_c                    0.060            0.017            0.960            0.996            0.996            0.996
+b1_c                    0.146            0.046            0.000            0.001            0.001            0.000
+omega_c                 0.369            0.103            0.001            0.707            0.740            0.761
+b3_c                    0.142            0.047            0.000            0.125            0.155            0.137
+b0_ib                   0.031            0.012            0.002            0.719            0.735            0.721
+b1_ib                   0.181            0.053            0.000            0.469            0.524            0.528
+b3_ib                   0.195            0.078            0.000            0.436            0.417            0.375
+b0_ih                   0.049            0.019            0.000            0.415            0.421            0.463
+b1_ih                   0.209            0.087            0.874            0.986            0.988            0.988
+lambda_w                0.247            0.036            0.132            0.851            0.847            0.839
+kappa_w                 0.237            0.037            0.000            0.284            0.299            0.306
+b0_n                    0.040            0.020            0.394            0.923            0.927            0.927
+rho_L                   0.899            0.037            0.000            0.411            0.439            0.442
+rho_s                   0.948            0.023            0.000            0.263            0.368            0.438
+lambda_dom              0.399            0.046            0.000            0.166            0.186            0.194
+kappa_wacc              0.038            0.020            0.000            0.421            0.420            0.418
+kappa_mort              0.049            0.020            0.000            0.351            0.309            0.224
+kappa_inc               0.050            0.042            0.000            0.088            0.072            0.053
+
+
+Univariate convergence diagnostic, Brooks and Gelman (1998):
+    Parameter 1...  Done! 
+    Parameter 2...  Done! 
+    Parameter 3...  Done! 
+    Parameter 4...  Done! 
+    Parameter 5...  Done! 
+    Parameter 6...  Done! 
+    Parameter 7...  Done! 
+    Parameter 8...  Done! 
+    Parameter 9...  Done! 
+    Parameter 10...  Done! 
+    Parameter 11...  Done! 
+    Parameter 12...  Done! 
+    Parameter 13...  Done! 
+    Parameter 14...  Done! 
+    Parameter 15...  Done! 
+    Parameter 16...  Done! 
+    Parameter 17...  Done! 
+    Parameter 18...  Done! 
+    Parameter 19...  Done! 
+    Parameter 20...  Done! 
+    Parameter 21...  Done! 
+    Parameter 22...  Done! 
+    Parameter 23...  Done! 
+    Parameter 24...  Done! 
+
+marginal density: I'm computing the posterior mean and covariance...  Done!
+marginal density: I'm computing the posterior log marginal density (modified harmonic mean)... Done!
+
+
+ESTIMATION RESULTS
+
+Log data density (Modified Harmonic Mean) is -1095.379684.
+parameters
+             prior mean   post. mean        90% HPD interval    prior       pstdev
+
+b0_c              0.060       0.0595      0.0324      0.0882     beta       0.0200
+b1_c              0.350       0.1490      0.0745      0.2230     beta       0.1000
+omega_c           0.350       0.3689      0.1941      0.5311     beta       0.1000
+b3_c              0.150       0.1385      0.0600      0.2221     norm       0.0500
+b0_ib             0.040       0.0302      0.0104      0.0504     beta       0.0200
+b1_ib             0.250       0.1812      0.0966      0.2650     beta       0.0800
+b3_ib             0.200       0.1913      0.0594      0.3119     norm       0.0800
+b0_ih             0.050       0.0491      0.0197      0.0790     beta       0.0200
+b1_ih             0.200       0.2096      0.0693      0.3399     beta       0.0800
+lambda_w          0.550       0.2466      0.1904      0.3091     beta       0.1000
+kappa_w           0.100       0.2378      0.1790      0.2967     norm       0.0500
+b0_n              0.040       0.0402      0.0083      0.0714     beta       0.0200
+rho_L             0.850       0.9005      0.8435      0.9594     beta       0.0500
+rho_s             0.920       0.9495      0.9176      0.9820     beta       0.0300
+lambda_dom        0.100       0.3989      0.3244      0.4741     beta       0.0500
+kappa_wacc        0.040       0.0376      0.0043      0.0686     norm       0.0200
+kappa_mort        0.050       0.0479      0.0145      0.0795     norm       0.0200
+kappa_inc         0.080       0.0497     -0.0181      0.1143     norm       0.0400
+
+standard deviation of shocks
+             prior mean   post. mean        90% HPD interval    prior       pstdev
+
+eps_q             0.800       0.5056      0.4235      0.5859     invg          Inf
+eps_i             0.100       0.0813      0.0633      0.0993     invg          Inf
+eps_pi            0.600       0.7290      0.6522      0.8025     invg          Inf
+eps_c             0.500       1.7938      1.5797      1.9737     invg          Inf
+eps_ib            1.500       2.8073      2.5134      3.0976     invg          Inf
+eps_ih            2.000       1.7285      0.4859      3.3149     invg          Inf
+Estimation::mcmc: Posterior (dsge) IRFs...
+Estimation::mcmc: Posterior IRFs, done!
+Total computing time : 0h36m53s

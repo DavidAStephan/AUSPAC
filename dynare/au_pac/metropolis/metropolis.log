@@ -2657,3 +2657,88 @@
     params:24: 0.18549
     log2po:-1044.9382
  
+
+% Mh1Blck2 (10-Apr-2026 23:20:49)
+ 
+  Number of simulations.: 50000
+  Acceptance ratio......: 0.46104
+  Feval per iteration...: 1
+  Posterior mean........:
+    params:1: 0.50488
+    params:2: 0.082102
+    params:3: 0.7276
+    params:4: 1.7917
+    params:5: 2.7981
+    params:6: 1.7282
+    params:7: 0.05986
+    params:8: 0.14569
+    params:9: 0.36876
+    params:10: 0.14212
+    params:11: 0.030512
+    params:12: 0.18061
+    params:13: 0.19532
+    params:14: 0.049208
+    params:15: 0.20859
+    params:16: 0.24748
+    params:17: 0.2373
+    params:18: 0.04028
+    params:19: 0.89946
+    params:20: 0.94842
+    params:21: 0.39932
+    params:22: 0.038149
+    params:23: 0.048945
+    params:24: 0.049595
+    log2po:-1053.4347
+  Minimum value.........:
+    params:1: 0.3156
+    params:2: 0.051032
+    params:3: 0.5718
+    params:4: 1.4086
+    params:5: 2.1548
+    params:6: 0.35108
+    params:7: 0.0098496
+    params:8: 0.016868
+    params:9: 0.077851
+    params:10: -0.052368
+    params:11: 0.00082763
+    params:12: 0.035708
+    params:13: -0.10856
+    params:14: 0.0036528
+    params:15: 0.011867
+    params:16: 0.11678
+    params:17: 0.077479
+    params:18: 0.0013054
+    params:19: 0.75842
+    params:20: 0.8374
+    params:21: 0.20039
+    params:22: -0.03509
+    params:23: -0.015487
+    params:24: -0.10016
+    log2po:-1070.8826
+  Maximum value.........:
+    params:1: 0.67517
+    params:2: 0.12682
+    params:3: 0.93214
+    params:4: 2.3129
+    params:5: 3.4916
+    params:6: 6.332
+    params:7: 0.12237
+    params:8: 0.3352
+    params:9: 0.74487
+    params:10: 0.31703
+    params:11: 0.088171
+    params:12: 0.39723
+    params:13: 0.59192
+    params:14: 0.13398
+    params:15: 0.54614
+    params:16: 0.37156
+    params:17: 0.35836
+    params:18: 0.13808
+    params:19: 0.98196
+    params:20: 0.99455
+    params:21: 0.54705
+    params:22: 0.10986
+    params:23: 0.12631
+    params:24: 0.19199
+    log2po:-1044.3996
+ 
