@@ -1,0 +1,9 @@
+[Warning: File not found or permission denied] 
+[> In dynare (line 192)] 
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: noclearall nograph
+Starting preprocessing of the model file ... 
+Substitution of Diff operator: added 4 auxiliary variables and equations. 
+ERROR in trend component model: LHS variable should not appear with a multiplicative constant in error correction term 
+Preprocessing time: 0h00m01s.
+DYNARE_FAIL: Dynare: preprocessing failed

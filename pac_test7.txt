@@ -1,0 +1,9 @@
+[Warning: File not found or permission denied] 
+[> In dynare (line 192)] 
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: noclearall nograph
+Starting preprocessing of the model file ... 
+Substitution of Diff operator: added 2 auxiliary variables and equations. 
+ERROR: in Equation eq_pQ_star_level. A trend component model may not have leaded or contemporaneous endogenous variables on the RHS.  
+Preprocessing time: 0h00m00s.
+DYNARE_FAIL: Dynare: preprocessing failed

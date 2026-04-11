@@ -1,0 +1,8 @@
+[Warning: File not found or permission denied] 
+[> In dynare (line 192)] 
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: noclearall nograph
+Starting preprocessing of the model file ... 
+ERROR: au_pac.mod: line 596, cols 55-58: syntax error, unexpected FLOAT_NUMBER 
+Preprocessing time: 0h00m00s.
+DYNARE_FAIL: Dynare: preprocessing failed

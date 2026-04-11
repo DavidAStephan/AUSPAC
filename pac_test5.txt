@@ -1,0 +1,8 @@
+[Warning: File not found or permission denied] 
+[> In dynare (line 192)] 
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: noclearall nograph
+Starting preprocessing of the model file ... 
+ERROR: for PAC model 'pac_pQ', it is not possible to declare a 'growth' option in the 'pac_model' command when there is also a 'pac_target_info' block 
+Preprocessing time: 0h00m00s.
+DYNARE_FAIL: Dynare: preprocessing failed

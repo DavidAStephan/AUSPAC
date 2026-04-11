@@ -52,6 +52,14 @@ var
     piQ_star_bar    // HP trend of VA price target growth
     pQ_gap          // gap between VA price target and actual (p*Q - pQ), in log
 
+    // === Cobb-Douglas production function (Stage 9a) ===
+    dln_y_star      // potential output growth (quarterly %)
+    dln_tfp         // total factor productivity growth (quarterly %)
+
+    // === Wage-price spiral (Stage 9c) ===
+    dln_ulc         // unit labor cost growth (quarterly %)
+    dln_prod        // labor productivity growth proxy (quarterly %)
+
     // === Labor market: wage Phillips curve ===
     pi_w            // nominal wage inflation (quarterly %)
 
@@ -84,6 +92,9 @@ var
     ih_gap          // gap between target and actual housing investment (log level)
     dln_ih_1        // auxiliary: dln_ih(-1) for 2nd-order lag
 
+    // === User cost of capital (Stage 10b) ===
+    uc_k            // user cost of capital (quarterly %)
+
     // === Financial block (Section 4.8) ===
     i_10y           // 10-year AU government bond yield (quarterly %)
     tp              // term premium (quarterly %)
@@ -103,10 +114,48 @@ var
     pi_x            // export deflator inflation (quarterly %)
     pi_m            // import deflator inflation (quarterly %)
 
+    // === Commodity price channel (Stage 11b, Australia-specific) ===
+    dln_pcom        // commodity price growth (quarterly %)
+
     // === Government + GDP identity (Section 4.9) ===
     dln_g           // government spending growth (quarterly log diff)
     pi_g            // government deflator inflation (quarterly %)
     yhat_dom        // domestic demand gap (weighted sum of expenditure components)
+
+    // === New variables (Stage 12: equation audit fixes) ===
+    rw_gap          // real wage growth gap: pi_w - piQ - dln_prod (for employment target)
+    iad             // import-adjusted demand (weighted by import content shares)
+    i_lh            // household bank lending rate (quarterly %, eq. 68)
+    dln_ph          // real housing price growth (quarterly %, eq. 69)
+    ph_gap          // housing price gap (log level, cumulated dln_ph)
+
+    // === PAC trend_component_model variables ===
+    piQ_aux_l       // I(1) auxiliary VA price level (for TCM EC equation)
+    piQ_star_l      // I(1) VA price target level (random walk for TCM)
+
+    // === Detrended log-level for VA price PAC ===
+    pQ_level        // VA price detrended log-level (diff = piQ - pi_ss_au)
+    pQ_star_level   // VA price target detrended log-level
+
+    // === Consumption PAC TCM variables ===
+    c_aux_l         // I(1) auxiliary consumption level (for TCM EC equation)
+    c_star_l        // I(1) consumption target level (random walk for TCM)
+    ln_c_level      // consumption detrended log-level (diff = dln_c)
+
+    // === Business investment PAC TCM variables ===
+    ib_aux_l        // I(1) auxiliary business investment level (for TCM EC equation)
+    ib_star_l       // I(1) business investment target level (random walk for TCM)
+    ln_ib_level     // business investment detrended log-level (diff = dln_ib)
+
+    // === Household investment PAC TCM variables ===
+    ih_aux_l        // I(1) auxiliary household investment level (for TCM EC equation)
+    ih_star_l       // I(1) household investment target level (random walk for TCM)
+    ln_ih_level     // household investment detrended log-level (diff = dln_ih)
+
+    // === Employment PAC TCM variables ===
+    n_aux_l         // I(1) auxiliary employment level (for TCM EC equation)
+    n_star_l        // I(1) employment target level (random walk for TCM)
+    ln_n_level      // employment detrended log-level (diff = dln_n)
 ;
 
 
@@ -141,6 +190,24 @@ varexo
     // Government shocks
     eps_g           // government spending shock
     eps_pg          // government deflator shock
+    // Supply block shock (Stage 9a)
+    eps_tfp         // TFP shock
+    // Commodity price shock (Stage 11b)
+    eps_pcom        // commodity price shock
+    // Stage 12: equation audit fixes
+    eps_lh          // household bank lending rate shock
+    eps_ph          // housing price shock
+    // TCM shocks (for trend_component_model)
+    eps_e_q         // TCM non-target (VA price EC) shock
+    eps_e_pQ_star   // TCM target (VA price target) shock
+    eps_e_c         // TCM non-target (consumption EC) shock
+    eps_e_c_star    // TCM target (consumption target) shock
+    eps_e_ib        // TCM non-target (business investment EC) shock
+    eps_e_ib_star   // TCM target (business investment target) shock
+    eps_e_ih        // TCM non-target (household investment EC) shock
+    eps_e_ih_star   // TCM target (household investment target) shock
+    eps_e_n         // TCM non-target (employment EC) shock
+    eps_e_n_star    // TCM target (employment target) shock
 ;
 
 // -----------------------------------------------------------------------
@@ -164,6 +231,16 @@ parameters
     b2_pQ           // output gap sensitivity
     omega_pQ        // share of nonstationary expectations component
     rho_pQ_star     // VA price target persistence
+    gamma_ulc       // ULC pass-through to VA price target (Stage 9c)
+
+    // --- Cobb-Douglas production function parameters (Stage 9a) ---
+    alpha_k         // capital share in Cobb-Douglas
+    rho_tfp         // TFP persistence
+
+    // --- Commodity price channel parameters (Stage 11b) ---
+    rho_pcom        // commodity price persistence
+    b4_x            // commodity price -> export volumes
+    alpha_pcom      // commodity price -> export deflator
 
     // --- Wage Phillips curve parameters (Section 4.5.1) ---
     lambda_w        // wage persistence (coefficient on pi_w(-1))
@@ -200,7 +277,9 @@ parameters
     b3_ib           // output gap sensitivity (accelerator channel)
     b4_ib           // real interest rate sensitivity (negative: higher r -> less I)
     rho_ib_star     // target investment growth persistence
-    kappa_wacc      // WACC gap -> investment target (user cost channel)
+    kappa_wacc      // WACC gap -> investment target (legacy, replaced by kappa_uc)
+    kappa_uc        // user cost sensitivity in investment target (Stage 10b)
+    delta_k         // quarterly capital depreciation rate (Stage 9a/10b)
     // growth neutrality: coeff on dln_ib_star_bar(-1) = (1 - b1_ib - b2_ib - omega_ib)
 
     // --- Household investment PAC parameters (Section 4.6.3, 2nd-order) ---
@@ -267,6 +346,40 @@ parameters
     w_g             // government spending share (~24%)
     w_x             // export share (~25%)
     w_m             // import share (~23%)
+
+    // === Stage 12: equation audit fix parameters ===
+    // Employment target: real wage sensitivity (Section 4.3, CES elasticity)
+    sigma_n         // CES capital-labor substitution elasticity for employment target
+
+    // Deflator import price channels (Section 4.7, IAD weights)
+    beta_pc_m       // import price pass-through to consumption deflator
+    beta_pib_m      // import price pass-through to business investment deflator
+    beta_pih_m      // import price pass-through to housing investment deflator
+    gamma_oil       // energy/commodity price pass-through to CPI
+    beta_pm_com     // commodity price pass-through to import deflator
+
+    // Import-adjusted demand weights (import content of each component)
+    w_iad_c         // import content of consumption
+    w_iad_ib        // import content of business investment
+    w_iad_ih        // import content of household investment
+    w_iad_g         // import content of government spending
+    w_iad_x         // import content of exports (re-export channel)
+
+    // Household bank lending rate (Section 4.8.3, eq. 68)
+    rho_lh          // bank lending rate persistence
+    spread_lh       // bank lending rate spread over 10Y government rate
+
+    // Housing prices (Section 4.6.3, eq. 69)
+    rho_ph          // housing price persistence
+    alpha_ph_y      // output gap -> housing prices (demand channel)
+    alpha_ph_r      // interest rate gap -> housing prices (credit channel, negative)
+    kappa_ph        // housing price gap -> household investment target (Tobin's Q)
+
+    // Investment target output proportionality (Section 4.6.2, eq. 63)
+    kappa_ib_y      // output gap -> business investment target
+
+    // PAC discount factor
+    beta_pac        // quarterly subjective discount (0.98 ≈ 8% annual)
 ;
 
 // -----------------------------------------------------------------------
@@ -295,7 +408,7 @@ pi_ss_us        = 0.5;
 // Bridge equation: demand-side feedback into IS curve (Phase 7a)
 // Closes the Keynesian multiplier: demand components -> yhat_dom -> yhat_au
 // Start conservative to avoid instability; loop gain must be < 1
-lambda_dom      = 0.10;     // demand feedback weight (conservative start)
+lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
 // VA price PAC parameters (calibrated from Table 4.4.3)
 b0_pQ           = 0.06;     // error correction
@@ -303,18 +416,28 @@ b1_pQ           = 0.50;     // persistence
 b2_pQ           = 0.09;     // output gap
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
+gamma_ulc       = 0.12;     // ULC pass-through to VA price target (Stage 9c)
+
+// --- Cobb-Douglas production function (Stage 9a) ---
+alpha_k         = 0.33;     // capital share in Cobb-Douglas
+rho_tfp         = 0.99;     // TFP persistence (near unit root)
+
+// --- Commodity price channel (Stage 11b) ---
+rho_pcom        = 0.85;     // commodity price persistence
+b4_x            = 0.15;     // commodity price -> export volumes
+alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 
 // Wage Phillips curve parameters (calibrated from Section 4.5.1 / Table 4.5.1)
 // Australia: moderate wage persistence, significant gap sensitivity
 // Forward expectations proxied by pibar_au (inflation anchor)
-lambda_w        = 0.55;     // wage persistence
-kappa_w         = 0.10;     // output gap -> wages (positive sign: Okun implicit)
+lambda_w        = 0.247;    // wage persistence (posterior mean)
+kappa_w         = 0.238;    // output gap -> wages (posterior mean)
 gamma_w         = 0.15;     // CPI indexation channel
 // growth neutrality coeff = 1 - 0.55 - 0.15 = 0.30 on pibar_au
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n            = 0.04;     // error correction (slow adjustment to target)
+b0_n            = 0.040;    // error correction (posterior mean)
 b1_n            = 0.30;     // 1st lag
 b2_n            = 0.10;     // 2nd lag
 b3_n            = 0.05;     // 3rd lag
@@ -327,44 +450,46 @@ rho_n_star      = 0.95;     // target persistence
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c            = 0.06;     // error correction (moderate speed)
-b1_c            = 0.35;     // persistence (1st lag)
-omega_c         = 0.35;     // expectations/forward component
+b0_c            = 0.060;    // error correction (posterior mean)
+b1_c            = 0.149;    // persistence (posterior mean)
+omega_c         = 0.369;    // expectations/forward component (posterior mean)
 b2_c            = -0.02;    // real interest rate -> consumption (negative: substitution)
-b3_c            = 0.15;     // output gap -> consumption (HtM channel)
+b3_c            = 0.139;    // output gap -> consumption (posterior mean)
 rho_c_star      = 0.95;     // target persistence
-kappa_inc       = 0.08;     // output gap -> consumption target (permanent income proxy)
+kappa_inc       = 0.050;    // output gap -> consumption target (posterior mean)
 // growth neutrality coeff = 1 - 0.35 - 0.35 = 0.30
 
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib           = 0.04;     // error correction (slow — capital stock adjusts slowly)
-b1_ib           = 0.25;     // 1st lag persistence
+b0_ib           = 0.030;    // error correction (posterior mean)
+b1_ib           = 0.181;    // 1st lag persistence (posterior mean)
 b2_ib           = 0.10;     // 2nd lag
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib           = 0.20;     // output gap -> investment (accelerator, strong)
+b3_ib           = 0.191;    // output gap -> investment (posterior mean)
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
-kappa_wacc      = 0.04;     // WACC gap -> investment target (user cost of capital)
+kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
+kappa_uc        = 0.04;     // user cost sensitivity (Stage 10b)
+delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
 // growth neutrality coeff = 1 - 0.25 - 0.10 - 0.35 = 0.30
 
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih           = 0.05;     // error correction
-b1_ih           = 0.20;     // 1st lag persistence
+b0_ih           = 0.049;    // error correction (posterior mean)
+b1_ih           = 0.210;    // 1st lag persistence (posterior mean)
 b2_ih           = 0.08;     // 2nd lag
 omega_ih        = 0.30;     // expectations/forward component
 b3_ih           = 0.12;     // output gap -> housing investment
 b4_ih           = -0.05;    // real interest rate -> housing (mortgage channel, strongest)
 rho_ih_star     = 0.95;     // target persistence
-kappa_mort      = 0.05;     // mortgage rate gap -> housing target (AU variable-rate)
+kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
 // growth neutrality coeff = 1 - 0.20 - 0.08 - 0.30 = 0.42
 
 // Term structure parameters (calibrated from Section 4.8 / Table 4.8.1)
 // AU 10Y yield tracks RBA cash rate with smoothing + term premium
-rho_L           = 0.85;     // long rate persistence (smooths short rate movements)
+rho_L           = 0.900;    // long rate persistence (posterior mean)
 tp_ss           = 0.30;     // SS term premium (~1.2% annual, AU avg yield curve slope)
 rho_tp          = 0.98;     // term premium very persistent (global risk appetite)
 // SS: i_10y = i_ss + tp_ss = 1.0491 + 0.30 = 1.3491 (~5.4% annual)
@@ -378,7 +503,7 @@ spread_ss       = 0.50;     // SS spread (~2% annual, AU corporate + equity prem
 // Exchange rate parameters (calibrated from Section 4.8 / eq. 105)
 // AUD/USD real exchange rate, UIP-based with persistent deviations from PPP
 // s_gap > 0 = AUD depreciation (less purchasing power)
-rho_s           = 0.92;     // persistent misalignment (PPP half-life ~8 quarters)
+rho_s           = 0.950;    // persistent misalignment (posterior mean)
 alpha_s         = 0.15;     // interest rate differential -> appreciation (negative sign in eq)
 
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
@@ -445,6 +570,90 @@ w_x             = 0.25;     // exports
 w_m             = 0.23;     // imports (subtracted)
 // Note: w_c + w_ib + w_ih + w_g + w_x - w_m = 1.00
 
+// === Stage 12: equation audit fix parameter values ===
+
+// CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
+// Higher sigma_n -> employment target more sensitive to real wage changes
+sigma_n         = 0.53;
+
+// Import price pass-through to domestic deflators (Section 4.7, IAD weights)
+// beta_j_m = import content share * partial pass-through coefficient
+beta_pc_m       = 0.10;     // consumption: ~20% import content, ~50% pass-through
+beta_pib_m      = 0.12;     // business investment: ~25% import content
+beta_pih_m      = 0.08;     // housing: ~15% import content (domestic materials)
+gamma_oil       = 0.03;     // energy/commodity -> CPI (smaller for AU than FR)
+beta_pm_com     = 0.05;     // commodity price -> import deflator
+
+// Import-adjusted demand weights (import content of each expenditure component)
+// From ABS input-output tables, approximate for AU economy
+w_iad_c         = 0.12;     // consumption has moderate import content
+w_iad_ib        = 0.25;     // business investment: capital goods highly imported
+w_iad_ih        = 0.15;     // housing: some imported materials
+w_iad_g         = 0.08;     // government: mostly domestic services
+w_iad_x         = 0.30;     // exports: high re-export content (commodity processing)
+
+// Household bank lending rate (Section 4.8.3, eq. 68, Table 4.6.17)
+// Paper: iLH adjusts toward i_10y with spread, persistence rho = 0.88
+rho_lh          = 0.88;     // bank lending rate persistence (paper beta0 = 0.88)
+spread_lh       = 0.40;     // ~1.6% annual AU mortgage spread over 10Y bonds
+// SS: i_lh = i_ss + tp_ss + spread_lh = 1.0491 + 0.30 + 0.40 = 1.7491 (~7.0% annual)
+
+// Housing prices (Section 4.6.3, eq. 69, Table 4.6.18)
+// Paper: AR(2) with rho0=0.48, rho1=0.43; simplified to AR(1) with ~0.90
+rho_ph          = 0.90;     // high persistence (AU housing cycle ~7 year half-life)
+alpha_ph_y      = 0.15;     // output gap -> housing prices (demand/income channel)
+alpha_ph_r      = -0.10;    // rate hike -> lower house prices (credit channel)
+kappa_ph        = 0.03;     // housing price gap -> household investment (Tobin's Q)
+
+// Investment target output proportionality (Section 4.6.2, eq. 63)
+// Paper: log I* = a0 + q - sigma*log(rKB) + log(I*/K*)
+// The 'q' term means desired investment is proportional to output level.
+kappa_ib_y      = 0.06;     // output gap -> business investment target
+
+// PAC discount factor (paper Section 4.1: beta = 0.98 for most blocks)
+beta_pac        = 0.98;
+
+// -----------------------------------------------------------------------
+// PAC infrastructure: auxiliary VAR + PAC model declarations
+// Must appear BEFORE the model block.
+// -----------------------------------------------------------------------
+
+// Minimal TCM: just the VA price error-correction + target trend.
+// Only 2 equations to keep it simple and match known-working patterns.
+trend_component_model(model_name = esat_tcm,
+    eqtags = ['eq_tcm_piQ_ec', 'eq_tcm_piQ_target'],
+    targets = ['eq_tcm_piQ_target']);
+
+pac_model(auxiliary_model_name = esat_tcm, discount = beta_pac, model_name = pac_pQ, growth = piQ_star_l(-1));
+
+// Consumption TCM: 2 equations for consumption PAC.
+trend_component_model(model_name = c_tcm,
+    eqtags = ['eq_tcm_c_ec', 'eq_tcm_c_target'],
+    targets = ['eq_tcm_c_target']);
+
+pac_model(auxiliary_model_name = c_tcm, discount = beta_pac, model_name = pac_c, growth = c_star_l(-1));
+
+// Business investment TCM: 2 equations for business investment PAC.
+trend_component_model(model_name = ib_tcm,
+    eqtags = ['eq_tcm_ib_ec', 'eq_tcm_ib_target'],
+    targets = ['eq_tcm_ib_target']);
+
+pac_model(auxiliary_model_name = ib_tcm, discount = beta_pac, model_name = pac_ib, growth = ib_star_l(-1));
+
+// Household investment TCM: 2 equations for household investment PAC.
+trend_component_model(model_name = ih_tcm,
+    eqtags = ['eq_tcm_ih_ec', 'eq_tcm_ih_target'],
+    targets = ['eq_tcm_ih_target']);
+
+pac_model(auxiliary_model_name = ih_tcm, discount = beta_pac, model_name = pac_ih, growth = ih_star_l(-1));
+
+// Employment TCM: 2 equations for employment PAC.
+trend_component_model(model_name = n_tcm,
+    eqtags = ['eq_tcm_n_ec', 'eq_tcm_n_target'],
+    targets = ['eq_tcm_n_target']);
+
+pac_model(auxiliary_model_name = n_tcm, discount = beta_pac, model_name = pac_n, growth = n_star_l(-1));
+
 // -----------------------------------------------------------------------
 // Model equations
 // -----------------------------------------------------------------------
@@ -499,42 +708,183 @@ model;
     [name = 'eq_pibar_us']
     pibar_us = lambda_pibar_us * pibar_us(-1) + (1 - lambda_pibar_us) * pi_ss_us + eps_pibar_us;
 
-    // === VA PRICE BLOCK ===
+    // =================================================================
+    // SHADOW E-SAT — TREND COMPONENT MODEL FORM (for Dynare PAC)
+    // =================================================================
+    // Written in diff() form for I(1) pseudo-level variables.
+    // TCM requires: diff(x) = f(lagged vars) + shock
+    // The I(0) gap variables are the differences of pseudo-levels.
 
+    // Minimal TCM: 2 equations for VA price PAC.
+    // Non-target: error-correction of detrended VA price level toward target.
+    // Target: random walk (stochastic trend for VA price level).
+    // TCM requires unit coefficient on x(-1) in EC term.
+    // Form: diff(x) = a*target(-1) - x(-1) + b*diff(x(-1)) + eps
+    // This means the EC speed is implicitly 1 (absorbed into target coeff).
+    [name = 'eq_tcm_piQ_ec']
+    diff(piQ_aux_l) = b0_pQ * piQ_star_l(-1) - piQ_aux_l(-1) + b1_pQ * diff(piQ_aux_l(-1)) + eps_e_q;
+
+    [name = 'eq_tcm_piQ_target']
+    piQ_star_l = piQ_star_l(-1) + eps_e_pQ_star;
+
+    // --- Consumption TCM ---
+    // Non-target: error-correction of detrended consumption level toward target.
+    // Same structure as VA price TCM: unit EC coefficient on x(-1).
+    [name = 'eq_tcm_c_ec']
+    diff(c_aux_l) = b0_c * c_star_l(-1) - c_aux_l(-1) + b1_c * diff(c_aux_l(-1)) + eps_e_c;
+
+    [name = 'eq_tcm_c_target']
+    c_star_l = c_star_l(-1) + eps_e_c_star;
+
+    // --- Business investment TCM ---
+    [name = 'eq_tcm_ib_ec']
+    diff(ib_aux_l) = b0_ib * ib_star_l(-1) - ib_aux_l(-1) + b1_ib * diff(ib_aux_l(-1)) + eps_e_ib;
+
+    [name = 'eq_tcm_ib_target']
+    ib_star_l = ib_star_l(-1) + eps_e_ib_star;
+
+    // --- Household investment TCM ---
+    [name = 'eq_tcm_ih_ec']
+    diff(ih_aux_l) = b0_ih * ih_star_l(-1) - ih_aux_l(-1) + b1_ih * diff(ih_aux_l(-1)) + eps_e_ih;
+
+    [name = 'eq_tcm_ih_target']
+    ih_star_l = ih_star_l(-1) + eps_e_ih_star;
+
+    // --- Employment TCM ---
+    [name = 'eq_tcm_n_ec']
+    diff(n_aux_l) = b0_n * n_star_l(-1) - n_aux_l(-1) + b1_n * diff(n_aux_l(-1)) + eps_e_n;
+
+    [name = 'eq_tcm_n_target']
+    n_star_l = n_star_l(-1) + eps_e_n_star;
+
+    // =================================================================
+    // LOG-LEVEL VARIABLES FOR DYNARE PAC (VA price)
+    // =================================================================
+    // Dynare PAC expects diff(z) on LHS. We accumulate piQ into a level.
+    // At SS: pQ_level = pQ_star_level = 0 (gap model, everything demeaned).
+
+    // Detrended price levels: pQ_level measures cumulated (piQ - pi_ss_au).
+    // At SS: piQ = pi_ss_au => diff(pQ_level) = 0 => pQ_level = 0. Stationary.
+    // This allows Dynare PAC to work on stationary level variables.
+    [name = 'eq_piQ_from_level']
+    piQ = (pQ_level - pQ_level(-1)) + pi_ss_au;
+
+    // pQ_star_level accumulates the detrended VA price target growth.
+    // Uses piQ_star_gap_e from the shadow E-SAT for PAC target tracking.
+    // The main model piQ_star is still computed separately (eq_piQ_star).
+    // pQ_star_level accumulates the detrended VA price target growth from the main model.
+    // This is separate from the shadow VAR — it just tracks the main model's target.
+    [name = 'eq_pQ_star_level']
+    pQ_star_level = pQ_star_level(-1) + (piQ_star - pi_ss_au);
+
+    // =================================================================
+    // LOG-LEVEL VARIABLES FOR DYNARE PAC (Consumption)
+    // =================================================================
+    // dln_c has SS = 0 (gap model), so diff(ln_c_level) = dln_c directly.
+    // At SS: dln_c = 0 => diff(ln_c_level) = 0 => ln_c_level = 0.
+    [name = 'eq_dln_c_from_level']
+    dln_c = ln_c_level - ln_c_level(-1);
+
+    // =================================================================
+    // LOG-LEVEL VARIABLES FOR DYNARE PAC (Business investment)
+    // =================================================================
+    [name = 'eq_dln_ib_from_level']
+    dln_ib = ln_ib_level - ln_ib_level(-1);
+
+    // =================================================================
+    // LOG-LEVEL VARIABLES FOR DYNARE PAC (Household investment)
+    // =================================================================
+    [name = 'eq_dln_ih_from_level']
+    dln_ih = ln_ih_level - ln_ih_level(-1);
+
+    // =================================================================
+    // LOG-LEVEL VARIABLES FOR DYNARE PAC (Employment)
+    // =================================================================
+    [name = 'eq_dln_n_from_level']
+    dln_n = ln_n_level - ln_n_level(-1);
+
+    // === COBB-DOUGLAS PRODUCTION FUNCTION (Stage 9a) ===
+    // Potential output growth in growth-rate form (no level tracking).
+    // Capital contribution approximated: dln_k ≈ delta_k * dln_ib (I/K = delta_k at SS).
+    // Does NOT redefine yhat_au — IS curve still drives output gap.
+    // Provides supply-side inputs to employment target and productivity.
+    [name = 'eq_dln_y_star']
+    dln_y_star = alpha_k * delta_k * dln_ib
+               + (1 - alpha_k) * dln_n_star_bar
+               + dln_tfp;
+
+    // TFP follows a persistent AR(1) process
+    [name = 'eq_dln_tfp']
+    dln_tfp = rho_tfp * dln_tfp(-1) + eps_tfp;
+
+    // === WAGE-PRICE SPIRAL (Stage 9c, upgraded with TFP from Stage 9b) ===
+    // Productivity growth: TFP-based (replaces cyclical proxy yhat_au - yhat_au(-1)).
+    // From Cobb-Douglas: labor productivity = TFP / (1-alpha_k).
+    // At SS: dln_prod = 0 (since dln_tfp = 0).
+    [name = 'eq_dln_prod']
+    dln_prod = dln_tfp / (1 - alpha_k);
+
+    // Unit labor cost growth = wage inflation - productivity growth
+    // At SS: dln_ulc = pi_ss_au - 0 = pi_ss_au (correct: ULC grows at inflation rate)
+    [name = 'eq_dln_ulc']
+    dln_ulc = pi_w - dln_prod;
+
+    // === VA PRICE BLOCK ===
+    // VA price target: now includes ULC pass-through (wage-price spiral closure)
+    // Growth neutrality: piQ_star_ss = rho_pQ_star*piQ_star_ss + gamma_ulc*pi_ss_au
+    //                    + (1-rho_pQ_star-gamma_ulc)*pi_ss_au = pi_ss_au (verified)
     [name = 'eq_piQ_star']
-    piQ_star = rho_pQ_star * piQ_star(-1) + (1 - rho_pQ_star) * pibar_au;
+    piQ_star = rho_pQ_star * piQ_star(-1)
+             + gamma_ulc * dln_ulc
+             + (1 - rho_pQ_star - gamma_ulc) * pibar_au;
 
     [name = 'eq_piQ_star_bar']
     piQ_star_bar = pibar_au;
 
+    // pQ_gap from detrended levels (equivalent to cumulated piQ_star - piQ)
     [name = 'eq_pQ_gap']
-    pQ_gap = pQ_gap(-1) + piQ_star - piQ;
+    pQ_gap = pQ_star_level - pQ_level;
 
+    // VA price PAC equation — now using Dynare native pac_expectation().
+    // pac_expectation(pac_pQ) replaces the manual omega_pQ * piQ_star term.
+    // It computes h0'*Z_{t-1} + h1'*Z_{t-1} from the shadow E-SAT companion matrix,
+    // giving the full discounted sum of expected future target changes (paper eqs 14-17).
+    // The growth neutrality correction is handled by the 'growth' option in pac_model.
+    // VA price PAC with Dynare native pac_expectation.
+    // diff(pQ_level) = piQ - pi_ss_au (detrended).
+    // Error correction: pQ_star_level(-1) - pQ_level(-1) = cumulated gap.
+    // EC target must reference the TCM target variable (piQ_star_l),
+    // not the main model's pQ_star_level, so PAC machinery can link them.
     [name = 'eq_piQ_pac']
-    piQ = b0_pQ * pQ_gap(-1)
-          + b1_pQ * piQ(-1)
-          + omega_pQ * piQ_star
-          + b2_pQ * yhat_au
-          + (1 - b1_pQ - omega_pQ) * piQ_star_bar(-1)
-          + eps_pQ;
+    diff(pQ_level) = b0_pQ * (piQ_star_l(-1) - pQ_level(-1))
+                     + b1_pQ * diff(pQ_level(-1))
+                     + pac_expectation(pac_pQ)
+                     + b2_pQ * yhat_au
+                     + eps_pQ;
 
     // === WAGE PHILLIPS CURVE (Section 4.5.1, eq. 52) ===
     // Hybrid backward/forward Phillips curve for nominal wages.
     // Forward expectations proxied by inflation anchor pibar_au.
-    // pi_w = lambda_w * pi_w(-1) + gamma_w * pi_au + kappa_w * yhat_au
-    //         + (1 - lambda_w - gamma_w) * pibar_au + eps_w
     //
-    // Growth neutrality: at SS with pi_au = pibar_au = pi_ss,
-    //   pi_w_ss = lambda_w * pi_w_ss + gamma_w * pi_ss + kappa_w * 0
-    //             + (1 - lambda_w - gamma_w) * pi_ss
-    //           = lambda_w * pi_w_ss + pi_ss - lambda_w * pi_ss
-    //   => pi_w_ss = pi_ss  (verified)
+    // Stage 12 fix: Added efficiency trend (1-lambda_w)*dln_prod.
+    // Paper eq. 52: wages anchor to [Δē + π̄], not just π̄.
+    // On BGP with productivity growth g: pi_w = pi_ss + g (wages grow at
+    // inflation + productivity growth). VA price stays at pi_ss since FPF
+    // absorbs productivity gains into lower ULC.
+    //
+    // Growth neutrality: at SS with dln_prod = 0, pi_au = pibar_au = pi_ss:
+    //   pi_w_ss = lambda_w*pi_w_ss + gamma_w*pi_ss + 0 + (1-lw-gw)*pi_ss + 0
+    //   => pi_w_ss = pi_ss (verified)
+    // At BGP with dln_prod = g:
+    //   pi_w_ss*(1-lambda_w) = gamma_w*pi_ss + (1-lw-gw)*pi_ss + (1-lw)*g
+    //   => pi_w_ss = pi_ss + g (verified: wages grow at inflation + productivity)
 
     [name = 'eq_pi_w']
     pi_w = lambda_w * pi_w(-1)
            + gamma_w * pi_au
            + kappa_w * yhat_au
            + (1 - lambda_w - gamma_w) * pibar_au
+           + (1 - lambda_w) * dln_prod
            + eps_w;
 
     // === EMPLOYMENT PAC (Section 4.5.2, eq. 56, 4th-order) ===
@@ -546,10 +896,15 @@ model;
     dln_n_star = rho_n_star * dln_n_star(-1)
                  + (1 - rho_n_star) * dln_n_star_bar;
 
-    // Trend employment growth: zero in stationary gap model.
-    // Future: linked to working-age population growth / labor force trend.
+    // Trend employment growth: derived from inverted production function (Stage 9b).
+    // Stage 12 fix: Added real wage sensitivity from paper eq. 55:
+    //   n* = b0 + q - ē - σ*(w̃ - pQ - ē - h)
+    // In growth rates: dln_n_star depends on productivity AND real wage gap.
+    // rw_gap = pi_w - piQ - dln_prod: real wage growth above productivity.
+    // When real wages rise above productivity, firms reduce labor demand.
+    // At SS: rw_gap = 0 => no effect. dln_tfp = 0 => dln_n_star_bar = 0.
     [name = 'eq_dln_n_star_bar']
-    dln_n_star_bar = 0;
+    dln_n_star_bar = dln_tfp / (1 - alpha_k) - sigma_n * rw_gap;
 
     // Employment gap accumulation (parallel to pQ_gap)
     [name = 'eq_n_gap']
@@ -565,22 +920,18 @@ model;
     [name = 'eq_dln_n_3']
     dln_n_3 = dln_n_2(-1);
 
-    // Employment PAC equation (4th-order adjustment costs)
-    // dln_n = error_correction + 4 AR lags + expectations + output_gap + growth_neutrality
-    //
-    // Growth neutrality: at SS with all gaps = 0 and dln_n = dln_n_star = dln_n_star_bar = 0:
-    //   0 = b0_n*0 + (b1_n+b2_n+b3_n+b4_n)*0 + omega_n*0 + b5_n*0
-    //       + (1-b1_n-b2_n-b3_n-b4_n-omega_n)*0 = 0  (verified)
+    // Employment PAC equation — now using Dynare native pac_expectation().
+    // pac_expectation(pac_n) replaces omega_n * dln_n_star + neutrality term.
+    // 4th-order adjustment costs: 4 AR lags of diff(ln_n_level).
 
     [name = 'eq_dln_n_pac']
-    dln_n = b0_n * n_gap(-1)
-            + b1_n * dln_n(-1)
-            + b2_n * dln_n_1(-1)
-            + b3_n * dln_n_2(-1)
-            + b4_n * dln_n_3(-1)
-            + omega_n * dln_n_star
+    diff(ln_n_level) = b0_n * (n_star_l(-1) - ln_n_level(-1))
+            + b1_n * diff(ln_n_level(-1))
+            + b2_n * diff(ln_n_level(-2))
+            + b3_n * diff(ln_n_level(-3))
+            + b4_n * diff(ln_n_level(-4))
+            + pac_expectation(pac_n)
             + b5_n * yhat_au
-            + (1 - b1_n - b2_n - b3_n - b4_n - omega_n) * dln_n_star_bar(-1)
             + eps_n;
 
     // =================================================================
@@ -596,32 +947,30 @@ model;
     dln_c_star = rho_c_star * dln_c_star(-1)
                  + (1 - rho_c_star) * dln_c_star_bar;
 
-    // Consumption target: permanent income proxy (Phase 7d).
-    // When output is above potential, permanent income estimate rises,
-    // pulling the consumption target up. Preserves SS: yhat_au=0 => target=0.
+    // Consumption target: persistent income proxy (Stage 10a, upgraded from Phase 7d).
+    // Weighted average of recent output gaps approximates permanent income
+    // without introducing forward-looking variables. SS: all gaps 0 => target 0.
     [name = 'eq_dln_c_star_bar']
-    dln_c_star_bar = kappa_inc * yhat_au;
+    dln_c_star_bar = kappa_inc * (0.5 * yhat_au + 0.3 * yhat_au(-1) + 0.2 * yhat_au(-2));
 
     // Consumption gap accumulation
     [name = 'eq_c_gap']
     c_gap = c_gap(-1) + dln_c_star - dln_c;
 
-    // Consumption PAC equation (1st-order adjustment costs)
-    // dln_c = error_correction + 1 AR lag + expectations + real_rate + output_gap + neutrality
+    // Consumption PAC equation — now using Dynare native pac_expectation().
+    // pac_expectation(pac_c) replaces omega_c * dln_c_star + (1-b1_c-omega_c) * dln_c_star_bar(-1).
+    // It computes h0'*Z_{t-1} + h1'*Z_{t-1} from the consumption TCM companion matrix.
+    // Growth neutrality correction handled by 'growth' option in pac_model.
+    // EC term references TCM target variable (c_star_l), not main model's c_gap.
     //
-    // Growth neutrality: at SS with all gaps = 0 and dln_c = dln_c_star = dln_c_star_bar = 0:
-    //   0 = b0_c*0 + b1_c*0 + omega_c*0 + b2_c*0 + b3_c*0 + (1-b1_c-omega_c)*0 = 0  (verified)
-    //
-    // Real interest rate: (i_gap - pi_au_gap) = real rate gap.
-    // Negative b2_c: higher real rates depress consumption (substitution effect).
+    // Stage 12 fix preserved: real bank lending rate gap (i_lh - pi_c).
 
     [name = 'eq_dln_c_pac']
-    dln_c = b0_c * c_gap(-1)
-            + b1_c * dln_c(-1)
-            + omega_c * dln_c_star
-            + b2_c * (i_gap(-1) - pi_au_gap(-1))
+    diff(ln_c_level) = b0_c * (c_star_l(-1) - ln_c_level(-1))
+            + b1_c * diff(ln_c_level(-1))
+            + pac_expectation(pac_c)
+            + b2_c * i_gap(-1)
             + b3_c * yhat_au
-            + (1 - b1_c - omega_c) * dln_c_star_bar(-1)
             + eps_c;
 
     // === BUSINESS INVESTMENT PAC (Section 4.6.2, eq. 64, 2nd-order) ===
@@ -633,11 +982,21 @@ model;
     dln_ib_star = rho_ib_star * dln_ib_star(-1)
                   + (1 - rho_ib_star) * dln_ib_star_bar;
 
-    // Investment target: WACC-driven user cost channel (Phase 7b).
-    // When WACC rises above SS (tight credit), desired capital growth falls.
-    // Preserves SS: wacc = i_ss + tp_ss + spread_ss => gap = 0 => target = 0.
+    // User cost of capital (Stage 10b): financial cost + depreciation - capital gains
+    // At SS: uc_k = wacc_ss + delta_k - 0 = i_ss + tp_ss + spread_ss + delta_k
+    [name = 'eq_uc_k']
+    uc_k = wacc + delta_k - (pi_ib - piQ);
+
+    // Investment target: user cost + output proportionality (Stage 10b + Stage 12).
+    // Paper eq. 63: log I* = a0 + q - σ*log(rKB) + log(I*/K*).
+    // The 'q' term means desired investment is proportional to output.
+    // Stage 12 fix: Added kappa_ib_y * yhat_au for output proportionality.
+    // When user cost rises above SS, desired capital growth falls.
+    // When output is above potential, desired investment growth rises.
+    // Preserves SS: uc_k = uc_k_ss, yhat_au = 0 => target = 0.
     [name = 'eq_dln_ib_star_bar']
-    dln_ib_star_bar = -kappa_wacc * (wacc - (i_ss + tp_ss + spread_ss));
+    dln_ib_star_bar = -kappa_uc * (uc_k - (i_ss + tp_ss + spread_ss + delta_k))
+                      + kappa_ib_y * yhat_au;
 
     // Investment gap accumulation
     [name = 'eq_ib_gap']
@@ -647,21 +1006,19 @@ model;
     [name = 'eq_dln_ib_1']
     dln_ib_1 = dln_ib(-1);
 
-    // Business investment PAC equation (2nd-order adjustment costs)
-    // dln_ib = EC + 2 AR lags + expectations + output_gap + real_rate + neutrality
-    //
-    // Growth neutrality at SS: verified (all terms zero).
+    // Business investment PAC equation — now using Dynare native pac_expectation().
+    // pac_expectation(pac_ib) replaces omega_ib * dln_ib_star + neutrality term.
+    // 2nd-order adjustment costs: 2 AR lags of diff(ln_ib_level).
     // Accelerator (b3_ib): output gap drives investment via demand.
-    // User cost (b4_ib): real interest rate gap depresses investment.
+    // User cost (b4_ib): interest rate gap depresses investment.
 
     [name = 'eq_dln_ib_pac']
-    dln_ib = b0_ib * ib_gap(-1)
-             + b1_ib * dln_ib(-1)
-             + b2_ib * dln_ib_1(-1)
-             + omega_ib * dln_ib_star
+    diff(ln_ib_level) = b0_ib * (ib_star_l(-1) - ln_ib_level(-1))
+             + b1_ib * diff(ln_ib_level(-1))
+             + b2_ib * diff(ln_ib_level(-2))
+             + pac_expectation(pac_ib)
              + b3_ib * yhat_au
-             + b4_ib * (i_gap(-1) - pi_au_gap(-1))
-             + (1 - b1_ib - b2_ib - omega_ib) * dln_ib_star_bar(-1)
+             + b4_ib * i_gap(-1)
              + eps_ib;
 
     // === HOUSEHOLD INVESTMENT PAC (Section 4.6.3, eq. 67, 2nd-order) ===
@@ -674,12 +1031,17 @@ model;
     dln_ih_star = rho_ih_star * dln_ih_star(-1)
                   + (1 - rho_ih_star) * dln_ih_star_bar;
 
-    // Housing investment target: mortgage rate channel (Phase 7c).
-    // Uses short rate gap as mortgage rate proxy (AU variable-rate dominance).
-    // When RBA raises rates above neutral, housing investment target falls.
-    // Preserves SS: i_gap = 0 => target = 0.
+    // Housing investment target: mortgage rate + housing prices (Stage 12).
+    // Paper eq. 66: log I*_H depends on permanent income, relative prices
+    // of new vs existing housing, and real user cost of housing capital.
+    // Stage 12 fix: (a) Use bank lending rate i_lh instead of short rate.
+    //              (b) Add housing price gap (Tobin's Q for housing).
+    // When mortgage rate rises above SS, housing investment target falls.
+    // When existing house prices are above trend, incentive to build rises.
+    // Preserves SS: i_lh = i_lh_ss, ph_gap = 0 => target = 0.
     [name = 'eq_dln_ih_star_bar']
-    dln_ih_star_bar = -kappa_mort * i_gap;
+    dln_ih_star_bar = -kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh))
+                      + kappa_ph * ph_gap(-1);
 
     // Housing investment gap accumulation
     [name = 'eq_ih_gap']
@@ -689,21 +1051,18 @@ model;
     [name = 'eq_dln_ih_1']
     dln_ih_1 = dln_ih(-1);
 
-    // Household investment PAC equation (2nd-order adjustment costs)
-    // dln_ih = EC + 2 AR lags + expectations + output_gap + real_rate + neutrality
-    //
-    // Growth neutrality at SS: verified (all terms zero).
-    // Mortgage channel (b4_ih): strongest interest rate sensitivity of all demand
-    // components — reflects Australia's variable-rate mortgage dominance.
+    // Household investment PAC equation — now using Dynare native pac_expectation().
+    // pac_expectation(pac_ih) replaces omega_ih * dln_ih_star + neutrality term.
+    // 2nd-order adjustment costs: 2 AR lags of diff(ln_ih_level).
+    // Mortgage channel (b4_ih): strongest interest rate sensitivity.
 
     [name = 'eq_dln_ih_pac']
-    dln_ih = b0_ih * ih_gap(-1)
-             + b1_ih * dln_ih(-1)
-             + b2_ih * dln_ih_1(-1)
-             + omega_ih * dln_ih_star
+    diff(ln_ih_level) = b0_ih * (ih_star_l(-1) - ln_ih_level(-1))
+             + b1_ih * diff(ln_ih_level(-1))
+             + b2_ih * diff(ln_ih_level(-2))
+             + pac_expectation(pac_ih)
              + b3_ih * yhat_au
-             + b4_ih * (i_gap(-1) - pi_au_gap(-1))
-             + (1 - b1_ih - b2_ih - omega_ih) * dln_ih_star_bar(-1)
+             + b4_ih * i_gap(-1)
              + eps_ih;
 
     // =================================================================
@@ -711,9 +1070,15 @@ model;
     // =================================================================
 
     // === TERM STRUCTURE (eq. 95) ===
-    // 10Y yield follows expectations hypothesis: weighted average of expected
-    // future short rates + term premium. Simplified to partial adjustment:
-    // i_10y adjusts toward (current short rate + term premium) with smoothing.
+    // Paper: i_10 = PV(i)_{t|t-1} + s_10 where PV(i) is a discounted sum of
+    // future short rates from E-SAT (eq. 97: κ_10 ≈ 0.97 decay parameter).
+    // Under MCE: PV(i)_t = (1-0.97)*i_t + 0.97*PV(i)_{t+1} (eq. 132).
+    //
+    // Implementation: partial adjustment i_10y toward (i_au + tp) with rho_L.
+    // This is the backward-looking (VAR-based) approximation: the partial
+    // adjustment filter smooths the short rate path similarly to the
+    // discounted sum, with rho_L ≈ κ_10. For MCE experiments, replace this
+    // with the forward-looking recursive form from eq. 132.
     //
     // At SS: i_10y = i_au + tp = i_ss + tp_ss
 
@@ -724,10 +1089,13 @@ model;
     i_10y = rho_L * i_10y(-1) + (1 - rho_L) * (i_au + tp) + eps_10y;
 
     // === WACC (eq. 98) ===
-    // Weighted average cost of capital for firms.
-    // Simplified: WACC = long rate + credit/equity spread.
-    // Full model: w_d*(i_L + credit_spread) + w_e*(i_L + equity_premium)
-    // Future: feed back into business investment target (dln_ib_star_bar).
+    // Paper: wacc = 0.5*iCOE + 0.3*iLB + 0.2*iBBB (eq. 98) with each
+    // component = i_10 + spread_j(AR1) (eqs. 99-100, Table 4.8.4).
+    // Full model has 3 separate spreads: cost of equity (s̄_COE=1.4%),
+    // bank lending rate firms (s̄_LB=0.3%), BBB bonds (s̄_BBB=0.02%).
+    // Simplified: single spread capturing the composite premium.
+    // Extension: decompose into separate COE/bank/bond components with
+    // distinct AR(1) spread processes for richer credit channel dynamics.
     //
     // At SS: wacc = i_10y_ss + spread_ss
 
@@ -742,8 +1110,16 @@ model;
     //
     // At SS: s_gap = 0 (PPP holds in long run)
 
+    // Stage 12 fix: Added inflation differential per paper eq. 104.
+    // Paper: ξ + p_EA - p_F = Σ(i-i_F) - Σ(π_EA - π_F).
+    // Real interest rate differential = (i - π) - (i_F - π_F).
+    // Higher AU inflation reduces real rate attractiveness → AUD depreciates.
+    // Uses same alpha_s coefficient (real rate parity).
     [name = 'eq_s_gap']
-    s_gap = rho_s * s_gap(-1) - alpha_s * i_gap + eps_s;
+    s_gap = rho_s * s_gap(-1)
+            - alpha_s * i_gap
+            + alpha_s * (pi_au_gap - pi_us_gap)
+            + eps_s;
 
     // =================================================================
     // TRADE BLOCK (Section 4.7)
@@ -766,6 +1142,7 @@ model;
             + b1_x * dln_x(-1)
             + b2_x * yhat_us
             + b3_x * s_gap
+            + b4_x * dln_pcom
             + eps_x;
 
     // === IMPORTS ECM (eqs. 74-77) ===
@@ -780,10 +1157,15 @@ model;
     [name = 'eq_m_gap']
     m_gap = m_gap(-1) - dln_m;
 
+    // Stage 12 fix: Replaced yhat_au with import-adjusted demand (iad).
+    // Paper eqs. 72-75: imports driven by IAD = Σ(w_j * component_j),
+    // with weights = import content shares from input-output tables.
+    // IAD correctly distinguishes high-import-content demand (investment,
+    // exports) from low-import-content demand (government spending).
     [name = 'eq_dln_m']
     dln_m = b0_m * m_gap(-1)
             + b1_m * dln_m(-1)
-            + b2_m * yhat_au
+            + b2_m * iad
             + b3_m * s_gap
             + eps_m;
 
@@ -798,44 +1180,72 @@ model;
     //                     + (1 - rho_j - alpha_j) * pibar_au + eps_j
     // Trade deflators add exchange rate pass-through (beta * s_gap).
 
-    // === Consumption deflator (CPI-like) ===
+    // === Consumption deflator (CPI-like, Section 4.7.1, eqs. 79-80) ===
+    // Stage 12 fix: Added import price channel (beta_pc_m * pi_m) and
+    // energy/commodity price pass-through (gamma_oil * dln_pcom).
+    // Paper target: p*_C = (1-β0)*pQ + β0*pM (β0 = IAD import content ~0.23).
+    // Growth neutrality: (rho_pc + alpha_pc + beta_pc_m) < 1, rest on pibar_au.
+    // At SS: all pi = pi_ss, dln_pcom = 0 => pi_c = pi_ss (verified).
     [name = 'eq_pi_c']
     pi_c = rho_pc * pi_c(-1)
            + alpha_pc * piQ
-           + (1 - rho_pc - alpha_pc) * pibar_au
+           + beta_pc_m * pi_m
+           + gamma_oil * dln_pcom
+           + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au
            + eps_pc;
 
-    // === Business investment deflator ===
+    // === Business investment deflator (Section 4.7.2, eqs. 81-82) ===
+    // Stage 12 fix: Added import price channel (beta_pib_m * pi_m).
+    // Capital goods have high import content (~25%).
     [name = 'eq_pi_ib']
     pi_ib = rho_pib * pi_ib(-1)
             + alpha_pib * piQ
-            + (1 - rho_pib - alpha_pib) * pibar_au
+            + beta_pib_m * pi_m
+            + (1 - rho_pib - alpha_pib - beta_pib_m) * pibar_au
             + eps_pib;
 
-    // === Household investment deflator (construction costs) ===
+    // === Household investment deflator (construction costs, Section 4.7.3, eqs. 83-84) ===
+    // Stage 12 fix: Added import price channel (beta_pih_m * pi_m).
+    // Housing construction uses some imported materials (~15%).
     [name = 'eq_pi_ih']
     pi_ih = rho_pih * pi_ih(-1)
             + alpha_pih * piQ
-            + (1 - rho_pih - alpha_pih) * pibar_au
+            + beta_pih_m * pi_m
+            + (1 - rho_pih - alpha_pih - beta_pih_m) * pibar_au
             + eps_pih;
 
-    // === Export deflator (world price influence via exchange rate) ===
+    // === Export deflator (world price + commodity influence via exchange rate) ===
     // Depreciation (s_gap > 0) raises domestic-currency export prices.
+    // Commodity price pass-through (Stage 11b): higher pcom → higher export deflator.
     [name = 'eq_pi_x']
     pi_x = rho_px * pi_x(-1)
            + alpha_px * piQ
            + (1 - rho_px - alpha_px) * pibar_au
            + beta_px * s_gap
+           + alpha_pcom * dln_pcom
            + eps_px;
 
-    // === Import deflator (exchange rate pass-through dominant) ===
+    // === Import deflator (exchange rate pass-through dominant, Section 4.7.5) ===
     // Depreciation (s_gap > 0) raises import prices in AUD.
+    // Stage 12 fix: Added commodity price pass-through (beta_pm_com * dln_pcom).
+    // Captures energy import price channel without separate energy import block.
+    // Paper has separate energy (eq. 91) and non-energy (eq. 89) import deflators.
     [name = 'eq_pi_m']
     pi_m = rho_pm * pi_m(-1)
            + alpha_pm * piQ
            + (1 - rho_pm - alpha_pm) * pibar_au
            + beta_pm * s_gap
+           + beta_pm_com * dln_pcom
            + eps_pm;
+
+    // =================================================================
+    // COMMODITY PRICE CHANNEL (Stage 11b, Australia-specific)
+    // =================================================================
+    // Commodity prices: exogenous AR(1) + world demand link (via yhat_us).
+    // Australia is a major commodity exporter — this channel is key.
+    // At SS: dln_pcom = 0 (no trend commodity price growth in gap model).
+    [name = 'eq_dln_pcom']
+    dln_pcom = rho_pcom * dln_pcom(-1) + 0.10 * yhat_us + eps_pcom;
 
     // =================================================================
     // GOVERNMENT + GDP IDENTITY (Section 4.9)
@@ -853,11 +1263,15 @@ model;
             + phi_g * yhat_au
             + eps_g;
 
-    // === Government deflator ===
-    // Tracks VA price with moderate pass-through (public sector wages).
+    // === Government deflator (Section 4.7.6, eq. 92) ===
+    // Stage 12 fix: Paper uses πG = 0.54*(πW - Δē) + 0.46*π̄.
+    // Government prices driven by public sector wages (not VA price).
+    // alpha_pg weight on efficient wage (pi_w - dln_prod), rest on pibar_au.
+    // At SS: alpha_pg*(pi_ss - 0) + ... = pi_ss (verified).
+    // At BGP with g: alpha_pg*(pi_ss+g-g) + (1-rho_pg-alpha_pg)*pi_ss = pi_ss.
     [name = 'eq_pi_g']
     pi_g = rho_pg * pi_g(-1)
-           + alpha_pg * piQ
+           + alpha_pg * (pi_w - dln_prod)
            + (1 - rho_pg - alpha_pg) * pibar_au
            + eps_pg;
 
@@ -879,6 +1293,58 @@ model;
     yhat_dom = w_c * dln_c + w_ib * dln_ib + w_ih * dln_ih
              + w_g * dln_g + w_x * dln_x - w_m * dln_m;
 
+    // =================================================================
+    // STAGE 12: NEW EQUATIONS (equation audit fixes)
+    // =================================================================
+
+    // === Real wage growth gap (for employment target, Section 4.3, eq. 27) ===
+    // rw_gap = nominal wage growth - VA price inflation - productivity growth.
+    // Measures how fast real wages grow above labor productivity.
+    // When rw_gap > 0: real wages outpacing productivity → firms cut labor demand.
+    // At SS: pi_w = pi_ss, piQ = pi_ss, dln_prod = 0 => rw_gap = 0.
+    [name = 'eq_rw_gap']
+    rw_gap = pi_w - piQ - dln_prod;
+
+    // === Import-adjusted demand (Section 4.6.4, eqs. 72-73) ===
+    // Weighted sum of expenditure components by their import content shares.
+    // Replaces yhat_au in import equation for correct composition effects.
+    // High-import-content components (investment, exports) get higher weight.
+    // At SS: all dln_j = 0 => iad = 0.
+    [name = 'eq_iad']
+    iad = w_iad_c * dln_c + w_iad_ib * dln_ib + w_iad_ih * dln_ih
+          + w_iad_g * dln_g + w_iad_x * dln_x;
+
+    // === Household bank lending rate (Section 4.8.3, eq. 68) ===
+    // Paper: ΔiLH = α1*(iLH(-1) - i10(-1) - α0) + lags of Δi10 + Δi10(-1) + ΔiLH(-1)
+    // Simplified to partial adjustment toward 10Y rate + spread.
+    // rho_lh captures the sluggish pass-through of market rates to retail rates.
+    // At SS: i_lh = i_10y_ss + spread_lh = i_ss + tp_ss + spread_lh.
+    [name = 'eq_i_lh']
+    i_lh = rho_lh * i_lh(-1)
+           + (1 - rho_lh) * (i_10y + spread_lh)
+           + eps_lh;
+
+    // === Housing price dynamics (Section 4.6.3, eq. 69) ===
+    // Paper: ΔpSH = ρ0*ΔpSH(-1) + ρ1*ΔpSH(-2) + (1-ρ0-ρ1)*π̄.
+    // Simplified to AR(1) of real housing price growth + demand/credit channels.
+    // Real housing prices (deflated) so SS growth = 0.
+    // Output gap: demand channel (higher income → higher house prices).
+    // Interest rate: credit channel (rate hikes reduce borrowing → lower prices).
+    // At SS: dln_ph = 0.
+    [name = 'eq_dln_ph']
+    dln_ph = rho_ph * dln_ph(-1)
+             + alpha_ph_y * yhat_au
+             + alpha_ph_r * i_gap(-1)
+             + eps_ph;
+
+    // Housing price gap accumulation (for Tobin's Q in household investment target)
+    // ph_gap > 0: house prices above trend → incentive to build new housing.
+    // Small mean-reversion (0.02 per quarter ≈ half-life 35 quarters) ensures
+    // stationarity — housing price gaps are persistent but not permanent.
+    // At SS: dln_ph = 0 => ph_gap = 0.
+    [name = 'eq_ph_gap']
+    ph_gap = 0.98 * ph_gap(-1) + dln_ph;
+
 end;
 
 // -----------------------------------------------------------------------
@@ -898,6 +1364,14 @@ steady_state_model;
     i_gap    = 0;
     pi_au_gap = 0;
     pi_us_gap = 0;
+
+    // Production function (Stage 9a)
+    dln_y_star   = 0;         // zero potential output growth at SS (gap model)
+    dln_tfp      = 0;         // zero TFP growth at SS
+
+    // Wage-price spiral (Stage 9c)
+    dln_prod     = 0;         // zero productivity growth at SS
+    dln_ulc      = pi_ss_au;  // ULC grows at inflation rate at SS
 
     // VA price block
     piQ_star     = pi_ss_au;
@@ -922,6 +1396,9 @@ steady_state_model;
     dln_c_star     = 0;
     dln_c_star_bar = 0;
     c_gap          = 0;
+
+    // User cost of capital (Stage 10b)
+    uc_k           = i_ss + tp_ss + spread_ss + delta_k;
 
     // Business investment PAC
     dln_ib         = 0;       // zero investment growth in stationary model
@@ -956,13 +1433,63 @@ steady_state_model;
     pi_x           = pi_ss_au;
     pi_m           = pi_ss_au;
 
+    // Commodity prices (Stage 11b)
+    dln_pcom       = 0;       // zero commodity price growth at SS
+
     // Government
     dln_g          = 0;       // zero government spending growth in stationary model
     pi_g           = pi_ss_au;
 
     // GDP identity
     yhat_dom       = 0;       // zero at SS (all components zero)
+
+    // Stage 12: new variables
+    rw_gap         = 0;                            // pi_w - piQ - dln_prod = pi_ss - pi_ss - 0 = 0
+    iad            = 0;                            // all dln_j = 0 => iad = 0
+    i_lh           = i_ss + tp_ss + spread_lh;     // bank lending rate at SS
+    dln_ph         = 0;                            // zero real housing price growth at SS
+    ph_gap         = 0;                            // housing prices at trend at SS
+
+    // PAC TCM variables (zero at SS)
+    piQ_aux_l      = 0;
+    piQ_star_l     = 0;
+
+    // Log-level variables for PAC (zero at SS — gap model, everything demeaned)
+    pQ_level       = 0;
+    pQ_star_level  = 0;
+
+    // Consumption PAC TCM + level variables
+    c_aux_l        = 0;
+    c_star_l       = 0;
+    ln_c_level     = 0;
+
+    // Business investment PAC TCM + level variables
+    ib_aux_l       = 0;
+    ib_star_l      = 0;
+    ln_ib_level    = 0;
+
+    // Household investment PAC TCM + level variables
+    ih_aux_l       = 0;
+    ih_star_l      = 0;
+    ln_ih_level    = 0;
+
+    // Employment PAC TCM + level variables
+    n_aux_l        = 0;
+    n_star_l       = 0;
+    ln_n_level     = 0;
 end;
+
+// Initialize PAC models BEFORE steady (h vectors must be computed first)
+pac.initialize('pac_pQ');
+pac.update.expectation('pac_pQ');
+pac.initialize('pac_c');
+pac.update.expectation('pac_c');
+pac.initialize('pac_ib');
+pac.update.expectation('pac_ib');
+pac.initialize('pac_ih');
+pac.update.expectation('pac_ih');
+pac.initialize('pac_n');
+pac.update.expectation('pac_n');
 
 steady;
 check;
@@ -972,9 +1499,9 @@ check;
 // -----------------------------------------------------------------------
 
 shocks;
-    var eps_q;        stderr 0.7773;
-    var eps_i;        stderr 0.0978;
-    var eps_pi;       stderr 0.5806;
+    var eps_q;        stderr 0.506;     // posterior mean
+    var eps_i;        stderr 0.081;     // posterior mean
+    var eps_pi;       stderr 0.729;     // posterior mean
     var eps_q_us;     stderr 1.0879;
     var eps_pi_us;    stderr 0.2645;
     var eps_ibar;     stderr 0.01;
@@ -983,9 +1510,9 @@ shocks;
     var eps_pQ;       stderr 0.5;    // VA price shock (~0.5% quarterly)
     var eps_w;        stderr 0.6;    // wage shock (comparable to price Phillips)
     var eps_n;        stderr 0.4;    // employment shock
-    var eps_c;        stderr 0.5;    // consumption shock (~0.5% quarterly)
-    var eps_ib;       stderr 1.5;    // business investment shock (most volatile component)
-    var eps_ih;       stderr 2.0;    // household investment shock (housing very volatile)
+    var eps_c;        stderr 1.794;  // consumption shock (posterior mean)
+    var eps_ib;       stderr 2.807;  // business investment shock (posterior mean)
+    var eps_ih;       stderr 1.729;  // household investment shock (posterior mean)
     var eps_10y;      stderr 0.10;   // long rate shock (small — most variation from short rate)
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
     var eps_wacc;     stderr 0.15;   // WACC shock (credit conditions)
@@ -999,13 +1526,29 @@ shocks;
     var eps_pm;       stderr 0.7;    // import deflator shock (exchange rate volatility)
     var eps_g;        stderr 0.3;    // government spending shock (small, policy-driven)
     var eps_pg;       stderr 0.3;    // government deflator shock
+    var eps_tfp;      stderr 0.2;    // TFP shock (Stage 9a)
+    var eps_pcom;     stderr 3.0;    // commodity price shock (Stage 11b, volatile)
+    // Stage 12: new shocks
+    var eps_lh;       stderr 0.15;   // bank lending rate shock (credit conditions)
+    var eps_ph;       stderr 1.0;    // housing price shock (AU housing very volatile)
+    // Shadow E-SAT shocks (same scale as main E-SAT)
+    var eps_e_q;      stderr 0.506;   // TCM non-target shock (VA price)
+    var eps_e_pQ_star; stderr 0.5;   // TCM target shock (VA price)
+    var eps_e_c;      stderr 0.506;   // TCM non-target shock (consumption)
+    var eps_e_c_star; stderr 0.5;    // TCM target shock (consumption)
+    var eps_e_ib;     stderr 0.506;  // TCM non-target shock (business investment)
+    var eps_e_ib_star; stderr 0.5;   // TCM target shock (business investment)
+    var eps_e_ih;     stderr 0.506;  // TCM non-target shock (household investment)
+    var eps_e_ih_star; stderr 0.5;   // TCM target shock (household investment)
+    var eps_e_n;      stderr 0.506;  // TCM non-target shock (employment)
+    var eps_e_n_star; stderr 0.5;    // TCM target shock (employment)
 end;
 
 // -----------------------------------------------------------------------
 // Compute IRFs
 // -----------------------------------------------------------------------
 
-// stoch_simul(order=1, irf=80, nograph);  // commented out for estimation
+stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y;
 
 // =======================================================================
 // ESTIMATION INFRASTRUCTURE (Phase 7e)
@@ -1036,7 +1579,7 @@ end;
 //   dln_ib      <- dlog(au_gfcf) (extended_dataset.csv, approx — needs split)
 //   i_10y       <- au_i10/4 (extended_dataset.csv, annualized -> quarterly)
 //
-varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
+// varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
 
 // -----------------------------------------------------------------------
 // Estimated parameters with priors
@@ -1044,49 +1587,45 @@ varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
 // Priors centered on current calibrated values with informative spreads.
 // Beta distribution for [0,1] parameters, Gamma for positive, Normal for others.
 //
-estimated_params;
-    // --- Demand block: key PAC parameters ---
-    b0_c,       beta_pdf, 0.06, 0.02;     // consumption error correction
-    b1_c,       beta_pdf, 0.35, 0.10;     // consumption persistence
-    omega_c,    beta_pdf, 0.35, 0.10;     // consumption expectations
-    b3_c,       normal_pdf, 0.15, 0.05;   // consumption HtM channel
-    b0_ib,      beta_pdf, 0.04, 0.02;     // investment error correction
-    b1_ib,      beta_pdf, 0.25, 0.08;     // investment persistence
-    b3_ib,      normal_pdf, 0.20, 0.08;   // investment accelerator
-    b0_ih,      beta_pdf, 0.05, 0.02;     // housing error correction
-    b1_ih,      beta_pdf, 0.20, 0.08;     // housing persistence
-
-    // --- Labor block ---
-    lambda_w,   beta_pdf, 0.55, 0.10;     // wage persistence
-    kappa_w,    normal_pdf, 0.10, 0.05;   // wage Phillips slope
-    b0_n,       beta_pdf, 0.04, 0.02;     // employment error correction
-
-    // --- Financial block ---
-    rho_L,      beta_pdf, 0.85, 0.05;     // term structure smoothing
-    rho_s,      beta_pdf, 0.92, 0.03;     // exchange rate persistence
-
-    // --- Feedback parameters (Phase 7) ---
-    lambda_dom, beta_pdf, 0.10, 0.05;     // demand bridge weight
-    kappa_wacc, normal_pdf, 0.04, 0.02;   // WACC -> investment target
-    kappa_mort, normal_pdf, 0.05, 0.02;   // mortgage -> housing target
-    kappa_inc,  normal_pdf, 0.08, 0.04;   // income -> consumption target
-
-    // --- Shock standard deviations ---
-    stderr eps_q,        inv_gamma_pdf, 0.80, inf;
-    stderr eps_i,        inv_gamma_pdf, 0.10, inf;
-    stderr eps_pi,       inv_gamma_pdf, 0.60, inf;
-    stderr eps_c,        inv_gamma_pdf, 0.50, inf;
-    stderr eps_ib,       inv_gamma_pdf, 1.50, inf;
-    stderr eps_ih,       inv_gamma_pdf, 2.00, inf;
-end;
+// estimated_params;
+//     // --- Demand block: key PAC parameters ---
+//     b0_c,       beta_pdf, 0.06, 0.02;
+//     b1_c,       beta_pdf, 0.35, 0.10;
+//     omega_c,    beta_pdf, 0.35, 0.10;
+//     b3_c,       normal_pdf, 0.15, 0.05;
+//     b0_ib,      beta_pdf, 0.04, 0.02;
+//     b1_ib,      beta_pdf, 0.25, 0.08;
+//     b3_ib,      normal_pdf, 0.20, 0.08;
+//     b0_ih,      beta_pdf, 0.05, 0.02;
+//     b1_ih,      beta_pdf, 0.20, 0.08;
+//     // --- Labor block ---
+//     lambda_w,   beta_pdf, 0.55, 0.10;
+//     kappa_w,    normal_pdf, 0.10, 0.05;
+//     b0_n,       beta_pdf, 0.04, 0.02;
+//     // --- Financial block ---
+//     rho_L,      beta_pdf, 0.85, 0.05;
+//     rho_s,      beta_pdf, 0.92, 0.03;
+//     // --- Feedback parameters (Phase 7) ---
+//     lambda_dom, beta_pdf, 0.10, 0.05;
+//     kappa_wacc, normal_pdf, 0.04, 0.02;
+//     kappa_mort, normal_pdf, 0.05, 0.02;
+//     kappa_inc,  normal_pdf, 0.08, 0.04;
+//     // --- Shock standard deviations ---
+//     stderr eps_q,        inv_gamma_pdf, 0.80, inf;
+//     stderr eps_i,        inv_gamma_pdf, 0.10, inf;
+//     stderr eps_pi,       inv_gamma_pdf, 0.60, inf;
+//     stderr eps_c,        inv_gamma_pdf, 0.50, inf;
+//     stderr eps_ib,       inv_gamma_pdf, 1.50, inf;
+//     stderr eps_ih,       inv_gamma_pdf, 2.00, inf;
+// end;
 
 // -----------------------------------------------------------------------
 // Estimation command
 // -----------------------------------------------------------------------
-estimation(datafile='estimation_data.mat',
-           first_obs=1, nobs=122,
-           mh_replic=10000, mh_nblocks=2, mh_jscale=0.3,
-           mode_compute=4, presample=4,
-           bayesian_irf,
-           graph_format=(eps), nograph)
-           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
+// estimation(datafile='estimation_data.mat',
+//            first_obs=1, nobs=122,
+//            mh_replic=10000, mh_nblocks=2, mh_jscale=0.3,
+//            mode_compute=4, presample=4,
+//            bayesian_irf,
+//            graph_format=(eps), nograph)
+//            yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;

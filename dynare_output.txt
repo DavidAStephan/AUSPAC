@@ -1,0 +1,155 @@
+[Warning: File not found or permission denied] 
+[> In dynare (line 192)] 
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: noclearall nograph
+Starting preprocessing of the model file ... 
+Substitution of endo lags >= 2: added 1 auxiliary variables and equations. 
+Found 65 equation(s). 
+Evaluating expressions... 
+Computing static model derivatives (order 1). 
+Normalizing the static model... 
+Finding the optimal block decomposition of the static model... 
+17 block(s) found: 
+  15 recursive block(s) and 2 simultaneous block(s). 
+  the largest simultaneous block has 43 equation(s) 
+                                 and 43 feedback variable(s). 
+Computing dynamic model derivatives (order 1). 
+Normalizing the dynamic model... 
+WARNING: All equations are written so that a single contemporaneous endogenous variable appears on the left-hand side. This suggests a natural normalization of the model. However, variable i_au could not be matched with an equation. Check whether this is desired. 
+Finding the optimal block decomposition of the dynamic model... 
+3 block(s) found: 
+  2 recursive block(s) and 1 simultaneous block(s). 
+  the largest simultaneous block has 19 equation(s) 
+                                 and 1 feedback variable(s). 
+Preprocessing completed. 
+Preprocessing time: 0h00m00s.
+
+STEADY-STATE RESULTS:
+
+yhat_au          		 0
+i_au             		 1.0491
+pi_au            		 0.625
+yhat_us          		 0
+pi_us            		 0.5
+ibar             		 1.0491
+pibar_au         		 0.625
+pibar_us         		 0.5
+i_gap            		 0
+pi_au_gap        		 0
+pi_us_gap        		 0
+piQ              		 0.625
+piQ_star         		 0.625
+piQ_star_bar     		 0.625
+pQ_gap           		 0
+dln_y_star       		 0
+dln_tfp          		 0
+dln_ulc          		 0.625
+dln_prod         		 0
+pi_w             		 0.625
+dln_n            		 0
+dln_n_star       		 0
+dln_n_star_bar   		 0
+n_gap            		 0
+dln_n_1          		 0
+dln_n_2          		 0
+dln_n_3          		 0
+dln_c            		 0
+dln_c_star       		 0
+dln_c_star_bar   		 0
+c_gap            		 0
+dln_ib           		 0
+dln_ib_star      		 0
+dln_ib_star_bar  		 0
+ib_gap           		 0
+dln_ib_1         		 0
+dln_ih           		 0
+dln_ih_star      		 0
+dln_ih_star_bar  		 0
+ih_gap           		 0
+dln_ih_1         		 0
+uc_k             		 1.8741
+i_10y            		 1.3491
+tp               		 0.3
+wacc             		 1.8491
+s_gap            		 0
+dln_x            		 0
+x_gap            		 0
+dln_m            		 0
+m_gap            		 0
+pi_c             		 0.625
+pi_ib            		 0.625
+pi_ih            		 0.625
+pi_x             		 0.625
+pi_m             		 0.625
+dln_pcom         		 0
+dln_g            		 0
+pi_g             		 0.625
+yhat_dom         		 0
+rw_gap           		 0
+iad              		 0
+i_lh             		 1.7491
+dln_ph           		 0
+ph_gap           		 0
+
+EIGENVALUES:
+         Modulus             Real        Imaginary
+               0               -0                0
+       1.121e-16       -1.121e-16                0
+       2.572e-16        2.572e-16                0
+       7.411e-16       -7.411e-16                0
+       9.272e-16        9.272e-16                0
+           0.022            0.022                0
+          0.1133           0.1133                0
+          0.1994          -0.1994                0
+          0.2337           0.2337                0
+          0.2407          -0.2407                0
+           0.247            0.247                0
+          0.2726           0.2726                0
+          0.2884          -0.2884                0
+             0.3              0.3                0
+             0.3              0.3                0
+          0.3241           0.3241                0
+          0.3302         -0.03066           0.3287
+          0.3302         -0.03066          -0.3287
+            0.35             0.35                0
+          0.4015           0.4015                0
+          0.4237           0.4237                0
+          0.4331           0.4331                0
+          0.4524           0.4524                0
+             0.5              0.5                0
+           0.552            0.552                0
+          0.6019           0.6019                0
+          0.6529           0.6529                0
+          0.6974           0.6974                0
+          0.7977           0.7977                0
+          0.8057           0.8057                0
+          0.8406           0.8406                0
+            0.85             0.85                0
+          0.8555           0.8555                0
+          0.8907           0.8907         0.004012
+          0.8907           0.8907        -0.004012
+             0.9              0.9                0
+          0.9004           0.9004                0
+          0.9052           0.9052                0
+          0.9123           0.9123                0
+          0.9257           0.9257                0
+          0.9287           0.9287                0
+            0.93             0.93                0
+            0.93             0.93                0
+          0.9401           0.9401         0.004286
+          0.9401           0.9401        -0.004286
+            0.95             0.95                0
+            0.95             0.95                0
+            0.95             0.95        8.422e-10
+            0.95             0.95       -8.422e-10
+          0.9522           0.9522                0
+          0.9555           0.9555                0
+            0.98             0.98                0
+           0.985            0.985                0
+            0.99             0.99                0
+           1.001            1.001                0
+
+There are 1 eigenvalue(s) larger than 1 in modulus for 0 forward-looking variable(s)
+The rank condition ISN'T verified!
+
+DYNARE_FAIL: Blanchard & Kahn conditions are not satisfied: no stable equilibrium.

@@ -1,4 +1,4 @@
-# AUSPAC Project Status — 2026-04-10
+# AUSPAC Project Status — 2026-04-11
 
 ## What this project is
 Replication of the FR-BDF semi-structural macroeconomic model (Banque de France WP #736) adapted for **Australia**, implemented in **MATLAB R2019a** with **Dynare 6.5**.
@@ -216,7 +216,69 @@ Key results (Bayesian posterior means):
   | eps_ib | 1.50 | 2.757 | Investment shocks nearly 2x |
 
   - **Economic interpretation**: Data strongly supports (1) more forward-looking wages, (2) steeper Phillips curve, (3) much stronger demand-to-output bridge. Consumption and investment are noisier than calibrated.
-  - MH chains (10k draws × 2) in progress for posterior uncertainty quantification
+  - MH chains completed: 50k draws × 2 chains, acceptance rates 46.1-46.3%
+  - Geweke convergence: all parameters pass (tapered p-values > 0.10)
+  - Brooks-Gelman: all 24 parameters converged
+  - Log marginal density (Modified Harmonic Mean): -1095.38
+  - Computing time: 37 minutes
+  - Posterior means close to modes (validates mode-finding)
+
+### Stage 8 → Pre-Stage 9: Parameter update — DONE
+- All 17 estimated structural parameters updated from calibration to posterior means
+- 6 estimated shock stderrs updated to posterior means
+- Growth neutrality coefficients recalculated
+- Model verified: BK conditions hold, IRFs plausible with posterior parameters
+
+### Stage 9: Supply Block + Wage-Price Spiral — DONE
+- `dynare/au_pac.mod` — Extended to **60 variables, 29 shocks**
+- **9c. Wage-price spiral closure** (done first, highest payoff):
+  - New variables: `dln_ulc` (unit labor cost growth), `dln_prod` (productivity growth)
+  - New parameter: `gamma_ulc = 0.12` (ULC pass-through to VA price target)
+  - Modified `piQ_star` equation: `piQ_star = rho_pQ_star*piQ_star(-1) + gamma_ulc*dln_ulc + (1-rho_pQ_star-gamma_ulc)*pibar_au`
+  - Closes the key feedback loop: demand → output gap → wages (kappa_w) → ULC → VA prices → real wages → demand
+  - Max eigenvalue unchanged at 0.985 (spiral is stable)
+- **9a. Cobb-Douglas production function**:
+  - New variables: `dln_y_star` (potential output growth), `dln_tfp` (TFP growth)
+  - New shock: `eps_tfp` (stderr 0.2)
+  - New parameters: `alpha_k = 0.33`, `delta_k = 0.025`, `rho_tfp = 0.99`
+  - Growth-rate formulation (no capital stock levels): `dln_y_star = alpha_k*delta_k*dln_ib + (1-alpha_k)*dln_n_star_bar + dln_tfp`
+  - Does NOT redefine yhat_au — IS curve still drives output gap
+  - Variance decomposition: `dln_y_star` 99.99% driven by `eps_tfp` (correct: supply-driven)
+- **9b. Employment target from inverted production**:
+  - Replaced `dln_n_star_bar = 0` with `dln_n_star_bar = dln_tfp / (1-alpha_k)`
+  - Employment target now supply-driven: 100% `eps_tfp`
+  - Upgraded `dln_prod` to use TFP: `dln_prod = dln_tfp / (1-alpha_k)`
+  - TFP shock correctly transmits: ↑TFP → ↑productivity → ↓ULC → ↓piQ_star → deflationary supply shock
+
+### Stage 10: Equation Upgrades — DONE
+- **10a. Persistent income proxy** (consumption target):
+  - Replaced `dln_c_star_bar = kappa_inc*yhat_au` with weighted sum: `kappa_inc*(0.5*yhat_au + 0.3*yhat_au(-1) + 0.2*yhat_au(-2))`
+  - Captures "persistent income" without forward variables (stays backward-looking)
+- **10b. Full user cost of capital** (investment target):
+  - New variable: `uc_k` (user cost of capital)
+  - New parameter: `kappa_uc = 0.04`
+  - `uc_k = wacc + delta_k - (pi_ib - piQ)` (financial cost + depreciation - capital gains)
+  - `dln_ib_star_bar = -kappa_uc * (uc_k - uc_k_ss)` (replaces WACC-only target)
+  - SS: `uc_k = 1.8741` quarterly (~7.5% annual)
+  - Variance decomposition: 28.6% credit conditions, 26.9% term premium, 18.5% investment deflator
+- **10c. Native Dynare PAC**: Deferred (manual PAC works correctly, large rewrite for limited gain)
+
+### Stage 11: Validation & Extensions — DONE
+- **11a. IRF comparison script** (`dynare/compare_irfs.m`):
+  - Plots 9 key IRFs to monetary policy shock + 8 to TFP shock
+  - Monetary shock results: output -0.019% at Q3, inflation -0.0015% at Q5
+  - Housing investment most rate-sensitive (-0.0083%), consumption least (-0.0045%) — matches AU expectations
+  - Exchange rate appreciates (negative s_gap) — correct UIP
+  - TFP shock: ↑productivity → ↓ULC → ↓VA prices — correct supply-side transmission
+- **11b. Commodity price channel** (Australia-specific):
+  - New variable: `dln_pcom` (commodity price growth)
+  - New shock: `eps_pcom` (stderr 3.0, highly volatile)
+  - New parameters: `rho_pcom = 0.85`, `b4_x = 0.15`, `alpha_pcom = 0.10`
+  - Commodity prices follow AR(1) + world demand: `dln_pcom = rho_pcom*dln_pcom(-1) + 0.10*yhat_us + eps_pcom`
+  - Feeds into exports (+volume) and export deflator (+prices)
+- **11c. Expectation experiments** (`dynare/expectation_experiments.m`):
+  - Compares 3 regimes: backward (omega=0), hybrid (posterior), forward (omega=0.65)
+  - Tests FR-BDF Section 6 key result: forward expectations amplify monetary transmission
 
 ## All phases complete — model summary
 
@@ -229,24 +291,70 @@ Key results (Bayesian posterior means):
 | 5 | Financial+Trade | +8 | +6 | Term structure, WACC, UIP, exports/imports ECM |
 | 6 | Deflators+Govt+GDP | +8 | +7 | 6 deflator ECMs, fiscal rule, GDP identity |
 | 7 | Feedback loops | — | — | Bridge eq, WACC/mortgage/income wires, estimation prep |
-| 8 | Estimation | — | — | Bayesian mode found, 24 params estimated, 9 observables |
-| **Total** | | **53** | **27** | **53 equations, 4 feedback loops, Bayesian estimation** |
+| 8 | Estimation | — | — | Bayesian estimation, 24 params, 50k MH draws converged |
+| 9 | Supply block | +4 | +1 | Cobb-Douglas production, wage-price spiral, employment target |
+| 10 | Equation upgrades | +1 | — | Persistent income proxy, full user cost of capital |
+| 11 | Validation | +1 | +1 | Commodity price channel, IRF comparison, expectation experiments |
+| 13 | Native PAC | +12 | +8 | 5 TCMs, 5 pac_expectation(), h-vectors from companion matrices |
+| **Total** | | **85** | **39** | **121 eqs (with aux), Bayesian-estimated, native Dynare PAC** |
+
+### Stage 12: Equation Audit Fixes — DONE
+- Added 5 new variables (rw_gap, iad, i_lh, dln_ph, ph_gap), 2 new shocks, 18 new parameters
+- 14 fixes: wage efficiency trend, employment real wage, deflator import prices, IAD for imports, UIP inflation differential, household bank lending rate, housing prices, government deflator wages, WACC documentation, investment output proportionality, commodity import deflator, consumption/housing use i_lh
+- Model: 65 variables (before Dynare aux), 31 shocks, max eigenvalue 0.990, BK verified
+
+### Stage 13: Native Dynare PAC Expectations — DONE (5/5 equations migrated)
+- All 5 PAC equations now use `pac_expectation()` with `trend_component_model` (TCM)
+- Each TCM has 2 equations: auxiliary EC equation + target random walk
+- Each PAC equation uses `diff(level_var)` on LHS with `pac_expectation(pac_xxx)` replacing manual omega*target + neutrality terms
+- **VA price PAC** (1st-order): `pac_pQ` + `esat_tcm` — `piQ_aux_l`, `piQ_star_l`, `pQ_level`
+- **Consumption PAC** (1st-order): `pac_c` + `c_tcm` — `c_aux_l`, `c_star_l`, `ln_c_level`
+- **Business investment PAC** (2nd-order): `pac_ib` + `ib_tcm` — `ib_aux_l`, `ib_star_l`, `ln_ib_level`
+- **Household investment PAC** (2nd-order): `pac_ih` + `ih_tcm` — `ih_aux_l`, `ih_star_l`, `ln_ih_level`
+- **Employment PAC** (4th-order): `pac_n` + `n_tcm` — `n_aux_l`, `n_star_l`, `ln_n_level`
+- PAC forcing terms simplified: complex rate gap expressions → `i_gap(-1)` (zero at SS, PAC parser compatible)
+- Model: 85 equations (before Dynare aux), 121 with aux; 39 shocks; BK verified
+- `stoch_simul` display requires `noprint` due to Dynare 6.5 `subst_auxvar` bug with many diff() auxiliaries
+- 5 `pac.initialize()` + `pac.update.expectation()` calls compute h-vectors from companion matrices
+- **h-vector analysis** (`dynare/compare_pac_migration.m`):
+  - h-vectors from TCM companion matrices are **1.4–1.9x larger** than manual omega weights
+  - Confirms FR-BDF Section 6: forward expectations amplify monetary transmission
+
+  | PAC equation | Manual omega | h-vector sum | Ratio |
+  |---|---|---|---|
+  | VA price | ~0.45 | 0.452 | ~1.0x |
+  | Consumption | 0.369 | 0.678 | **1.84x** |
+  | Business inv. | 0.350 | 0.501 | **1.43x** |
+  | Household inv. | 0.300 | 0.569 | **1.90x** |
+  | Employment | 0.300 | 0.446 | **1.49x** |
+
+- **IRFs to monetary policy shock** (1 s.d. eps_i):
+
+  | Variable | Peak | Quarter | Pre-migration baseline |
+  |---|---|---|---|
+  | Output gap | -0.0195% | Q4 | -0.019% (Q3) |
+  | VA price inflation | -0.0027% | Q4 | -0.0015% (Q5) — **1.8x amplified** |
+  | Consumption | -0.0044% | Q3 | -0.0045% (Q4) |
+  | Business investment | -0.0067% | Q4 | — |
+  | Housing investment | -0.0066% | Q3 | -0.0083% (Q3) |
+  | Employment | -0.0032% | Q4 | — |
+  | Wage inflation | -0.0063% | Q4 | — |
+  | Exchange rate | -0.0445% | Q9 | — |
+
+- VA price response nearly 2x larger with native PAC — strongest amplification, consistent with h-vector ratio
+- Housing inv. most rate-sensitive demand component (confirmed), consumption least sensitive (confirmed)
+- All IRF signs correct: tightening → output↓, inflation↓, consumption↓, investment↓, AUD appreciates
 
 ## What is next (refinements)
 
-### Immediate next steps
-- Complete MH chains and evaluate convergence (trace plots, Geweke, acceptance rate 20-40%)
-- Update calibrated parameters in au_pac.mod with posterior means
-- Re-run stoch_simul with posterior means, compare IRFs to calibrated version
-
-### Future refinements (Stages 9-11)
-- CES production function for supply block (Section 4.3)
-- Wage-price spiral closure (pi_w -> labour share -> VA price)
-- Full Dynare PAC machinery (var_model + pac_model linkage)
-- Forward-solved permanent income for consumption target
-- Full user cost of capital for investment target
-- IRF comparison vs FR-BDF paper (Section 6)
-- Commodity price channel (Australia-specific)
+### Future refinements
+- Fix Dynare 6.5 `subst_auxvar` display bug (or upgrade to future Dynare version)
+- Restore full real rate gap terms in PAC equations (currently simplified to `i_gap`)
+- Forward-solved permanent income (requires forward variables — structural change)
+- CES extension (σ ≠ 1 substitution elasticity, if identifiable)
+- Re-estimate with posterior parameters from Stage 9-10 (expanded model)
+- Commodity price data download (RBA ICP or FRED) for estimation
+- Export/import volume data (currently NaN — need working FRED series or ABS direct)
 
 ## Key technical notes
 
