@@ -5,14 +5,14 @@ Calling Dynare with arguments: noclearall nograph
 Starting preprocessing of the model file ... 
 Substitution of Diff operator: added 25 auxiliary variables and equations. 
 Substitution of endo lags >= 2: added 11 auxiliary variables and equations. 
-Found 121 equation(s). 
+Found 122 equation(s). 
 Evaluating expressions... 
 Computing static model derivatives (order 1). 
 Normalizing the static model... 
 Normalization failed with cutoff, trying symbolic normalization... 
 Finding the optimal block decomposition of the static model... 
-59 block(s) found: 
-  58 recursive block(s) and 1 simultaneous block(s). 
+61 block(s) found: 
+  60 recursive block(s) and 1 simultaneous block(s). 
   the largest simultaneous block has 11 equation(s) 
                                  and 11 feedback variable(s). 
 Computing dynamic model derivatives (order 1). 
@@ -70,6 +70,7 @@ dln_ih_star_bar        		 0
 ih_gap                 		 0
 dln_ih_1               		 0
 uc_k                   		 1.8741
+dln_uc_k               		 0
 i_10y                  		 1.3491
 tp                     		 0.3
 wacc                   		 1.8491
@@ -111,6 +112,7 @@ ln_n_level             		 0
 
 EIGENVALUES:
          Modulus             Real        Imaginary
+               0               -0                0
                0               -0                0
                0               -0                0
                0               -0                0
@@ -200,5 +202,5 @@ EIGENVALUES:
 There are 0 eigenvalue(s) larger than 1 in modulus for 0 forward-looking variable(s)
 The rank condition is verified.
 
-Total computing time : 0h00m03s
+Total computing time : 0h00m05s
 Note: warning(s) encountered in MATLAB/Octave code

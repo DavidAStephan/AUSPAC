@@ -94,6 +94,7 @@ var
 
     // === User cost of capital (Stage 10b) ===
     uc_k            // user cost of capital (quarterly %)
+    dln_uc_k        // user cost of capital growth (quarterly change)
 
     // === Financial block (Section 4.8) ===
     i_10y           // 10-year AU government bond yield (quarterly %)
@@ -231,7 +232,8 @@ parameters
     b2_pQ           // output gap sensitivity
     omega_pQ        // share of nonstationary expectations component
     rho_pQ_star     // VA price target persistence
-    gamma_ulc       // ULC pass-through to VA price target (Stage 9c)
+    gamma_ulc       // ULC pass-through to VA price target (CES dual, labor share)
+    gamma_uck       // user cost pass-through to VA price target (CES dual, capital share)
 
     // --- Cobb-Douglas production function parameters (Stage 9a) ---
     alpha_k         // capital share in Cobb-Douglas
@@ -277,8 +279,7 @@ parameters
     b3_ib           // output gap sensitivity (accelerator channel)
     b4_ib           // real interest rate sensitivity (negative: higher r -> less I)
     rho_ib_star     // target investment growth persistence
-    kappa_wacc      // WACC gap -> investment target (legacy, replaced by kappa_uc)
-    kappa_uc        // user cost sensitivity in investment target (Stage 10b)
+    kappa_wacc      // WACC gap -> investment target (legacy, unused)
     delta_k         // quarterly capital depreciation rate (Stage 9a/10b)
     // growth neutrality: coeff on dln_ib_star_bar(-1) = (1 - b1_ib - b2_ib - omega_ib)
 
@@ -349,7 +350,7 @@ parameters
 
     // === Stage 12: equation audit fix parameters ===
     // Employment target: real wage sensitivity (Section 4.3, CES elasticity)
-    sigma_n         // CES capital-labor substitution elasticity for employment target
+    sigma_ces       // CES elasticity of substitution (paper Section 4.3, Table 4.3.2)
 
     // Deflator import price channels (Section 4.7, IAD weights)
     beta_pc_m       // import price pass-through to consumption deflator
@@ -416,7 +417,8 @@ b1_pQ           = 0.50;     // persistence
 b2_pQ           = 0.09;     // output gap
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-gamma_ulc       = 0.12;     // ULC pass-through to VA price target (Stage 9c)
+gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
+gamma_uck       = 0.06;     // user cost pass-through (CES dual, capital share channel)
 
 // --- Cobb-Douglas production function (Stage 9a) ---
 alpha_k         = 0.33;     // capital share in Cobb-Douglas
@@ -470,7 +472,6 @@ b3_ib           = 0.191;    // output gap -> investment (posterior mean)
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
-kappa_uc        = 0.04;     // user cost sensitivity (Stage 10b)
 delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
 // growth neutrality coeff = 1 - 0.25 - 0.10 - 0.35 = 0.30
 
@@ -573,8 +574,9 @@ w_m             = 0.23;     // imports (subtracted)
 // === Stage 12: equation audit fix parameter values ===
 
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
-// Higher sigma_n -> employment target more sensitive to real wage changes
-sigma_n         = 0.53;
+// CES substitution elasticity: governs employment target (eq 55), investment target
+// (eq 63), and VA price target (unit cost dual, eqs 42-43).
+sigma_ces       = 0.53;     // paper Table 4.3.2 estimate for France; adopted for AU
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient
@@ -803,11 +805,14 @@ model;
     [name = 'eq_dln_n_from_level']
     dln_n = ln_n_level - ln_n_level(-1);
 
-    // === COBB-DOUGLAS PRODUCTION FUNCTION (Stage 9a) ===
-    // Potential output growth in growth-rate form (no level tracking).
+    // === CES PRODUCTION FUNCTION (Section 4.3, sigma_ces = 0.53) ===
+    // Growth-rate accounting form (Cobb-Douglas approximation at SS).
+    // CES effects captured through factor demand target equations:
+    //   - Employment target (eq_dln_n_star_bar): sigma_ces on rw_gap (eq 55)
+    //   - Investment target (eq_dln_ib_star_bar): sigma_ces on dln_uc_k (eq 63)
+    //   - VA price target (eq_piQ_star): gamma_uck on dln_uc_k (unit cost dual, eqs 42-43)
     // Capital contribution approximated: dln_k ≈ delta_k * dln_ib (I/K = delta_k at SS).
     // Does NOT redefine yhat_au — IS curve still drives output gap.
-    // Provides supply-side inputs to employment target and productivity.
     [name = 'eq_dln_y_star']
     dln_y_star = alpha_k * delta_k * dln_ib
                + (1 - alpha_k) * dln_n_star_bar
@@ -830,12 +835,18 @@ model;
     dln_ulc = pi_w - dln_prod;
 
     // === VA PRICE BLOCK ===
-    // VA price target: now includes ULC pass-through (wage-price spiral closure)
-    // Growth neutrality: piQ_star_ss = rho_pQ_star*piQ_star_ss + gamma_ulc*pi_ss_au
-    //                    + (1-rho_pQ_star-gamma_ulc)*pi_ss_au = pi_ss_au (verified)
+    // VA price target from CES unit cost dual (paper eqs. 42-43).
+    // CES cost function: p_Q* = [alpha_K * r_KB^(1-sigma) + (1-alpha_K)*(w/e)^(1-sigma)]^(1/(1-sigma))
+    // Log-linearized: piQ_star = s_K * d(uc_k) + s_L * dln_ulc.
+    // gamma_ulc: labor share channel (ULC pass-through).
+    // gamma_uck: capital share channel (user cost pass-through, zero at SS).
+    // Growth neutrality: dln_uc_k = 0 at SS, so gamma_uck term vanishes.
+    //   piQ_star_ss = rho_pQ_star*pi_ss + gamma_ulc*pi_ss + gamma_uck*0
+    //                 + (1-rho_pQ_star-gamma_ulc)*pi_ss = pi_ss (verified)
     [name = 'eq_piQ_star']
     piQ_star = rho_pQ_star * piQ_star(-1)
              + gamma_ulc * dln_ulc
+             + gamma_uck * dln_uc_k
              + (1 - rho_pQ_star - gamma_ulc) * pibar_au;
 
     [name = 'eq_piQ_star_bar']
@@ -904,7 +915,7 @@ model;
     // When real wages rise above productivity, firms reduce labor demand.
     // At SS: rw_gap = 0 => no effect. dln_tfp = 0 => dln_n_star_bar = 0.
     [name = 'eq_dln_n_star_bar']
-    dln_n_star_bar = dln_tfp / (1 - alpha_k) - sigma_n * rw_gap;
+    dln_n_star_bar = dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap;
 
     // Employment gap accumulation (parallel to pQ_gap)
     [name = 'eq_n_gap']
@@ -987,16 +998,19 @@ model;
     [name = 'eq_uc_k']
     uc_k = wacc + delta_k - (pi_ib - piQ);
 
-    // Investment target: user cost + output proportionality (Stage 10b + Stage 12).
-    // Paper eq. 63: log I* = a0 + q - σ*log(rKB) + log(I*/K*).
-    // The 'q' term means desired investment is proportional to output.
-    // Stage 12 fix: Added kappa_ib_y * yhat_au for output proportionality.
-    // When user cost rises above SS, desired capital growth falls.
-    // When output is above potential, desired investment growth rises.
-    // Preserves SS: uc_k = uc_k_ss, yhat_au = 0 => target = 0.
+    // User cost growth: needed for CES capital demand and unit cost dual.
+    // At SS: uc_k constant => dln_uc_k = 0.
+    [name = 'eq_dln_uc_k']
+    dln_uc_k = uc_k - uc_k(-1);
+
+    // Investment target: CES capital demand (paper eq. 63).
+    // log I* = a0 + q - sigma*log(rKB) + log(I*/K*).
+    // In growth rates: dln_ib_star = dln_q - sigma*d(log rKB).
+    // sigma_ces: CES substitution elasticity governs sensitivity to user cost changes.
+    // kappa_ib_y: output proportionality ('q' term in eq. 63).
+    // At SS: dln_uc_k = 0, yhat_au = 0 => target = 0.
     [name = 'eq_dln_ib_star_bar']
-    dln_ib_star_bar = -kappa_uc * (uc_k - (i_ss + tp_ss + spread_ss + delta_k))
-                      + kappa_ib_y * yhat_au;
+    dln_ib_star_bar = kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
 
     // Investment gap accumulation
     [name = 'eq_ib_gap']
@@ -1399,6 +1413,7 @@ steady_state_model;
 
     // User cost of capital (Stage 10b)
     uc_k           = i_ss + tp_ss + spread_ss + delta_k;
+    dln_uc_k       = 0;            // user cost constant at SS
 
     // Business investment PAC
     dln_ib         = 0;       // zero investment growth in stationary model

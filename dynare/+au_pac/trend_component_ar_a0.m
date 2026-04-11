@@ -5,14 +5,14 @@ function [AR, A0, A0star] = trend_component_ar_a0(model_name, params)
 if strcmp(model_name, 'c_tcm')
     % AR
     AR = zeros(1, 1, 1);
-    AR(1, 1, 1) = params(42);
+    AR(1, 1, 1) = params(43);
 
     % A0
     A0 = zeros(1, 1);
 
     % A0star
     A0star = zeros(1, 1);
-    A0star(1, 1) = (-params(41));
+    A0star(1, 1) = (-params(42));
     return
 end
 
@@ -33,14 +33,14 @@ end
 if strcmp(model_name, 'ib_tcm')
     % AR
     AR = zeros(1, 1, 1);
-    AR(1, 1, 1) = params(49);
+    AR(1, 1, 1) = params(50);
 
     % A0
     A0 = zeros(1, 1);
 
     % A0star
     A0star = zeros(1, 1);
-    A0star(1, 1) = (-params(48));
+    A0star(1, 1) = (-params(49));
     return
 end
 
@@ -61,14 +61,14 @@ end
 if strcmp(model_name, 'n_tcm')
     % AR
     AR = zeros(1, 1, 1);
-    AR(1, 1, 1) = params(34);
+    AR(1, 1, 1) = params(35);
 
     % A0
     A0 = zeros(1, 1);
 
     % A0star
     A0star = zeros(1, 1);
-    A0star(1, 1) = (-params(33));
+    A0star(1, 1) = (-params(34));
     return
 end
 
