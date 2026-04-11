@@ -1,9 +1,8 @@
 // =========================================================================
 // au_pac_mce.mod
-// Australian Semi-Structural Model — MODEL-CONSISTENT EXPECTATIONS version
+// Australian Semi-Structural Model — FULL MCE expectations
 //
-// Full MCE: pac_expectation() expands to recursive forward-looking leads
-// (paper Section 6.1, eqs 138-142). Compare with au_pac.mod (VAR-based).
+// All expectations forward-looking including PAC equations.
 //          E-SAT + Supply + Labor + Demand + Financial + Trade
 //          + Deflators + Government + GDP identity + Feedback wires
 //
@@ -104,6 +103,7 @@ var
     // === Financial block (Section 4.8) ===
     i_10y           // 10-year AU government bond yield (quarterly %)
     tp              // term premium (quarterly %)
+    pv_i            // PV of expected future short rates (for term structure, kappa_10=0.97)
     wacc            // weighted average cost of capital (quarterly %)
     i_COE           // cost of equity (quarterly %)
     i_LB_firms      // bank lending rate for firms (quarterly %)
@@ -141,7 +141,7 @@ var
     dln_ph          // real housing price growth (quarterly %, eq. 69)
     ph_gap          // housing price gap (log level, cumulated dln_ph)
 
-    // === PAC target level variables (kept for MCE — PAC needs target reference) ===
+    // === PAC target level variables ===
     piQ_star_l      // I(1) VA price target level (random walk)
 
     // === Detrended log-level for VA price PAC ===
@@ -276,6 +276,7 @@ parameters
     rho_c_star      // target consumption growth persistence
     kappa_inc       // permanent income sensitivity: PV(yH) -> consumption target
     beta_c          // discount factor for permanent income PV (0.95, paper Section 4.6.1)
+    alpha_c_r       // real lending rate gap -> consumption target (negative, paper eq 59)
     // growth neutrality: coeff on dln_c_star_bar(-1) = (1 - b1_c - omega_c)
 
     // --- Business investment PAC parameters (Section 4.6.2, 2nd-order) ---
@@ -302,7 +303,8 @@ parameters
     // growth neutrality: coeff on dln_ih_star_bar(-1) = (1 - b1_ih - b2_ih - omega_ih)
 
     // --- Term structure parameters (Section 4.8, eq. 95) ---
-    rho_L           // long rate persistence (expectations smoothing)
+    rho_L           // long rate persistence (legacy, unused — now uses PV form)
+    kappa_10        // term structure decay parameter (paper eq 97, ~0.97)
     tp_ss           // steady-state term premium (quarterly %)
     rho_tp          // term premium persistence
 
@@ -392,6 +394,7 @@ parameters
     alpha_ph_y      // output gap -> housing prices (demand channel)
     alpha_ph_r      // interest rate gap -> housing prices (credit channel, negative)
     kappa_ph        // housing price gap -> household investment target (Tobin's Q)
+    kappa_ih_inc    // permanent income -> household investment target (paper eq 66)
 
     // Investment target output proportionality (Section 4.6.2, eq. 63)
     kappa_ib_y      // output gap -> business investment target
@@ -480,6 +483,7 @@ b3_c            = 0.139;    // output gap -> consumption (posterior mean)
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
 beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~25% annual)
+alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6.14, alpha_1=-0.95)
 // growth neutrality coeff = 1 - 0.35 - 0.35 = 0.30
 
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
@@ -507,11 +511,13 @@ b3_ih           = 0.12;     // output gap -> housing investment
 b4_ih           = -0.05;    // real interest rate -> housing (mortgage channel, strongest)
 rho_ih_star     = 0.95;     // target persistence
 kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
+kappa_ih_inc    = 0.03;     // permanent income -> housing target (paper eq 66, Table 4.6.14)
 // growth neutrality coeff = 1 - 0.20 - 0.08 - 0.30 = 0.42
 
 // Term structure parameters (calibrated from Section 4.8 / Table 4.8.1)
 // AU 10Y yield tracks RBA cash rate with smoothing + term premium
-rho_L           = 0.900;    // long rate persistence (posterior mean)
+rho_L           = 0.900;    // legacy (unused — replaced by kappa_10 PV form)
+kappa_10        = 0.97;     // term structure decay (paper eq 97, duration ~10Y)
 tp_ss           = 0.30;     // SS term premium (~1.2% annual, AU avg yield curve slope)
 rho_tp          = 0.98;     // term premium very persistent (global risk appetite)
 // SS: i_10y = i_ss + tp_ss = 1.0491 + 0.30 = 1.3491 (~5.4% annual)
@@ -653,12 +659,7 @@ beta_pac        = 0.98;
 // Must appear BEFORE the model block.
 // -----------------------------------------------------------------------
 
-// -----------------------------------------------------------------------
-// PAC model declarations — MODEL-CONSISTENT EXPECTATIONS
-// No auxiliary_model_name => Dynare uses MCE mode (forward-looking leads).
-// pac_expectation() auto-expands to recursive formula (paper eqs 138-142).
-// -----------------------------------------------------------------------
-
+// PAC model declarations — FULL MCE (no auxiliary_model_name)
 pac_model(discount = beta_pac, model_name = pac_pQ, growth = piQ_star_l(-1));
 pac_model(discount = beta_pac, model_name = pac_c, growth = c_star_l(-1));
 pac_model(discount = beta_pac, model_name = pac_ib, growth = ib_star_l(-1));
@@ -720,11 +721,8 @@ model;
     pibar_us = lambda_pibar_us * pibar_us(-1) + (1 - lambda_pibar_us) * pi_ss_us + eps_pibar_us;
 
     // =================================================================
-    // PAC TARGET RANDOM WALKS (MCE version — no auxiliary EC equations)
+    // PAC TARGET RANDOM WALKS (MCE — no auxiliary EC equations)
     // =================================================================
-    // Under MCE, pac_expectation() computes expectations from the PAC
-    // equation's own EC/AR structure. Only the target levels are needed.
-
     [name = 'eq_tcm_piQ_target']
     piQ_star_l = piQ_star_l(-1) + eps_e_pQ_star;
 
@@ -961,13 +959,14 @@ model;
     [name = 'eq_pv_yh']
     pv_yh = (1 - beta_c) * yhat_au + beta_c * pv_yh(+1);
 
-    // Consumption target: permanent income drives desired consumption growth.
-    // Paper eq 59: c* = a0 + PV(yH) + alpha1*(rLH - r_bar).
-    // In growth rates: dln_c_star_bar = kappa_inc * d(pv_yh).
-    // Using change in PV of permanent income as the driver.
-    // At SS: pv_yh constant at 0 => dln_c_star_bar = 0.
+    // Consumption target (paper eq 59): c* = a0 + PV(yH) + alpha1*(rLH - r_bar).
+    // In growth rates: dln_c_star_bar = kappa_inc*d(pv_yh) + alpha_c_r*d(r_lh_gap).
+    // Real lending rate gap: (i_lh - pi_c) - (i_ss + tp_ss + spread_lh - pi_ss_au).
+    // At SS: pv_yh=0, i_lh=SS, pi_c=pi_ss => dln_c_star_bar = 0.
     [name = 'eq_dln_c_star_bar']
-    dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1));
+    dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1))
+                   + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au))
+                                - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au)));
 
     // Consumption gap accumulation
     [name = 'eq_c_gap']
@@ -1050,16 +1049,15 @@ model;
     dln_ih_star = rho_ih_star * dln_ih_star(-1)
                   + (1 - rho_ih_star) * dln_ih_star_bar;
 
-    // Housing investment target: mortgage rate + housing prices (Stage 12).
-    // Paper eq. 66: log I*_H depends on permanent income, relative prices
-    // of new vs existing housing, and real user cost of housing capital.
-    // Stage 12 fix: (a) Use bank lending rate i_lh instead of short rate.
-    //              (b) Add housing price gap (Tobin's Q for housing).
-    // When mortgage rate rises above SS, housing investment target falls.
-    // When existing house prices are above trend, incentive to build rises.
-    // Preserves SS: i_lh = i_lh_ss, ph_gap = 0 => target = 0.
+    // Housing investment target (paper eq 66): log I*_H = a0 + PV(yH)
+    //   + gamma_1*(pIH - pC) + gamma_2*(pSH - pC) + gamma_3*log(rLH + delta_H).
+    // In growth rates: permanent income + mortgage rate gap + housing Tobin's Q.
+    // Relative price of new vs existing housing approximated by ph_gap
+    // (existing price gap captures the Tobin's Q incentive to build).
+    // At SS: pv_yh=0, i_lh=SS, ph_gap=0 => target = 0.
     [name = 'eq_dln_ih_star_bar']
-    dln_ih_star_bar = -kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh))
+    dln_ih_star_bar = kappa_ih_inc * (pv_yh - pv_yh(-1))
+                      - kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh))
                       + kappa_ph * ph_gap(-1);
 
     // Housing investment gap accumulation
@@ -1088,24 +1086,23 @@ model;
     // FINANCIAL BLOCK (Section 4.8)
     // =================================================================
 
-    // === TERM STRUCTURE (eq. 95) ===
-    // Paper: i_10 = PV(i)_{t|t-1} + s_10 where PV(i) is a discounted sum of
-    // future short rates from E-SAT (eq. 97: κ_10 ≈ 0.97 decay parameter).
-    // Under MCE: PV(i)_t = (1-0.97)*i_t + 0.97*PV(i)_{t+1} (eq. 132).
-    //
-    // Implementation: partial adjustment i_10y toward (i_au + tp) with rho_L.
-    // This is the backward-looking (VAR-based) approximation: the partial
-    // adjustment filter smooths the short rate path similarly to the
-    // discounted sum, with rho_L ≈ κ_10. For MCE experiments, replace this
-    // with the forward-looking recursive form from eq. 132.
-    //
-    // At SS: i_10y = i_au + tp = i_ss + tp_ss
+    // === TERM STRUCTURE (paper eqs 95-97, 132) ===
+    // i_10 = PV(i) + s_10 where PV(i) is the discounted sum of expected
+    // future short rates (eq 97: kappa_10 = 0.97 decay parameter).
+    // Recursive form (eq 132): PV(i)_t = (1-kappa_10)*i_t + kappa_10*PV(i)_{t+1}
+    // This works for both VAR-based and MCE expectations.
+    // At SS: pv_i = i_ss, i_10y = i_ss + tp_ss.
 
     [name = 'eq_term_premium']
     tp = rho_tp * tp(-1) + (1 - rho_tp) * tp_ss + eps_tp;
 
+    // Expected discounted sum of future short rates (forward-looking)
+    [name = 'eq_pv_i']
+    pv_i = (1 - kappa_10) * i_au + kappa_10 * pv_i(+1);
+
+    // 10Y rate = expectation component + term premium + residual
     [name = 'eq_i_10y']
-    i_10y = rho_L * i_10y(-1) + (1 - rho_L) * (i_au + tp) + eps_10y;
+    i_10y = pv_i + tp + eps_10y;
 
     // === WACC (Section 4.8.3, eq 98-100, Table 4.8.4) ===
     // Decomposed into 3 components: cost of equity, bank lending, BBB bonds.
@@ -1456,6 +1453,7 @@ steady_state_model;
 
     // Financial block
     tp             = tp_ss;                         // term premium at SS
+    pv_i           = i_ss;                          // PV of future short rates = current rate at SS
     i_10y          = i_ss + tp_ss;                  // 10Y yield = short rate + term premium
     s_COE          = s_COE_ss;                      // equity spread at SS
     s_LB_firms     = s_LB_firms_ss;                 // bank lending spread at SS
@@ -1496,7 +1494,7 @@ steady_state_model;
     dln_ph         = 0;                            // zero real housing price growth at SS
     ph_gap         = 0;                            // housing prices at trend at SS
 
-    // PAC target level variables (zero at SS)
+    // PAC target variables (zero at SS)
     piQ_star_l     = 0;
 
     // Log-level variables for PAC (zero at SS — gap model, everything demeaned)
@@ -1507,21 +1505,17 @@ steady_state_model;
     c_star_l       = 0;
     ln_c_level     = 0;
 
-    // Business investment PAC level variables
     ib_star_l      = 0;
     ln_ib_level    = 0;
 
-    // Household investment PAC level variables
     ih_star_l      = 0;
     ln_ih_level    = 0;
 
-    // Employment PAC level variables
     n_star_l       = 0;
     ln_n_level     = 0;
 end;
 
 // Initialize PAC models BEFORE steady (h vectors must be computed first)
-// MCE: initialize PAC models and compute alpha parameters (no h-vectors needed)
 pac.initialize('pac_pQ');
 pac.mce.parameters('pac_pQ');
 pac.initialize('pac_c');
@@ -1575,12 +1569,12 @@ shocks;
     // Stage 12: new shocks
     var eps_lh;       stderr 0.15;   // bank lending rate shock (credit conditions)
     var eps_ph;       stderr 1.0;    // housing price shock (AU housing very volatile)
-    // PAC target shocks (random walk innovations)
-    var eps_e_pQ_star; stderr 0.5;   // VA price target shock
-    var eps_e_c_star; stderr 0.5;    // consumption target shock
-    var eps_e_ib_star; stderr 0.5;   // business investment target shock
-    var eps_e_ih_star; stderr 0.5;   // household investment target shock
-    var eps_e_n_star; stderr 0.5;    // employment target shock
+    // PAC target shocks
+    var eps_e_pQ_star; stderr 0.5;
+    var eps_e_c_star; stderr 0.5;
+    var eps_e_ib_star; stderr 0.5;
+    var eps_e_ih_star; stderr 0.5;
+    var eps_e_n_star; stderr 0.5;
 end;
 
 // -----------------------------------------------------------------------

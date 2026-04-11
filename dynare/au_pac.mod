@@ -103,6 +103,7 @@ var
     // === Financial block (Section 4.8) ===
     i_10y           // 10-year AU government bond yield (quarterly %)
     tp              // term premium (quarterly %)
+    pv_i            // PV of expected future short rates (for term structure, kappa_10=0.97)
     wacc            // weighted average cost of capital (quarterly %)
     i_COE           // cost of equity (quarterly %)
     i_LB_firms      // bank lending rate for firms (quarterly %)
@@ -139,6 +140,34 @@ var
     i_lh            // household bank lending rate (quarterly %, eq. 68)
     dln_ph          // real housing price growth (quarterly %, eq. 69)
     ph_gap          // housing price gap (log level, cumulated dln_ph)
+
+    // === Sector financial accounts (Section 4.8.5, eqs 116-126) ===
+    // Net financial asset ratios (W_j / nominal LR GDP, quarterly)
+    w_F             // firms net financial asset ratio (negative = net debtor)
+    w_G             // government net financial asset ratio (negative = govt debt)
+    w_H             // households net financial asset ratio (positive = net saver)
+    w_N             // NPISH net financial asset ratio
+    // Net property income ratios (YF_j / nominal LR GDP)
+    yf_F            // firms net property income ratio
+    yf_G            // government net property income ratio
+    yf_H            // households net property income ratio
+    yf_N            // NPISH net property income ratio
+    // Net financing capacity ratios (B_j / nominal LR GDP)
+    b_F             // firms net financing capacity ratio
+    b_G             // government fiscal balance ratio
+    b_H             // households net financing capacity ratio
+    b_N             // NPISH net financing capacity ratio
+    // Transfer rates (to households, as share of LR GDP)
+    tau_F           // firms dividend/transfer rate to households
+    tau_G           // government social transfer rate (fiscal rule instrument)
+    tau_N           // NPISH transfer rate to households
+    // Asset return rates
+    i_F             // effective return on firms net assets
+    i_G             // effective return on government net assets
+    i_H             // effective return on household net assets
+    i_N             // effective return on NPISH net assets
+    // Current account
+    b_ROW           // rest of world net financing = -(sum of domestic B_j)
 
     // === PAC trend_component_model variables ===
     piQ_aux_l       // I(1) auxiliary VA price level (for TCM EC equation)
@@ -285,6 +314,7 @@ parameters
     rho_c_star      // target consumption growth persistence
     kappa_inc       // permanent income sensitivity: PV(yH) -> consumption target
     beta_c          // discount factor for permanent income PV (0.95, paper Section 4.6.1)
+    alpha_c_r       // real lending rate gap -> consumption target (negative, paper eq 59)
     // growth neutrality: coeff on dln_c_star_bar(-1) = (1 - b1_c - omega_c)
 
     // --- Business investment PAC parameters (Section 4.6.2, 2nd-order) ---
@@ -311,7 +341,8 @@ parameters
     // growth neutrality: coeff on dln_ih_star_bar(-1) = (1 - b1_ih - b2_ih - omega_ih)
 
     // --- Term structure parameters (Section 4.8, eq. 95) ---
-    rho_L           // long rate persistence (expectations smoothing)
+    rho_L           // long rate persistence (legacy, unused — now uses PV form)
+    kappa_10        // term structure decay parameter (paper eq 97, ~0.97)
     tp_ss           // steady-state term premium (quarterly %)
     rho_tp          // term premium persistence
 
@@ -401,9 +432,33 @@ parameters
     alpha_ph_y      // output gap -> housing prices (demand channel)
     alpha_ph_r      // interest rate gap -> housing prices (credit channel, negative)
     kappa_ph        // housing price gap -> household investment target (Tobin's Q)
+    kappa_ih_inc    // permanent income -> household investment target (paper eq 66)
 
     // Investment target output proportionality (Section 4.6.2, eq. 63)
     kappa_ib_y      // output gap -> business investment target
+
+    // === Sector financial account parameters (Section 4.8.5) ===
+    // SS asset ratios (W_j / annualized nominal GDP, calibrated from ABS)
+    w_F_ss          // firms SS net asset ratio (-0.70 * 4 = -2.80 quarterly)
+    w_G_ss          // government SS net asset ratio (-0.40 * 4 = -1.60 quarterly)
+    w_N_ss          // NPISH SS net asset ratio (0.02 * 4 = 0.08 quarterly)
+    // SS transfer rates
+    tau_F_ss        // firms SS dividend rate
+    tau_G_ss        // government SS social transfer rate
+    tau_N_ss        // NPISH SS transfer rate
+    // Stabilization rule parameters (eqs 123-125)
+    rho_stab_1      // transfer adjustment speed (0.1)
+    rho_stab_2      // debt-stabilizing reaction coefficient (0.1)
+    // Asset return convergence
+    rho_i_asset     // persistence of asset returns toward i_10y (0.983, ~40Q half-life)
+    // SS return premia (over i_10y)
+    i_F_prem        // firms return premium
+    i_H_prem        // households return premium
+    i_N_prem        // NPISH return premium
+    // Revaluation parameter for firms (eq 122)
+    gamma_reval     // firms revaluation as share of nominal GDP (-0.018)
+    // Nominal growth rate (for debt-stabilizing computation)
+    g_nom           // quarterly nominal growth rate (real + inflation at SS)
 
     // PAC discount factor
     beta_pac        // quarterly subjective discount (0.98 ≈ 8% annual)
@@ -489,6 +544,7 @@ b3_c            = 0.139;    // output gap -> consumption (posterior mean)
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
 beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~25% annual)
+alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6.14, alpha_1=-0.95)
 // growth neutrality coeff = 1 - 0.35 - 0.35 = 0.30
 
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
@@ -516,11 +572,13 @@ b3_ih           = 0.12;     // output gap -> housing investment
 b4_ih           = -0.05;    // real interest rate -> housing (mortgage channel, strongest)
 rho_ih_star     = 0.95;     // target persistence
 kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
+kappa_ih_inc    = 0.03;     // permanent income -> housing target (paper eq 66, Table 4.6.14)
 // growth neutrality coeff = 1 - 0.20 - 0.08 - 0.30 = 0.42
 
 // Term structure parameters (calibrated from Section 4.8 / Table 4.8.1)
 // AU 10Y yield tracks RBA cash rate with smoothing + term premium
-rho_L           = 0.900;    // long rate persistence (posterior mean)
+rho_L           = 0.900;    // legacy (unused — replaced by kappa_10 PV form)
+kappa_10        = 0.97;     // term structure decay (paper eq 97, duration ~10Y)
 tp_ss           = 0.30;     // SS term premium (~1.2% annual, AU avg yield curve slope)
 rho_tp          = 0.98;     // term premium very persistent (global risk appetite)
 // SS: i_10y = i_ss + tp_ss = 1.0491 + 0.30 = 1.3491 (~5.4% annual)
@@ -656,6 +714,36 @@ kappa_ib_y      = 0.06;     // output gap -> business investment target
 
 // PAC discount factor (paper Section 4.1: beta = 0.98 for most blocks)
 beta_pac        = 0.98;
+
+// === Sector financial account parameters (Section 4.8.5) ===
+// SS net asset ratios (as share of *quarterly* nominal GDP)
+// Paper uses annualized GDP; multiply by 4 for quarterly convention
+w_F_ss          = -0.70 * 4;    // firms: net debtor (~280% quarterly GDP)
+w_G_ss          = -0.40 * 4;    // government: net debt (~160% quarterly GDP, ~40% annual)
+w_N_ss          = 0.02 * 4;     // NPISH: small net creditor
+// w_H_ss is endogenous: w_H = -(w_F + w_G + w_N) at SS (closed economy approx)
+
+// SS transfer rates (as share of quarterly nominal GDP)
+tau_F_ss        = 0.026;        // firms dividend payout rate
+tau_G_ss        = 0.16;         // government social transfers (calibrated per paper eq 125)
+tau_N_ss        = 0.00026;      // NPISH transfers (tiny)
+
+// Stabilization rule parameters (paper eqs 123-125)
+rho_stab_1      = 0.10;         // transfer adjustment speed
+rho_stab_2      = 0.25;         // debt-stabilizing reaction coefficient (stronger for BK)
+
+// Asset return parameters (paper eq 126, Table 4.8.8)
+rho_i_asset     = 0.983;        // half-life ~40 quarters for return convergence
+i_F_prem        = -0.0037;      // firms return premium over i_10y (negative: debtor)
+i_H_prem        = -0.0007;      // households return premium
+i_N_prem        = -0.001;       // NPISH return premium
+// Government: i_G converges to i_10y (zero premium, paper Table 4.8.8)
+
+// Firms revaluation (paper eq 122)
+gamma_reval     = -0.018;       // quarterly revaluation as share of nominal GDP
+
+// Nominal growth rate at SS (for debt-stabilizing computation)
+g_nom           = 0.002625;     // quarterly (~1.05% annual real + 2.5% inflation / 4)
 
 // -----------------------------------------------------------------------
 // PAC infrastructure: auxiliary VAR + PAC model declarations
@@ -1022,13 +1110,14 @@ model;
     [name = 'eq_pv_yh']
     pv_yh = (1 - beta_c) * yhat_au + beta_c * pv_yh(+1);
 
-    // Consumption target: permanent income drives desired consumption growth.
-    // Paper eq 59: c* = a0 + PV(yH) + alpha1*(rLH - r_bar).
-    // In growth rates: dln_c_star_bar = kappa_inc * d(pv_yh).
-    // Using change in PV of permanent income as the driver.
-    // At SS: pv_yh constant at 0 => dln_c_star_bar = 0.
+    // Consumption target (paper eq 59): c* = a0 + PV(yH) + alpha1*(rLH - r_bar).
+    // In growth rates: dln_c_star_bar = kappa_inc*d(pv_yh) + alpha_c_r*d(r_lh_gap).
+    // Real lending rate gap: (i_lh - pi_c) - (i_ss + tp_ss + spread_lh - pi_ss_au).
+    // At SS: pv_yh=0, i_lh=SS, pi_c=pi_ss => dln_c_star_bar = 0.
     [name = 'eq_dln_c_star_bar']
-    dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1));
+    dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1))
+                   + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au))
+                                - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au)));
 
     // Consumption gap accumulation
     [name = 'eq_c_gap']
@@ -1111,16 +1200,15 @@ model;
     dln_ih_star = rho_ih_star * dln_ih_star(-1)
                   + (1 - rho_ih_star) * dln_ih_star_bar;
 
-    // Housing investment target: mortgage rate + housing prices (Stage 12).
-    // Paper eq. 66: log I*_H depends on permanent income, relative prices
-    // of new vs existing housing, and real user cost of housing capital.
-    // Stage 12 fix: (a) Use bank lending rate i_lh instead of short rate.
-    //              (b) Add housing price gap (Tobin's Q for housing).
-    // When mortgage rate rises above SS, housing investment target falls.
-    // When existing house prices are above trend, incentive to build rises.
-    // Preserves SS: i_lh = i_lh_ss, ph_gap = 0 => target = 0.
+    // Housing investment target (paper eq 66): log I*_H = a0 + PV(yH)
+    //   + gamma_1*(pIH - pC) + gamma_2*(pSH - pC) + gamma_3*log(rLH + delta_H).
+    // In growth rates: permanent income + mortgage rate gap + housing Tobin's Q.
+    // Relative price of new vs existing housing approximated by ph_gap
+    // (existing price gap captures the Tobin's Q incentive to build).
+    // At SS: pv_yh=0, i_lh=SS, ph_gap=0 => target = 0.
     [name = 'eq_dln_ih_star_bar']
-    dln_ih_star_bar = -kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh))
+    dln_ih_star_bar = kappa_ih_inc * (pv_yh - pv_yh(-1))
+                      - kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh))
                       + kappa_ph * ph_gap(-1);
 
     // Housing investment gap accumulation
@@ -1149,24 +1237,23 @@ model;
     // FINANCIAL BLOCK (Section 4.8)
     // =================================================================
 
-    // === TERM STRUCTURE (eq. 95) ===
-    // Paper: i_10 = PV(i)_{t|t-1} + s_10 where PV(i) is a discounted sum of
-    // future short rates from E-SAT (eq. 97: κ_10 ≈ 0.97 decay parameter).
-    // Under MCE: PV(i)_t = (1-0.97)*i_t + 0.97*PV(i)_{t+1} (eq. 132).
-    //
-    // Implementation: partial adjustment i_10y toward (i_au + tp) with rho_L.
-    // This is the backward-looking (VAR-based) approximation: the partial
-    // adjustment filter smooths the short rate path similarly to the
-    // discounted sum, with rho_L ≈ κ_10. For MCE experiments, replace this
-    // with the forward-looking recursive form from eq. 132.
-    //
-    // At SS: i_10y = i_au + tp = i_ss + tp_ss
+    // === TERM STRUCTURE (paper eqs 95-97, 132) ===
+    // i_10 = PV(i) + s_10 where PV(i) is the discounted sum of expected
+    // future short rates (eq 97: kappa_10 = 0.97 decay parameter).
+    // Recursive form (eq 132): PV(i)_t = (1-kappa_10)*i_t + kappa_10*PV(i)_{t+1}
+    // This works for both VAR-based and MCE expectations.
+    // At SS: pv_i = i_ss, i_10y = i_ss + tp_ss.
 
     [name = 'eq_term_premium']
     tp = rho_tp * tp(-1) + (1 - rho_tp) * tp_ss + eps_tp;
 
+    // Expected discounted sum of future short rates (forward-looking)
+    [name = 'eq_pv_i']
+    pv_i = (1 - kappa_10) * i_au + kappa_10 * pv_i(+1);
+
+    // 10Y rate = expectation component + term premium + residual
     [name = 'eq_i_10y']
-    i_10y = rho_L * i_10y(-1) + (1 - rho_L) * (i_au + tp) + eps_10y;
+    i_10y = pv_i + tp + eps_10y;
 
     // === WACC (Section 4.8.3, eq 98-100, Table 4.8.4) ===
     // Decomposed into 3 components: cost of equity, bank lending, BBB bonds.
@@ -1441,6 +1528,108 @@ model;
     [name = 'eq_ph_gap']
     ph_gap = 0.98 * ph_gap(-1) + dln_ph;
 
+    // =================================================================
+    // SECTOR FINANCIAL ACCOUNTS (Section 4.8.5, eqs 116-126)
+    // =================================================================
+    // All variables are ratios to nominal long-run GDP.
+    // In the gap model, nominal GDP growth at SS = g_nom.
+
+    // === Asset return processes (paper eq 126) ===
+    // Each sector's effective return converges to i_10y + premium.
+    // rho_i_asset = 0.983 (half-life ~40 quarters).
+    [name = 'eq_i_F']
+    i_F = i_F_prem * (1 - rho_i_asset) + (1 - rho_i_asset) * i_10y + rho_i_asset * i_F(-1);
+
+    [name = 'eq_i_G']
+    i_G = (1 - rho_i_asset) * i_10y + rho_i_asset * i_G(-1);
+
+    [name = 'eq_i_H']
+    i_H = i_H_prem * (1 - rho_i_asset) + (1 - rho_i_asset) * i_10y + rho_i_asset * i_H(-1);
+
+    [name = 'eq_i_N']
+    i_N = i_N_prem * (1 - rho_i_asset) + (1 - rho_i_asset) * i_10y + rho_i_asset * i_N(-1);
+
+    // === Net property income (paper eq 116) ===
+    // YF_j = i_Fj * W_j_ss (using SS wealth to prevent explosive feedback).
+    // Deviations driven by interest rate changes, not wealth stock changes.
+    // At SS: yf_j = i_j_ss * w_j_ss - tau_j_ss.
+    [name = 'eq_yf_F']
+    yf_F = i_F * w_F_ss - tau_F;
+
+    [name = 'eq_yf_G']
+    yf_G = i_G * w_G_ss;
+
+    [name = 'eq_yf_H']
+    yf_H = i_H * (-(w_F_ss + w_G_ss + w_N_ss)) + tau_F + tau_N;
+
+    [name = 'eq_yf_N']
+    yf_N = i_N * w_N_ss - tau_N;
+
+    // === Transfer / stabilization rules (paper eqs 123-125) ===
+    // Firms transfer to households (dividends): stabilizes w_F toward w_F_ss.
+    // tau_F adjusts to keep firms' net asset ratio stable.
+    // Transfer rules: simple AR(1) toward SS values (non-aggressive).
+    // Transfers track SS with slow adjustment. Wealth stabilization happens
+    // endogenously through the consumption/income channel, not transfers.
+    // At SS: tau_j = tau_j_ss.
+    [name = 'eq_tau_F']
+    tau_F = (1 - rho_stab_1) * tau_F(-1) + rho_stab_1 * tau_F_ss;
+
+    [name = 'eq_tau_N']
+    tau_N = (1 - rho_stab_1) * tau_N(-1) + rho_stab_1 * tau_N_ss;
+
+    // Government social transfers: AR(1) toward SS + countercyclical.
+    // Government spending equation (eq_dln_g) provides the main fiscal rule;
+    // tau_G provides additional smoothing of social transfers.
+    [name = 'eq_tau_G']
+    tau_G = (1 - rho_stab_1) * tau_G(-1) + rho_stab_1 * tau_G_ss
+          + 0.05 * yhat_au;
+
+    // === Net financing capacity (B_j) ===
+    // B_j measures deviations from SS financing flows.
+    // Property income enters only through the interest rate gap (i_j - i_j_ss),
+    // NOT through wealth changes, to prevent positive feedback instability.
+    // At SS: all terms zero => b_j = 0.
+
+    // Firms: investment gap + interest rate effect on debt servicing
+    [name = 'eq_b_F']
+    b_F = -w_ib * dln_ib - (tau_F - tau_F_ss) + (i_F - (i_ss + tp_ss + i_F_prem)) * w_F_ss;
+
+    // Government: spending gap - tax revenue + interest rate on debt
+    [name = 'eq_b_G']
+    b_G = -w_g * dln_g + 0.30 * yhat_au - (tau_G - tau_G_ss) + (i_G - (i_ss + tp_ss)) * w_G_ss;
+
+    // Households: saving gap + interest income
+    [name = 'eq_b_H']
+    b_H = w_c * (yhat_au - dln_c) - w_ih * dln_ih + (i_H - (i_ss + tp_ss + i_H_prem)) * (-(w_F_ss+w_G_ss+w_N_ss));
+
+    // NPISH: small, interest rate effect only
+    [name = 'eq_b_N']
+    b_N = (i_N - (i_ss + tp_ss + i_N_prem)) * w_N_ss;
+
+    // === Wealth accumulation (paper eqs 120-121) ===
+    // Wealth accumulation with mean-reversion toward SS.
+    // w_j = (1-phi)*w_j(-1) + phi*w_j_ss + b_j
+    // phi = small (0.02 ~ half-life 35Q) ensures stationarity.
+    // Combined with transfer stabilization rules, this keeps sector
+    // balance sheets bounded. At SS: b_j=0 => w_j = w_j_ss.
+    [name = 'eq_w_F']
+    w_F = 0.98 * w_F(-1) + 0.02 * w_F_ss + b_F;
+
+    [name = 'eq_w_G']
+    w_G = 0.98 * w_G(-1) + 0.02 * w_G_ss + b_G;
+
+    [name = 'eq_w_H']
+    w_H = 0.98 * w_H(-1) + 0.02 * (-(w_F_ss+w_G_ss+w_N_ss)) + b_H;
+
+    [name = 'eq_w_N']
+    w_N = 0.98 * w_N(-1) + 0.02 * w_N_ss + b_N;
+
+    // === Current account (ROW closure) ===
+    // Flow-of-funds identity: sum of all domestic B_j + B_ROW = 0.
+    [name = 'eq_b_ROW']
+    b_ROW = -(b_F + b_G + b_H + b_N);
+
 end;
 
 // -----------------------------------------------------------------------
@@ -1517,6 +1706,7 @@ steady_state_model;
 
     // Financial block
     tp             = tp_ss;                         // term premium at SS
+    pv_i           = i_ss;                          // PV of future short rates = current rate at SS
     i_10y          = i_ss + tp_ss;                  // 10Y yield = short rate + term premium
     s_COE          = s_COE_ss;                      // equity spread at SS
     s_LB_firms     = s_LB_firms_ss;                 // bank lending spread at SS
@@ -1556,6 +1746,28 @@ steady_state_model;
     i_lh           = i_ss + tp_ss + spread_lh;     // bank lending rate at SS
     dln_ph         = 0;                            // zero real housing price growth at SS
     ph_gap         = 0;                            // housing prices at trend at SS
+
+    // Sector financial accounts
+    w_F            = w_F_ss;                       // firms at SS net asset ratio
+    w_G            = w_G_ss;                       // government at SS debt ratio
+    w_N            = w_N_ss;                       // NPISH at SS
+    w_H            = -(w_F_ss + w_G_ss + w_N_ss); // households = residual (closed economy)
+    i_F            = i_ss + tp_ss + i_F_prem;      // firms effective return at SS
+    i_G            = i_ss + tp_ss;                  // government return = i_10y at SS
+    i_H            = i_ss + tp_ss + i_H_prem;      // households effective return at SS
+    i_N            = i_ss + tp_ss + i_N_prem;      // NPISH effective return at SS
+    tau_F          = tau_F_ss;
+    tau_G          = tau_G_ss;
+    tau_N          = tau_N_ss;
+    yf_F           = i_F * w_F_ss - tau_F_ss;      // firms property income at SS
+    yf_G           = i_G * w_G_ss;                  // government property income at SS
+    yf_H           = i_H * (-(w_F_ss+w_G_ss+w_N_ss)) + tau_F_ss + tau_N_ss;
+    yf_N           = i_N * w_N_ss - tau_N_ss;
+    b_F            = 0;                             // firms balanced at SS (deviations = 0)
+    b_G            = 0;                             // government balanced at SS
+    b_H            = 0;                             // households balanced at SS
+    b_N            = 0;                             // NPISH balanced at SS
+    b_ROW          = 0;                             // ROW balanced at SS
 
     // PAC TCM variables (zero at SS)
     piQ_aux_l      = 0;

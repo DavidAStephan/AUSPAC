@@ -8,21 +8,21 @@ PAC Model Consistent Expectation: added 4 auxiliary variables and equations for 
 PAC Model Consistent Expectation: added 6 auxiliary variables and equations for model pac_n. 
 PAC Model Consistent Expectation: added 3 auxiliary variables and equations for model pac_pQ. 
 Substitution of endo leads >= 2: added 10 auxiliary variables and equations. 
-Found 131 equation(s). 
+Found 132 equation(s). 
 Evaluating expressions... 
 Computing static model derivatives (order 1). 
 Normalizing the static model... 
 Normalization failed with cutoff, trying symbolic normalization... 
 Finding the optimal block decomposition of the static model... 
-64 block(s) found: 
-  58 recursive block(s) and 6 simultaneous block(s). 
+65 block(s) found: 
+  59 recursive block(s) and 6 simultaneous block(s). 
   the largest simultaneous block has 11 equation(s) 
                                  and 11 feedback variable(s). 
 Computing dynamic model derivatives (order 1). 
 Normalizing the dynamic model... 
 Finding the optimal block decomposition of the dynamic model... 
-28 block(s) found: 
-  20 recursive block(s) and 8 simultaneous block(s). 
+29 block(s) found: 
+  21 recursive block(s) and 8 simultaneous block(s). 
   the largest simultaneous block has 25 equation(s) 
                                  and 23 feedback variable(s). 
 Preprocessing completed. 
@@ -89,6 +89,7 @@ uc_k               		 1.8591
 dln_uc_k           		 0
 i_10y              		 1.3491
 tp                 		 0.3
+pv_i               		 1.0491
 wacc               		 1.8341
 i_COE              		 2.1491
 i_LB_firms         		 1.5991
@@ -131,11 +132,11 @@ EIGENVALUES:
          Modulus             Real        Imaginary
                0                0                0
                0                0                0
-       9.212e-18        9.212e-18                0
-       5.154e-17       -5.154e-17                0
-       6.306e-17       -6.306e-17                0
-       6.801e-17        6.801e-17                0
-        1.06e-16        -1.06e-16                0
+       3.815e-17        3.815e-17                0
+       1.109e-16       -1.109e-16                0
+       1.259e-16       -1.259e-16                0
+       2.427e-16       -2.427e-16                0
+       1.023e-15        1.023e-15                0
           0.1563           0.1563                0
           0.1994          -0.1994                0
           0.2222           0.2222                0
@@ -165,7 +166,6 @@ EIGENVALUES:
             0.85             0.85                0
           0.8556           0.8556                0
             0.88             0.88                0
-             0.9              0.9                0
              0.9              0.9                0
           0.9123           0.9123                0
           0.9188           0.9188         0.004974
@@ -200,6 +200,7 @@ EIGENVALUES:
                1                1                0
                1                1                0
             1.02             1.02                0
+           1.031            1.031                0
            1.053            1.053                0
            1.066            1.066                0
            1.099            1.099                0
@@ -216,18 +217,18 @@ EIGENVALUES:
            4.242           -4.242                0
            5.118           -5.118                0
            6.359            6.359                0
-         3.9e+14         -3.9e+14                0
-       9.969e+21        9.969e+21                0
-       1.601e+34        1.601e+34                0
-       4.154e+34       -4.154e+34                0
-       7.308e+47        7.308e+47                0
-       8.321e+48        8.321e+48                0
+       1.827e+47       -1.827e+47                0
+       5.802e+47       -5.802e+47                0
+       5.846e+47        5.846e+47                0
              Inf             -Inf                0
-             Inf              Inf                0
+             Inf             -Inf                0
+             Inf             -Inf                0
+             Inf             -Inf                0
+             Inf             -Inf                0
              Inf              Inf                0
              Inf             -Inf                0
 
-There are 27 eigenvalue(s) larger than 1 in modulus for 27 forward-looking variable(s)
+There are 28 eigenvalue(s) larger than 1 in modulus for 28 forward-looking variable(s)
 The rank condition is verified.
 
 Total computing time : 0h00m00s

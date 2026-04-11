@@ -1,0 +1,38 @@
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: noclearall nograph
+Starting preprocessing of the model file ... 
+Found 3 equation(s). 
+Evaluating expressions... 
+Computing static model derivatives (order 1). 
+Normalizing the static model... 
+Finding the optimal block decomposition of the static model... 
+1 block(s) found: 
+  0 recursive block(s) and 1 simultaneous block(s). 
+  the largest simultaneous block has 3 equation(s) 
+                                 and 3 feedback variable(s). 
+Computing dynamic model derivatives (order 1). 
+Normalizing the dynamic model... 
+Finding the optimal block decomposition of the dynamic model... 
+1 block(s) found: 
+  0 recursive block(s) and 1 simultaneous block(s). 
+  the largest simultaneous block has 3 equation(s) 
+                                 and 3 feedback variable(s). 
+Preprocessing completed. 
+Preprocessing time: 0h00m00s.
+
+STEADY-STATE RESULTS:
+
+x     		 0
+pi    		 0
+i_gap 		 0
+
+EIGENVALUES:
+         Modulus             Real        Imaginary
+          0.4457           0.4457                0
+            1.08             1.08                0
+           1.731            1.731                0
+
+There are 2 eigenvalue(s) larger than 1 in modulus for 2 forward-looking variable(s)
+The rank condition is verified.
+
+Total computing time : 0h00m00s

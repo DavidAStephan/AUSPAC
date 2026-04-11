@@ -672,27 +672,58 @@ At the balanced growth path (gap model, all growth rates = 0):
 | dln_c, dln_ib, dln_ih, dln_n, ... | 0 | Zero growth (gap model) |
 | s_gap, u_gap, pv_u_gap, pv_yh | 0 | All gaps closed |
 
-### 6.2 IRFs to monetary policy shock
+### 6.2 IRFs to monetary policy shock under three expectation regimes
 
-Response to a 1 standard deviation tightening shock (eps_i):
+The model is solved under three regimes (FR-BDF Section 6): VAR-based (all backward-looking), Hybrid (financial expectations forward, PAC backward), and Full MCE (all forward). Peak responses to a 1 s.d. tightening shock (eps_i):
 
-| Variable | Peak response | Quarter of peak |
-|----------|--------------|-----------------|
-| Output gap | -0.020% | Q4 |
-| VA price inflation | -0.003% | Q4 |
-| Consumption | -0.004% | Q3 |
-| Business investment | -0.007% | Q4 |
-| Housing investment | -0.007% | Q3 |
-| Employment | -0.003% | Q4 |
-| Wage inflation | -0.006% | Q4 |
-| Exchange rate (s_gap) | -0.044% | Q9 |
-| 10Y yield | +0.023% | Q7 |
+| Variable | VAR-based | Hybrid | Full MCE |
+|----------|-----------|--------|----------|
+| Output gap | -0.0195% (Q4) | -0.0195% (Q4) | -0.0195% (Q4) |
+| CPI inflation | -0.0015% (Q5) | -0.0015% (Q5) | -0.0015% (Q5) |
+| VA price | -0.0027% (Q4) | -0.0027% (Q4) | -0.0027% (Q4) |
+| Consumption | -0.0044% (Q3) | -0.0044% (Q3) | -0.0044% (Q3) |
+| Business inv. | -0.0067% (Q4) | -0.0067% (Q4) | -0.0067% (Q4) |
+| Housing inv. | -0.0066% (Q3) | -0.0066% (Q3) | -0.0066% (Q3) |
+| Employment | -0.0032% (Q4) | -0.0032% (Q4) | -0.0032% (Q4) |
+| Wage inflation | +0.0029% (Q31) | +0.0032% (Q3) | +0.0032% (Q3) |
+| Exchange rate | -0.0445% (Q9) | -0.0445% (Q9) | -0.0445% (Q9) |
+| **10Y yield** | **+0.0098% (Q11)** | **+0.0119% (Q1)** | **+0.0119% (Q1)** |
+| Policy rate | +0.0810% (Q1) | +0.0810% (Q1) | +0.0810% (Q1) |
 
-Housing investment and business investment are the most rate-sensitive demand components. Consumption is the least sensitive, consistent with the heavy discounting of permanent income (beta_c = 0.95).
+**Forward-looking eigenvalues**: VAR=0, Hybrid=3, MCE=28.
+
+The key difference between regimes appears in the **term structure** and **wage dynamics**:
+
+- **10Y yield**: Under VAR-based expectations, the long rate responds slowly (partial adjustment, peak at Q11). Under Hybrid/MCE, the forward-looking term structure front-loads the expected rate path — the 10Y yield jumps immediately (Q1) because agents foresee the full persistence of the rate shock.
+
+- **Wage inflation**: Under VAR, the backward unemployment PV responds slowly (peak at Q31). Under Hybrid/MCE, the forward PV anticipates the tightening's effect on unemployment, producing a faster wage response (peak at Q3).
+
+- **Output, consumption, investment**: Identical across all regimes at first order, because the PAC h-vectors and the RE solution coincide.
+
+#### Detailed IRF paths: 10Y yield (key difference)
+
+| Quarter | VAR-based | Hybrid/MCE |
+|---------|-----------|------------|
+| 1 | +0.0024% | **+0.0119%** |
+| 2 | +0.0044% | +0.0097% |
+| 4 | +0.0071% | +0.0065% |
+| 8 | +0.0094% | +0.0029% |
+| 12 | +0.0097% | +0.0013% |
+| 20 | +0.0084% | +0.0003% |
+
+The forward-looking term structure front-loads the rate shock: the 10Y yield jumps 5x more on impact under Hybrid/MCE (+0.0119 vs +0.0024), but decays much faster. This is economically meaningful — it means financial markets instantly price in the expected future rate path.
 
 ### 6.3 h-vector amplification
 
-The native `pac_expectation()` h-vectors produce expectations weights 1.4-1.9x larger than the manual omega approximation. This amplification reflects the full discounted sum of expected future target changes computed from the TCM companion matrix, confirming FR-BDF Section 6: forward expectations amplify monetary transmission.
+The native `pac_expectation()` h-vectors produce expectations weights 1.4-1.9x larger than the manual omega approximation:
+
+| PAC equation | Manual omega | h-vector sum | Ratio |
+|---|---|---|---|
+| VA price | ~0.45 | 0.452 | 1.0x |
+| Consumption | 0.369 | 0.678 | **1.84x** |
+| Business inv. | 0.350 | 0.501 | **1.43x** |
+| Household inv. | 0.300 | 0.569 | **1.90x** |
+| Employment | 0.300 | 0.446 | **1.49x** |
 
 ---
 
@@ -700,15 +731,37 @@ The native `pac_expectation()` h-vectors produce expectations weights 1.4-1.9x l
 
 ### 7.1 Expectation regimes
 
-Under first-order perturbation (`stoch_simul(order=1)`), the VAR-based and MCE models produce identical IRFs. This is because the certainty equivalence principle applies at first order — both are solutions to the same linear rational expectations system. The difference between expectation regimes manifests in:
+The model exists in three files implementing the three regimes from FR-BDF Section 6:
 
-- Nonlinear simulations (deterministic `simul` / `perfect_foresight_solver`)
-- Anticipated shocks (forward guidance)
-- Second-order approximations
+| File | Regime | Forward vars | Description |
+|------|--------|-------------|-------------|
+| `au_pac_var.mod` | VAR-based | 0 | All expectations backward-looking |
+| `au_pac.mod` | Hybrid | 3 | pv_i, pv_u_gap, pv_yh forward; PAC backward |
+| `au_pac_mce.mod` | Full MCE | 28 | All expectations forward-looking |
+
+At first order, the Hybrid and MCE regimes produce identical IRFs for most variables, because the PAC h-vectors already capture the rational expectations solution. The key differences appear in:
+
+1. **Term structure timing**: Forward pv_i front-loads the rate shock impact on the 10Y yield
+2. **Wage dynamics timing**: Forward pv_u_gap anticipates unemployment effects
+3. **Nonlinear simulations**: Differences would appear in deterministic `simul` / `perfect_foresight_solver` runs
 
 ### 7.2 Forward guidance
 
-The model is designed to avoid the forward guidance puzzle. The high discount factor in the permanent income equation (beta_c = 0.95, equivalent to ~25% annual) means that promises of future interest rate changes have a rapidly declining effect on current consumption. This mirrors the FR-BDF finding (Section 6.3) that peak GDP effects increase linearly — not exponentially — with the duration of forward guidance announcements.
+The model does not suffer from the forward guidance puzzle. Using superposition of N-quarter rate cuts (25bp each), the peak GDP response scales approximately linearly with duration:
+
+| Duration N | Standard NK | Discounted NK | **AU-PAC** | Linear ref |
+|---|---|---|---|---|
+| 1 | 1.00 | 1.00 | **1.00** | 1.00 |
+| 2 | 1.44 | 1.45 | **2.00** | 2.00 |
+| 4 | 1.72 | 1.73 | **3.69** | 4.00 |
+| 8 | 1.79 | 1.80 | **6.09** | 8.00 |
+
+**Amplification ratio (N=8 / N=1)**: Standard NK = 1.79, AU-PAC = **6.09** (close to linear 8.0).
+
+The AU-PAC model's near-linear scaling comes from three features:
+1. **High permanent income discount** (beta_c = 0.95): households heavily discount future income, limiting sensitivity to distant rate changes
+2. **Discounted term structure** (kappa_10 = 0.97): the 10Y rate discounts distant expected short rates
+3. **PAC adjustment costs**: polynomial frictions prevent explosive compounding of expectations
 
 ---
 
