@@ -52,7 +52,8 @@ var
     piQ_star_bar    // HP trend of VA price target growth
     pQ_gap          // gap between VA price target and actual (p*Q - pQ), in log
 
-    // === Cobb-Douglas production function (Stage 9a) ===
+    // === CES production function (Section 4.3) ===
+    dln_k           // capital services growth (quarterly %, from accumulation eq 32)
     dln_y_star      // potential output growth (quarterly %)
     dln_tfp         // total factor productivity growth (quarterly %)
 
@@ -62,6 +63,8 @@ var
 
     // === Labor market: wage Phillips curve ===
     pi_w            // nominal wage inflation (quarterly %)
+    u_gap           // unemployment gap (pp, Okun's law from output gap)
+    pv_u_gap        // PV of expected future unemployment gaps (beta_w=0.98)
 
     // === Labor market: employment PAC ===
     dln_n           // employment growth (quarterly %, log diff)
@@ -77,6 +80,7 @@ var
     dln_c_star      // target consumption growth (permanent income proxy)
     dln_c_star_bar  // trend consumption growth
     c_gap           // gap between target and actual consumption (log level)
+    pv_yh           // PV of expected future output gaps (permanent income proxy, beta_c=0.95)
 
     // === Demand block: business investment PAC (Section 4.6.2) ===
     dln_ib          // business investment growth (quarterly log diff)
@@ -100,6 +104,12 @@ var
     i_10y           // 10-year AU government bond yield (quarterly %)
     tp              // term premium (quarterly %)
     wacc            // weighted average cost of capital (quarterly %)
+    i_COE           // cost of equity (quarterly %)
+    i_LB_firms      // bank lending rate for firms (quarterly %)
+    i_BBB           // BBB corporate bond rate (quarterly %)
+    s_COE           // equity spread over 10Y govt rate (quarterly %)
+    s_LB_firms      // bank lending spread for firms (quarterly %)
+    s_BBB           // BBB bond spread (quarterly %)
     s_gap           // real exchange rate gap (log, + = AUD depreciation)
 
     // === Trade block (Section 4.7) ===
@@ -177,7 +187,9 @@ varexo
     // Financial block shocks
     eps_10y         // long rate shock (term structure residual)
     eps_tp          // term premium shock
-    eps_wacc        // WACC shock (credit conditions)
+    eps_COE         // cost of equity spread shock
+    eps_LB_firms    // bank lending spread shock (firms)
+    eps_BBB         // BBB bond spread shock
     eps_s           // exchange rate shock (UIP residual / risk premium)
     // Trade block shocks
     eps_x           // export volume shock
@@ -248,6 +260,9 @@ parameters
     lambda_w        // wage persistence (coefficient on pi_w(-1))
     kappa_w         // output gap sensitivity (positive: higher gap -> higher wages)
     gamma_w         // weight on current CPI inflation (indexation channel)
+    okun_coeff      // Okun's law: output gap -> unemployment gap (negative, ~-0.33)
+    rho_u_gap       // unemployment gap persistence (AR1 in Okun's law)
+    beta_w          // discount factor for expected unemployment gaps (0.98)
     // growth neutrality: coeff on pibar_au = (1 - lambda_w - gamma_w)
 
     // --- Employment PAC parameters (Section 4.5.2, 4th-order) ---
@@ -268,7 +283,8 @@ parameters
     b2_c            // real interest rate sensitivity (negative: higher r -> less C)
     b3_c            // output gap sensitivity (HtM channel, positive)
     rho_c_star      // target consumption growth persistence
-    kappa_inc       // permanent income proxy: output gap -> consumption target
+    kappa_inc       // permanent income sensitivity: PV(yH) -> consumption target
+    beta_c          // discount factor for permanent income PV (0.95, paper Section 4.6.1)
     // growth neutrality: coeff on dln_c_star_bar(-1) = (1 - b1_c - omega_c)
 
     // --- Business investment PAC parameters (Section 4.6.2, 2nd-order) ---
@@ -300,8 +316,18 @@ parameters
     rho_tp          // term premium persistence
 
     // --- WACC parameters (Section 4.8, eq. 98) ---
-    rho_wacc        // WACC persistence (credit conditions inertia)
-    spread_ss       // steady-state credit+equity spread over risk-free (quarterly %)
+    rho_wacc        // WACC persistence (legacy, unused — now decomposed)
+    spread_ss       // steady-state composite spread (quarterly %, for uc_k SS)
+    // --- WACC component parameters (Section 4.8.3, eq 98-100) ---
+    w_COE           // weight of cost of equity in WACC (0.5)
+    w_LB_firms      // weight of bank lending rate in WACC (0.3)
+    w_BBB           // weight of BBB bond rate in WACC (0.2)
+    rho_COE         // COE spread persistence
+    rho_LB_firms    // bank lending spread persistence
+    rho_BBB         // BBB spread persistence
+    s_COE_ss        // SS equity spread (quarterly %)
+    s_LB_firms_ss   // SS bank lending spread (quarterly %)
+    s_BBB_ss        // SS BBB bond spread (quarterly %)
 
     // --- Exchange rate parameters (Section 4.8, eq. 105) ---
     rho_s           // real exchange rate persistence (PPP half-life ~3-5 years)
@@ -435,6 +461,9 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 lambda_w        = 0.247;    // wage persistence (posterior mean)
 kappa_w         = 0.238;    // output gap -> wages (posterior mean)
 gamma_w         = 0.15;     // CPI indexation channel
+okun_coeff      = -0.33;    // Okun's law: 1pp output gap -> -0.33pp unemployment gap
+rho_u_gap       = 0.94;     // unemployment gap persistence (paper Table 4.5.2)
+beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
 // growth neutrality coeff = 1 - 0.55 - 0.15 = 0.30 on pibar_au
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
@@ -458,7 +487,8 @@ omega_c         = 0.369;    // expectations/forward component (posterior mean)
 b2_c            = -0.02;    // real interest rate -> consumption (negative: substitution)
 b3_c            = 0.139;    // output gap -> consumption (posterior mean)
 rho_c_star      = 0.95;     // target persistence
-kappa_inc       = 0.050;    // output gap -> consumption target (posterior mean)
+kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
+beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~25% annual)
 // growth neutrality coeff = 1 - 0.35 - 0.35 = 0.30
 
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
@@ -497,9 +527,21 @@ rho_tp          = 0.98;     // term premium very persistent (global risk appetit
 
 // WACC parameters (calibrated from Section 4.8 / eq. 98)
 // Cost of capital = long rate + credit/equity spread
-rho_wacc        = 0.90;     // persistent credit conditions
-spread_ss       = 0.50;     // SS spread (~2% annual, AU corporate + equity premium)
+rho_wacc        = 0.90;     // legacy (unused — WACC now decomposed)
+spread_ss       = 0.50;     // SS composite spread (for uc_k SS calculation)
 // SS: wacc = i_10y_ss + spread_ss = 1.3491 + 0.50 = 1.8491 (~7.4% annual)
+
+// WACC decomposition (Section 4.8.3, eq 98, Table 4.8.4, adapted for AU)
+w_COE           = 0.50;     // equity share of funding (paper: 0.5)
+w_LB_firms      = 0.30;     // bank lending share (paper: 0.3)
+w_BBB           = 0.20;     // bond share (paper: 0.2)
+rho_COE         = 0.92;     // equity risk premium persistence (paper: 0.92)
+rho_LB_firms    = 0.77;     // bank lending spread persistence (paper: 0.77)
+rho_BBB         = 0.94;     // BBB spread persistence (paper: 0.94)
+s_COE_ss        = 0.80;     // SS equity spread (~3.2% annual)
+s_LB_firms_ss   = 0.25;     // SS bank lending spread (~1.0% annual)
+s_BBB_ss        = 0.05;     // SS BBB bond spread (~0.2% annual)
+// Weighted SS: 0.5*0.80 + 0.3*0.25 + 0.2*0.05 = 0.485 ≈ spread_ss
 
 // Exchange rate parameters (calibrated from Section 4.8 / eq. 105)
 // AUD/USD real exchange rate, UIP-based with persistent deviations from PPP
@@ -805,16 +847,23 @@ model;
     [name = 'eq_dln_n_from_level']
     dln_n = ln_n_level - ln_n_level(-1);
 
+    // === CAPITAL ACCUMULATION (Section 4.3, eq 32) ===
+    // K_t = (1-delta)*K_{t-1} + I_t. In growth rates (linearized):
+    // dln_k = (1-delta_k)*dln_k(-1) + delta_k*dln_ib
+    // At SS: dln_k = 0 (stationary gap model). I/K = delta_k at SS.
+    // The (1-delta_k) persistence captures how capital builds up slowly.
+    [name = 'eq_dln_k']
+    dln_k = (1 - delta_k) * dln_k(-1) + delta_k * dln_ib;
+
     // === CES PRODUCTION FUNCTION (Section 4.3, sigma_ces = 0.53) ===
-    // Growth-rate accounting form (Cobb-Douglas approximation at SS).
+    // Growth-rate accounting form using capital growth from accumulation equation.
     // CES effects captured through factor demand target equations:
     //   - Employment target (eq_dln_n_star_bar): sigma_ces on rw_gap (eq 55)
     //   - Investment target (eq_dln_ib_star_bar): sigma_ces on dln_uc_k (eq 63)
     //   - VA price target (eq_piQ_star): gamma_uck on dln_uc_k (unit cost dual, eqs 42-43)
-    // Capital contribution approximated: dln_k ≈ delta_k * dln_ib (I/K = delta_k at SS).
     // Does NOT redefine yhat_au — IS curve still drives output gap.
     [name = 'eq_dln_y_star']
-    dln_y_star = alpha_k * delta_k * dln_ib
+    dln_y_star = alpha_k * dln_k
                + (1 - alpha_k) * dln_n_star_bar
                + dln_tfp;
 
@@ -873,27 +922,34 @@ model;
                      + b2_pQ * yhat_au
                      + eps_pQ;
 
+    // === UNEMPLOYMENT GAP (Okun's law, paper eq 53/Table 4.5.2) ===
+    // u_gap = AR(1) with output gap driving force. Negative: higher output -> lower unemployment.
+    // At SS: yhat_au = 0 => u_gap = 0.
+    [name = 'eq_u_gap']
+    u_gap = rho_u_gap * u_gap(-1) + okun_coeff * yhat_au;
+
+    // Discounted PV of expected future unemployment gaps (paper eq 52, Section 4.5.1).
+    // PV(û)_t = (1-beta_w)*û_t + beta_w*PV(û)_{t+1} (recursive, eq 137 in paper).
+    // Under VAR-based expectations this collapses to a backward-looking policy function.
+    // Here we use the recursive form which works for both VAR and MCE cases.
+    // At SS: u_gap = 0 => pv_u_gap = 0.
+    [name = 'eq_pv_u_gap']
+    pv_u_gap = (1 - beta_w) * u_gap + beta_w * pv_u_gap(+1);
+
     // === WAGE PHILLIPS CURVE (Section 4.5.1, eq. 52) ===
     // Hybrid backward/forward Phillips curve for nominal wages.
-    // Forward expectations proxied by inflation anchor pibar_au.
+    // Now uses forward PV of unemployment gap (pv_u_gap) instead of current yhat_au.
+    // kappa_w measures sensitivity to expected labor market tightness.
     //
     // Stage 12 fix: Added efficiency trend (1-lambda_w)*dln_prod.
-    // Paper eq. 52: wages anchor to [Δē + π̄], not just π̄.
-    // On BGP with productivity growth g: pi_w = pi_ss + g (wages grow at
-    // inflation + productivity growth). VA price stays at pi_ss since FPF
-    // absorbs productivity gains into lower ULC.
-    //
-    // Growth neutrality: at SS with dln_prod = 0, pi_au = pibar_au = pi_ss:
+    // Growth neutrality: at SS with dln_prod = 0, pv_u_gap = 0:
     //   pi_w_ss = lambda_w*pi_w_ss + gamma_w*pi_ss + 0 + (1-lw-gw)*pi_ss + 0
     //   => pi_w_ss = pi_ss (verified)
-    // At BGP with dln_prod = g:
-    //   pi_w_ss*(1-lambda_w) = gamma_w*pi_ss + (1-lw-gw)*pi_ss + (1-lw)*g
-    //   => pi_w_ss = pi_ss + g (verified: wages grow at inflation + productivity)
 
     [name = 'eq_pi_w']
     pi_w = lambda_w * pi_w(-1)
            + gamma_w * pi_au
-           + kappa_w * yhat_au
+           + kappa_w * pv_u_gap
            + (1 - lambda_w - gamma_w) * pibar_au
            + (1 - lambda_w) * dln_prod
            + eps_w;
@@ -958,11 +1014,21 @@ model;
     dln_c_star = rho_c_star * dln_c_star(-1)
                  + (1 - rho_c_star) * dln_c_star_bar;
 
-    // Consumption target: persistent income proxy (Stage 10a, upgraded from Phase 7d).
-    // Weighted average of recent output gaps approximates permanent income
-    // without introducing forward-looking variables. SS: all gaps 0 => target 0.
+    // Permanent income: discounted PV of expected future output gaps (paper eq 60/136).
+    // PV(yH)_t = (1-beta_c)*yhat_au_t + beta_c*PV(yH)_{t+1}
+    // beta_c = 0.95 (high discount due to risk aversion + income uncertainty).
+    // This heavy discounting is key to avoiding the forward guidance puzzle (paper Section 6.3).
+    // At SS: yhat_au = 0 => pv_yh = 0.
+    [name = 'eq_pv_yh']
+    pv_yh = (1 - beta_c) * yhat_au + beta_c * pv_yh(+1);
+
+    // Consumption target: permanent income drives desired consumption growth.
+    // Paper eq 59: c* = a0 + PV(yH) + alpha1*(rLH - r_bar).
+    // In growth rates: dln_c_star_bar = kappa_inc * d(pv_yh).
+    // Using change in PV of permanent income as the driver.
+    // At SS: pv_yh constant at 0 => dln_c_star_bar = 0.
     [name = 'eq_dln_c_star_bar']
-    dln_c_star_bar = kappa_inc * (0.5 * yhat_au + 0.3 * yhat_au(-1) + 0.2 * yhat_au(-2));
+    dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1));
 
     // Consumption gap accumulation
     [name = 'eq_c_gap']
@@ -1102,19 +1168,35 @@ model;
     [name = 'eq_i_10y']
     i_10y = rho_L * i_10y(-1) + (1 - rho_L) * (i_au + tp) + eps_10y;
 
-    // === WACC (eq. 98) ===
-    // Paper: wacc = 0.5*iCOE + 0.3*iLB + 0.2*iBBB (eq. 98) with each
-    // component = i_10 + spread_j(AR1) (eqs. 99-100, Table 4.8.4).
-    // Full model has 3 separate spreads: cost of equity (s̄_COE=1.4%),
-    // bank lending rate firms (s̄_LB=0.3%), BBB bonds (s̄_BBB=0.02%).
-    // Simplified: single spread capturing the composite premium.
-    // Extension: decompose into separate COE/bank/bond components with
-    // distinct AR(1) spread processes for richer credit channel dynamics.
-    //
-    // At SS: wacc = i_10y_ss + spread_ss
+    // === WACC (Section 4.8.3, eq 98-100, Table 4.8.4) ===
+    // Decomposed into 3 components: cost of equity, bank lending, BBB bonds.
+    // Each rate = 10Y govt rate + spread_j. Spreads follow AR(1).
+    // wacc = w_COE*i_COE + w_LB*i_LB + w_BBB*i_BBB
+    // At SS: wacc = i_10y_ss + weighted_spread_ss
 
+    // Spread processes (eq 100)
+    [name = 'eq_s_COE']
+    s_COE = (1 - rho_COE) * s_COE_ss + rho_COE * s_COE(-1) + eps_COE;
+
+    [name = 'eq_s_LB_firms']
+    s_LB_firms = (1 - rho_LB_firms) * s_LB_firms_ss + rho_LB_firms * s_LB_firms(-1) + eps_LB_firms;
+
+    [name = 'eq_s_BBB']
+    s_BBB = (1 - rho_BBB) * s_BBB_ss + rho_BBB * s_BBB(-1) + eps_BBB;
+
+    // Component rates (eq 99)
+    [name = 'eq_i_COE']
+    i_COE = i_10y + s_COE;
+
+    [name = 'eq_i_LB_firms']
+    i_LB_firms = i_10y + s_LB_firms;
+
+    [name = 'eq_i_BBB']
+    i_BBB = i_10y + s_BBB;
+
+    // WACC identity (eq 98)
     [name = 'eq_wacc']
-    wacc = rho_wacc * wacc(-1) + (1 - rho_wacc) * (i_10y + spread_ss) + eps_wacc;
+    wacc = w_COE * i_COE + w_LB_firms * i_LB_firms + w_BBB * i_BBB;
 
     // === EXCHANGE RATE (eq. 105) ===
     // Real exchange rate gap follows modified UIP.
@@ -1379,7 +1461,8 @@ steady_state_model;
     pi_au_gap = 0;
     pi_us_gap = 0;
 
-    // Production function (Stage 9a)
+    // Production function (Section 4.3)
+    dln_k        = 0;         // zero capital growth at SS (gap model)
     dln_y_star   = 0;         // zero potential output growth at SS (gap model)
     dln_tfp      = 0;         // zero TFP growth at SS
 
@@ -1394,6 +1477,8 @@ steady_state_model;
     pQ_gap       = 0;
 
     // Wage Phillips curve
+    u_gap        = 0;         // unemployment at equilibrium at SS
+    pv_u_gap     = 0;         // PV of future unemployment gaps = 0 at SS
     pi_w         = pi_ss_au;  // wages grow at LR inflation rate at SS
 
     // Employment PAC
@@ -1406,13 +1491,14 @@ steady_state_model;
     dln_n_3        = 0;
 
     // Household consumption PAC
+    pv_yh          = 0;       // permanent income PV = 0 at SS (gap model)
     dln_c          = 0;       // zero consumption growth in stationary model
     dln_c_star     = 0;
     dln_c_star_bar = 0;
     c_gap          = 0;
 
-    // User cost of capital (Stage 10b)
-    uc_k           = i_ss + tp_ss + spread_ss + delta_k;
+    // User cost of capital: uc_k = wacc + delta_k at SS (pi_ib = piQ at SS)
+    uc_k           = w_COE*(i_ss+tp_ss+s_COE_ss) + w_LB_firms*(i_ss+tp_ss+s_LB_firms_ss) + w_BBB*(i_ss+tp_ss+s_BBB_ss) + delta_k;
     dln_uc_k       = 0;            // user cost constant at SS
 
     // Business investment PAC
@@ -1432,7 +1518,13 @@ steady_state_model;
     // Financial block
     tp             = tp_ss;                         // term premium at SS
     i_10y          = i_ss + tp_ss;                  // 10Y yield = short rate + term premium
-    wacc           = i_ss + tp_ss + spread_ss;      // WACC = long rate + spread
+    s_COE          = s_COE_ss;                      // equity spread at SS
+    s_LB_firms     = s_LB_firms_ss;                 // bank lending spread at SS
+    s_BBB          = s_BBB_ss;                      // BBB bond spread at SS
+    i_COE          = i_ss + tp_ss + s_COE_ss;       // cost of equity at SS
+    i_LB_firms     = i_ss + tp_ss + s_LB_firms_ss;  // bank lending rate firms at SS
+    i_BBB          = i_ss + tp_ss + s_BBB_ss;        // BBB bond rate at SS
+    wacc           = w_COE*(i_ss+tp_ss+s_COE_ss) + w_LB_firms*(i_ss+tp_ss+s_LB_firms_ss) + w_BBB*(i_ss+tp_ss+s_BBB_ss);
     s_gap          = 0;                             // PPP holds at SS
 
     // Trade block
@@ -1530,7 +1622,9 @@ shocks;
     var eps_ih;       stderr 1.729;  // household investment shock (posterior mean)
     var eps_10y;      stderr 0.10;   // long rate shock (small — most variation from short rate)
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
-    var eps_wacc;     stderr 0.15;   // WACC shock (credit conditions)
+    var eps_COE;      stderr 0.15;   // cost of equity spread shock
+    var eps_LB_firms; stderr 0.10;   // bank lending spread shock (firms)
+    var eps_BBB;      stderr 0.08;   // BBB bond spread shock
     var eps_s;        stderr 2.5;    // exchange rate shock (AUD/USD volatile)
     var eps_x;        stderr 1.2;    // export volume shock
     var eps_m;        stderr 1.0;    // import volume shock

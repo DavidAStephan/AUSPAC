@@ -1,0 +1,3 @@
+function [y, T] = static_64(y, x, params, sparse_rowval, sparse_colval, sparse_colptr, T)
+  y(15)=y(79)-y(78);
+end
