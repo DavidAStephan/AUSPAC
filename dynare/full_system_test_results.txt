@@ -1,0 +1,99 @@
+AUSPAC FULL SYSTEM TEST
+Timestamp: 12-Apr-2026 20:48:45
+MATLAB: 9.6.0.1472908 (R2019a) Update 9
+Dynare: 6.5
+\n=== STAGE 1: DATA LOADING & TRANSFORMATION ===
+  [PASS] [S1] dataset.csv: 128 rows x 12 cols
+  [PASS] [S1] Required columns
+  [PASS] [S1] au_ygap: 128 valid, [-7.27,1.38]
+  [PASS] [S1] extended_dataset.csv: 128 rows
+  [PASS] [S1] Extended columns
+  [PASS] [S1] Date alignment
+  [PASS] [S1] i_gap [-1.048,-0.537]
+  [PASS] [S1] dln_c std=1.776
+  [PASS] [S1] dln_ib std=2.787
+  [PASS] [S1] dln_ih std=2.787
+  [PASS] [S1] dln_n std=0.699
+\n=== STAGE 2: E-SAT OLS ESTIMATION ===
+  [PASS] [S2] params.mat exists
+  [PASS] [S2] lambda_q=0.4572
+  [PASS] [S2] lambda_i=0.8210
+  [PASS] [S2] kappa_pi=0.0500 (>0)
+  [PASS] [S2] sigma_q=0.0862 (>0)
+  [PASS] [S2] delta=0.1997 (spillover)
+\n=== STAGE 3: E-SAT MODEL & IRFs ===
+  [PASS] [S3] esat_model.m exists
+  [PASS] [S3] irf_interest_rate.png
+  [PASS] [S3] irf_us_output_gap.png
+  [PASS] [S3] data.mat exists
+\n=== STAGE 4: EXTENDED DATA PREPARATION ===
+  [PASS] [S4] estimation_data.mat exists
+  [PASS] [S4] 9 vars x 122 obs
+  [PASS] [S4] yhat_au mean=0.0000 (demeaned)
+  [PASS] [S4] dln_c mean=-0.0000 (demeaned)
+  [PASS] [S4] estimation_meta.mat exists
+\n=== STAGE 5: DYNARE AU_PAC_VAR (backward) ===
+  [PASS] [S5] Compiles: 140 endo 45 exo
+  [PASS] [S5] Max|eig|=1.0000
+  [PASS] [S5] BK conditions
+  [PASS] [S5] MP->output trough=-0.0108%
+\n=== STAGE 6: DYNARE AU_PAC (hybrid) ===
+  [PASS] [S6] Compiles: 140 endo 45 exo
+  [FAIL] [S6] Max|eig|=1.0526: 
+  [FAIL] [S6] BK conditions: 
+  [PASS] [S6] 5 PAC models
+  [PASS] [S6] IRF yhat_au peak=0.0108
+  [PASS] [S6] IRF pi_au peak=0.0006
+  [PASS] [S6] IRF dln_c peak=0.0062
+  [PASS] [S6] IRF dln_ib peak=0.0103
+  [PASS] [S6] IRF dln_ih peak=0.0166
+  [PASS] [S6] IRF dln_n peak=0.0098
+  [PASS] [S6] IRF pi_w peak=0.0035
+  [PASS] [S6] IRF s_gap peak=0.0333
+  [PASS] [S6] IRF i_10y peak=0.0112
+  [PASS] [S6] IRF piQ peak=0.0044
+\n=== STAGE 7: DYNARE AU_PAC_MCE (forward) ===
+  [PASS] [S7] Compiles: 154 endo
+  [FAIL] [S7] BK conditions: 
+  [PASS] [S7] 30 forward vars (expect >0)
+  [PASS] [S7] MP->output trough=-0.0060%
+\n=== STAGE 8: PAC ESTIMATION (iterative OLS) ===
+  [PASS] [S8] json=compute OK
+  [PASS] [S8] Companion 12x12
+  [PASS] [S8] 5 PAC models initialized
+  [PASS] [S8] dseries 62 vars x 128 obs
+  [PASS] [S8] VA Price: SSR=40.4 T=118
+  [PASS] [S8] Consumption: SSR=435.4 T=118
+  [PASS] [S8] Bus.Inv.: SSR=973.9 T=118
+  [PASS] [S8] Hhold.Inv.: SSR=965.8 T=118
+  [PASS] [S8] Employment: SSR=76.1 T=118
+\n=== STAGE 9: PAC NLS ESTIMATION ===
+  [PASS] [S9] NLS Consumption: b0=0.0716 b1=-0.2616
+\n=== STAGE 10: THREE-REGIME IRF COMPARISON ===
+  [PASS] [S10] All 3 IRF files
+  Output trough: VAR=-0.0108% Hybrid=-0.0108% MCE=-0.0060%
+  [PASS] [S10] All negative output response
+  [PASS] [S10] VAR-MCE diff=0.005156
+  [PASS] [S10] Hybrid yhat_au<0 (-0.0108)
+  [PASS] [S10] Hybrid pi_au<0 (-0.0006)
+  [PASS] [S10] Hybrid dln_c<0 (-0.0062)
+  [PASS] [S10] Hybrid dln_ib<0 (-0.0103)
+
+  Variable        VAR(Q4) Hybrid(Q4)    MCE(Q4)
+  yhat_au         -0.0067    -0.0067    -0.0047
+  pi_au           -0.0002    -0.0002    -0.0002
+  piQ             -0.0027    -0.0027    -0.0006
+  dln_c           -0.0043    -0.0043    -0.0012
+  dln_ib          -0.0079    -0.0079    -0.0009
+  dln_ih          -0.0130    -0.0130    -0.0022
+  dln_n           -0.0040    -0.0040    -0.0007
+  pi_w             0.0000     0.0034     0.0025
+  i_10y            0.0029     0.0098     0.0098
+
+====== SUMMARY: 62 PASS, 3 FAIL (15.2 sec) ======
+
+FAILURES:
+  [S6] Max|eig|=1.0526: 
+  [S6] BK conditions: 
+  [S7] BK conditions: 
+--- END OF TEST ---

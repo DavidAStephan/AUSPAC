@@ -1,0 +1,16 @@
+Starting at 12-Apr-2026 18:09:19
+SUCCESS at 12-Apr-2026 18:11:18
+lambda_q        = 0.695888
+sigma_q         = 0.064769
+lambda_i        = 0.957601
+alpha_i         = 0.300078
+beta_i          = 0.083742
+lambda_pi       = 0.290157
+kappa_pi        = 0.037405
+stderr eps_q      = 0.818191
+stderr eps_i      = 0.027370
+stderr eps_pi     = 0.583630
+stderr eps_q_us   = 1.137849
+stderr eps_pi_us  = 0.319211
+
+Log marginal density (Laplace): -234.4590

@@ -147,16 +147,21 @@ var
     y_gap_var       // shadow output gap (pure VAR form of yhat_au)
     i_gap_var       // shadow interest rate gap (pure VAR form of i_gap)
     pi_gap_var      // shadow inflation gap (pure VAR form of pi_au_gap)
+    // Additional E-SAT state variables (FR-BDF Tables 4.4.4, 4.5.7 use 6-9 states)
+    u_gap_var       // shadow unemployment gap (Okun's law in VAR form)
+    yhat_us_var     // shadow foreign output gap (AR(1) in VAR form)
     // Auxiliary gap variables (appended to E-SAT, FR-BDF Tables 4.4.4, 4.5.7, etc.)
     piQ_hat         // VA price target gap (FR-BDF eq 45-47 chain)
     n_hat           // employment target gap (FR-BDF eq 57)
-    c_hat           // consumption income-output ratio gap (FR-BDF Table 4.6.3)
+    yh_ratio_hat    // household income-output ratio gap (FR-BDF Table 4.6.3: yH-ȳ)
+    c_hat           // consumption PV² gap (FR-BDF Table 4.6.4: PV of yh_ratio_hat)
     ib_hat          // business investment output gap (FR-BDF Table 4.6.11)
+    rKB_hat         // user cost of capital gap (FR-BDF Table 4.6.12: r̂_KB)
     ih_hat          // housing investment target gap (FR-BDF Table 4.6.16)
     // Backward expectation correction variables (additive wedge at first order)
     // These represent the DIFFERENCE between E-SAT simplified forecast and full model RE.
     // Present in backward models only; absent in MCE.
-    pv_piQ_aux  pv_n_aux  pv_c_aux  pv_ib_aux  pv_ih_aux
+    pv_piQ_aux  pv_n_aux  pv_c_aux  pv_ib_aux  pv_rKB_aux  pv_ih_aux
 
     // === Sector financial accounts (Section 4.8.5, eqs 116-126) ===
     // Net financial asset ratios (W_j / nominal LR GDP, quarterly)
@@ -245,6 +250,10 @@ varexo
     eps_var_c       // consumption auxiliary gap shock
     eps_var_ib      // business investment auxiliary gap shock
     eps_var_ih      // housing investment auxiliary gap shock
+    eps_var_u       // shadow unemployment gap shock
+    eps_var_yus     // shadow foreign output gap shock
+    eps_var_yh      // household income-output ratio gap shock
+    eps_var_rKB     // user cost of capital gap shock
 ;
 
 // -----------------------------------------------------------------------
@@ -467,46 +476,60 @@ parameters
     rho_pQ_aux      // own persistence
     a_pQ_y          // output gap (Phillips → ULC → VA price)
     a_pQ_i          // interest rate gap (cost channel)
+    a_pQ_pi         // inflation gap (FR-BDF policy fn: 0.00087)
     a_pQ_u          // unemployment gap (wage → ULC channel, FR-BDF: û coeff = -0.011)
 
-    // Employment (FR-BDF Table 4.5.7, eq 57: n̂* = f(ŷ, i, π, n̂*))
+    // Employment (FR-BDF Table 4.5.7, eq 57: n̂* = f(ŷ, i, π, û, n̂*))
     rho_n_aux       // own persistence (FR-BDF: 0.67)
     a_n_y           // output gap (Okun, FR-BDF: 0.30)
     a_n_i           // interest rate gap (FR-BDF: 0.07, n.s.)
     a_n_pi          // inflation gap (FR-BDF: 0.16)
+    a_n_u           // unemployment gap (FR-BDF Table 4.5.7: implicit via Okun)
 
-    // Consumption (FR-BDF Table 4.6.3: yH-ȳ = f(yH-ȳ, Δw_eff, û))
-    rho_c_aux       // own persistence (FR-BDF: 0.92 for yH-ȳ aux)
+    // Household income-output ratio (FR-BDF Table 4.6.3: yH-ȳ auxiliary)
+    rho_yh_aux      // own persistence (FR-BDF: 0.92)
+    a_yh_y          // output gap → income ratio (FR-BDF: implicit via Okun)
+    a_yh_u          // unemployment gap → income ratio (FR-BDF: -0.08 via labor income)
+
+    // Consumption PV² (FR-BDF Table 4.6.4: PV of yH-ȳ changes)
+    rho_c_aux       // own persistence
     a_c_y           // output gap (income channel)
     a_c_i           // interest rate gap (substitution)
-    a_c_u           // unemployment gap (income expectation, FR-BDF: -0.08)
+    a_c_pi          // inflation gap (FR-BDF PV²: 0.002)
+    a_c_u           // unemployment gap (income expectation, FR-BDF: -0.03)
+    a_c_yh          // income-output ratio gap (FR-BDF PV²: 0.034, key nested PV channel)
 
-    // Business investment (FR-BDF Tables 4.6.11-12: q̂ + r̂_KB separate)
+    // Business investment output gap (FR-BDF Table 4.6.11: q̂ auxiliary)
     rho_ib_aux      // own persistence (FR-BDF: 0.59 for q̂ aux)
     a_ib_y          // output gap (accelerator, FR-BDF: 0.61 in aux / 0.035 in policy fn)
-    a_ib_i          // interest rate gap (user cost, FR-BDF: 4.45 in r̂_KB aux / 0.24 in policy fn)
     a_ib_pi         // inflation gap (FR-BDF: 0.027 in policy fn)
+    a_ib_u          // unemployment gap (FR-BDF: implicit via output-unemployment link)
+
+    // Business investment user cost gap (FR-BDF Table 4.6.12: r̂_KB auxiliary)
+    rho_rKB_aux     // own persistence (FR-BDF: -0.055 in policy fn)
+    a_rKB_i         // interest rate gap (FR-BDF: 4.45 in aux, 0.24 in policy fn)
 
     // Housing investment (FR-BDF Table 4.6.16: Î*_H = f(ŷ, i, π, Î*_H))
     rho_ih_aux      // own persistence (FR-BDF: 0.71)
     a_ih_y          // output gap (demand, FR-BDF: 0.38)
     a_ih_i          // interest rate gap (mortgage, FR-BDF: -0.89)
     a_ih_pi         // inflation gap (FR-BDF: 0.49)
+    a_ih_u          // unemployment gap (FR-BDF: implicit via demand channel)
 ;
 
 // -----------------------------------------------------------------------
 // Parameter values
 // -----------------------------------------------------------------------
 
-// E-SAT (Bayesian posterior means)
-delta           = 0.1989;
-lambda_q        = 0.4479;
-sigma_q         = 0.1663;
-lambda_i        = 0.8281;
-alpha_i         = 0.2787;
-beta_i          = 0.1350;
-lambda_pi       = 0.2629;
-kappa_pi        = 0.0582;
+// E-SAT (Bayesian posterior modes — Australian data 1993Q2-2023Q3)
+delta           = 0.1989;       // foreign spillover (calibrated, small open economy)
+lambda_q        = 0.6959;       // IS persistence (AU posterior, FR-BDF: 0.877)
+sigma_q         = 0.0648;       // real rate sensitivity (AU posterior, FR-BDF: 0.072)
+lambda_i        = 0.9576;       // interest rate smoothing (AU posterior, FR-BDF: 0.891)
+alpha_i         = 0.3001;       // Taylor inflation response (AU posterior, FR-BDF: 0.390)
+beta_i          = 0.0837;       // Taylor output response (AU posterior, FR-BDF: 0.156)
+lambda_pi       = 0.2902;       // inflation persistence (AU posterior, FR-BDF: 0.465)
+kappa_pi        = 0.0374;       // Phillips slope (AU posterior, FR-BDF: 0.080)
 lambda_q_us     = 0.8057;
 lambda_pi_us    = 0.6529;
 kappa_pi_us     = 0.0131;
@@ -755,6 +778,7 @@ beta_pac        = 0.98;
 rho_pQ_aux      = 0.70;     // persistence (FR-BDF: implicit via 3-eq chain ~0.70)
 a_pQ_y          = 0.03;     // ŷ → PV (FR-BDF policy fn: -0.0015, scaled up for single-eq form)
 a_pQ_i          = -0.02;    // i_gap → PV (FR-BDF policy fn: -0.0034, scaled)
+a_pQ_pi         = 0.01;     // π_gap → PV (FR-BDF policy fn: 0.00087, small positive)
 a_pQ_u          = -0.01;    // û → PV (FR-BDF policy fn: -0.011, key wage-price channel)
 
 // Employment auxiliary (FR-BDF Table 4.5.7, eq 57)
@@ -763,23 +787,37 @@ rho_n_aux       = 0.67;     // persistence (FR-BDF: 0.67, EXACT)
 a_n_y           = 0.12;     // ŷ → n̂* (FR-BDF: 0.30 [0.09], scaled for gap model)
 a_n_i           = -0.03;    // i_gap → n̂* (FR-BDF: 0.07 [0.3], n.s., sign flipped for AU)
 a_n_pi          = 0.05;     // π_gap → n̂* (FR-BDF: 0.16 [0.13], scaled)
+a_n_u           = -0.02;    // û → n̂* (FR-BDF: implicit via Okun link to output)
 
-// Consumption auxiliary (FR-BDF Table 4.6.3)
+// Household income-output ratio auxiliary (FR-BDF Table 4.6.3)
 // Auxiliary regression: yH-ȳ = 0.92·lag + 0.32·Δw_eff - 0.08·û, R²=0.91
+rho_yh_aux      = 0.92;     // persistence (FR-BDF: 0.92, EXACT)
+a_yh_y          = 0.05;     // ŷ → yH-ȳ (income tracks output via labor share)
+a_yh_u          = -0.08;    // û → yH-ȳ (FR-BDF: -0.08, unemployment reduces income)
+
+// Consumption PV² auxiliary (FR-BDF Table 4.6.4)
 // Policy function PV²: 10 states including ŷ(-0.052), i_gap(-0.012), û(-0.03)
-rho_c_aux       = 0.70;     // persistence (FR-BDF: 0.92 for yH-ȳ, reduced for PV² form)
-a_c_y           = 0.06;     // ŷ → PV (FR-BDF PV²: -0.052, sign adjusted)
-a_c_i           = -0.04;    // i_gap → PV (FR-BDF PV²: -0.012, amplified for AU)
-a_c_u           = -0.03;    // û → PV (FR-BDF PV²: -0.03, via income expectations)
+// c_hat captures PV of changes in yh_ratio_hat (the 2nd layer of PV)
+rho_c_aux       = 0.70;     // persistence (FR-BDF PV²: -0.12 on PV lag, positive on yH-ȳ lag)
+a_c_y           = 0.06;     // ŷ → PV² (FR-BDF: -0.052, sign adjusted)
+a_c_i           = -0.04;    // i_gap → PV² (FR-BDF: -0.012, amplified for AU)
+a_c_pi          = 0.005;    // π_gap → PV² (FR-BDF: 0.002, small)
+a_c_u           = -0.03;    // û → PV² (FR-BDF: -0.03, via income expectations)
+a_c_yh          = 0.10;     // yH-ȳ → PV² (FR-BDF Table 4.6.4: 0.034 in policy fn)
 
 // Business investment auxiliary (FR-BDF Tables 4.6.11-12)
 // Output aux: q̂ = 0.59·q̂(-1) + 0.61·ŷ, R²=0.90
 // User cost aux: r̂_KB = 4.45·(i-ī)(-1), R²=0.63
 // Policy fn (output): ŷ(0.035), i_gap(-0.101), π_gap(0.027)
+// Business investment OUTPUT gap auxiliary (FR-BDF Table 4.6.11: q̂)
 rho_ib_aux      = 0.59;     // persistence (FR-BDF: 0.59 for q̂, EXACT)
-a_ib_y          = 0.15;     // ŷ → PV (FR-BDF: 0.035 policy fn, 0.61 in aux, scaled)
-a_ib_i          = -0.10;    // i_gap → PV (FR-BDF: -0.101 policy fn, EXACT)
-a_ib_pi         = 0.03;     // π_gap → PV (FR-BDF: 0.027 policy fn, NEAR EXACT)
+a_ib_y          = 0.15;     // ŷ → q̂ (FR-BDF: 0.035 policy fn, 0.61 in aux, scaled)
+a_ib_pi         = 0.03;     // π_gap → q̂ (FR-BDF: 0.027 policy fn, NEAR EXACT)
+a_ib_u          = 0.00;     // û → q̂ (FR-BDF: 0 in output aux)
+
+// Business investment USER COST gap auxiliary (FR-BDF Table 4.6.12: r̂_KB)
+rho_rKB_aux     = 0.30;     // own persistence (FR-BDF: -0.055 in policy fn, positive in aux)
+a_rKB_i         = 0.24;     // i_gap → r̂_KB (FR-BDF: 4.45 in aux, 0.24 in policy fn)
 
 // Housing investment auxiliary (FR-BDF Table 4.6.16)
 // Auxiliary: Î*_H = 0.38·ŷ + -0.89·(i-ī) + 0.49·(π-π̄) + 0.71·lag, R²=0.62
@@ -787,6 +825,7 @@ rho_ih_aux      = 0.71;     // persistence (FR-BDF: 0.71, EXACT)
 a_ih_y          = 0.10;     // ŷ → PV (FR-BDF: 0.38 [0.26] in aux, 0.029 in policy fn)
 a_ih_i          = -0.15;    // i_gap → PV (FR-BDF: -0.89 [0.96] in aux, -0.15 in policy fn, EXACT)
 a_ih_pi         = 0.05;     // π_gap → PV (FR-BDF: 0.49 [0.54] in aux, 0.035 in policy fn)
+a_ih_u          = 0.00;     // û → PV (FR-BDF: implicit via demand channel)
 
 // === Sector financial account parameters (Section 4.8.5) ===
 // SS net asset ratios (as share of *quarterly* nominal GDP)
@@ -834,7 +873,8 @@ g_nom           = 0.002625;     // quarterly (~1.05% annual real + 2.5% inflatio
 
 var_model(model_name = esat_enriched,
     eqtags = ['var_y', 'var_i', 'var_pi',
-              'var_pQ', 'var_n', 'var_c', 'var_ib', 'var_ih']);
+              'var_u', 'var_yus',
+              'var_pQ', 'var_n', 'var_yh', 'var_c', 'var_ib', 'var_rKB', 'var_ih']);
 
 // All 5 PAC models share this enriched var_model.
 // Each finds its own target variable (piQ_hat, n_hat, etc.) in the VAR.
@@ -903,7 +943,7 @@ model;
     // =================================================================
     // Pure VAR(1) form: x = f(x(-1)) + eps. No contemporaneous terms.
     // These equations form the auxiliary model for PAC expectations.
-    // The companion matrix H is 8x8, jointly capturing E-SAT + auxiliary dynamics.
+    // The companion matrix H is 10x10, jointly capturing E-SAT + auxiliary dynamics.
     // h-vectors from pac_expectation() depend on ALL state variables.
 
     // --- E-SAT core: simplified IS curve (lagged terms only) ---
@@ -918,25 +958,46 @@ model;
     [name = 'var_pi']
     pi_gap_var = lambda_pi * pi_gap_var(-1) + kappa_pi * y_gap_var(-1) + eps_var_pi;
 
+    // --- E-SAT additional: unemployment gap (Okun's law, FR-BDF Table 4.5.2) ---
+    [name = 'var_u']
+    u_gap_var = rho_u_gap * u_gap_var(-1) + okun_coeff * y_gap_var(-1) + eps_var_u;
+
+    // --- E-SAT additional: foreign output gap (US, simplified AR(1)) ---
+    [name = 'var_yus']
+    yhat_us_var = lambda_q_us * yhat_us_var(-1) + eps_var_yus;
+
     // --- Auxiliary: VA price target gap (FR-BDF Table 4.4.4, eqs 45-47) ---
     [name = 'var_pQ']
-    piQ_hat = rho_pQ_aux * piQ_hat(-1) + a_pQ_y * y_gap_var(-1) + a_pQ_i * i_gap_var(-1) + a_pQ_u * pi_gap_var(-1) + eps_var_pQ;
+    piQ_hat = rho_pQ_aux * piQ_hat(-1) + a_pQ_y * y_gap_var(-1) + a_pQ_i * i_gap_var(-1) + a_pQ_pi * pi_gap_var(-1) + a_pQ_u * u_gap_var(-1) + eps_var_pQ;
 
     // --- Auxiliary: employment target gap (FR-BDF Table 4.5.7, eq 57) ---
     [name = 'var_n']
-    n_hat = rho_n_aux * n_hat(-1) + a_n_y * y_gap_var(-1) + a_n_i * i_gap_var(-1) + a_n_pi * pi_gap_var(-1) + eps_var_n;
+    n_hat = rho_n_aux * n_hat(-1) + a_n_y * y_gap_var(-1) + a_n_i * i_gap_var(-1) + a_n_pi * pi_gap_var(-1) + a_n_u * u_gap_var(-1) + eps_var_n;
 
-    // --- Auxiliary: consumption income-output gap (FR-BDF Table 4.6.3) ---
+    // --- Auxiliary: household income-output ratio gap (FR-BDF Table 4.6.3: yH-ȳ) ---
+    // This is the FIRST layer of the nested PV: income ratio tracks output and unemployment
+    [name = 'var_yh']
+    yh_ratio_hat = rho_yh_aux * yh_ratio_hat(-1) + a_yh_y * y_gap_var(-1) + a_yh_u * u_gap_var(-1) + eps_var_yh;
+
+    // --- Auxiliary: consumption PV² gap (FR-BDF Table 4.6.4: PV of yH-ȳ) ---
+    // This is the SECOND layer: PV of changes in the income-output ratio.
+    // c_hat depends on yh_ratio_hat(-1), creating the nested PV structure.
     [name = 'var_c']
-    c_hat = rho_c_aux * c_hat(-1) + a_c_y * y_gap_var(-1) + a_c_i * i_gap_var(-1) + a_c_u * pi_gap_var(-1) + eps_var_c;
+    c_hat = rho_c_aux * c_hat(-1) + a_c_y * y_gap_var(-1) + a_c_i * i_gap_var(-1) + a_c_pi * pi_gap_var(-1) + a_c_u * u_gap_var(-1) + a_c_yh * yh_ratio_hat(-1) + eps_var_c;
 
-    // --- Auxiliary: business inv output gap (FR-BDF Table 4.6.11) ---
+    // --- Auxiliary: business inv output gap (FR-BDF Table 4.6.11: q̂) ---
+    // Output channel only; interest rate channel moves to rKB_hat (Table 4.6.12)
     [name = 'var_ib']
-    ib_hat = rho_ib_aux * ib_hat(-1) + a_ib_y * y_gap_var(-1) + a_ib_i * i_gap_var(-1) + a_ib_pi * pi_gap_var(-1) + eps_var_ib;
+    ib_hat = rho_ib_aux * ib_hat(-1) + a_ib_y * y_gap_var(-1) + a_ib_pi * pi_gap_var(-1) + a_ib_u * u_gap_var(-1) + eps_var_ib;
+
+    // --- Auxiliary: business inv user cost gap (FR-BDF Table 4.6.12: r̂_KB) ---
+    // Separate user cost expectations: interest rate → cost of capital → investment
+    [name = 'var_rKB']
+    rKB_hat = rho_rKB_aux * rKB_hat(-1) + a_rKB_i * i_gap_var(-1) + eps_var_rKB;
 
     // --- Auxiliary: housing inv target gap (FR-BDF Table 4.6.16) ---
     [name = 'var_ih']
-    ih_hat = rho_ih_aux * ih_hat(-1) + a_ih_y * y_gap_var(-1) + a_ih_i * i_gap_var(-1) + a_ih_pi * pi_gap_var(-1) + eps_var_ih;
+    ih_hat = rho_ih_aux * ih_hat(-1) + a_ih_y * y_gap_var(-1) + a_ih_i * i_gap_var(-1) + a_ih_pi * pi_gap_var(-1) + a_ih_u * u_gap_var(-1) + eps_var_ih;
 
     // =================================================================
     // LOG-LEVEL ACCUMULATION FOR DYNARE PAC (diff() form)
@@ -1045,15 +1106,17 @@ model;
     // differentiation. Absent in MCE (forward leads already capture everything).
 
     [name = 'eq_pv_piQ_aux']
-    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_u * pi_au_gap(-1);
+    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1);
     [name = 'eq_pv_n_aux']
-    pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1);
+    pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1) + a_n_u * u_gap(-1);
     [name = 'eq_pv_c_aux']
-    pv_c_aux = rho_c_aux * pv_c_aux(-1) + a_c_y * yhat_au(-1) + a_c_i * i_gap(-1) + a_c_u * pi_au_gap(-1);
+    pv_c_aux = rho_c_aux * pv_c_aux(-1) + a_c_y * yhat_au(-1) + a_c_i * i_gap(-1) + a_c_pi * pi_au_gap(-1) + a_c_u * u_gap(-1);
     [name = 'eq_pv_ib_aux']
-    pv_ib_aux = rho_ib_aux * pv_ib_aux(-1) + a_ib_y * yhat_au(-1) + a_ib_i * i_gap(-1) + a_ib_pi * pi_au_gap(-1);
+    pv_ib_aux = rho_ib_aux * pv_ib_aux(-1) + a_ib_y * yhat_au(-1) + a_ib_pi * pi_au_gap(-1) + a_ib_u * u_gap(-1);
+    [name = 'eq_pv_rKB_aux']
+    pv_rKB_aux = rho_rKB_aux * pv_rKB_aux(-1) + a_rKB_i * i_gap(-1);
     [name = 'eq_pv_ih_aux']
-    pv_ih_aux = rho_ih_aux * pv_ih_aux(-1) + a_ih_y * yhat_au(-1) + a_ih_i * i_gap(-1) + a_ih_pi * pi_au_gap(-1);
+    pv_ih_aux = rho_ih_aux * pv_ih_aux(-1) + a_ih_y * yhat_au(-1) + a_ih_i * i_gap(-1) + a_ih_pi * pi_au_gap(-1) + a_ih_u * u_gap(-1);
 
     // VA price PAC equation — h-vectors from enriched E-SAT var_model
     // PLUS backward expectation correction for first-order wedge.
@@ -1236,7 +1299,7 @@ model;
     // pac_expectation(pac_ib) replaces omega_ib * dln_ib_star + neutrality term.
     // 2nd-order adjustment costs: 2 AR lags of diff(ln_ib_level).
     // Accelerator (b3_ib): output gap drives investment via demand.
-    // User cost (b4_ib): interest rate gap depresses investment.
+    // User cost: sigma_ces * pv_rKB_aux (FR-BDF eq 64: σ·PV(Δlog r̂_KB), structural)
 
     [name = 'eq_dln_ib_pac']
     diff(ln_ib_level) = b0_ib * (ib_hat(-1) - ln_ib_level(-1))
@@ -1244,7 +1307,7 @@ model;
              + b2_ib * diff(ln_ib_level(-2))
              + pac_expectation(pac_ib)
              + b3_ib * yhat_au
-             + b4_ib * i_gap(-1)
+             - sigma_ces * pv_rKB_aux
              + pv_ib_aux
              + eps_ib;
 
@@ -1877,20 +1940,20 @@ check;
 // -----------------------------------------------------------------------
 
 shocks;
-    var eps_q;        stderr 0.506;     // posterior mean
-    var eps_i;        stderr 0.081;     // posterior mean
-    var eps_pi;       stderr 0.729;     // posterior mean
-    var eps_q_us;     stderr 1.0879;
-    var eps_pi_us;    stderr 0.2645;
+    var eps_q;        stderr 0.818;     // AU posterior mode
+    var eps_i;        stderr 0.027;     // AU posterior mode
+    var eps_pi;       stderr 0.584;     // AU posterior mode
+    var eps_q_us;     stderr 1.138;     // AU posterior mode
+    var eps_pi_us;    stderr 0.319;     // AU posterior mode
     var eps_ibar;     stderr 0.01;
     var eps_pibar_au; stderr 0.01;
     var eps_pibar_us; stderr 0.01;
-    var eps_pQ;       stderr 0.5;    // VA price shock (~0.5% quarterly)
+    var eps_pQ;       stderr 0.571;  // VA price shock (AU OLS residual)
     var eps_w;        stderr 0.6;    // wage shock (comparable to price Phillips)
-    var eps_n;        stderr 0.4;    // employment shock
-    var eps_c;        stderr 1.794;  // consumption shock (posterior mean)
-    var eps_ib;       stderr 2.807;  // business investment shock (posterior mean)
-    var eps_ih;       stderr 1.729;  // household investment shock (posterior mean)
+    var eps_n;        stderr 0.577;  // employment shock (AU OLS residual)
+    var eps_c;        stderr 1.576;  // consumption shock (AU OLS residual)
+    var eps_ib;       stderr 2.750;  // business investment shock (AU OLS residual)
+    var eps_ih;       stderr 1.729;  // household investment shock (calibrated — separate data needed)
     var eps_10y;      stderr 0.10;   // long rate shock (small — most variation from short rate)
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
     var eps_COE;      stderr 0.15;   // cost of equity spread shock
@@ -1915,6 +1978,10 @@ shocks;
     var eps_var_y;    stderr 0.34;   // shadow output gap (E-SAT scale)
     var eps_var_i;    stderr 0.10;   // shadow interest rate gap
     var eps_var_pi;   stderr 0.26;   // shadow inflation gap
+    var eps_var_u;    stderr 0.20;   // shadow unemployment gap
+    var eps_var_yus;  stderr 0.50;   // shadow foreign output gap
+    var eps_var_yh;   stderr 0.30;   // household income-output ratio gap
+    var eps_var_rKB;  stderr 0.30;   // user cost of capital gap
     var eps_var_pQ;   stderr 0.50;   // VA price auxiliary gap
     var eps_var_n;    stderr 0.50;   // employment auxiliary gap
     var eps_var_c;    stderr 0.50;   // consumption auxiliary gap

@@ -1,0 +1,46 @@
+Full PAC Estimation Test - 12-Apr-2026 20:06:01
+
+Dynare OK: 140 endo, 45 exo
+Companion matrix: 12x12
+All PAC models initialized
+
+dseries: 62 vars x 128 obs
+
+=== 1. VA PRICE PAC (eq_piQ_pac) ===
+SSR=40.3766 T=118
+  b0_pQ: 0.0600 -> 0.0201
+  b1_pQ: 0.5000 -> 0.1791
+  b2_pQ: 0.0900 -> 0.1064
+
+=== 2. CONSUMPTION PAC (eq_dln_c_pac) ===
+SSR=435.3995 T=118
+  b0_c: 0.0600 -> 0.0879
+  b1_c: 0.1490 -> -0.2528
+  b2_c: -0.0200 -> 0.8186
+  b3_c: 0.1390 -> -0.5936
+
+=== 3. BUSINESS INVESTMENT PAC (eq_dln_ib_pac) ===
+SSR=973.9135 T=118
+  b0_ib: 0.0300 -> 0.0177
+  b1_ib: 0.1810 -> 0.0777
+  b2_ib: 0.1000 -> -0.0473
+  b3_ib: 0.1910 -> 0.4295
+
+=== 4. HOUSEHOLD INVESTMENT PAC (eq_dln_ih_pac) ===
+SSR=965.7746 T=118
+  b0_ih: 0.0490 -> 0.0237
+  b1_ih: 0.2100 -> 0.0828
+  b2_ih: 0.0800 -> -0.0370
+  b3_ih: 0.1200 -> 0.1511
+  b4_ih: -0.0500 -> 0.4663
+
+=== 5. EMPLOYMENT PAC (eq_dln_n_pac) ===
+SSR=76.1025 T=118
+  b0_n: 0.0400 -> 0.0463
+  b1_n: 0.3000 -> -0.2647
+  b2_n: 0.1000 -> -0.2743
+  b3_n: 0.0500 -> -0.1948
+  b4_n: 0.0200 -> -0.1587
+  b5_n: 0.1200 -> 0.3791
+
+=== DONE ===

@@ -1,8 +1,10 @@
 function [y, T, residual, g1] = dynamic_14(y, x, params, steady_state, sparse_rowval, sparse_colval, sparse_colptr, T)
 residual=NaN(3, 1);
-  residual(1)=(y(242))-((1+params(146)+params(147)+params(148))*(y(243)-(y(244)*(T(1)*params(147)+T(3)*params(148))+T(3)*params(148)*y(245)))-(y(374)*params(137)*params(146)+T(1)*params(147)*y(390)+T(3)*params(148)*y(391)));
-  residual(2)=(y(259))-(y(390));
-  residual(3)=(y(258))-(y(374));
+  T(3)=params(151)^3;
+  T(4)=T(3)*params(162);
+  residual(1)=(y(286))-((1+params(160)+params(161)+params(162))*(y(287)-(y(288)*(T(1)*params(161)+T(4))+T(4)*y(289)))-(y(440)*params(151)*params(160)+T(1)*params(161)*y(456)+T(4)*y(457)));
+  residual(2)=(y(303))-(y(456));
+  residual(3)=(y(302))-(y(440));
 if nargout > 3
     g1_v = NaN(3, 1);
 g1_v(1)=1;

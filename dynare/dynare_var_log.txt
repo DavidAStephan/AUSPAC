@@ -1,9 +1,4 @@
 Starting Dynare run for au_pac_var.mod
-SUCCESS: Dynare completed without errors
-BK conditions satisfied
-IRF fields: 451
-  yhat_au_eps_q: peak = 0.522543
-  pi_au_eps_q: peak = 0.030412
-  i_au_eps_q: peak = 0.018420
-  piQ_eps_q: peak = 0.058986
-  dln_c_eps_q: peak = 0.072748
+SUCCESS: Dynare completed
+Endogenous vars: 135
+Forward-looking: 0

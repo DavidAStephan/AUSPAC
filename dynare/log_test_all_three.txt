@@ -1,27 +1,27 @@
 === COMPILE TEST: ALL THREE REGIMES ===
-Timestamp: 12-Apr-2026 14:11:03
+Timestamp: 12-Apr-2026 18:36:47
 
 --- VAR-based (au_pac_var.mod) ---
 STATUS: SUCCESS
 Forward-looking vars: 0
-Predetermined vars: 79
-Endogenous vars: 115
-Output gap peak: -0.024261 at Q4
-VA price peak: -0.009660 at Q5
+Predetermined vars: 95
+Endogenous vars: 140
+Output gap peak: -0.010837 at Q10
+VA price peak: -0.004424 at Q8
 
 --- Hybrid (au_pac.mod) ---
 STATUS: SUCCESS
 Forward-looking vars: 3
-Predetermined vars: 87
-Endogenous vars: 135
-Output gap peak: -0.024261 at Q4
-VA price peak: -0.009660 at Q5
+Predetermined vars: 92
+Endogenous vars: 140
+Output gap peak: -0.010837 at Q10
+VA price peak: -0.004424 at Q8
 
 --- Full MCE (au_pac_mce.mod) ---
 STATUS: SUCCESS
-Forward-looking vars: 28
-Predetermined vars: 68
-Endogenous vars: 132
-Output gap peak: -0.019539 at Q4
-VA price peak: -0.002709 at Q4
+Forward-looking vars: 30
+Predetermined vars: 79
+Endogenous vars: 154
+Output gap peak: -0.005982 at Q8
+VA price peak: -0.000752 at Q6
 

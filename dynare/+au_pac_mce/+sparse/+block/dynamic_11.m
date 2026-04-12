@@ -1,3 +1,3 @@
 function [y, T] = dynamic_11(y, x, params, steady_state, sparse_rowval, sparse_colval, sparse_colptr, T)
-  y(254)=y(385);
+  y(298)=y(451);
 end

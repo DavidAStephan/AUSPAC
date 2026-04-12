@@ -6,7 +6,7 @@ if nargin<3
 end
 
 if strcmp(model_name, 'esat_enriched')
-    ar = zeros(8, 8, 1);
+    ar = zeros(12, 12, 1);
     ar(1,1,1) = params(2);
     ar(1,2,1) = (-params(3));
     ar(1,3,1) = params(3);
@@ -15,42 +15,55 @@ if strcmp(model_name, 'esat_enriched')
     ar(2,3,1) = (1-params(4))*params(5);
     ar(3,1,1) = params(8);
     ar(3,3,1) = params(7);
-    ar(4,1,1) = params(139);
-    ar(4,2,1) = params(140);
-    ar(4,3,1) = params(141);
-    ar(4,4,1) = params(138);
-    ar(5,1,1) = params(143);
-    ar(5,2,1) = params(144);
-    ar(5,3,1) = params(145);
-    ar(5,5,1) = params(142);
-    ar(6,1,1) = params(147);
-    ar(6,2,1) = params(148);
-    ar(6,3,1) = params(149);
-    ar(6,6,1) = params(146);
-    ar(7,1,1) = params(151);
-    ar(7,2,1) = params(152);
-    ar(7,3,1) = params(153);
-    ar(7,7,1) = params(150);
-    ar(8,1,1) = params(155);
-    ar(8,2,1) = params(156);
-    ar(8,3,1) = params(157);
-    ar(8,8,1) = params(154);
+    ar(4,1,1) = params(34);
+    ar(4,4,1) = params(35);
+    ar(5,5,1) = params(9);
+    ar(6,1,1) = params(139);
+    ar(6,2,1) = params(140);
+    ar(6,3,1) = params(141);
+    ar(6,4,1) = params(142);
+    ar(6,6,1) = params(138);
+    ar(7,1,1) = params(144);
+    ar(7,2,1) = params(145);
+    ar(7,3,1) = params(146);
+    ar(7,4,1) = params(147);
+    ar(7,7,1) = params(143);
+    ar(8,1,1) = params(149);
+    ar(8,4,1) = params(150);
+    ar(8,8,1) = params(148);
+    ar(9,1,1) = params(152);
+    ar(9,2,1) = params(153);
+    ar(9,3,1) = params(154);
+    ar(9,4,1) = params(155);
+    ar(9,8,1) = params(156);
+    ar(9,9,1) = params(151);
+    ar(10,1,1) = params(158);
+    ar(10,3,1) = params(159);
+    ar(10,4,1) = params(160);
+    ar(10,10,1) = params(157);
+    ar(11,2,1) = params(162);
+    ar(11,11,1) = params(161);
+    ar(12,1,1) = params(164);
+    ar(12,2,1) = params(165);
+    ar(12,3,1) = params(166);
+    ar(12,4,1) = params(167);
+    ar(12,12,1) = params(163);
     if nargout>1
-        a0 = eye(8);
+        a0 = eye(12);
         if reducedform
             for i=1:1
                 ar(:,:,i) = a0\ar(:,:,i);
             end
             if nargout<3
-                a0 = eye(8);
+                a0 = eye(12);
             end
         end
         if nargout>2
-            constants = zeros(8,1);
+            constants = zeros(12,1);
         end
         if reducedform
             constants = a0\constants;
-            a0 = eye(8);
+            a0 = eye(12);
         end
     end
     return

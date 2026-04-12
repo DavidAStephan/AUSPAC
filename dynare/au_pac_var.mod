@@ -150,16 +150,49 @@ var
     y_gap_var       // shadow output gap (pure VAR form of yhat_au)
     i_gap_var       // shadow interest rate gap (pure VAR form of i_gap)
     pi_gap_var      // shadow inflation gap (pure VAR form of pi_au_gap)
+    // Additional E-SAT state variables (FR-BDF Tables 4.4.4, 4.5.7 use 6-9 states)
+    u_gap_var       // shadow unemployment gap (Okun's law in VAR form)
+    yhat_us_var     // shadow foreign output gap (AR(1) in VAR form)
     // Auxiliary gap variables (appended to E-SAT, FR-BDF Tables 4.4.4, 4.5.7, etc.)
     piQ_hat         // VA price target gap (FR-BDF eq 45-47 chain)
     n_hat           // employment target gap (FR-BDF eq 57)
-    c_hat           // consumption income-output ratio gap (FR-BDF Table 4.6.3)
+    yh_ratio_hat    // household income-output ratio gap (FR-BDF Table 4.6.3: yH-ȳ)
+    c_hat           // consumption PV² gap (FR-BDF Table 4.6.4: PV of yh_ratio_hat)
     ib_hat          // business investment output gap (FR-BDF Table 4.6.11)
+    rKB_hat         // user cost of capital gap (FR-BDF Table 4.6.12: r̂_KB)
     ih_hat          // housing investment target gap (FR-BDF Table 4.6.16)
     // Backward expectation correction variables (additive wedge at first order)
     // These represent the DIFFERENCE between E-SAT simplified forecast and full model RE.
     // Present in backward models only; absent in MCE.
-    pv_piQ_aux  pv_n_aux  pv_c_aux  pv_ib_aux  pv_ih_aux
+    pv_piQ_aux  pv_n_aux  pv_c_aux  pv_ib_aux  pv_rKB_aux  pv_ih_aux
+
+    // === Sector financial accounts (Section 4.8.5, eqs 116-126) ===
+    // Net financial asset ratios (W_j / nominal LR GDP, quarterly)
+    w_F             // firms net financial asset ratio (negative = net debtor)
+    w_G             // government net financial asset ratio (negative = govt debt)
+    w_H             // households net financial asset ratio (positive = net saver)
+    w_N             // NPISH net financial asset ratio
+    // Net property income ratios (YF_j / nominal LR GDP)
+    yf_F            // firms net property income ratio
+    yf_G            // government net property income ratio
+    yf_H            // households net property income ratio
+    yf_N            // NPISH net property income ratio
+    // Net financing capacity ratios (B_j / nominal LR GDP)
+    b_F             // firms net financing capacity ratio
+    b_G             // government fiscal balance ratio
+    b_H             // households net financing capacity ratio
+    b_N             // NPISH net financing capacity ratio
+    // Transfer rates (to households, as share of LR GDP)
+    tau_F           // firms dividend/transfer rate to households
+    tau_G           // government social transfer rate (fiscal rule instrument)
+    tau_N           // NPISH transfer rate to households
+    // Asset return rates
+    i_F             // effective return on firms net assets
+    i_G             // effective return on government net assets
+    i_H             // effective return on household net assets
+    i_N             // effective return on NPISH net assets
+    // Current account
+    b_ROW           // rest of world net financing = -(sum of domestic B_j)
 
     // === PAC level-accumulation variables (for Dynare PAC diff() form) ===
     pQ_level        // VA price detrended log-level (diff = piQ - pi_ss_au)
@@ -220,6 +253,10 @@ varexo
     eps_var_c       // consumption auxiliary gap shock
     eps_var_ib      // business investment auxiliary gap shock
     eps_var_ih      // housing investment auxiliary gap shock
+    eps_var_u       // shadow unemployment gap shock
+    eps_var_yus     // shadow foreign output gap shock
+    eps_var_yh      // household income-output ratio gap shock
+    eps_var_rKB     // user cost of capital gap shock
 ;
 
 // -----------------------------------------------------------------------
@@ -411,26 +448,44 @@ parameters
     beta_pac        // quarterly subjective discount (0.98 ≈ 8% annual)
 
     // Dynamic E-SAT auxiliary parameters (same as hybrid, aligned with FR-BDF)
-    rho_pQ_aux  a_pQ_y  a_pQ_i  a_pQ_u
-    rho_n_aux   a_n_y   a_n_i   a_n_pi
-    rho_c_aux   a_c_y   a_c_i   a_c_u
-    rho_ib_aux  a_ib_y  a_ib_i  a_ib_pi
-    rho_ih_aux  a_ih_y  a_ih_i  a_ih_pi
+    rho_pQ_aux  a_pQ_y  a_pQ_i  a_pQ_pi  a_pQ_u
+    rho_n_aux   a_n_y   a_n_i   a_n_pi   a_n_u
+    rho_yh_aux  a_yh_y  a_yh_u
+    rho_c_aux   a_c_y   a_c_i   a_c_pi   a_c_u  a_c_yh
+    rho_ib_aux  a_ib_y  a_ib_pi  a_ib_u
+    rho_rKB_aux a_rKB_i
+    rho_ih_aux  a_ih_y  a_ih_i  a_ih_pi  a_ih_u
+
+    // === Sector financial account parameters (Section 4.8.5) ===
+    w_F_ss          // firms SS net asset ratio
+    w_G_ss          // government SS net asset ratio
+    w_N_ss          // NPISH SS net asset ratio
+    tau_F_ss        // firms SS dividend rate
+    tau_G_ss        // government SS social transfer rate
+    tau_N_ss        // NPISH SS transfer rate
+    rho_stab_1      // transfer adjustment speed
+    rho_stab_2      // debt-stabilizing reaction coefficient
+    rho_i_asset     // persistence of asset returns toward i_10y
+    i_F_prem        // firms return premium over i_10y
+    i_H_prem        // households return premium
+    i_N_prem        // NPISH return premium
+    gamma_reval     // firms revaluation as share of nominal GDP
+    g_nom           // quarterly nominal growth rate
 ;
 
 // -----------------------------------------------------------------------
 // Parameter values
 // -----------------------------------------------------------------------
 
-// E-SAT (Bayesian posterior means)
-delta           = 0.1989;
-lambda_q        = 0.4479;
-sigma_q         = 0.1663;
-lambda_i        = 0.8281;
-alpha_i         = 0.2787;
-beta_i          = 0.1350;
-lambda_pi       = 0.2629;
-kappa_pi        = 0.0582;
+// E-SAT (Bayesian posterior modes — Australian data 1993Q2-2023Q3)
+delta           = 0.1989;       // foreign spillover (calibrated)
+lambda_q        = 0.6959;       // IS persistence (AU posterior)
+sigma_q         = 0.0648;       // real rate sensitivity (AU posterior)
+lambda_i        = 0.9576;       // interest rate smoothing (AU posterior)
+alpha_i         = 0.3001;       // Taylor inflation response (AU posterior)
+beta_i          = 0.0837;       // Taylor output response (AU posterior)
+lambda_pi       = 0.2902;       // inflation persistence (AU posterior)
+kappa_pi        = 0.0374;       // Phillips slope (AU posterior)
 lambda_q_us     = 0.8057;
 lambda_pi_us    = 0.6529;
 kappa_pi_us     = 0.0131;
@@ -670,11 +725,29 @@ kappa_ib_y      = 0.06;     // output gap -> business investment target
 beta_pac        = 0.98;
 
 // Dynamic E-SAT auxiliary parameters (same values as hybrid, aligned with FR-BDF)
-rho_pQ_aux = 0.70; a_pQ_y = 0.03; a_pQ_i = -0.02; a_pQ_u = -0.01;
-rho_n_aux  = 0.67; a_n_y  = 0.12; a_n_i  = -0.03; a_n_pi = 0.05;
-rho_c_aux  = 0.70; a_c_y  = 0.06; a_c_i  = -0.04; a_c_u  = -0.03;
-rho_ib_aux = 0.59; a_ib_y = 0.15; a_ib_i = -0.10; a_ib_pi = 0.03;
-rho_ih_aux = 0.71; a_ih_y = 0.10; a_ih_i = -0.15; a_ih_pi = 0.05;
+rho_pQ_aux = 0.70; a_pQ_y = 0.03; a_pQ_i = -0.02; a_pQ_pi = 0.01;  a_pQ_u = -0.01;
+rho_n_aux  = 0.67; a_n_y  = 0.12; a_n_i  = -0.03; a_n_pi  = 0.05;  a_n_u  = -0.02;
+rho_yh_aux = 0.92; a_yh_y = 0.05; a_yh_u = -0.08;
+rho_c_aux  = 0.70; a_c_y  = 0.06; a_c_i  = -0.04; a_c_pi  = 0.005; a_c_u  = -0.03; a_c_yh = 0.10;
+rho_ib_aux = 0.59; a_ib_y = 0.15; a_ib_pi = 0.03;  a_ib_u = 0.00;
+rho_rKB_aux = 0.30; a_rKB_i = 0.24;
+rho_ih_aux = 0.71; a_ih_y = 0.10; a_ih_i = -0.15; a_ih_pi = 0.05;  a_ih_u = 0.00;
+
+// === Sector financial account parameters (Section 4.8.5) ===
+w_F_ss          = -0.70 * 4;    // firms: net debtor (~280% quarterly GDP)
+w_G_ss          = -0.40 * 4;    // government: net debt (~160% quarterly GDP)
+w_N_ss          = 0.02 * 4;     // NPISH: small net creditor
+tau_F_ss        = 0.026;        // firms dividend payout rate
+tau_G_ss        = 0.16;         // government social transfers
+tau_N_ss        = 0.00026;      // NPISH transfers (tiny)
+rho_stab_1      = 0.10;         // transfer adjustment speed
+rho_stab_2      = 0.25;         // debt-stabilizing reaction coefficient
+rho_i_asset     = 0.983;        // half-life ~40 quarters for return convergence
+i_F_prem        = -0.0037;      // firms return premium over i_10y
+i_H_prem        = -0.0007;      // households return premium
+i_N_prem        = -0.001;       // NPISH return premium
+gamma_reval     = -0.018;       // quarterly revaluation as share of nominal GDP
+g_nom           = 0.002625;     // quarterly nominal growth (~1.05% annual real + 2.5% infl)
 
 // -----------------------------------------------------------------------
 // PAC infrastructure: auxiliary VAR + PAC model declarations
@@ -692,7 +765,8 @@ rho_ih_aux = 0.71; a_ih_y = 0.10; a_ih_i = -0.15; a_ih_pi = 0.05;
 
 var_model(model_name = esat_enriched,
     eqtags = ['var_y', 'var_i', 'var_pi',
-              'var_pQ', 'var_n', 'var_c', 'var_ib', 'var_ih']);
+              'var_u', 'var_yus',
+              'var_pQ', 'var_n', 'var_yh', 'var_c', 'var_ib', 'var_rKB', 'var_ih']);
 
 // All 5 PAC models share this enriched var_model.
 // Each finds its own target variable (piQ_hat, n_hat, etc.) in the VAR.
@@ -757,24 +831,11 @@ model;
     pibar_us = lambda_pibar_us * pibar_us(-1) + (1 - lambda_pibar_us) * pi_ss_us + eps_pibar_us;
 
     // =================================================================
-    // SHADOW E-SAT — TREND COMPONENT MODEL FORM (for Dynare PAC)
-    // =================================================================
-    // Written in diff() form for I(1) pseudo-level variables.
-    // TCM requires: diff(x) = f(lagged vars) + shock
-    // The I(0) gap variables are the differences of pseudo-levels.
-
-    // Minimal TCM: 2 equations for VA price PAC.
-    // Non-target: error-correction of detrended VA price level toward target.
-    // Target: random walk (stochastic trend for VA price level).
-    // TCM requires unit coefficient on x(-1) in EC term.
-    // Form: diff(x) = a*target(-1) - x(-1) + b*diff(x(-1)) + eps
-    // This means the EC speed is implicitly 1 (absorbed into target coeff).
-    // =================================================================
     // ENRICHED E-SAT var_model EQUATIONS (FR-BDF Section 3.1.1)
     // =================================================================
     // Pure VAR(1) form: x = f(x(-1)) + eps. No contemporaneous terms.
     // These equations form the auxiliary model for PAC expectations.
-    // The companion matrix H is 8x8, jointly capturing E-SAT + auxiliary dynamics.
+    // The companion matrix H is 10x10, jointly capturing E-SAT + auxiliary dynamics.
     // h-vectors from pac_expectation() depend on ALL state variables.
 
     // --- E-SAT core: simplified IS curve (lagged terms only) ---
@@ -789,25 +850,41 @@ model;
     [name = 'var_pi']
     pi_gap_var = lambda_pi * pi_gap_var(-1) + kappa_pi * y_gap_var(-1) + eps_var_pi;
 
+    // --- E-SAT additional: unemployment gap (Okun's law, FR-BDF Table 4.5.2) ---
+    [name = 'var_u']
+    u_gap_var = rho_u_gap * u_gap_var(-1) + okun_coeff * y_gap_var(-1) + eps_var_u;
+
+    // --- E-SAT additional: foreign output gap (US, simplified AR(1)) ---
+    [name = 'var_yus']
+    yhat_us_var = lambda_q_us * yhat_us_var(-1) + eps_var_yus;
+
     // --- Auxiliary: VA price target gap (FR-BDF Table 4.4.4, eqs 45-47) ---
     [name = 'var_pQ']
-    piQ_hat = rho_pQ_aux * piQ_hat(-1) + a_pQ_y * y_gap_var(-1) + a_pQ_i * i_gap_var(-1) + a_pQ_u * pi_gap_var(-1) + eps_var_pQ;
+    piQ_hat = rho_pQ_aux * piQ_hat(-1) + a_pQ_y * y_gap_var(-1) + a_pQ_i * i_gap_var(-1) + a_pQ_pi * pi_gap_var(-1) + a_pQ_u * u_gap_var(-1) + eps_var_pQ;
 
     // --- Auxiliary: employment target gap (FR-BDF Table 4.5.7, eq 57) ---
     [name = 'var_n']
-    n_hat = rho_n_aux * n_hat(-1) + a_n_y * y_gap_var(-1) + a_n_i * i_gap_var(-1) + a_n_pi * pi_gap_var(-1) + eps_var_n;
+    n_hat = rho_n_aux * n_hat(-1) + a_n_y * y_gap_var(-1) + a_n_i * i_gap_var(-1) + a_n_pi * pi_gap_var(-1) + a_n_u * u_gap_var(-1) + eps_var_n;
 
-    // --- Auxiliary: consumption income-output gap (FR-BDF Table 4.6.3) ---
+    // --- Auxiliary: household income-output ratio gap (FR-BDF Table 4.6.3: yH-ȳ) ---
+    [name = 'var_yh']
+    yh_ratio_hat = rho_yh_aux * yh_ratio_hat(-1) + a_yh_y * y_gap_var(-1) + a_yh_u * u_gap_var(-1) + eps_var_yh;
+
+    // --- Auxiliary: consumption PV² gap (FR-BDF Table 4.6.4: PV of yH-ȳ) ---
     [name = 'var_c']
-    c_hat = rho_c_aux * c_hat(-1) + a_c_y * y_gap_var(-1) + a_c_i * i_gap_var(-1) + a_c_u * pi_gap_var(-1) + eps_var_c;
+    c_hat = rho_c_aux * c_hat(-1) + a_c_y * y_gap_var(-1) + a_c_i * i_gap_var(-1) + a_c_pi * pi_gap_var(-1) + a_c_u * u_gap_var(-1) + a_c_yh * yh_ratio_hat(-1) + eps_var_c;
 
-    // --- Auxiliary: business inv output gap (FR-BDF Table 4.6.11) ---
+    // --- Auxiliary: business inv output gap (FR-BDF Table 4.6.11: q̂) ---
     [name = 'var_ib']
-    ib_hat = rho_ib_aux * ib_hat(-1) + a_ib_y * y_gap_var(-1) + a_ib_i * i_gap_var(-1) + a_ib_pi * pi_gap_var(-1) + eps_var_ib;
+    ib_hat = rho_ib_aux * ib_hat(-1) + a_ib_y * y_gap_var(-1) + a_ib_pi * pi_gap_var(-1) + a_ib_u * u_gap_var(-1) + eps_var_ib;
+
+    // --- Auxiliary: business inv user cost gap (FR-BDF Table 4.6.12: r̂_KB) ---
+    [name = 'var_rKB']
+    rKB_hat = rho_rKB_aux * rKB_hat(-1) + a_rKB_i * i_gap_var(-1) + eps_var_rKB;
 
     // --- Auxiliary: housing inv target gap (FR-BDF Table 4.6.16) ---
     [name = 'var_ih']
-    ih_hat = rho_ih_aux * ih_hat(-1) + a_ih_y * y_gap_var(-1) + a_ih_i * i_gap_var(-1) + a_ih_pi * pi_gap_var(-1) + eps_var_ih;
+    ih_hat = rho_ih_aux * ih_hat(-1) + a_ih_y * y_gap_var(-1) + a_ih_i * i_gap_var(-1) + a_ih_pi * pi_gap_var(-1) + a_ih_u * u_gap_var(-1) + eps_var_ih;
 
     // =================================================================
     // LOG-LEVEL ACCUMULATION FOR DYNARE PAC (diff() form)
@@ -891,15 +968,17 @@ model;
 
     // Dynamic E-SAT auxiliary equations (same as hybrid, aligned with FR-BDF)
     [name = 'eq_pv_piQ_aux']
-    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_u * pi_au_gap(-1);
+    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1);
     [name = 'eq_pv_n_aux']
-    pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1);
+    pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1) + a_n_u * u_gap(-1);
     [name = 'eq_pv_c_aux']
-    pv_c_aux = rho_c_aux * pv_c_aux(-1) + a_c_y * yhat_au(-1) + a_c_i * i_gap(-1) + a_c_u * pi_au_gap(-1);
+    pv_c_aux = rho_c_aux * pv_c_aux(-1) + a_c_y * yhat_au(-1) + a_c_i * i_gap(-1) + a_c_pi * pi_au_gap(-1) + a_c_u * u_gap(-1);
     [name = 'eq_pv_ib_aux']
-    pv_ib_aux = rho_ib_aux * pv_ib_aux(-1) + a_ib_y * yhat_au(-1) + a_ib_i * i_gap(-1) + a_ib_pi * pi_au_gap(-1);
+    pv_ib_aux = rho_ib_aux * pv_ib_aux(-1) + a_ib_y * yhat_au(-1) + a_ib_pi * pi_au_gap(-1) + a_ib_u * u_gap(-1);
+    [name = 'eq_pv_rKB_aux']
+    pv_rKB_aux = rho_rKB_aux * pv_rKB_aux(-1) + a_rKB_i * i_gap(-1);
     [name = 'eq_pv_ih_aux']
-    pv_ih_aux = rho_ih_aux * pv_ih_aux(-1) + a_ih_y * yhat_au(-1) + a_ih_i * i_gap(-1) + a_ih_pi * pi_au_gap(-1);
+    pv_ih_aux = rho_ih_aux * pv_ih_aux(-1) + a_ih_y * yhat_au(-1) + a_ih_i * i_gap(-1) + a_ih_pi * pi_au_gap(-1) + a_ih_u * u_gap(-1);
 
     // VA price PAC equation — h-vectors from enriched E-SAT var_model
     // PLUS backward expectation correction for first-order wedge.
@@ -1078,16 +1157,16 @@ model;
     // pac_expectation(pac_ib) replaces omega_ib * dln_ib_star + neutrality term.
     // 2nd-order adjustment costs: 2 AR lags of diff(ln_ib_level).
     // Accelerator (b3_ib): output gap drives investment via demand.
-    // User cost (b4_ib): interest rate gap depresses investment.
+    // User cost: sigma_ces * pv_rKB_aux (FR-BDF eq 64: σ·PV(Δlog r̂_KB), structural)
 
     [name = 'eq_dln_ib_pac']
     diff(ln_ib_level) = b0_ib * (ib_hat(-1) - ln_ib_level(-1))
              + b1_ib * diff(ln_ib_level(-1))
              + b2_ib * diff(ln_ib_level(-2))
              + pac_expectation(pac_ib)
-             + pv_ib_aux
              + b3_ib * yhat_au
-             + b4_ib * i_gap(-1)
+             - sigma_ces * pv_rKB_aux
+             + pv_ib_aux
              + eps_ib;
 
     // === HOUSEHOLD INVESTMENT PAC (Section 4.6.3, eq. 67, 2nd-order) ===
@@ -1429,6 +1508,78 @@ model;
     [name = 'eq_ph_gap']
     ph_gap = 0.98 * ph_gap(-1) + dln_ph;
 
+    // =================================================================
+    // SECTOR FINANCIAL ACCOUNTS (Section 4.8.5, eqs 116-126)
+    // =================================================================
+    // All variables are ratios to nominal long-run GDP.
+
+    // === Asset return processes (paper eq 126) ===
+    [name = 'eq_i_F']
+    i_F = i_F_prem * (1 - rho_i_asset) + (1 - rho_i_asset) * i_10y + rho_i_asset * i_F(-1);
+
+    [name = 'eq_i_G']
+    i_G = (1 - rho_i_asset) * i_10y + rho_i_asset * i_G(-1);
+
+    [name = 'eq_i_H']
+    i_H = i_H_prem * (1 - rho_i_asset) + (1 - rho_i_asset) * i_10y + rho_i_asset * i_H(-1);
+
+    [name = 'eq_i_N']
+    i_N = i_N_prem * (1 - rho_i_asset) + (1 - rho_i_asset) * i_10y + rho_i_asset * i_N(-1);
+
+    // === Net property income (paper eq 116) ===
+    [name = 'eq_yf_F']
+    yf_F = i_F * w_F_ss - tau_F;
+
+    [name = 'eq_yf_G']
+    yf_G = i_G * w_G_ss;
+
+    [name = 'eq_yf_H']
+    yf_H = i_H * (-(w_F_ss + w_G_ss + w_N_ss)) + tau_F + tau_N;
+
+    [name = 'eq_yf_N']
+    yf_N = i_N * w_N_ss - tau_N;
+
+    // === Transfer / stabilization rules (paper eqs 123-125) ===
+    [name = 'eq_tau_F']
+    tau_F = (1 - rho_stab_1) * tau_F(-1) + rho_stab_1 * tau_F_ss;
+
+    [name = 'eq_tau_N']
+    tau_N = (1 - rho_stab_1) * tau_N(-1) + rho_stab_1 * tau_N_ss;
+
+    [name = 'eq_tau_G']
+    tau_G = (1 - rho_stab_1) * tau_G(-1) + rho_stab_1 * tau_G_ss
+          + 0.05 * yhat_au;
+
+    // === Net financing capacity (B_j) ===
+    [name = 'eq_b_F']
+    b_F = -w_ib * dln_ib - (tau_F - tau_F_ss) + (i_F - (i_ss + tp_ss + i_F_prem)) * w_F_ss;
+
+    [name = 'eq_b_G']
+    b_G = -w_g * dln_g + 0.30 * yhat_au - (tau_G - tau_G_ss) + (i_G - (i_ss + tp_ss)) * w_G_ss;
+
+    [name = 'eq_b_H']
+    b_H = w_c * (yhat_au - dln_c) - w_ih * dln_ih + (i_H - (i_ss + tp_ss + i_H_prem)) * (-(w_F_ss+w_G_ss+w_N_ss));
+
+    [name = 'eq_b_N']
+    b_N = (i_N - (i_ss + tp_ss + i_N_prem)) * w_N_ss;
+
+    // === Wealth accumulation (paper eqs 120-121) ===
+    [name = 'eq_w_F']
+    w_F = 0.98 * w_F(-1) + 0.02 * w_F_ss + b_F;
+
+    [name = 'eq_w_G']
+    w_G = 0.98 * w_G(-1) + 0.02 * w_G_ss + b_G;
+
+    [name = 'eq_w_H']
+    w_H = 0.98 * w_H(-1) + 0.02 * (-(w_F_ss+w_G_ss+w_N_ss)) + b_H;
+
+    [name = 'eq_w_N']
+    w_N = 0.98 * w_N(-1) + 0.02 * w_N_ss + b_N;
+
+    // === Current account (ROW closure) ===
+    [name = 'eq_b_ROW']
+    b_ROW = -(b_F + b_G + b_H + b_N);
+
 end;
 
 // -----------------------------------------------------------------------
@@ -1550,17 +1701,44 @@ steady_state_model;
     y_gap_var      = 0;
     i_gap_var      = 0;
     pi_gap_var     = 0;
+    u_gap_var      = 0;
+    yhat_us_var    = 0;
     piQ_hat        = 0;
     n_hat          = 0;
+    yh_ratio_hat   = 0;
     c_hat          = 0;
     ib_hat         = 0;
+    rKB_hat        = 0;
     ih_hat         = 0;
     // Backward expectation corrections (zero at SS)
     pv_piQ_aux     = 0;
     pv_n_aux       = 0;
     pv_c_aux       = 0;
     pv_ib_aux      = 0;
+    pv_rKB_aux     = 0;
     pv_ih_aux      = 0;
+
+    // Sector financial accounts
+    w_F            = w_F_ss;
+    w_G            = w_G_ss;
+    w_N            = w_N_ss;
+    w_H            = -(w_F_ss + w_G_ss + w_N_ss);
+    i_F            = i_ss + tp_ss + i_F_prem;
+    i_G            = i_ss + tp_ss;
+    i_H            = i_ss + tp_ss + i_H_prem;
+    i_N            = i_ss + tp_ss + i_N_prem;
+    tau_F          = tau_F_ss;
+    tau_G          = tau_G_ss;
+    tau_N          = tau_N_ss;
+    yf_F           = i_F * w_F_ss - tau_F_ss;
+    yf_G           = i_G * w_G_ss;
+    yf_H           = i_H * (-(w_F_ss+w_G_ss+w_N_ss)) + tau_F_ss + tau_N_ss;
+    yf_N           = i_N * w_N_ss - tau_N_ss;
+    b_F            = 0;
+    b_G            = 0;
+    b_H            = 0;
+    b_N            = 0;
+    b_ROW          = 0;
 
     // Log-level variables for PAC (zero at SS — gap model, everything demeaned)
     pQ_level       = 0;
@@ -1591,20 +1769,20 @@ check;
 // -----------------------------------------------------------------------
 
 shocks;
-    var eps_q;        stderr 0.506;     // posterior mean
-    var eps_i;        stderr 0.081;     // posterior mean
-    var eps_pi;       stderr 0.729;     // posterior mean
-    var eps_q_us;     stderr 1.0879;
-    var eps_pi_us;    stderr 0.2645;
+    var eps_q;        stderr 0.818;     // AU posterior mode
+    var eps_i;        stderr 0.027;     // AU posterior mode
+    var eps_pi;       stderr 0.584;     // AU posterior mode
+    var eps_q_us;     stderr 1.138;     // AU posterior mode
+    var eps_pi_us;    stderr 0.319;     // AU posterior mode
     var eps_ibar;     stderr 0.01;
     var eps_pibar_au; stderr 0.01;
     var eps_pibar_us; stderr 0.01;
-    var eps_pQ;       stderr 0.5;    // VA price shock (~0.5% quarterly)
+    var eps_pQ;       stderr 0.571;  // VA price shock (AU OLS residual)
     var eps_w;        stderr 0.6;    // wage shock (comparable to price Phillips)
-    var eps_n;        stderr 0.4;    // employment shock
-    var eps_c;        stderr 1.794;  // consumption shock (posterior mean)
-    var eps_ib;       stderr 2.807;  // business investment shock (posterior mean)
-    var eps_ih;       stderr 1.729;  // household investment shock (posterior mean)
+    var eps_n;        stderr 0.577;  // employment shock (AU OLS residual)
+    var eps_c;        stderr 1.576;  // consumption shock (AU OLS residual)
+    var eps_ib;       stderr 2.750;  // business investment shock (AU OLS residual)
+    var eps_ih;       stderr 1.729;  // household investment shock (calibrated)
     var eps_10y;      stderr 0.10;   // long rate shock (small — most variation from short rate)
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
     var eps_COE;      stderr 0.15;   // cost of equity spread shock
@@ -1629,6 +1807,10 @@ shocks;
     var eps_var_y;    stderr 0.34;   // shadow output gap (E-SAT scale)
     var eps_var_i;    stderr 0.10;   // shadow interest rate gap
     var eps_var_pi;   stderr 0.26;   // shadow inflation gap
+    var eps_var_u;    stderr 0.20;   // shadow unemployment gap
+    var eps_var_yus;  stderr 0.50;   // shadow foreign output gap
+    var eps_var_yh;   stderr 0.30;   // household income-output ratio gap
+    var eps_var_rKB;  stderr 0.30;   // user cost of capital gap
     var eps_var_pQ;   stderr 0.50;   // VA price auxiliary gap
     var eps_var_n;    stderr 0.50;   // employment auxiliary gap
     var eps_var_c;    stderr 0.50;   // consumption auxiliary gap

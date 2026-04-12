@@ -8,25 +8,25 @@ PAC Model Consistent Expectation: added 4 auxiliary variables and equations for 
 PAC Model Consistent Expectation: added 6 auxiliary variables and equations for model pac_n. 
 PAC Model Consistent Expectation: added 3 auxiliary variables and equations for model pac_pQ. 
 Substitution of endo leads >= 2: added 10 auxiliary variables and equations. 
-Found 132 equation(s). 
+Found 154 equation(s). 
 Evaluating expressions... 
 Computing static model derivatives (order 1). 
 Normalizing the static model... 
 Normalization failed with cutoff, trying symbolic normalization... 
 Finding the optimal block decomposition of the static model... 
-65 block(s) found: 
-  59 recursive block(s) and 6 simultaneous block(s). 
+85 block(s) found: 
+  79 recursive block(s) and 6 simultaneous block(s). 
   the largest simultaneous block has 11 equation(s) 
                                  and 11 feedback variable(s). 
 Computing dynamic model derivatives (order 1). 
 Normalizing the dynamic model... 
 Finding the optimal block decomposition of the dynamic model... 
-29 block(s) found: 
-  21 recursive block(s) and 8 simultaneous block(s). 
-  the largest simultaneous block has 25 equation(s) 
-                                 and 23 feedback variable(s). 
+27 block(s) found: 
+  20 recursive block(s) and 7 simultaneous block(s). 
+  the largest simultaneous block has 41 equation(s) 
+                                 and 34 feedback variable(s). 
 Preprocessing completed. 
-Preprocessing time: 0h00m01s.
+Preprocessing time: 0h00m00s.
 PAC model pac_pQ is used in equation eq_piQ_pac.
 
 PAC model pac_c is used in equation eq_dln_c_pac.
@@ -75,6 +75,7 @@ dln_c_star         		 0
 dln_c_star_bar     		 0
 c_gap              		 0
 pv_yh              		 0
+pv2_yh             		 0
 dln_ib             		 0
 dln_ib_star        		 0
 dln_ib_star_bar    		 0
@@ -87,6 +88,7 @@ ih_gap             		 0
 dln_ih_1           		 0
 uc_k               		 1.8591
 dln_uc_k           		 0
+pv_rKB             		 0
 i_10y              		 1.3491
 tp                 		 0.3
 pv_i               		 1.0491
@@ -116,6 +118,26 @@ iad                		 0
 i_lh               		 1.7491
 dln_ph             		 0
 ph_gap             		 0
+w_F                		 -2.8
+w_G                		 -1.6
+w_H                		 4.32
+w_N                		 0.08
+yf_F               		 -3.79312
+yf_G               		 -2.15856
+yf_H               		 5.85135
+yf_N               		 0.107588
+b_F                		 0
+b_G                		 0
+b_H                		 0
+b_N                		 0
+tau_F              		 0.026
+tau_G              		 0.16
+tau_N              		 0.00026
+i_F                		 1.3454
+i_G                		 1.3491
+i_H                		 1.3484
+i_N                		 1.3481
+b_ROW              		 0
 piQ_star_l         		 0
 pQ_level           		 0
 pQ_star_level      		 0
@@ -130,19 +152,20 @@ ln_n_level         		 0
 
 EIGENVALUES:
          Modulus             Real        Imaginary
-               0                0                0
-               0                0                0
-       3.815e-17        3.815e-17                0
-       1.109e-16       -1.109e-16                0
-       1.259e-16       -1.259e-16                0
-       2.427e-16       -2.427e-16                0
-       1.023e-15        1.023e-15                0
-          0.1563           0.1563                0
+         4.8e-18         -4.8e-18                0
+       5.854e-17        5.854e-17                0
+       1.659e-16       -1.659e-16                0
+       2.044e-16        2.044e-16                0
+       3.326e-16        3.326e-16                0
+       3.349e-06       -1.674e-06          2.9e-06
+       3.349e-06       -1.674e-06         -2.9e-06
+       3.349e-06        3.349e-06                0
+          0.1588           0.1588                0
           0.1994          -0.1994                0
-          0.2222           0.2222                0
           0.2408          -0.2408                0
            0.247            0.247                0
-          0.2727           0.2727                0
+           0.272            0.272                0
+           0.285            0.285                0
           0.2884          -0.2884                0
              0.3              0.3                0
              0.3              0.3                0
@@ -151,42 +174,53 @@ EIGENVALUES:
           0.3302         -0.03066          -0.3287
             0.35             0.35                0
              0.4              0.4                0
-          0.4262           0.4262                0
-          0.4329           0.4329                0
+          0.4306           0.4306                0
+           0.433            0.433                0
             0.45             0.45                0
              0.5              0.5                0
-          0.5548           0.5548                0
-          0.5844           0.5844                0
+          0.5842           0.5842                0
           0.6529           0.6529                0
           0.6974           0.6974                0
             0.77             0.77                0
-          0.8009           0.8009                0
+          0.7961           0.7935          0.06422
+          0.7961           0.7935         -0.06422
           0.8057           0.8057                0
-            0.84             0.84                0
             0.85             0.85                0
           0.8556           0.8556                0
             0.88             0.88                0
              0.9              0.9                0
+             0.9              0.9                0
+             0.9              0.9                0
+             0.9              0.9                0
           0.9123           0.9123                0
-          0.9188           0.9188         0.004974
-          0.9188           0.9188        -0.004974
             0.92             0.92                0
-          0.9271           0.9271                0
-          0.9282           0.9282                0
+          0.9221           0.9221                0
+          0.9228           0.9228          0.00745
+          0.9228           0.9228         -0.00745
+          0.9281           0.9281                0
             0.93             0.93                0
             0.93             0.93                0
             0.94             0.94                0
             0.94             0.94                0
+          0.9407           0.9407                0
             0.95             0.95                0
             0.95             0.95                0
             0.95             0.95                0
             0.95             0.95                0
             0.95             0.95                0
-          0.9516           0.9516                0
-           0.956            0.956                0
+          0.9572           0.9572                0
+          0.9598           0.9598                0
            0.975            0.975                0
+            0.98             0.98        3.846e-14
+            0.98             0.98       -3.846e-14
             0.98             0.98                0
             0.98             0.98                0
+            0.98             0.98                0
+            0.98             0.98                0
+           0.983            0.983                0
+           0.983            0.983        4.008e-14
+           0.983            0.983       -4.008e-14
+           0.983            0.983                0
            0.985            0.985                0
             0.99             0.99                0
                1                1                0
@@ -200,7 +234,9 @@ EIGENVALUES:
                1                1                0
                1                1                0
             1.02             1.02                0
+            1.02             1.02                0
            1.031            1.031                0
+           1.053            1.053                0
            1.053            1.053                0
            1.066            1.066                0
            1.099            1.099                0
@@ -217,18 +253,18 @@ EIGENVALUES:
            4.242           -4.242                0
            5.118           -5.118                0
            6.359            6.359                0
-       1.827e+47       -1.827e+47                0
-       5.802e+47       -5.802e+47                0
-       5.846e+47        5.846e+47                0
-             Inf             -Inf                0
-             Inf             -Inf                0
-             Inf             -Inf                0
-             Inf             -Inf                0
-             Inf             -Inf                0
+       1.793e+31       -1.793e+31                0
+       2.152e+31       -2.152e+31                0
+       3.096e+31        3.096e+31                0
+         4.2e+31         -4.2e+31                0
+       5.565e+31        5.565e+31                0
+       6.495e+31       -6.495e+31                0
+       9.355e+32        9.355e+32                0
+       2.284e+46       -2.284e+46                0
              Inf              Inf                0
              Inf             -Inf                0
 
-There are 28 eigenvalue(s) larger than 1 in modulus for 28 forward-looking variable(s)
+There are 30 eigenvalue(s) larger than 1 in modulus for 30 forward-looking variable(s)
 The rank condition is verified.
 
-Total computing time : 0h00m02s
+Total computing time : 0h00m01s

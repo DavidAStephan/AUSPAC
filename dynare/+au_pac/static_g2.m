@@ -18,6 +18,6 @@ function g2 = static_g2(T, y, x, params, T_flag)
 if T_flag
     T = au_pac.static_g2_tt(T, y, x, params);
 end
-g2 = sparse([],[],[],135,18225);
+g2 = sparse([],[],[],140,19600);
 
 end

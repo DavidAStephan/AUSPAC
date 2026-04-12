@@ -1,0 +1,25 @@
+PAC Pipeline Test - 12-Apr-2026 20:01:09
+
+--- Step 1: Dynare preprocessing ---
+OK: M_.endo_nbr = 140
+OK: M_.exo_nbr = 45
+OK: pac_c has 13 h-params
+OK: pac_ib has 13 h-params
+OK: pac_ih has 13 h-params
+OK: pac_n has 13 h-params
+OK: pac_pQ has 13 h-params
+
+--- Step 2: dseries construction ---
+OK: dseries has 62 variables x 128 obs
+Variables: yhat_au, pi_au, i_au, yhat_us, pi_us, i_gap, pi_au_gap, u_gap, ibar, pibar_au
+
+--- Step 3: Test pac.estimate.iterative_ols ---
+Range: 1994Q2 to 2023Q3
+FAIL iterative_ols: Auxiliary model esat_enriched has to be estimated first!
+  at parameters line 61
+  at UpdatePacExpectationsData line 401
+  at iterative_ols line 318
+  at test_pac_pipeline line 59
+  at run line 91
+
+--- Test complete ---
