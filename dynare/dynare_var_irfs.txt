@@ -1,0 +1,8 @@
+=== au_pac_var.mod IRFs to eps_i ===
+yhat_au: trough=-0.024261 at Q4
+pi_au: trough=-0.001846 at Q6
+piQ: trough=-0.009660 at Q5
+dln_c: trough=-0.012802 at Q5
+dln_ib: trough=-0.029516 at Q5
+dln_ih: trough=-0.037919 at Q5
+dln_n: trough=-0.018476 at Q7

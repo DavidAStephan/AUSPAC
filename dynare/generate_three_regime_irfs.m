@@ -71,8 +71,9 @@ for r = 1:3
         save(['temp_irfs_regime_' num2str(r) '.mat'], 'irfs_regime');
     end
 
-    % Clear Dynare globals for next run
-    clear M_ oo_ options_ estim_params_ bayestopt_ dataset_ dataset_info;
+    % Thorough cleanup: clear everything except loop/config variables
+    clearvars -except shock_name T_plot vars_all var_labels regime_names regime_files regime_colors regime_styles regime_widths regime_markers r;
+    clearvars -global M_ oo_ options_ estim_params_ bayestopt_ dataset_ dataset_info;
 end
 
 %% Load all three regime IRFs
