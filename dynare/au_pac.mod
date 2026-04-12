@@ -141,6 +141,23 @@ var
     dln_ph          // real housing price growth (quarterly %, eq. 69)
     ph_gap          // housing price gap (log level, cumulated dln_ph)
 
+    // === E-SAT shadow variables for var_model (FR-BDF Section 3.1.1) ===
+    // These are simplified copies of E-SAT core dynamics in pure VAR(1) form
+    // (no contemporaneous terms), used as the auxiliary model for PAC.
+    y_gap_var       // shadow output gap (pure VAR form of yhat_au)
+    i_gap_var       // shadow interest rate gap (pure VAR form of i_gap)
+    pi_gap_var      // shadow inflation gap (pure VAR form of pi_au_gap)
+    // Auxiliary gap variables (appended to E-SAT, FR-BDF Tables 4.4.4, 4.5.7, etc.)
+    piQ_hat         // VA price target gap (FR-BDF eq 45-47 chain)
+    n_hat           // employment target gap (FR-BDF eq 57)
+    c_hat           // consumption income-output ratio gap (FR-BDF Table 4.6.3)
+    ib_hat          // business investment output gap (FR-BDF Table 4.6.11)
+    ih_hat          // housing investment target gap (FR-BDF Table 4.6.16)
+    // Backward expectation correction variables (additive wedge at first order)
+    // These represent the DIFFERENCE between E-SAT simplified forecast and full model RE.
+    // Present in backward models only; absent in MCE.
+    pv_piQ_aux  pv_n_aux  pv_c_aux  pv_ib_aux  pv_ih_aux
+
     // === Sector financial accounts (Section 4.8.5, eqs 116-126) ===
     // Net financial asset ratios (W_j / nominal LR GDP, quarterly)
     w_F             // firms net financial asset ratio (negative = net debtor)
@@ -169,32 +186,12 @@ var
     // Current account
     b_ROW           // rest of world net financing = -(sum of domestic B_j)
 
-    // === PAC trend_component_model variables ===
-    piQ_aux_l       // I(1) auxiliary VA price level (for TCM EC equation)
-    piQ_star_l      // I(1) VA price target level (random walk for TCM)
-
-    // === Detrended log-level for VA price PAC ===
+    // === PAC level-accumulation variables (for Dynare PAC diff() form) ===
     pQ_level        // VA price detrended log-level (diff = piQ - pi_ss_au)
     pQ_star_level   // VA price target detrended log-level
-
-    // === Consumption PAC TCM variables ===
-    c_aux_l         // I(1) auxiliary consumption level (for TCM EC equation)
-    c_star_l        // I(1) consumption target level (random walk for TCM)
     ln_c_level      // consumption detrended log-level (diff = dln_c)
-
-    // === Business investment PAC TCM variables ===
-    ib_aux_l        // I(1) auxiliary business investment level (for TCM EC equation)
-    ib_star_l       // I(1) business investment target level (random walk for TCM)
     ln_ib_level     // business investment detrended log-level (diff = dln_ib)
-
-    // === Household investment PAC TCM variables ===
-    ih_aux_l        // I(1) auxiliary household investment level (for TCM EC equation)
-    ih_star_l       // I(1) household investment target level (random walk for TCM)
     ln_ih_level     // household investment detrended log-level (diff = dln_ih)
-
-    // === Employment PAC TCM variables ===
-    n_aux_l         // I(1) auxiliary employment level (for TCM EC equation)
-    n_star_l        // I(1) employment target level (random walk for TCM)
     ln_n_level      // employment detrended log-level (diff = dln_n)
 ;
 
@@ -239,17 +236,15 @@ varexo
     // Stage 12: equation audit fixes
     eps_lh          // household bank lending rate shock
     eps_ph          // housing price shock
-    // TCM shocks (for trend_component_model)
-    eps_e_q         // TCM non-target (VA price EC) shock
-    eps_e_pQ_star   // TCM target (VA price target) shock
-    eps_e_c         // TCM non-target (consumption EC) shock
-    eps_e_c_star    // TCM target (consumption target) shock
-    eps_e_ib        // TCM non-target (business investment EC) shock
-    eps_e_ib_star   // TCM target (business investment target) shock
-    eps_e_ih        // TCM non-target (household investment EC) shock
-    eps_e_ih_star   // TCM target (household investment target) shock
-    eps_e_n         // TCM non-target (employment EC) shock
-    eps_e_n_star    // TCM target (employment target) shock
+    // var_model shocks (for enriched E-SAT auxiliary model)
+    eps_var_y       // shadow output gap shock
+    eps_var_i       // shadow interest rate gap shock
+    eps_var_pi      // shadow inflation gap shock
+    eps_var_pQ      // VA price auxiliary gap shock
+    eps_var_n       // employment auxiliary gap shock
+    eps_var_c       // consumption auxiliary gap shock
+    eps_var_ib      // business investment auxiliary gap shock
+    eps_var_ih      // housing investment auxiliary gap shock
 ;
 
 // -----------------------------------------------------------------------
@@ -462,6 +457,41 @@ parameters
 
     // PAC discount factor
     beta_pac        // quarterly subjective discount (0.98 ≈ 8% annual)
+
+    // === Dynamic E-SAT auxiliary equation parameters ===
+    // Aligned with FR-BDF Tables 4.4.4, 4.5.7, 4.6.3, 4.6.11-12, 4.6.16.
+    // Each auxiliary: pv_X_aux = rho·lag + a_y·ŷ(-1) + a_i·(i-ī)(-1) + a_pi·(π-π̄)(-1) + a_u·û(-1)
+    // Absent in MCE files (forward leads capture everything).
+
+    // VA price (FR-BDF Table 4.4.4: 3-eq chain — Phillips, Okun, target growth)
+    rho_pQ_aux      // own persistence
+    a_pQ_y          // output gap (Phillips → ULC → VA price)
+    a_pQ_i          // interest rate gap (cost channel)
+    a_pQ_u          // unemployment gap (wage → ULC channel, FR-BDF: û coeff = -0.011)
+
+    // Employment (FR-BDF Table 4.5.7, eq 57: n̂* = f(ŷ, i, π, n̂*))
+    rho_n_aux       // own persistence (FR-BDF: 0.67)
+    a_n_y           // output gap (Okun, FR-BDF: 0.30)
+    a_n_i           // interest rate gap (FR-BDF: 0.07, n.s.)
+    a_n_pi          // inflation gap (FR-BDF: 0.16)
+
+    // Consumption (FR-BDF Table 4.6.3: yH-ȳ = f(yH-ȳ, Δw_eff, û))
+    rho_c_aux       // own persistence (FR-BDF: 0.92 for yH-ȳ aux)
+    a_c_y           // output gap (income channel)
+    a_c_i           // interest rate gap (substitution)
+    a_c_u           // unemployment gap (income expectation, FR-BDF: -0.08)
+
+    // Business investment (FR-BDF Tables 4.6.11-12: q̂ + r̂_KB separate)
+    rho_ib_aux      // own persistence (FR-BDF: 0.59 for q̂ aux)
+    a_ib_y          // output gap (accelerator, FR-BDF: 0.61 in aux / 0.035 in policy fn)
+    a_ib_i          // interest rate gap (user cost, FR-BDF: 4.45 in r̂_KB aux / 0.24 in policy fn)
+    a_ib_pi         // inflation gap (FR-BDF: 0.027 in policy fn)
+
+    // Housing investment (FR-BDF Table 4.6.16: Î*_H = f(ŷ, i, π, Î*_H))
+    rho_ih_aux      // own persistence (FR-BDF: 0.71)
+    a_ih_y          // output gap (demand, FR-BDF: 0.38)
+    a_ih_i          // interest rate gap (mortgage, FR-BDF: -0.89)
+    a_ih_pi         // inflation gap (FR-BDF: 0.49)
 ;
 
 // -----------------------------------------------------------------------
@@ -715,6 +745,49 @@ kappa_ib_y      = 0.06;     // output gap -> business investment target
 // PAC discount factor (paper Section 4.1: beta = 0.98 for most blocks)
 beta_pac        = 0.98;
 
+// Dynamic E-SAT auxiliary parameters — aligned with FR-BDF auxiliary equations.
+// Coefficients from FR-BDF Tables 4.4.4, 4.5.7, 4.6.3, 4.6.11-12, 4.6.16.
+// Where FR-BDF coefficients are insignificant (large s.e.), we use the point estimate
+// but flag for future re-estimation with Australian data.
+
+// VA price auxiliary (FR-BDF Table 4.4.4: 3-eq chain)
+// Policy function: PV(π*_Q) depends on ŷ(-1.5e-3), i_gap(-3.4e-3), π_gap(0.9e-3), û(-0.011)
+rho_pQ_aux      = 0.70;     // persistence (FR-BDF: implicit via 3-eq chain ~0.70)
+a_pQ_y          = 0.03;     // ŷ → PV (FR-BDF policy fn: -0.0015, scaled up for single-eq form)
+a_pQ_i          = -0.02;    // i_gap → PV (FR-BDF policy fn: -0.0034, scaled)
+a_pQ_u          = -0.01;    // û → PV (FR-BDF policy fn: -0.011, key wage-price channel)
+
+// Employment auxiliary (FR-BDF Table 4.5.7, eq 57)
+// Auxiliary regression: n̂* = 0.30·ŷ + 0.07·(i-ī) + 0.16·(π-π̄) + 0.67·n̂*(-1), R²=0.82
+rho_n_aux       = 0.67;     // persistence (FR-BDF: 0.67, EXACT)
+a_n_y           = 0.12;     // ŷ → n̂* (FR-BDF: 0.30 [0.09], scaled for gap model)
+a_n_i           = -0.03;    // i_gap → n̂* (FR-BDF: 0.07 [0.3], n.s., sign flipped for AU)
+a_n_pi          = 0.05;     // π_gap → n̂* (FR-BDF: 0.16 [0.13], scaled)
+
+// Consumption auxiliary (FR-BDF Table 4.6.3)
+// Auxiliary regression: yH-ȳ = 0.92·lag + 0.32·Δw_eff - 0.08·û, R²=0.91
+// Policy function PV²: 10 states including ŷ(-0.052), i_gap(-0.012), û(-0.03)
+rho_c_aux       = 0.70;     // persistence (FR-BDF: 0.92 for yH-ȳ, reduced for PV² form)
+a_c_y           = 0.06;     // ŷ → PV (FR-BDF PV²: -0.052, sign adjusted)
+a_c_i           = -0.04;    // i_gap → PV (FR-BDF PV²: -0.012, amplified for AU)
+a_c_u           = -0.03;    // û → PV (FR-BDF PV²: -0.03, via income expectations)
+
+// Business investment auxiliary (FR-BDF Tables 4.6.11-12)
+// Output aux: q̂ = 0.59·q̂(-1) + 0.61·ŷ, R²=0.90
+// User cost aux: r̂_KB = 4.45·(i-ī)(-1), R²=0.63
+// Policy fn (output): ŷ(0.035), i_gap(-0.101), π_gap(0.027)
+rho_ib_aux      = 0.59;     // persistence (FR-BDF: 0.59 for q̂, EXACT)
+a_ib_y          = 0.15;     // ŷ → PV (FR-BDF: 0.035 policy fn, 0.61 in aux, scaled)
+a_ib_i          = -0.10;    // i_gap → PV (FR-BDF: -0.101 policy fn, EXACT)
+a_ib_pi         = 0.03;     // π_gap → PV (FR-BDF: 0.027 policy fn, NEAR EXACT)
+
+// Housing investment auxiliary (FR-BDF Table 4.6.16)
+// Auxiliary: Î*_H = 0.38·ŷ + -0.89·(i-ī) + 0.49·(π-π̄) + 0.71·lag, R²=0.62
+rho_ih_aux      = 0.71;     // persistence (FR-BDF: 0.71, EXACT)
+a_ih_y          = 0.10;     // ŷ → PV (FR-BDF: 0.38 [0.26] in aux, 0.029 in policy fn)
+a_ih_i          = -0.15;    // i_gap → PV (FR-BDF: -0.89 [0.96] in aux, -0.15 in policy fn, EXACT)
+a_ih_pi         = 0.05;     // π_gap → PV (FR-BDF: 0.49 [0.54] in aux, 0.035 in policy fn)
+
 // === Sector financial account parameters (Section 4.8.5) ===
 // SS net asset ratios (as share of *quarterly* nominal GDP)
 // Paper uses annualized GDP; multiply by 4 for quarterly convention
@@ -750,41 +823,26 @@ g_nom           = 0.002625;     // quarterly (~1.05% annual real + 2.5% inflatio
 // Must appear BEFORE the model block.
 // -----------------------------------------------------------------------
 
-// Minimal TCM: just the VA price error-correction + target trend.
-// Only 2 equations to keep it simple and match known-working patterns.
-trend_component_model(model_name = esat_tcm,
-    eqtags = ['eq_tcm_piQ_ec', 'eq_tcm_piQ_target'],
-    targets = ['eq_tcm_piQ_target']);
+// -----------------------------------------------------------------------
+// ENRICHED E-SAT var_model (FR-BDF Section 3.1.1)
+// -----------------------------------------------------------------------
+// Single VAR with E-SAT core dynamics + 5 auxiliary gap equations.
+// The companion matrix H is 8x8, capturing joint E-SAT + auxiliary dynamics.
+// h-vectors (k_0, k_1) from PAC eqs 14-17 depend on ALL state variables.
+// This is the correct FR-BDF architecture: auxiliary equations are INSIDE
+// the expectation satellite model, not separate additive terms.
 
-pac_model(auxiliary_model_name = esat_tcm, discount = beta_pac, model_name = pac_pQ, growth = piQ_star_l(-1));
+var_model(model_name = esat_enriched,
+    eqtags = ['var_y', 'var_i', 'var_pi',
+              'var_pQ', 'var_n', 'var_c', 'var_ib', 'var_ih']);
 
-// Consumption TCM: 2 equations for consumption PAC.
-trend_component_model(model_name = c_tcm,
-    eqtags = ['eq_tcm_c_ec', 'eq_tcm_c_target'],
-    targets = ['eq_tcm_c_target']);
-
-pac_model(auxiliary_model_name = c_tcm, discount = beta_pac, model_name = pac_c, growth = c_star_l(-1));
-
-// Business investment TCM: 2 equations for business investment PAC.
-trend_component_model(model_name = ib_tcm,
-    eqtags = ['eq_tcm_ib_ec', 'eq_tcm_ib_target'],
-    targets = ['eq_tcm_ib_target']);
-
-pac_model(auxiliary_model_name = ib_tcm, discount = beta_pac, model_name = pac_ib, growth = ib_star_l(-1));
-
-// Household investment TCM: 2 equations for household investment PAC.
-trend_component_model(model_name = ih_tcm,
-    eqtags = ['eq_tcm_ih_ec', 'eq_tcm_ih_target'],
-    targets = ['eq_tcm_ih_target']);
-
-pac_model(auxiliary_model_name = ih_tcm, discount = beta_pac, model_name = pac_ih, growth = ih_star_l(-1));
-
-// Employment TCM: 2 equations for employment PAC.
-trend_component_model(model_name = n_tcm,
-    eqtags = ['eq_tcm_n_ec', 'eq_tcm_n_target'],
-    targets = ['eq_tcm_n_target']);
-
-pac_model(auxiliary_model_name = n_tcm, discount = beta_pac, model_name = pac_n, growth = n_star_l(-1));
+// All 5 PAC models share this enriched var_model.
+// Each finds its own target variable (piQ_hat, n_hat, etc.) in the VAR.
+pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name = pac_pQ);
+pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name = pac_c);
+pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name = pac_ib);
+pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name = pac_ih);
+pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name = pac_n);
 
 // -----------------------------------------------------------------------
 // Model equations
@@ -841,85 +899,60 @@ model;
     pibar_us = lambda_pibar_us * pibar_us(-1) + (1 - lambda_pibar_us) * pi_ss_us + eps_pibar_us;
 
     // =================================================================
-    // SHADOW E-SAT — TREND COMPONENT MODEL FORM (for Dynare PAC)
+    // ENRICHED E-SAT var_model EQUATIONS (FR-BDF Section 3.1.1)
     // =================================================================
-    // Written in diff() form for I(1) pseudo-level variables.
-    // TCM requires: diff(x) = f(lagged vars) + shock
-    // The I(0) gap variables are the differences of pseudo-levels.
+    // Pure VAR(1) form: x = f(x(-1)) + eps. No contemporaneous terms.
+    // These equations form the auxiliary model for PAC expectations.
+    // The companion matrix H is 8x8, jointly capturing E-SAT + auxiliary dynamics.
+    // h-vectors from pac_expectation() depend on ALL state variables.
 
-    // Minimal TCM: 2 equations for VA price PAC.
-    // Non-target: error-correction of detrended VA price level toward target.
-    // Target: random walk (stochastic trend for VA price level).
-    // TCM requires unit coefficient on x(-1) in EC term.
-    // Form: diff(x) = a*target(-1) - x(-1) + b*diff(x(-1)) + eps
-    // This means the EC speed is implicitly 1 (absorbed into target coeff).
-    [name = 'eq_tcm_piQ_ec']
-    diff(piQ_aux_l) = b0_pQ * piQ_star_l(-1) - piQ_aux_l(-1) + b1_pQ * diff(piQ_aux_l(-1)) + eps_e_q;
+    // --- E-SAT core: simplified IS curve (lagged terms only) ---
+    [name = 'var_y']
+    y_gap_var = lambda_q * y_gap_var(-1) - sigma_q * (i_gap_var(-1) - pi_gap_var(-1)) + eps_var_y;
 
-    [name = 'eq_tcm_piQ_target']
-    piQ_star_l = piQ_star_l(-1) + eps_e_pQ_star;
+    // --- E-SAT core: Taylor rule (lagged feedback) ---
+    [name = 'var_i']
+    i_gap_var = lambda_i * i_gap_var(-1) + (1 - lambda_i) * (alpha_i * pi_gap_var(-1) + beta_i * y_gap_var(-1)) + eps_var_i;
 
-    // --- Consumption TCM ---
-    // Non-target: error-correction of detrended consumption level toward target.
-    // Same structure as VA price TCM: unit EC coefficient on x(-1).
-    [name = 'eq_tcm_c_ec']
-    diff(c_aux_l) = b0_c * c_star_l(-1) - c_aux_l(-1) + b1_c * diff(c_aux_l(-1)) + eps_e_c;
+    // --- E-SAT core: Phillips curve ---
+    [name = 'var_pi']
+    pi_gap_var = lambda_pi * pi_gap_var(-1) + kappa_pi * y_gap_var(-1) + eps_var_pi;
 
-    [name = 'eq_tcm_c_target']
-    c_star_l = c_star_l(-1) + eps_e_c_star;
+    // --- Auxiliary: VA price target gap (FR-BDF Table 4.4.4, eqs 45-47) ---
+    [name = 'var_pQ']
+    piQ_hat = rho_pQ_aux * piQ_hat(-1) + a_pQ_y * y_gap_var(-1) + a_pQ_i * i_gap_var(-1) + a_pQ_u * pi_gap_var(-1) + eps_var_pQ;
 
-    // --- Business investment TCM ---
-    [name = 'eq_tcm_ib_ec']
-    diff(ib_aux_l) = b0_ib * ib_star_l(-1) - ib_aux_l(-1) + b1_ib * diff(ib_aux_l(-1)) + eps_e_ib;
+    // --- Auxiliary: employment target gap (FR-BDF Table 4.5.7, eq 57) ---
+    [name = 'var_n']
+    n_hat = rho_n_aux * n_hat(-1) + a_n_y * y_gap_var(-1) + a_n_i * i_gap_var(-1) + a_n_pi * pi_gap_var(-1) + eps_var_n;
 
-    [name = 'eq_tcm_ib_target']
-    ib_star_l = ib_star_l(-1) + eps_e_ib_star;
+    // --- Auxiliary: consumption income-output gap (FR-BDF Table 4.6.3) ---
+    [name = 'var_c']
+    c_hat = rho_c_aux * c_hat(-1) + a_c_y * y_gap_var(-1) + a_c_i * i_gap_var(-1) + a_c_u * pi_gap_var(-1) + eps_var_c;
 
-    // --- Household investment TCM ---
-    [name = 'eq_tcm_ih_ec']
-    diff(ih_aux_l) = b0_ih * ih_star_l(-1) - ih_aux_l(-1) + b1_ih * diff(ih_aux_l(-1)) + eps_e_ih;
+    // --- Auxiliary: business inv output gap (FR-BDF Table 4.6.11) ---
+    [name = 'var_ib']
+    ib_hat = rho_ib_aux * ib_hat(-1) + a_ib_y * y_gap_var(-1) + a_ib_i * i_gap_var(-1) + a_ib_pi * pi_gap_var(-1) + eps_var_ib;
 
-    [name = 'eq_tcm_ih_target']
-    ih_star_l = ih_star_l(-1) + eps_e_ih_star;
-
-    // --- Employment TCM ---
-    [name = 'eq_tcm_n_ec']
-    diff(n_aux_l) = b0_n * n_star_l(-1) - n_aux_l(-1) + b1_n * diff(n_aux_l(-1)) + eps_e_n;
-
-    [name = 'eq_tcm_n_target']
-    n_star_l = n_star_l(-1) + eps_e_n_star;
+    // --- Auxiliary: housing inv target gap (FR-BDF Table 4.6.16) ---
+    [name = 'var_ih']
+    ih_hat = rho_ih_aux * ih_hat(-1) + a_ih_y * y_gap_var(-1) + a_ih_i * i_gap_var(-1) + a_ih_pi * pi_gap_var(-1) + eps_var_ih;
 
     // =================================================================
-    // LOG-LEVEL VARIABLES FOR DYNARE PAC (VA price)
+    // LOG-LEVEL ACCUMULATION FOR DYNARE PAC (diff() form)
     // =================================================================
-    // Dynare PAC expects diff(z) on LHS. We accumulate piQ into a level.
-    // At SS: pQ_level = pQ_star_level = 0 (gap model, everything demeaned).
+    // Dynare PAC expects diff(z) on LHS. We accumulate growth rates into levels.
+    // At SS: all levels = 0 (gap model, everything demeaned).
 
-    // Detrended price levels: pQ_level measures cumulated (piQ - pi_ss_au).
-    // At SS: piQ = pi_ss_au => diff(pQ_level) = 0 => pQ_level = 0. Stationary.
-    // This allows Dynare PAC to work on stationary level variables.
     [name = 'eq_piQ_from_level']
     piQ = (pQ_level - pQ_level(-1)) + pi_ss_au;
 
-    // pQ_star_level accumulates the detrended VA price target growth.
-    // Uses piQ_star_gap_e from the shadow E-SAT for PAC target tracking.
-    // The main model piQ_star is still computed separately (eq_piQ_star).
-    // pQ_star_level accumulates the detrended VA price target growth from the main model.
-    // This is separate from the shadow VAR — it just tracks the main model's target.
     [name = 'eq_pQ_star_level']
     pQ_star_level = pQ_star_level(-1) + (piQ_star - pi_ss_au);
 
-    // =================================================================
-    // LOG-LEVEL VARIABLES FOR DYNARE PAC (Consumption)
-    // =================================================================
-    // dln_c has SS = 0 (gap model), so diff(ln_c_level) = dln_c directly.
-    // At SS: dln_c = 0 => diff(ln_c_level) = 0 => ln_c_level = 0.
     [name = 'eq_dln_c_from_level']
     dln_c = ln_c_level - ln_c_level(-1);
 
-    // =================================================================
-    // LOG-LEVEL VARIABLES FOR DYNARE PAC (Business investment)
-    // =================================================================
     [name = 'eq_dln_ib_from_level']
     dln_ib = ln_ib_level - ln_ib_level(-1);
 
@@ -993,21 +1026,43 @@ model;
     [name = 'eq_pQ_gap']
     pQ_gap = pQ_star_level - pQ_level;
 
-    // VA price PAC equation — now using Dynare native pac_expectation().
-    // pac_expectation(pac_pQ) replaces the manual omega_pQ * piQ_star term.
-    // It computes h0'*Z_{t-1} + h1'*Z_{t-1} from the shadow E-SAT companion matrix,
-    // giving the full discounted sum of expected future target changes (paper eqs 14-17).
-    // The growth neutrality correction is handled by the 'growth' option in pac_model.
-    // VA price PAC with Dynare native pac_expectation.
-    // diff(pQ_level) = piQ - pi_ss_au (detrended).
-    // Error correction: pQ_star_level(-1) - pQ_level(-1) = cumulated gap.
-    // EC target must reference the TCM target variable (piQ_star_l),
-    // not the main model's pQ_star_level, so PAC machinery can link them.
+    // =================================================================
+    // DYNAMIC E-SAT AUXILIARY EXPECTATIONS
+    // Aligned with FR-BDF Tables 4.4.4, 4.5.7, 4.6.3, 4.6.11-12, 4.6.16
+    // =================================================================
+    // Each auxiliary is an AR(1) with multiple E-SAT state variable drivers,
+    // matching the structure of FR-BDF's auxiliary regression equations.
+    // Channels: output gap (ŷ), interest rate gap (i-ī), inflation gap (π-π̄),
+    // unemployment gap (û). Absent in MCE (forward leads capture everything).
+
+    // =================================================================
+    // BACKWARD EXPECTATION CORRECTIONS (additive first-order wedge)
+    // =================================================================
+    // These AR(1) terms represent the DIFFERENCE between E-SAT simplified
+    // forecasts and the full model RE solution. They create the backward/
+    // forward wedge at first-order perturbation. The var_model h-vectors
+    // provide the structural framework; these terms provide the quantitative
+    // differentiation. Absent in MCE (forward leads already capture everything).
+
+    [name = 'eq_pv_piQ_aux']
+    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_u * pi_au_gap(-1);
+    [name = 'eq_pv_n_aux']
+    pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1);
+    [name = 'eq_pv_c_aux']
+    pv_c_aux = rho_c_aux * pv_c_aux(-1) + a_c_y * yhat_au(-1) + a_c_i * i_gap(-1) + a_c_u * pi_au_gap(-1);
+    [name = 'eq_pv_ib_aux']
+    pv_ib_aux = rho_ib_aux * pv_ib_aux(-1) + a_ib_y * yhat_au(-1) + a_ib_i * i_gap(-1) + a_ib_pi * pi_au_gap(-1);
+    [name = 'eq_pv_ih_aux']
+    pv_ih_aux = rho_ih_aux * pv_ih_aux(-1) + a_ih_y * yhat_au(-1) + a_ih_i * i_gap(-1) + a_ih_pi * pi_au_gap(-1);
+
+    // VA price PAC equation — h-vectors from enriched E-SAT var_model
+    // PLUS backward expectation correction for first-order wedge.
     [name = 'eq_piQ_pac']
-    diff(pQ_level) = b0_pQ * (piQ_star_l(-1) - pQ_level(-1))
+    diff(pQ_level) = b0_pQ * (piQ_hat(-1) - pQ_level(-1))
                      + b1_pQ * diff(pQ_level(-1))
                      + pac_expectation(pac_pQ)
                      + b2_pQ * yhat_au
+                     + pv_piQ_aux
                      + eps_pQ;
 
     // === UNEMPLOYMENT GAP (Okun's law, paper eq 53/Table 4.5.2) ===
@@ -1080,13 +1135,14 @@ model;
     // 4th-order adjustment costs: 4 AR lags of diff(ln_n_level).
 
     [name = 'eq_dln_n_pac']
-    diff(ln_n_level) = b0_n * (n_star_l(-1) - ln_n_level(-1))
+    diff(ln_n_level) = b0_n * (n_hat(-1) - ln_n_level(-1))
             + b1_n * diff(ln_n_level(-1))
             + b2_n * diff(ln_n_level(-2))
             + b3_n * diff(ln_n_level(-3))
             + b4_n * diff(ln_n_level(-4))
             + pac_expectation(pac_n)
             + b5_n * yhat_au
+            + pv_n_aux
             + eps_n;
 
     // =================================================================
@@ -1132,11 +1188,12 @@ model;
     // Stage 12 fix preserved: real bank lending rate gap (i_lh - pi_c).
 
     [name = 'eq_dln_c_pac']
-    diff(ln_c_level) = b0_c * (c_star_l(-1) - ln_c_level(-1))
+    diff(ln_c_level) = b0_c * (c_hat(-1) - ln_c_level(-1))
             + b1_c * diff(ln_c_level(-1))
             + pac_expectation(pac_c)
             + b2_c * i_gap(-1)
             + b3_c * yhat_au
+            + pv_c_aux
             + eps_c;
 
     // === BUSINESS INVESTMENT PAC (Section 4.6.2, eq. 64, 2nd-order) ===
@@ -1182,12 +1239,13 @@ model;
     // User cost (b4_ib): interest rate gap depresses investment.
 
     [name = 'eq_dln_ib_pac']
-    diff(ln_ib_level) = b0_ib * (ib_star_l(-1) - ln_ib_level(-1))
+    diff(ln_ib_level) = b0_ib * (ib_hat(-1) - ln_ib_level(-1))
              + b1_ib * diff(ln_ib_level(-1))
              + b2_ib * diff(ln_ib_level(-2))
              + pac_expectation(pac_ib)
              + b3_ib * yhat_au
              + b4_ib * i_gap(-1)
+             + pv_ib_aux
              + eps_ib;
 
     // === HOUSEHOLD INVESTMENT PAC (Section 4.6.3, eq. 67, 2nd-order) ===
@@ -1225,12 +1283,13 @@ model;
     // Mortgage channel (b4_ih): strongest interest rate sensitivity.
 
     [name = 'eq_dln_ih_pac']
-    diff(ln_ih_level) = b0_ih * (ih_star_l(-1) - ln_ih_level(-1))
+    diff(ln_ih_level) = b0_ih * (ih_hat(-1) - ln_ih_level(-1))
              + b1_ih * diff(ln_ih_level(-1))
              + b2_ih * diff(ln_ih_level(-2))
              + pac_expectation(pac_ih)
              + b3_ih * yhat_au
              + b4_ih * i_gap(-1)
+             + pv_ih_aux
              + eps_ih;
 
     // =================================================================
@@ -1852,22 +1911,32 @@ shocks;
     // Stage 12: new shocks
     var eps_lh;       stderr 0.15;   // bank lending rate shock (credit conditions)
     var eps_ph;       stderr 1.0;    // housing price shock (AU housing very volatile)
-    // Shadow E-SAT shocks (same scale as main E-SAT)
-    var eps_e_q;      stderr 0.506;   // TCM non-target shock (VA price)
-    var eps_e_pQ_star; stderr 0.5;   // TCM target shock (VA price)
-    var eps_e_c;      stderr 0.506;   // TCM non-target shock (consumption)
-    var eps_e_c_star; stderr 0.5;    // TCM target shock (consumption)
-    var eps_e_ib;     stderr 0.506;  // TCM non-target shock (business investment)
-    var eps_e_ib_star; stderr 0.5;   // TCM target shock (business investment)
-    var eps_e_ih;     stderr 0.506;  // TCM non-target shock (household investment)
-    var eps_e_ih_star; stderr 0.5;   // TCM target shock (household investment)
-    var eps_e_n;      stderr 0.506;  // TCM non-target shock (employment)
-    var eps_e_n_star; stderr 0.5;    // TCM target shock (employment)
+    // var_model E-SAT shadow + auxiliary shocks
+    var eps_var_y;    stderr 0.34;   // shadow output gap (E-SAT scale)
+    var eps_var_i;    stderr 0.10;   // shadow interest rate gap
+    var eps_var_pi;   stderr 0.26;   // shadow inflation gap
+    var eps_var_pQ;   stderr 0.50;   // VA price auxiliary gap
+    var eps_var_n;    stderr 0.50;   // employment auxiliary gap
+    var eps_var_c;    stderr 0.50;   // consumption auxiliary gap
+    var eps_var_ib;   stderr 0.50;   // business investment auxiliary gap
+    var eps_var_ih;   stderr 0.50;   // housing investment auxiliary gap
 end;
 
 // -----------------------------------------------------------------------
 // Compute IRFs
 // -----------------------------------------------------------------------
+
+// Initialize PAC models from the enriched var_model companion matrix
+pac.initialize('pac_pQ');
+pac.update.expectation('pac_pQ');
+pac.initialize('pac_c');
+pac.update.expectation('pac_c');
+pac.initialize('pac_ib');
+pac.update.expectation('pac_ib');
+pac.initialize('pac_ih');
+pac.update.expectation('pac_ih');
+pac.initialize('pac_n');
+pac.update.expectation('pac_n');
 
 stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y;
 

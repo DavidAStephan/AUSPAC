@@ -142,6 +142,9 @@ var
     dln_ph          // real housing price growth (quarterly %, eq. 69)
     ph_gap          // housing price gap (log level, cumulated dln_ph)
 
+    // Dynamic E-SAT auxiliary expectation variables
+    pv_piQ_aux  pv_n_aux  pv_c_aux  pv_ib_aux  pv_ih_aux
+
     // === PAC trend_component_model variables ===
     piQ_aux_l       // I(1) auxiliary VA price level (for TCM EC equation)
     piQ_star_l      // I(1) VA price target level (random walk for TCM)
@@ -412,6 +415,13 @@ parameters
 
     // PAC discount factor
     beta_pac        // quarterly subjective discount (0.98 ≈ 8% annual)
+
+    // Dynamic E-SAT auxiliary parameters (same as hybrid, aligned with FR-BDF)
+    rho_pQ_aux  a_pQ_y  a_pQ_i  a_pQ_u
+    rho_n_aux   a_n_y   a_n_i   a_n_pi
+    rho_c_aux   a_c_y   a_c_i   a_c_u
+    rho_ib_aux  a_ib_y  a_ib_i  a_ib_pi
+    rho_ih_aux  a_ih_y  a_ih_i  a_ih_pi
 ;
 
 // -----------------------------------------------------------------------
@@ -665,6 +675,13 @@ kappa_ib_y      = 0.06;     // output gap -> business investment target
 // PAC discount factor (paper Section 4.1: beta = 0.98 for most blocks)
 beta_pac        = 0.98;
 
+// Dynamic E-SAT auxiliary parameters (same values as hybrid, aligned with FR-BDF)
+rho_pQ_aux = 0.70; a_pQ_y = 0.03; a_pQ_i = -0.02; a_pQ_u = -0.01;
+rho_n_aux  = 0.67; a_n_y  = 0.12; a_n_i  = -0.03; a_n_pi = 0.05;
+rho_c_aux  = 0.70; a_c_y  = 0.06; a_c_i  = -0.04; a_c_u  = -0.03;
+rho_ib_aux = 0.59; a_ib_y = 0.15; a_ib_i = -0.10; a_ib_pi = 0.03;
+rho_ih_aux = 0.71; a_ih_y = 0.10; a_ih_i = -0.15; a_ih_pi = 0.05;
+
 // -----------------------------------------------------------------------
 // PAC infrastructure: auxiliary VAR + PAC model declarations
 // Must appear BEFORE the model block.
@@ -913,21 +930,25 @@ model;
     [name = 'eq_pQ_gap']
     pQ_gap = pQ_star_level - pQ_level;
 
-    // VA price PAC equation — now using Dynare native pac_expectation().
-    // pac_expectation(pac_pQ) replaces the manual omega_pQ * piQ_star term.
-    // It computes h0'*Z_{t-1} + h1'*Z_{t-1} from the shadow E-SAT companion matrix,
-    // giving the full discounted sum of expected future target changes (paper eqs 14-17).
-    // The growth neutrality correction is handled by the 'growth' option in pac_model.
-    // VA price PAC with Dynare native pac_expectation.
-    // diff(pQ_level) = piQ - pi_ss_au (detrended).
-    // Error correction: pQ_star_level(-1) - pQ_level(-1) = cumulated gap.
-    // EC target must reference the TCM target variable (piQ_star_l),
-    // not the main model's pQ_star_level, so PAC machinery can link them.
+    // Dynamic E-SAT auxiliary equations (same as hybrid, aligned with FR-BDF)
+    [name = 'eq_pv_piQ_aux']
+    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_u * u_gap(-1);
+    [name = 'eq_pv_n_aux']
+    pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1);
+    [name = 'eq_pv_c_aux']
+    pv_c_aux = rho_c_aux * pv_c_aux(-1) + a_c_y * yhat_au(-1) + a_c_i * i_gap(-1) + a_c_u * u_gap(-1);
+    [name = 'eq_pv_ib_aux']
+    pv_ib_aux = rho_ib_aux * pv_ib_aux(-1) + a_ib_y * yhat_au(-1) + a_ib_i * i_gap(-1) + a_ib_pi * pi_au_gap(-1);
+    [name = 'eq_pv_ih_aux']
+    pv_ih_aux = rho_ih_aux * pv_ih_aux(-1) + a_ih_y * yhat_au(-1) + a_ih_i * i_gap(-1) + a_ih_pi * pi_au_gap(-1);
+
+    // VA price PAC with dynamic auxiliary
     [name = 'eq_piQ_pac']
     diff(pQ_level) = b0_pQ * (piQ_star_l(-1) - pQ_level(-1))
                      + b1_pQ * diff(pQ_level(-1))
                      + pac_expectation(pac_pQ)
                      + b2_pQ * yhat_au
+                     + pv_piQ_aux
                      + eps_pQ;
 
     // === UNEMPLOYMENT GAP (Okun's law, paper eq 53/Table 4.5.2) ===
@@ -1005,6 +1026,7 @@ model;
             + b4_n * diff(ln_n_level(-4))
             + pac_expectation(pac_n)
             + b5_n * yhat_au
+            + pv_n_aux
             + eps_n;
 
     // =================================================================
@@ -1053,6 +1075,7 @@ model;
             + pac_expectation(pac_c)
             + b2_c * i_gap(-1)
             + b3_c * yhat_au
+            + pv_c_aux
             + eps_c;
 
     // === BUSINESS INVESTMENT PAC (Section 4.6.2, eq. 64, 2nd-order) ===
@@ -1102,6 +1125,7 @@ model;
              + b1_ib * diff(ln_ib_level(-1))
              + b2_ib * diff(ln_ib_level(-2))
              + pac_expectation(pac_ib)
+             + pv_ib_aux
              + b3_ib * yhat_au
              + b4_ib * i_gap(-1)
              + eps_ib;
@@ -1144,6 +1168,7 @@ model;
     diff(ln_ih_level) = b0_ih * (ih_star_l(-1) - ln_ih_level(-1))
              + b1_ih * diff(ln_ih_level(-1))
              + b2_ih * diff(ln_ih_level(-2))
+             + pv_ih_aux
              + pac_expectation(pac_ih)
              + b3_ih * yhat_au
              + b4_ih * i_gap(-1)

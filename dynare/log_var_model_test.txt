@@ -1,0 +1,6 @@
+SUCCESS
+Forward vars: 3
+Predetermined: 87
+Endo vars: 135
+Output peak: -0.024261
+piQ peak: -0.009660

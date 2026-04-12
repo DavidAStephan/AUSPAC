@@ -4,66 +4,57 @@ Paste everything below the line into a new Claude Code session.
 
 ---
 
-Read STATUS.md and the plan at `.claude/plans/stateful-mapping-puzzle.md`. We're building a semi-structural macro model for Australia based on WP #736 (wp736.pdf in the project root). The model is in `dynare/au_pac.mod` — 76 variables, 69 equations (before Dynare auxiliary expansion), Dynare 6.5 at `C:\dynare\6.5\matlab`, MATLAB R2019a.
+Read STATUS.md. We're building a semi-structural macro model for Australia based on WP #736 (wp736.pdf in the project root). The model is in `dynare/au_pac.mod` — Dynare 6.5 at `C:\dynare\6.5\matlab`, MATLAB R2019a at `C:\Program Files\MATLAB\R2019a\bin\matlab.exe`.
 
-## What's done
+## Current state
 
-We successfully migrated the **VA price PAC equation** from simplified AR(1) expectations to Dynare's native `pac_expectation()` using a `trend_component_model` (TCM). The model compiles, BK conditions pass, and h-vectors are computed from the TCM companion matrix.
+We have 3 model variants for different expectation regimes:
+- `au_pac.mod` (Hybrid) — **migrated to var_model architecture** with enriched E-SAT auxiliary
+- `au_pac_var.mod` (VAR-based) — **still on old trend_component_model, needs migration**
+- `au_pac_mce.mod` (Full MCE) — correct as-is, no auxiliary model
 
-The working pattern (hard-won after ~19 iterations of debugging):
+The hybrid model uses a `var_model` named `esat_enriched` with 8 equations (3 E-SAT core + 5 auxiliary gaps) as the PAC auxiliary model. This correctly implements FR-BDF Section 3.1.1 where auxiliary equations are appended to the E-SAT VAR. Additionally, `pv_X_aux` additive correction terms create the backward/forward wedge at first-order perturbation.
 
-1. **TCM declaration** (before `model;` block):
-```dynare
-trend_component_model(model_name = esat_tcm,
-    eqtags = ['eq_tcm_piQ_ec', 'eq_tcm_piQ_target'],
-    targets = ['eq_tcm_piQ_target']);
-pac_model(auxiliary_model_name = esat_tcm, discount = beta_pac, model_name = pac_pQ, growth = piQ_star_l(-1));
-```
+The three regimes now produce clearly different IRFs to monetary policy (output gap ratio 1.25x, VA price 3.8x backward vs MCE). See `ESAT_AUXILIARY_ARCHITECTURE.md` for the full explanation.
 
-2. **TCM equations** (inside `model;` block) — exactly 2 equations:
-   - Non-target EC: `diff(piQ_aux_l) = b0_pQ * piQ_star_l(-1) - piQ_aux_l(-1) + b1_pQ * diff(piQ_aux_l(-1)) + eps_e_q;`
-   - Target (random walk): `piQ_star_l = piQ_star_l(-1) + eps_e_pQ_star;`
+## Immediate task: Migrate au_pac_var.mod to var_model
 
-3. **Main PAC equation** uses `pac_expectation()` and references the TCM target in the EC term:
-```dynare
-diff(pQ_level) = b0_pQ * (piQ_star_l(-1) - pQ_level(-1))
-                 + b1_pQ * diff(pQ_level(-1))
-                 + pac_expectation(pac_pQ)
-                 + b2_pQ * yhat_au
-                 + eps_pQ;
-```
+`au_pac_var.mod` still uses the old 5 separate `trend_component_model` declarations. It needs the same migration that was done to `au_pac.mod`:
 
-4. **`pac.initialize('pac_pQ'); pac.update.expectation('pac_pQ');`** called BEFORE `steady;`
+1. **Replace TCM variable declarations** with var_model shadow variables (y_gap_var, i_gap_var, pi_gap_var) and auxiliary gap variables (piQ_hat, n_hat, c_hat, ib_hat, ih_hat). Keep pv_X_aux variables.
 
-Key gotchas discovered:
-- `pac_model` discount must be a **parameter name**, not a float literal
-- TCM non-target equations need `diff()` on LHS
-- TCM EC term: the LHS variable `x(-1)` must appear with coefficient exactly `-1` (unit EC), not `b*x(-1)`
-- The main PAC equation EC term must reference the **TCM target variable** (`piQ_star_l`), not a separate model variable (`pQ_star_level`)
-- Detrended level variables (`pQ_level`, `pQ_star_level`) needed because Dynare PAC requires `diff()` on LHS; these have SS = 0 in the gap model
-- `piQ = diff(pQ_level) + pi_ss_au` links back to the rest of the model
+2. **Replace TCM shock declarations** (eps_e_q, eps_e_pQ_star, etc.) with var_model shocks (eps_var_y, eps_var_i, eps_var_pi, eps_var_pQ, eps_var_n, eps_var_c, eps_var_ib, eps_var_ih).
 
-## What's next
+3. **Replace 5 trend_component_model + 5 pac_model declarations** with 1 `var_model(model_name = esat_enriched, eqtags = [...])` + 5 `pac_model(auxiliary_model_name = esat_enriched, ...)`.
 
-Migrate the remaining 4 PAC equations to use `pac_expectation()`, following the same TCM pattern. Each equation needs:
-1. Its own TCM (2 equations: auxiliary EC + target random walk)
-2. Its own `pac_model` declaration
-3. A detrended level variable pair (actual + target)
-4. The main PAC equation rewritten with `pac_expectation()`
+4. **Replace 10 TCM equations** (5 EC + 5 target random walks) with 8 var_model equations (3 E-SAT core + 5 auxiliary gaps) in pure VAR(1) form.
 
-The order should be:
-1. **Consumption** (1st-order PAC, `dln_c` → `diff(ln_c_level)`)
-2. **Business investment** (2nd-order PAC, `dln_ib` → `diff(ln_ib_level)`)
-3. **Household investment** (2nd-order PAC, `dln_ih` → `diff(ln_ih_level)`)
-4. **Employment** (4th-order PAC, `dln_n` → `diff(ln_n_level)`)
+5. **Update PAC equation EC targets** from old TCM targets (piQ_star_l, c_star_l, etc.) to new var_model auxiliary variables (piQ_hat, c_hat, etc.).
 
-For each: create `xxx_aux_l` (TCM auxiliary), `xxx_star_l` (TCM target), `xxx_level` (main model detrended level). Add 2 TCM equations, rewrite the main PAC equation, update SS, add shocks.
+6. **Keep pv_X_aux terms** in PAC equations — these provide the first-order wedge.
 
-After all 5 PAC equations are migrated, compare IRFs to the pre-migration baseline and to the FR-BDF paper Section 5.2 benchmarks. The expectations amplification should make the IRF magnitudes larger (closer to FR-BDF).
+7. **Add pac.initialize + pac.update.expectation calls** before stoch_simul.
 
-Reference files:
-- `C:\dynare\6.5\examples\pacmodel.mod` — Dynare PAC syntax reference
-- `https://gitlab.com/srecko/SemiStructDynareBasics` — full semi-structural example
-- Plan: `.claude/plans/stateful-mapping-puzzle.md`
+8. **Update shocks block** with new var_model shock variances.
 
-Work step by step. After each equation migration, test with `dynare au_pac noclearall nograph` to verify compilation and BK conditions. Update STATUS.md when done.
+The hybrid model (`au_pac.mod`) is the working template — all the changes are identical. Key difference: au_pac_var.mod uses backward AR(1) for pv_i, pv_u_gap, pv_yh instead of forward recursive.
+
+## After migration
+
+1. Fix `test_all_three.m` — sequential Dynare runs have workspace conflicts. Consider saving to separate .mat files between runs (the `generate_three_regime_irfs.m` script already does this).
+
+2. Run `generate_three_regime_irfs.m` to regenerate the comparison plots with all three models on the new architecture.
+
+3. Update `AU_PAC_MODEL_DOCUMENTATION.md` Section 6.2 tables with final values.
+
+## Key files
+
+- `dynare/au_pac.mod` — Hybrid (TEMPLATE for migration, working)
+- `dynare/au_pac_var.mod` — VAR-based (NEEDS MIGRATION)
+- `dynare/au_pac_mce.mod` — MCE (correct, no changes needed)
+- `dynare/test_var_pac.mod` — Prototype proving var_model PAC works
+- `dynare/test_var_pac_multi.mod` — Prototype proving multi-PAC shared var_model works
+- `dynare/ESAT_AUXILIARY_ARCHITECTURE.md` — Explains the architecture
+- `dynare/PAC_COEFFICIENT_COMPARISON.md` — All coefficients compared with FR-BDF
+
+Work step by step. After each change, verify by running: `"C:/Program Files/MATLAB/R2019a/bin/matlab.exe" -batch "cd('c:\Users\david\french_model\dynare'); addpath('C:\dynare\6.5\matlab'); dynare au_pac_var noclearall nograph"`. Use file-based logging (fopen/fprintf/fclose) since diary doesn't work well with Dynare.

@@ -1,0 +1,4 @@
+=== LOG START: extract_pac_hvectors.m ===
+Timestamp: 12-Apr-2026 07:47:53
+
+Running au_pac.mod to populate oo_ and M_...

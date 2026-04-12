@@ -1,0 +1,120 @@
+=== PAC STRUCTURE DIAGNOSIS ===
+Generated: 12-Apr-2026 07:52:56
+
+oo_.pac DOES NOT EXIST
+
+Top-level oo_ fields:
+  dynare_version
+  exo_simul
+  endo_simul
+  dr
+  exo_steady_state
+  exo_det_steady_state
+  exo_det_simul
+  initval_series
+  initial_steady_state
+  initial_exo_steady_state
+  gui
+  steady_state
+  trend_component
+  var_list
+  gamma_y
+  mean
+  var
+  variance_decomposition
+  autocorr
+  irfs
+  time
+
+=== M_.pac ===
+M_.pac EXISTS
+--- M_.pac.pac_c ---
+  .auxiliary_model_name = 'c_tcm'
+  .discount_index = [151.000000] (size 1x1)
+  .growth_str = 'c_star_l(-1)'
+  .growth_linear_comb = struct
+  .h_param_indices = [153.000000 154.000000 155.000000 156.000000] (size 1x4)
+  .aux_id = [138.000000] (size 1x1)
+  .eq_name = 'eq_dln_c_pac'
+  .growth_neutrality_param_index = [152.000000] (size 1x1)
+  .auxiliary_model_type = 'trend_component'
+  .kind = ''
+  .lhs_var = [130.000000] (size 1x1)
+  .ec = struct
+  .ar = struct
+  .max_lag = [1.000000] (size 1x1)
+  .additive = struct
+  .model_consistent_expectations = logical
+
+--- M_.pac.pac_ib ---
+  .auxiliary_model_name = 'ib_tcm'
+  .discount_index = [151.000000] (size 1x1)
+  .growth_str = 'ib_star_l(-1)'
+  .growth_linear_comb = struct
+  .h_param_indices = [158.000000 159.000000 160.000000 161.000000] (size 1x4)
+  .aux_id = [139.000000] (size 1x1)
+  .eq_name = 'eq_dln_ib_pac'
+  .growth_neutrality_param_index = [157.000000] (size 1x1)
+  .auxiliary_model_type = 'trend_component'
+  .kind = ''
+  .lhs_var = [132.000000] (size 1x1)
+  .ec = struct
+  .ar = struct
+  .max_lag = [2.000000] (size 1x1)
+  .additive = struct
+  .model_consistent_expectations = logical
+
+--- M_.pac.pac_ih ---
+  .auxiliary_model_name = 'ih_tcm'
+  .discount_index = [151.000000] (size 1x1)
+  .growth_str = 'ih_star_l(-1)'
+  .growth_linear_comb = struct
+  .h_param_indices = [163.000000 164.000000 165.000000 166.000000] (size 1x4)
+  .aux_id = [140.000000] (size 1x1)
+  .eq_name = 'eq_dln_ih_pac'
+  .growth_neutrality_param_index = [162.000000] (size 1x1)
+  .auxiliary_model_type = 'trend_component'
+  .kind = ''
+  .lhs_var = [135.000000] (size 1x1)
+  .ec = struct
+  .ar = struct
+  .max_lag = [2.000000] (size 1x1)
+  .additive = struct
+  .model_consistent_expectations = logical
+
+--- M_.pac.pac_n ---
+  .auxiliary_model_name = 'n_tcm'
+  .discount_index = [151.000000] (size 1x1)
+  .growth_str = 'n_star_l(-1)'
+  .growth_linear_comb = struct
+  .h_param_indices = [168.000000 169.000000 170.000000 171.000000] (size 1x4)
+  .aux_id = [141.000000] (size 1x1)
+  .eq_name = 'eq_dln_n_pac'
+  .growth_neutrality_param_index = [167.000000] (size 1x1)
+  .auxiliary_model_type = 'trend_component'
+  .kind = ''
+  .lhs_var = [125.000000] (size 1x1)
+  .ec = struct
+  .ar = struct
+  .max_lag = [4.000000] (size 1x1)
+  .additive = struct
+  .model_consistent_expectations = logical
+
+--- M_.pac.pac_pQ ---
+  .auxiliary_model_name = 'esat_tcm'
+  .discount_index = [151.000000] (size 1x1)
+  .growth_str = 'piQ_star_l(-1)'
+  .growth_linear_comb = struct
+  .h_param_indices = [173.000000 174.000000 175.000000 176.000000] (size 1x4)
+  .aux_id = [142.000000] (size 1x1)
+  .eq_name = 'eq_piQ_pac'
+  .growth_neutrality_param_index = [172.000000] (size 1x1)
+  .auxiliary_model_type = 'trend_component'
+  .kind = ''
+  .lhs_var = [123.000000] (size 1x1)
+  .ec = struct
+  .ar = struct
+  .max_lag = [1.000000] (size 1x1)
+  .additive = struct
+  .model_consistent_expectations = logical
+

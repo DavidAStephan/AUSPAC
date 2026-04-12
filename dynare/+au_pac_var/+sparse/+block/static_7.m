@@ -1,6 +1,6 @@
 function [y, T, residual, g1] = static_7(y, x, params, sparse_rowval, sparse_colval, sparse_colptr, T)
 residual=NaN(1, 1);
-  residual(1)=(y(82))-(y(82)+x(37));
+  residual(1)=(y(87))-(y(87)+x(37));
 if nargout > 3
     g1_v = NaN(0, 1);
     if ~isoctave && matlab_ver_less_than('9.8')

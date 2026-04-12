@@ -1,0 +1,23 @@
+=== COMPILE TEST: ALL THREE REGIMES ===
+Timestamp: 12-Apr-2026 13:42:36
+
+--- VAR-based (au_pac_var.mod) ---
+STATUS: SUCCESS
+Forward-looking vars: 0
+Predetermined vars: 96
+Endogenous vars: 137
+Output gap peak: -0.024399 at Q4
+VA price peak: -0.010293 at Q6
+
+--- Hybrid (au_pac.mod) ---
+STATUS: ERROR
+Message: Unable to perform assignment because dot indexing is not supported for variables of this type.
+
+--- Full MCE (au_pac_mce.mod) ---
+STATUS: SUCCESS
+Forward-looking vars: 28
+Predetermined vars: 68
+Endogenous vars: 132
+Output gap peak: -0.019539 at Q4
+VA price peak: -0.002709 at Q4
+

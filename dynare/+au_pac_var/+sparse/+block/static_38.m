@@ -1,4 +1,4 @@
 function [y, T] = static_38(y, x, params, sparse_rowval, sparse_colval, sparse_colptr, T)
-  y(38)=y(1)*params(136)-y(47)*params(118);
-  y(48)=y(49)+y(50)+x(15);
+  y(53)=y(48)+y(56);
+  y(51)=y(52)*params(77)+y(53)*params(78)+y(54)*params(79);
 end

@@ -26,7 +26,7 @@ Finding the optimal block decomposition of the dynamic model...
   the largest simultaneous block has 25 equation(s) 
                                  and 23 feedback variable(s). 
 Preprocessing completed. 
-Preprocessing time: 0h00m00s.
+Preprocessing time: 0h00m01s.
 PAC model pac_pQ is used in equation eq_piQ_pac.
 
 PAC model pac_c is used in equation eq_dln_c_pac.
@@ -231,4 +231,4 @@ EIGENVALUES:
 There are 28 eigenvalue(s) larger than 1 in modulus for 28 forward-looking variable(s)
 The rank condition is verified.
 
-Total computing time : 0h00m00s
+Total computing time : 0h00m01s
