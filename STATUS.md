@@ -1,4 +1,4 @@
-# AUSPAC Project Status — 2026-04-12
+# AUSPAC Project Status — 2026-04-13
 
 ## What this project is
 
@@ -16,8 +16,10 @@ Australian adaptation of the FR-BDF semi-structural macroeconomic model (Banque 
 | Variant | File | Endo | Exo | Forward | Expectations |
 |---------|------|------|-----|---------|-------------|
 | VAR-based | `au_pac_var.mod` | 140 | 45 | 0 | Backward (AR(1) for pv_i, pv_u_gap, pv_yh) |
-| Hybrid | `au_pac.mod` | 140 | 45 | 3 | Mixed (backward PAC + forward financial) |
+| Hybrid | `au_pac.mod` | 140 | 47 | 3 | Mixed (backward PAC + forward financial) |
 | MCE | `au_pac_mce.mod` | 154 | ~35 | 30 | Full model-consistent |
+
+Note: au_pac.mod has 47 exo (45 structural + 2 COVID pulse dummies).
 
 All three use enriched `var_model` (12 equations: 3 E-SAT core + 2 additional states + 7 auxiliary gaps) for PAC h-vector computation. BK conditions verified for all three. Compiles and solves.
 
@@ -78,9 +80,21 @@ Approaches: (A) Recursive auxiliary construction, (B) Hybrid (Kalman-smoothed ta
 - `calib_smoother` with `diffuse_filter` extracts 140 smoothed endogenous variables
 - Hybrid approach (B) recommended: uses smoothed targets for EC term, recursive pv_aux for corrections
 - Pure smoother (C) has lowest SSR but over-identifies VA Price
-- Sign issues (negative AR, positive rate on housing) are data-driven, not methodology artifacts
 
-NLS (csminwel) also converges for consumption (b0=0.072, b1=-0.262).
+**COVID pulse dummies** (2026-04-13):
+- Two exogenous dummies: `d_covid_crash` (2020Q2), `d_covid_bounce` (2020Q3)
+- Each PAC equation has its own pair of coefficients (10 new params)
+- Results with COVID dummies (recursive approach A):
+
+| Equation | SSR | b0 (EC) | b1 (AR1) | COVID crash | COVID bounce | Key improvement |
+|----------|-----|---------|----------|-------------|-------------|-----------------|
+| VA Price | 40.6 | 0.026 | **+0.287** | -2.88 | +1.49 | AR1 improved (0.18->0.29) |
+| Consumption | 416.9 | 0.063 | **+0.056** | -15.01 | +6.52 | AR1 flipped neg->pos |
+| Business Inv | 973.0 | 0.017 | **+0.107** | -5.51 | +3.11 | AR1 improved (0.08->0.11) |
+| Household Inv | 964.5 | 0.025 | **+0.111** | -5.67 | +2.54 | AR1 improved (0.08->0.11) |
+| Employment | 83.0 | 0.044 | **+0.345** | -6.81 | +4.01 | AR1 flipped neg->pos |
+
+Key finding: COVID dummies fix consumption AR1 (-0.25 -> +0.06) and employment AR1 (-0.26 -> +0.34). Housing rate channel (b4_ih) reduced but not flipped.
 
 ## Three-regime IRF comparison (monetary policy shock)
 
@@ -125,7 +139,7 @@ VAR-MCE differentiation = 0.0052 (meaningful, matches FR-BDF Section 6 pattern).
 | Priority | Task | Status |
 |----------|------|--------|
 | 1 | Kalman smoother for auxiliary variables | **Done** — 3 approaches implemented (recursive/hybrid/pure smoother) |
-| 2 | Diagnose negative AR coefficients / sign issues | Next step — persistent across all 3 approaches, likely data-driven (COVID?) |
+| 2 | COVID pulse dummies for PAC estimation | **Done** — fixes consumption AR1 and employment AR1 sign issues |
 | 3 | Activate Dynare `estimation()` block for joint Bayesian estimation | Infrastructure ready (commented out in au_pac.mod lines 2039-2088) |
 | 4 | Implement residual inversion for conditional forecasting | ECB-Base pattern available |
 | 5 | SUR estimation for auxiliary gap equations | Would improve cross-equation efficiency |

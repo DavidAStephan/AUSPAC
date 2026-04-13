@@ -79,6 +79,8 @@ params_pQ = struct();
 params_pQ.b0_pQ = 0.06;    % EC speed (initial guess = calibrated)
 params_pQ.b1_pQ = 0.50;    % AR(1)
 params_pQ.b2_pQ = 0.09;    % output gap
+params_pQ.b_covid_crash_pQ  = 0;
+params_pQ.b_covid_bounce_pQ = 0;
 try
     pac.estimate.iterative_ols('eq_piQ_pac', params_pQ, db, est_range);
     log_results(fid, 'VA Price PAC (iterative OLS)', params_pQ, M_, oo_, 'pac_pQ');
@@ -101,6 +103,8 @@ params_c.b0_c = 0.06;      % EC speed
 params_c.b1_c = 0.149;     % AR(1)
 params_c.b2_c = -0.02;     % interest rate gap
 params_c.b3_c = 0.139;     % output gap
+params_c.b_covid_crash_c  = 0;
+params_c.b_covid_bounce_c = 0;
 try
     pac.estimate.iterative_ols('eq_dln_c_pac', params_c, db, est_range);
     log_results(fid, 'Consumption PAC (iterative OLS)', params_c, M_, oo_, 'pac_c');
@@ -124,6 +128,8 @@ params_ib.b0_ib = 0.030;   % EC speed
 params_ib.b1_ib = 0.181;   % AR(1)
 params_ib.b2_ib = 0.10;    % AR(2)
 params_ib.b3_ib = 0.191;   % output gap
+params_ib.b_covid_crash_ib  = 0;
+params_ib.b_covid_bounce_ib = 0;
 try
     pac.estimate.iterative_ols('eq_dln_ib_pac', params_ib, db, est_range);
     log_results(fid, 'Business Investment PAC (iterative OLS)', params_ib, M_, oo_, 'pac_ib');
@@ -148,6 +154,8 @@ params_ih.b1_ih = 0.210;   % AR(1)
 params_ih.b2_ih = 0.08;    % AR(2)
 params_ih.b3_ih = 0.12;    % output gap
 params_ih.b4_ih = -0.05;   % interest rate gap (mortgage)
+params_ih.b_covid_crash_ih  = 0;
+params_ih.b_covid_bounce_ih = 0;
 try
     pac.estimate.iterative_ols('eq_dln_ih_pac', params_ih, db, est_range);
     log_results(fid, 'Household Investment PAC (iterative OLS)', params_ih, M_, oo_, 'pac_ih');
@@ -175,6 +183,8 @@ params_n.b2_n = 0.10;      % AR(2)
 params_n.b3_n = 0.05;      % AR(3)
 params_n.b4_n = 0.02;      % AR(4)
 params_n.b5_n = 0.12;      % output gap
+params_n.b_covid_crash_n  = 0;
+params_n.b_covid_bounce_n = 0;
 try
     pac.estimate.iterative_ols('eq_dln_n_pac', params_n, db, est_range);
     log_results(fid, 'Employment PAC (iterative OLS)', params_n, M_, oo_, 'pac_n');
@@ -215,6 +225,8 @@ params_c_nls.b0_c = 0.06;
 params_c_nls.b1_c = 0.149;
 params_c_nls.b2_c = -0.02;
 params_c_nls.b3_c = 0.139;
+params_c_nls.b_covid_crash_c  = 0;
+params_c_nls.b_covid_bounce_c = 0;
 try
     pac.estimate.nls('eq_dln_c_pac', params_c_nls, db, est_range, optimizer, 'MaxIter', 500);
     log_results(fid, 'Consumption PAC (NLS)', params_c_nls, M_, oo_, 'pac_c');
@@ -232,6 +244,8 @@ params_ib_nls.b0_ib = 0.030;
 params_ib_nls.b1_ib = 0.181;
 params_ib_nls.b2_ib = 0.10;
 params_ib_nls.b3_ib = 0.191;
+params_ib_nls.b_covid_crash_ib  = 0;
+params_ib_nls.b_covid_bounce_ib = 0;
 try
     pac.estimate.nls('eq_dln_ib_pac', params_ib_nls, db, est_range, optimizer, 'MaxIter', 500);
     log_results(fid, 'Business Investment PAC (NLS)', params_ib_nls, M_, oo_, 'pac_ib');
@@ -250,6 +264,8 @@ params_ih_nls.b1_ih = 0.210;
 params_ih_nls.b2_ih = 0.08;
 params_ih_nls.b3_ih = 0.12;
 params_ih_nls.b4_ih = -0.05;
+params_ih_nls.b_covid_crash_ih  = 0;
+params_ih_nls.b_covid_bounce_ih = 0;
 try
     pac.estimate.nls('eq_dln_ih_pac', params_ih_nls, db, est_range, optimizer, 'MaxIter', 500);
     log_results(fid, 'Household Investment PAC (NLS)', params_ih_nls, M_, oo_, 'pac_ih');

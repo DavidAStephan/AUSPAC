@@ -254,10 +254,6 @@ varexo
     eps_var_yus     // shadow foreign output gap shock
     eps_var_yh      // household income-output ratio gap shock
     eps_var_rKB     // user cost of capital gap shock
-
-    // COVID pulse dummies (exogenous, zero at SS)
-    d_covid_crash       // = 1 in 2020Q2 only (lockdown quarter)
-    d_covid_bounce      // = 1 in 2020Q3 only (rebound quarter)
 ;
 
 // -----------------------------------------------------------------------
@@ -519,13 +515,6 @@ parameters
     a_ih_i          // interest rate gap (mortgage, FR-BDF: -0.89)
     a_ih_pi         // inflation gap (FR-BDF: 0.49)
     a_ih_u          // unemployment gap (FR-BDF: implicit via demand channel)
-
-    // COVID dummy coefficients (one pair per PAC equation)
-    b_covid_crash_pQ    b_covid_bounce_pQ       // VA price
-    b_covid_crash_c     b_covid_bounce_c        // consumption
-    b_covid_crash_ib    b_covid_bounce_ib       // business investment
-    b_covid_crash_ih    b_covid_bounce_ih       // household investment
-    b_covid_crash_n     b_covid_bounce_n        // employment
 ;
 
 // -----------------------------------------------------------------------
@@ -838,13 +827,6 @@ a_ih_i          = -0.15;    // i_gap → PV (FR-BDF: -0.89 [0.96] in aux, -0.15 
 a_ih_pi         = 0.05;     // π_gap → PV (FR-BDF: 0.49 [0.54] in aux, 0.035 in policy fn)
 a_ih_u          = 0.00;     // û → PV (FR-BDF: implicit via demand channel)
 
-// COVID dummy coefficients — initial = 0 (estimated by pac.estimate; inert for stoch_simul)
-b_covid_crash_pQ   = 0;    b_covid_bounce_pQ  = 0;
-b_covid_crash_c    = 0;    b_covid_bounce_c   = 0;
-b_covid_crash_ib   = 0;    b_covid_bounce_ib  = 0;
-b_covid_crash_ih   = 0;    b_covid_bounce_ih  = 0;
-b_covid_crash_n    = 0;    b_covid_bounce_n   = 0;
-
 // === Sector financial account parameters (Section 4.8.5) ===
 // SS net asset ratios (as share of *quarterly* nominal GDP)
 // Paper uses annualized GDP; multiply by 4 for quarterly convention
@@ -905,6 +887,10 @@ pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name 
 // -----------------------------------------------------------------------
 // Model equations
 // -----------------------------------------------------------------------
+
+
+// Observable variables for Kalman smoother (auto-generated)
+varobs yhat_au pi_au i_au yhat_us pi_us dln_c dln_ib dln_ih dln_n;
 
 model;
 
@@ -1143,7 +1129,6 @@ model;
                      + b1_pQ * diff(pQ_level(-1))
                      + pac_expectation(pac_pQ)
                      + b2_pQ * yhat_au
-                     + b_covid_crash_pQ * d_covid_crash + b_covid_bounce_pQ * d_covid_bounce
                      + pv_piQ_aux
                      + eps_pQ;
 
@@ -1224,7 +1209,6 @@ model;
             + b4_n * diff(ln_n_level(-4))
             + pac_expectation(pac_n)
             + b5_n * yhat_au
-            + b_covid_crash_n * d_covid_crash + b_covid_bounce_n * d_covid_bounce
             + pv_n_aux
             + eps_n;
 
@@ -1276,7 +1260,6 @@ model;
             + pac_expectation(pac_c)
             + b2_c * i_gap(-1)
             + b3_c * yhat_au
-            + b_covid_crash_c * d_covid_crash + b_covid_bounce_c * d_covid_bounce
             + pv_c_aux
             + eps_c;
 
@@ -1328,7 +1311,6 @@ model;
              + b2_ib * diff(ln_ib_level(-2))
              + pac_expectation(pac_ib)
              + b3_ib * yhat_au
-             + b_covid_crash_ib * d_covid_crash + b_covid_bounce_ib * d_covid_bounce
              - sigma_ces * pv_rKB_aux
              + pv_ib_aux
              + eps_ib;
@@ -1374,7 +1356,6 @@ model;
              + pac_expectation(pac_ih)
              + b3_ih * yhat_au
              + b4_ih * i_gap(-1)
-             + b_covid_crash_ih * d_covid_crash + b_covid_bounce_ih * d_covid_bounce
              + pv_ih_aux
              + eps_ih;
 
@@ -2029,6 +2010,14 @@ pac.initialize('pac_n');
 pac.update.expectation('pac_n');
 
 stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y;
+
+// Kalman smoother: extract model-consistent states (auto-generated)
+calib_smoother(datafile='smoother_data.mat', diffuse_filter) yhat_au pi_au i_au yhat_us pi_us
+    dln_c dln_ib dln_ih dln_n
+    piQ_hat c_hat ib_hat ih_hat n_hat yh_ratio_hat rKB_hat
+    pv_piQ_aux pv_n_aux pv_c_aux pv_ib_aux pv_rKB_aux pv_ih_aux
+    pQ_level ln_c_level ln_ib_level ln_ih_level ln_n_level
+    y_gap_var i_gap_var pi_gap_var u_gap_var yhat_us_var;
 
 // =======================================================================
 // ESTIMATION INFRASTRUCTURE (Phase 7e)

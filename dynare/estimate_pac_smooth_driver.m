@@ -172,7 +172,8 @@ results = struct();
 % VA Price PAC
 % -----------------------------------------------------------------------
 log_msg('\n--- VA Price PAC (eq_piQ_pac) ---\n');
-params_pQ = struct('b0_pQ', 0.06, 'b1_pQ', 0.50, 'b2_pQ', 0.09);
+params_pQ = struct('b0_pQ', 0.06, 'b1_pQ', 0.50, 'b2_pQ', 0.09, ...
+                   'b_covid_crash_pQ', 0, 'b_covid_bounce_pQ', 0);
 try
     pac.estimate.iterative_ols('eq_piQ_pac', params_pQ, db, est_range);
     results.pQ = log_and_store(fid_log, 'VA Price', params_pQ, M_, oo_, 'pac_pQ');
@@ -184,7 +185,8 @@ end
 % Consumption PAC
 % -----------------------------------------------------------------------
 log_msg('\n--- Consumption PAC (eq_dln_c_pac) ---\n');
-params_c = struct('b0_c', 0.06, 'b1_c', 0.149, 'b2_c', -0.02, 'b3_c', 0.139);
+params_c = struct('b0_c', 0.06, 'b1_c', 0.149, 'b2_c', -0.02, 'b3_c', 0.139, ...
+                  'b_covid_crash_c', 0, 'b_covid_bounce_c', 0);
 try
     pac.estimate.iterative_ols('eq_dln_c_pac', params_c, db, est_range);
     results.c = log_and_store(fid_log, 'Consumption', params_c, M_, oo_, 'pac_c');
@@ -196,7 +198,8 @@ end
 % Business Investment PAC
 % -----------------------------------------------------------------------
 log_msg('\n--- Business Investment PAC (eq_dln_ib_pac) ---\n');
-params_ib = struct('b0_ib', 0.030, 'b1_ib', 0.181, 'b2_ib', 0.10, 'b3_ib', 0.191);
+params_ib = struct('b0_ib', 0.030, 'b1_ib', 0.181, 'b2_ib', 0.10, 'b3_ib', 0.191, ...
+                   'b_covid_crash_ib', 0, 'b_covid_bounce_ib', 0);
 try
     pac.estimate.iterative_ols('eq_dln_ib_pac', params_ib, db, est_range);
     results.ib = log_and_store(fid_log, 'Business Investment', params_ib, M_, oo_, 'pac_ib');
@@ -209,7 +212,8 @@ end
 % -----------------------------------------------------------------------
 log_msg('\n--- Household Investment PAC (eq_dln_ih_pac) ---\n');
 params_ih = struct('b0_ih', 0.049, 'b1_ih', 0.210, 'b2_ih', 0.08, ...
-                   'b3_ih', 0.12, 'b4_ih', -0.05);
+                   'b3_ih', 0.12, 'b4_ih', -0.05, ...
+                   'b_covid_crash_ih', 0, 'b_covid_bounce_ih', 0);
 try
     pac.estimate.iterative_ols('eq_dln_ih_pac', params_ih, db, est_range);
     results.ih = log_and_store(fid_log, 'Household Investment', params_ih, M_, oo_, 'pac_ih');
@@ -222,7 +226,8 @@ end
 % -----------------------------------------------------------------------
 log_msg('\n--- Employment PAC (eq_dln_n_pac) ---\n');
 params_n = struct('b0_n', 0.040, 'b1_n', 0.30, 'b2_n', 0.10, ...
-                  'b3_n', 0.05, 'b4_n', 0.02, 'b5_n', 0.12);
+                  'b3_n', 0.05, 'b4_n', 0.02, 'b5_n', 0.12, ...
+                  'b_covid_crash_n', 0, 'b_covid_bounce_n', 0);
 try
     pac.estimate.iterative_ols('eq_dln_n_pac', params_n, db, est_range);
     results.n = log_and_store(fid_log, 'Employment', params_n, M_, oo_, 'pac_n');
@@ -237,7 +242,8 @@ log_msg('\n--- NLS ESTIMATION (csminwel) ---\n');
 
 % Consumption NLS
 log_msg('\n--- Consumption NLS ---\n');
-params_c_nls = struct('b0_c', 0.06, 'b1_c', 0.149, 'b2_c', -0.02, 'b3_c', 0.139);
+params_c_nls = struct('b0_c', 0.06, 'b1_c', 0.149, 'b2_c', -0.02, 'b3_c', 0.139, ...
+                      'b_covid_crash_c', 0, 'b_covid_bounce_c', 0);
 try
     pac.estimate.nls('eq_dln_c_pac', params_c_nls, db, est_range, 'csminwel', 'MaxIter', 500);
     results.c_nls = log_and_store(fid_log, 'Consumption NLS', params_c_nls, M_, oo_, 'pac_c');
@@ -247,7 +253,8 @@ end
 
 % Business Investment NLS
 log_msg('\n--- Business Investment NLS ---\n');
-params_ib_nls = struct('b0_ib', 0.030, 'b1_ib', 0.181, 'b2_ib', 0.10, 'b3_ib', 0.191);
+params_ib_nls = struct('b0_ib', 0.030, 'b1_ib', 0.181, 'b2_ib', 0.10, 'b3_ib', 0.191, ...
+                       'b_covid_crash_ib', 0, 'b_covid_bounce_ib', 0);
 try
     pac.estimate.nls('eq_dln_ib_pac', params_ib_nls, db, est_range, 'csminwel', 'MaxIter', 500);
     results.ib_nls = log_and_store(fid_log, 'Business Investment NLS', params_ib_nls, M_, oo_, 'pac_ib');
@@ -265,11 +272,11 @@ log_msg(sprintf('  Method: %s auxiliaries\n', estimation_method));
 
 % Print all estimated parameter values
 log_msg('\n  --- Estimated PAC parameter values ---\n');
-pac_params = {'b0_pQ', 'b1_pQ', 'b2_pQ', ...
-              'b0_c', 'b1_c', 'b2_c', 'b3_c', ...
-              'b0_ib', 'b1_ib', 'b2_ib', 'b3_ib', ...
-              'b0_ih', 'b1_ih', 'b2_ih', 'b3_ih', 'b4_ih', ...
-              'b0_n', 'b1_n', 'b2_n', 'b3_n', 'b4_n', 'b5_n'};
+pac_params = {'b0_pQ', 'b1_pQ', 'b2_pQ', 'b_covid_crash_pQ', 'b_covid_bounce_pQ', ...
+              'b0_c', 'b1_c', 'b2_c', 'b3_c', 'b_covid_crash_c', 'b_covid_bounce_c', ...
+              'b0_ib', 'b1_ib', 'b2_ib', 'b3_ib', 'b_covid_crash_ib', 'b_covid_bounce_ib', ...
+              'b0_ih', 'b1_ih', 'b2_ih', 'b3_ih', 'b4_ih', 'b_covid_crash_ih', 'b_covid_bounce_ih', ...
+              'b0_n', 'b1_n', 'b2_n', 'b3_n', 'b4_n', 'b5_n', 'b_covid_crash_n', 'b_covid_bounce_n'};
 
 log_msg(sprintf('  %-16s %10s\n', 'Parameter', 'Estimated'));
 for k = 1:length(pac_params)

@@ -73,7 +73,8 @@ smooth_varnames = { ...
     'pQ_level', 'ln_c_level', 'ln_ib_level', 'ln_ih_level', 'ln_n_level', ...
     'dln_c', 'dln_ib', 'dln_ih', 'dln_n', 'piQ', ...
     'dln_n_1', 'dln_n_2', 'dln_n_3', 'dln_ib_1', 'dln_ih_1', ...
-    'pi_w', 'i_10y' };
+    'pi_w', 'i_10y', ...
+    'd_covid_crash', 'd_covid_bounce' };
 
 % Shock variables (set to NaN for pac.estimate)
 shock_varnames = { ...
@@ -107,6 +108,24 @@ for j = 1:length(shock_varnames)
 end
 
 fprintf('  Smoothed variables found: %d, missing: %d\n', n_found, n_missing);
+
+% Override COVID dummies with actual 0/1 values (not from smoother)
+projectdir_sm = fullfile(fileparts(mfilename('fullpath')), '..');
+T_base_sm = readtable(fullfile(projectdir_sm, 'dataset.csv'));
+base_dates_sm = datetime(T_base_sm.date, 'InputFormat', 'yyyy-MM-dd');
+covid_crash_idx  = find(strcmp('d_covid_crash', smooth_varnames));
+covid_bounce_idx = find(strcmp('d_covid_bounce', smooth_varnames));
+if ~isempty(covid_crash_idx) && ~isempty(covid_bounce_idx)
+    for t = 1:T_total
+        dt = base_dates_sm(t);
+        if year(dt) == 2020 && quarter(dt) == 2
+            data_mat(t, covid_crash_idx) = 1;
+        elseif year(dt) == 2020 && quarter(dt) == 3
+            data_mat(t, covid_bounce_idx) = 1;
+        end
+    end
+    fprintf('  COVID dummies set: crash at 2020Q2, bounce at 2020Q3\n');
+end
 
 %% Compare smoothed vs recursive auxiliary variables
 % Log the differences for diagnostic purposes
