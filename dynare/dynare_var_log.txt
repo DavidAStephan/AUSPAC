@@ -1,4 +1,0 @@
-Starting Dynare run for au_pac_var.mod
-SUCCESS: Dynare completed
-Endogenous vars: 135
-Forward-looking: 0

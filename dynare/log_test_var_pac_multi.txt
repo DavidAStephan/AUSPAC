@@ -1,5 +1,0 @@
-SUCCESS
-Forward vars: 0
-piQ peak to eps_i: -0.004071
-dln_n peak to eps_i: -0.003897
-y_gap peak to eps_i: -0.021760

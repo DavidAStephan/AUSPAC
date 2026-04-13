@@ -1,5 +1,0 @@
-Starting au_pac.mod with 12x12 var_model
-SUCCESS
-Endo: 140, Fwd: 3
-Output: -0.024183 Q4
-Bus inv: -0.024568 Q5

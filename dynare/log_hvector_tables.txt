@@ -1,7 +1,0 @@
-=== PAC h-VECTOR TABLES ===
-Generated: 12-Apr-2026 12:51:45
-
-### Summary
-
-| PAC equation | h_0 sum | h_1 sum | Total |
-|---|---|---|---|

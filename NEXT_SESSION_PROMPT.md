@@ -8,53 +8,63 @@ Read STATUS.md. We're building a semi-structural macro model for Australia based
 
 ## Current state
 
-We have 3 model variants for different expectation regimes:
-- `au_pac.mod` (Hybrid) — **migrated to var_model architecture** with enriched E-SAT auxiliary
-- `au_pac_var.mod` (VAR-based) — **still on old trend_component_model, needs migration**
-- `au_pac_mce.mod` (Full MCE) — correct as-is, no auxiliary model
+All 3 model variants compile, solve, and produce correct IRFs:
+- `au_pac.mod` (Hybrid) — 140 endo, var_model architecture
+- `au_pac_var.mod` (VAR-based) — 140 endo, var_model architecture  
+- `au_pac_mce.mod` (Full MCE) — 154 endo, 30 forward vars
 
-The hybrid model uses a `var_model` named `esat_enriched` with 8 equations (3 E-SAT core + 5 auxiliary gaps) as the PAC auxiliary model. This correctly implements FR-BDF Section 3.1.1 where auxiliary equations are appended to the E-SAT VAR. Additionally, `pv_X_aux` additive correction terms create the backward/forward wedge at first-order perturbation.
+PAC structural estimation is working via 3 approaches:
+- **Approach A** (Recursive): `estimate_pac_driver.m` — original, crude recursive auxiliary construction
+- **Approach B** (Hybrid, recommended): `estimate_pac_smooth_driver.m` — Kalman-smoothed auxiliary targets + recursive pv_aux corrections
+- **Approach C** (Pure Smoother): all variables from `calib_smoother` — lowest SSR but VA Price parameters unidentified
 
-The three regimes now produce clearly different IRFs to monetary policy (output gap ratio 1.25x, VA price 3.8x backward vs MCE). See `ESAT_AUXILIARY_ARCHITECTURE.md` for the full explanation.
+Full system test (`test_full_system.m`) passes 62/62 real tests across 10 stages.
+Three-way comparison (`test_smoother_comparison.m`) runs all approaches side-by-side.
 
-## Immediate task: Migrate au_pac_var.mod to var_model
+## 3-way estimation comparison (2026-04-13)
 
-`au_pac_var.mod` still uses the old 5 separate `trend_component_model` declarations. It needs the same migration that was done to `au_pac.mod`:
+| Equation | SSR (A/B/C) | b0 EC (A/B/C) | Key issue |
+|----------|-------------|---------------|-----------|
+| VA Price | 40.4/40.3/1.1 | 0.020/0.021/0.060* | *C: params stuck at initial (over-identification) |
+| Consumption | 435/437/401 | 0.088/0.098/0.097 | Negative AR1 (-0.25) across all approaches |
+| Business Inv | 974/973/968 | 0.018/0.018/0.030 | Negative AR2 (-0.05); strong accelerator (b3~0.43) |
+| Household Inv | 966/963/960 | 0.024/0.026/0.029 | Interest rate sign flip (b4>0 across all) |
+| Employment | 76/74/73 | 0.046/0.088/0.105 | All AR(1-4) negative; hybrid gives cleaner EC |
 
-1. **Replace TCM variable declarations** with var_model shadow variables (y_gap_var, i_gap_var, pi_gap_var) and auxiliary gap variables (piQ_hat, n_hat, c_hat, ib_hat, ih_hat). Keep pv_X_aux variables.
+## Immediate next task: Diagnose parameter sign issues
 
-2. **Replace TCM shock declarations** (eps_e_q, eps_e_pQ_star, etc.) with var_model shocks (eps_var_y, eps_var_i, eps_var_pi, eps_var_pQ, eps_var_n, eps_var_c, eps_var_ib, eps_var_ih).
+The negative AR coefficients and wrong-signed interest rate effects persist across ALL 3 dseries approaches. This is NOT a methodology artifact — it's a data feature. Possible causes:
 
-3. **Replace 5 trend_component_model + 5 pac_model declarations** with 1 `var_model(model_name = esat_enriched, eqtags = [...])` + 5 `pac_model(auxiliary_model_name = esat_enriched, ...)`.
+1. **COVID period** (2020Q1-2021Q2): extreme outliers in dln_n (-6%), dln_ib, dln_ih may dominate OLS
+   - Try: estimate on pre-COVID sample (1994Q2-2019Q4) to see if signs normalize
+   - Try: add COVID dummies to the PAC equations
 
-4. **Replace 10 TCM equations** (5 EC + 5 target random walks) with 8 var_model equations (3 E-SAT core + 5 auxiliary gaps) in pure VAR(1) form.
+2. **Variable-rate mortgage transmission**: AU has mostly variable-rate mortgages unlike FR fixed-rate
+   - The positive b4_ih might reflect that rate hikes → existing homeowners refinance → construction activity (short-run positive, long-run negative)
+   - Or: the i_gap measure doesn't capture the mortgage spread properly
 
-5. **Update PAC equation EC targets** from old TCM targets (piQ_star_l, c_star_l, etc.) to new var_model auxiliary variables (piQ_hat, c_hat, etc.).
+3. **Identification**: the enriched var_model (12 equations) may create too many correlated regressors
+   - The pac_expectation h-vectors are linear combinations of ALL 12 VAR states
+   - With pv_aux also a linear combination of the same states, multicollinearity is likely
 
-6. **Keep pv_X_aux terms** in PAC equations — these provide the first-order wedge.
-
-7. **Add pac.initialize + pac.update.expectation calls** before stoch_simul.
-
-8. **Update shocks block** with new var_model shock variances.
-
-The hybrid model (`au_pac.mod`) is the working template — all the changes are identical. Key difference: au_pac_var.mod uses backward AR(1) for pv_i, pv_u_gap, pv_yh instead of forward recursive.
-
-## After migration
-
-1. Fix `test_all_three.m` — sequential Dynare runs have workspace conflicts. Consider saving to separate .mat files between runs (the `generate_three_regime_irfs.m` script already does this).
-
-2. Run `generate_three_regime_irfs.m` to regenerate the comparison plots with all three models on the new architecture.
-
-3. Update `AU_PAC_MODEL_DOCUMENTATION.md` Section 6.2 tables with final values.
+4. **Sample-dependent estimation**: Try Bayesian estimation (Option C from STATUS.md) with informative priors centered on FR-BDF values — priors would regularize the sign issues
 
 ## Key files
 
-- `dynare/au_pac.mod` — Hybrid (TEMPLATE for migration, working)
-- `dynare/au_pac_var.mod` — VAR-based (NEEDS MIGRATION)
-- `dynare/au_pac_mce.mod` — MCE (correct, no changes needed)
-- `dynare/test_var_pac.mod` — Prototype proving var_model PAC works
-- `dynare/test_var_pac_multi.mod` — Prototype proving multi-PAC shared var_model works
-- `dynare/ESAT_AUXILIARY_ARCHITECTURE.md` — Explains the architecture
-- `dynare/PAC_COEFFICIENT_COMPARISON.md` — All coefficients compared with FR-BDF
+| File | Purpose |
+|------|---------|
+| `dynare/estimate_pac_smooth_driver.m` | Recommended pipeline (hybrid approach) |
+| `dynare/test_smoother_comparison.m` | Runs all 3 approaches side-by-side |
+| `dynare/prepare_pac_dseries_hybrid.m` | Hybrid dseries (smoothed targets + recursive corrections) |
+| `dynare/au_pac.mod` lines 2039-2088 | Commented-out Bayesian estimation block |
 
-Work step by step. After each change, verify by running: `"C:/Program Files/MATLAB/R2019a/bin/matlab.exe" -batch "cd('c:\Users\david\french_model\dynare'); addpath('C:\dynare\6.5\matlab'); dynare au_pac_var noclearall nograph"`. Use file-based logging (fopen/fprintf/fclose) since diary doesn't work well with Dynare.
+## Running
+
+```matlab
+cd('c:\Users\david\french_model\dynare')
+addpath('C:\dynare\6.5\matlab')
+estimate_pac_smooth_driver   % hybrid approach (recommended)
+test_smoother_comparison     % all 3 approaches
+```
+
+Work step by step. Use file-based logging (fopen/fprintf/fclose) since diary doesn't work well with Dynare.

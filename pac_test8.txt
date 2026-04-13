@@ -1,9 +1,0 @@
-[Warning: File not found or permission denied] 
-[> In dynare (line 192)] 
-Starting Dynare (version 6.5).
-Calling Dynare with arguments: noclearall nograph
-Starting preprocessing of the model file ... 
-Substitution of Diff operator: added 2 auxiliary variables and equations. 
-ERROR: the variable on the LHS of equation #11 does not have the diff operator applied to it yet you are trying to undiff it. 
-Preprocessing time: 0h00m00s.
-DYNARE_FAIL: Dynare: preprocessing failed

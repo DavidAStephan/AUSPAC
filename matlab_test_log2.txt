@@ -1,5 +1,0 @@
-Testing LCWRTT01AUQ661S ... HTML/error page
-Testing AUSCPIALLQINMEI ... OK (307 obs, first val=3.44)
-Testing AUSCPALTT01IXOBQ ... HTML/error page
-Testing CPGRLE01AUQ657N ... OK (210 obs, first val=0.85)
-Testing LCEAMN01AUQ189S ... HTML/error page

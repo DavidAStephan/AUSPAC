@@ -1,4 +1,0 @@
-testing download
-websave failed: The connection to URL 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=NAEXKP06AUQ189S' timed out after 19.241 seconds due to system timeout.
-curl status: 0
-exports via curl: 622 rows

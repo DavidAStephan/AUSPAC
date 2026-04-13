@@ -1,9 +1,0 @@
-[Warning: File not found or permission denied] 
-[> In dynare (line 192)] 
-Starting Dynare (version 6.5).
-Calling Dynare with arguments: noclearall nograph
-Starting preprocessing of the model file ... 
-Substitution of Diff operator: added 3 auxiliary variables and equations. 
-ERROR: the model equation defining the 'target' of 'pac_target_info(pac_pQ)' contains a variable (pQ_star_level) that is not declared as a 'component' 
-Preprocessing time: 0h00m01s.
-DYNARE_FAIL: Dynare: preprocessing failed
