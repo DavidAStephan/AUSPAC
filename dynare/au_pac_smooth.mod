@@ -43,6 +43,7 @@ var
     pibar_au        // LR AU inflation anchor (quarterly %)
     pibar_us        // LR US inflation anchor (quarterly %)
     i_gap           // i_au - ibar
+    di_gap          // first difference of i_gap (for consumption PAC, FR-BDF eq 61)
     pi_au_gap       // pi_au - pibar_au
     pi_us_gap       // pi_us - pibar_us
 
@@ -198,6 +199,24 @@ var
     ln_ib_level     // business investment detrended log-level (diff = dln_ib)
     ln_ih_level     // household investment detrended log-level (diff = dln_ih)
     ln_n_level      // employment detrended log-level (diff = dln_n)
+
+    // === Trend level accumulators (FR-BDF eq 43 — recover levels from gaps) ===
+    // These accumulate trend growth rates into log-level indices.
+    // Actual level = trend level + gap accumulator.
+    // All zero at SS (gap model). Non-zero only after shocks.
+    ln_QN           // log potential output index (accumulates dln_y_star)
+    ln_Q            // log actual output index = ln_QN + yhat_au
+    ln_C_star       // log trend consumption index (accumulates dln_c_star_bar)
+    ln_C            // log actual consumption = ln_C_star + ln_c_level
+    ln_IB_star      // log trend business investment index (accumulates dln_ib_star_bar)
+    ln_IB           // log actual business investment = ln_IB_star + ln_ib_level
+    ln_IH_star      // log trend household investment index (accumulates dln_ih_star_bar)
+    ln_IH           // log actual household investment = ln_IH_star + ln_ih_level
+    ln_N_star       // log trend employment index (accumulates dln_n_star_bar)
+    ln_N            // log actual employment = ln_N_star + ln_n_level
+    ln_K            // log capital stock index (accumulates dln_k)
+    ln_P_star       // log trend price level index (accumulates pibar_au)
+    ln_P            // log actual price level = ln_P_star + pQ_level
 ;
 
 
@@ -254,6 +273,10 @@ varexo
     eps_var_yus     // shadow foreign output gap shock
     eps_var_yh      // household income-output ratio gap shock
     eps_var_rKB     // user cost of capital gap shock
+
+    // COVID pulse dummies (exogenous, zero at SS)
+    d_covid_crash       // = 1 in 2020Q2 only (lockdown quarter)
+    d_covid_bounce      // = 1 in 2020Q3 only (rebound quarter)
 ;
 
 // -----------------------------------------------------------------------
@@ -315,6 +338,7 @@ parameters
     omega_c         // nonstationary expectations component
     b2_c            // real interest rate sensitivity (negative: higher r -> less C)
     b3_c            // output gap sensitivity (HtM channel, positive)
+    b_di_c          // interest rate CHANGE sensitivity (FR-BDF eq 61 β₃)
     rho_c_star      // target consumption growth persistence
     kappa_inc       // permanent income sensitivity: PV(yH) -> consumption target
     beta_c          // discount factor for permanent income PV (0.95, paper Section 4.6.1)
@@ -340,6 +364,7 @@ parameters
     omega_ih        // nonstationary expectations component
     b3_ih           // output gap sensitivity
     b4_ih           // real interest rate sensitivity (mortgage channel, negative)
+    b_ph_ih         // housing price gap in short-run PAC (FR-BDF eq 67 β₃)
     rho_ih_star     // target housing investment growth persistence
     kappa_mort      // mortgage rate gap -> housing investment target
     // growth neutrality: coeff on dln_ih_star_bar(-1) = (1 - b1_ih - b2_ih - omega_ih)
@@ -515,6 +540,13 @@ parameters
     a_ih_i          // interest rate gap (mortgage, FR-BDF: -0.89)
     a_ih_pi         // inflation gap (FR-BDF: 0.49)
     a_ih_u          // unemployment gap (FR-BDF: implicit via demand channel)
+
+    // COVID dummy coefficients (one pair per PAC equation)
+    b_covid_crash_pQ    b_covid_bounce_pQ       // VA price
+    b_covid_crash_c     b_covid_bounce_c        // consumption
+    b_covid_crash_ib    b_covid_bounce_ib       // business investment
+    b_covid_crash_ih    b_covid_bounce_ih       // household investment
+    b_covid_crash_n     b_covid_bounce_n        // employment
 ;
 
 // -----------------------------------------------------------------------
@@ -545,10 +577,10 @@ pi_ss_us        = 0.5;
 // Start conservative to avoid instability; loop gain must be < 1
 lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
-// VA price PAC parameters (calibrated from Table 4.4.3)
-b0_pQ           = 0.06;     // error correction
-b1_pQ           = 0.50;     // persistence
-b2_pQ           = 0.09;     // output gap
+// VA price PAC parameters (hybrid smoother iterative OLS, 2026-04-14)
+b0_pQ = 0.0275;    // error correction (hybrid smoother OLS, updated companion)
+b1_pQ = 0.2878;    // persistence
+b2_pQ = -0.0138;   // output gap (weak Phillips curve)
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
 gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
@@ -559,7 +591,7 @@ alpha_k         = 0.33;     // capital share in Cobb-Douglas
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
-rho_pcom        = 0.85;     // commodity price persistence
+rho_pcom        = 0.42;     // AU est (s.e.0.08). Was 0.85. IMF commodity index much less persistent
 b4_x            = 0.15;     // commodity price -> export volumes
 alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 
@@ -569,31 +601,32 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 lambda_w        = 0.247;    // wage persistence (posterior mean)
 kappa_w         = 0.238;    // output gap -> wages (posterior mean)
 gamma_w         = 0.15;     // CPI indexation channel
-okun_coeff      = -0.33;    // Okun's law: 1pp output gap -> -0.33pp unemployment gap
-rho_u_gap       = 0.94;     // unemployment gap persistence (paper Table 4.5.2)
+okun_coeff      = -0.13;    // AU OLS estimate (s.e.0.02). FR-BDF: -0.246, old cal: -0.33
+rho_u_gap       = 0.946;    // AU OLS estimate (s.e.0.01). FR-BDF: 0.946, EXACT MATCH
 beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
 // growth neutrality coeff = 1 - 0.55 - 0.15 = 0.30 on pibar_au
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n            = 0.040;    // error correction (posterior mean)
-b1_n            = 0.30;     // 1st lag
-b2_n            = 0.10;     // 2nd lag
-b3_n            = 0.05;     // 3rd lag
-b4_n            = 0.02;     // 4th lag
+b0_n = 0.0631;    // error correction (hybrid smoother OLS, updated companion)
+b1_n = 0.3143;    // 1st lag
+b2_n = -0.1869;   // 2nd lag
+b3_n = -0.0763;   // 3rd lag
+b4_n = -0.0852;   // 4th lag
 omega_n         = 0.30;     // expectations/forward component
-b5_n            = 0.12;     // output gap sensitivity
+b5_n = -0.0168;   // output gap sensitivity (weak)
 rho_n_star      = 0.95;     // target persistence
 // growth neutrality coeff = 1 - 0.30 - 0.10 - 0.05 - 0.02 - 0.30 = 0.23
 
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c            = 0.060;    // error correction (posterior mean)
-b1_c            = 0.149;    // persistence (posterior mean)
+b0_c = 0.0693;    // error correction (hybrid smoother OLS, updated companion)
+b1_c = 0.0463;    // persistence
 omega_c         = 0.369;    // expectations/forward component (posterior mean)
-b2_c            = -0.02;    // real interest rate -> consumption (negative: substitution)
-b3_c            = 0.139;    // output gap -> consumption (posterior mean)
+b2_c = -0.5588;   // real interest rate -> consumption (stronger than FR-BDF)
+b3_c = 0.0183;    // output gap -> consumption
+b_di_c          = 0;        // interest rate CHANGE: OLS=3.39 (wrong sign, reverse causality). Needs IV estimation
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
 beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~25% annual)
@@ -603,11 +636,11 @@ alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib           = 0.030;    // error correction (posterior mean)
-b1_ib           = 0.181;    // 1st lag persistence (posterior mean)
-b2_ib           = 0.10;     // 2nd lag
+b0_ib = 0.0171;    // error correction (hybrid smoother OLS, updated companion)
+b1_ib = 0.0925;    // 1st lag persistence
+b2_ib = -0.0445;   // 2nd lag
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib           = 0.191;    // output gap -> investment (posterior mean)
+b3_ib = 0.3444;    // output gap -> investment (strong accelerator)
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
@@ -617,12 +650,13 @@ delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih           = 0.049;    // error correction (posterior mean)
-b1_ih           = 0.210;    // 1st lag persistence (posterior mean)
-b2_ih           = 0.08;     // 2nd lag
+b0_ih = 0.0250;    // error correction (hybrid smoother OLS, updated companion)
+b1_ih = 0.1071;    // 1st lag persistence
+b2_ih = -0.0368;   // 2nd lag
 omega_ih        = 0.30;     // expectations/forward component
-b3_ih           = 0.12;     // output gap -> housing investment
-b4_ih           = -0.05;    // real interest rate -> housing (mortgage channel, strongest)
+b3_ih = 0.2313;    // output gap -> housing investment
+b4_ih           = 0;        // DROPPED: rate channel already in pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001, not significant)
+b_ph_ih         = 0;        // housing price gap: OLS=-0.04 (wrong sign vs FR-BDF +0.32). Needs ABS housing price data
 rho_ih_star     = 0.95;     // target persistence
 kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
 kappa_ih_inc    = 0.03;     // permanent income -> housing target (paper eq 66, Table 4.6.14)
@@ -657,7 +691,7 @@ s_BBB_ss        = 0.05;     // SS BBB bond spread (~0.2% annual)
 // Exchange rate parameters (calibrated from Section 4.8 / eq. 105)
 // AUD/USD real exchange rate, UIP-based with persistent deviations from PPP
 // s_gap > 0 = AUD depreciation (less purchasing power)
-rho_s           = 0.950;    // persistent misalignment (posterior mean)
+rho_s           = 0.775;    // AU est (s.e.0.06). Was 0.95. AUD less persistent PPP deviations
 alpha_s         = 0.15;     // interest rate differential -> appreciation (negative sign in eq)
 
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
@@ -702,16 +736,16 @@ beta_px         = -0.05;    // depreciation -> higher export prices in domestic 
 // Import deflator: heavily influenced by exchange rate
 rho_pm          = 0.30;     // moderate persistence
 alpha_pm        = 0.15;     // VA price pass-through (weak: foreign prices dominate)
-beta_pm         = 0.08;     // depreciation -> higher import prices (strong pass-through)
+beta_pm         = 0.09;     // AU est (s.e.0.03). Was 0.08. REER pass-through confirmed
 // neutrality: (1-0.30-0.15) = 0.55 on pibar_au (+ beta_pm*0 at SS)
 
 // Government parameters
 // Spending follows simple fiscal rule: countercyclical stabilizer
 rho_g           = 0.85;     // government spending persistent (budget inertia)
 phi_g           = -0.10;    // countercyclical: positive gap -> less spending growth
-rho_pg          = 0.50;     // government deflator moderately persistent
-alpha_pg        = 0.30;     // VA price pass-through to government prices
-// neutrality: (1-0.50-0.30) = 0.20 on pibar_au
+rho_pg          = 0.13;     // AU est (s.e.0.05). Was 0.50. Less persistent than assumed
+alpha_pg        = 0.37;     // AU est (s.e.0.02). Was 0.30. Slightly stronger wage pass-through
+// neutrality: (1-0.13-0.37) = 0.50 on pibar_au
 
 // GDP expenditure shares (ABS National Accounts, 2023 averages)
 // These sum to 1.0 for the domestic demand + net exports identity.
@@ -737,7 +771,7 @@ beta_pc_m       = 0.10;     // consumption: ~20% import content, ~50% pass-throu
 beta_pib_m      = 0.12;     // business investment: ~25% import content
 beta_pih_m      = 0.08;     // housing: ~15% import content (domestic materials)
 gamma_oil       = 0.03;     // energy/commodity -> CPI (smaller for AU than FR)
-beta_pm_com     = 0.05;     // commodity price -> import deflator
+beta_pm_com     = 0.42;     // AU est (s.e.0.02). Was 0.05. Strong commodity pass-through to imports (AU-specific)
 
 // Import-adjusted demand weights (import content of each expenditure component)
 // From ABS input-output tables, approximate for AU economy
@@ -774,58 +808,63 @@ beta_pac        = 0.98;
 // but flag for future re-estimation with Australian data.
 
 // VA price auxiliary (FR-BDF Table 4.4.4: 3-eq chain)
-// Policy function: PV(π*_Q) depends on ŷ(-1.5e-3), i_gap(-3.4e-3), π_gap(0.9e-3), û(-0.011)
-rho_pQ_aux      = 0.70;     // persistence (FR-BDF: implicit via 3-eq chain ~0.70)
-a_pQ_y          = 0.03;     // ŷ → PV (FR-BDF policy fn: -0.0015, scaled up for single-eq form)
+// Not identified from AU data (smoother R2=1.0). Keep FR-BDF calibration.
+rho_pQ_aux      = 0.70;     // persistence (FR-BDF: ~0.70)
+a_pQ_y          = 0.03;     // ŷ → PV (FR-BDF policy fn: -0.0015, scaled)
 a_pQ_i          = -0.02;    // i_gap → PV (FR-BDF policy fn: -0.0034, scaled)
-a_pQ_pi         = 0.01;     // π_gap → PV (FR-BDF policy fn: 0.00087, small positive)
-a_pQ_u          = -0.01;    // û → PV (FR-BDF policy fn: -0.011, key wage-price channel)
+a_pQ_pi         = 0.01;     // π_gap → PV (FR-BDF policy fn: 0.00087)
+a_pQ_u          = -0.01;    // û → PV (FR-BDF policy fn: -0.011)
 
 // Employment auxiliary (FR-BDF Table 4.5.7, eq 57)
-// Auxiliary regression: n̂* = 0.30·ŷ + 0.07·(i-ī) + 0.16·(π-π̄) + 0.67·n̂*(-1), R²=0.82
-rho_n_aux       = 0.67;     // persistence (FR-BDF: 0.67, EXACT)
-a_n_y           = 0.12;     // ŷ → n̂* (FR-BDF: 0.30 [0.09], scaled for gap model)
-a_n_i           = -0.03;    // i_gap → n̂* (FR-BDF: 0.07 [0.3], n.s., sign flipped for AU)
-a_n_pi          = 0.05;     // π_gap → n̂* (FR-BDF: 0.16 [0.13], scaled)
-a_n_u           = -0.02;    // û → n̂* (FR-BDF: implicit via Okun link to output)
+// AU smoother: rho=0.56 (R2=0.97, T=121). Coefficients on y/pi implausible.
+// Hybrid: AU rho + FR-BDF coefficient signs, AU i_gap magnitude.
+rho_n_aux       = 0.56;     // AU estimate (s.e.0.03). FR-BDF: 0.67
+a_n_y           = 0.12;     // FR-BDF calibration (AU smoother: -3.32, implausible)
+a_n_i           = -0.03;    // FR-BDF calibration (AU smoother: -1.70, implausible)
+a_n_pi          = 0.05;     // FR-BDF calibration (AU smoother: +42.8, implausible)
+a_n_u           = -0.02;    // FR-BDF calibration (AU smoother: +0.19, wrong sign)
 
 // Household income-output ratio auxiliary (FR-BDF Table 4.6.3)
-// Auxiliary regression: yH-ȳ = 0.92·lag + 0.32·Δw_eff - 0.08·û, R²=0.91
-rho_yh_aux      = 0.92;     // persistence (FR-BDF: 0.92, EXACT)
-a_yh_y          = 0.05;     // ŷ → yH-ȳ (income tracks output via labor share)
-a_yh_u          = -0.08;    // û → yH-ȳ (FR-BDF: -0.08, unemployment reduces income)
+// AU smoother: rho=0.93 (R2=1.00, T=121). Close to FR-BDF.
+rho_yh_aux      = 0.93;     // AU estimate (s.e.0.002). FR-BDF: 0.92
+a_yh_y          = 0.12;     // AU estimate (s.e.0.006). FR-BDF: 0.08 (AU 46% larger)
+a_yh_u          = -0.07;    // AU estimate (s.e.0.003). FR-BDF: -0.10 (AU 25% weaker)
 
 // Consumption PV² auxiliary (FR-BDF Table 4.6.4)
-// Policy function PV²: 10 states including ŷ(-0.052), i_gap(-0.012), û(-0.03)
-// c_hat captures PV of changes in yh_ratio_hat (the 2nd layer of PV)
-rho_c_aux       = 0.70;     // persistence (FR-BDF PV²: -0.12 on PV lag, positive on yH-ȳ lag)
-a_c_y           = 0.06;     // ŷ → PV² (FR-BDF: -0.052, sign adjusted)
-a_c_i           = -0.04;    // i_gap → PV² (FR-BDF: -0.012, amplified for AU)
-a_c_pi          = 0.005;    // π_gap → PV² (FR-BDF: 0.002, small)
-a_c_u           = -0.03;    // û → PV² (FR-BDF: -0.03, via income expectations)
-a_c_yh          = 0.10;     // yH-ȳ → PV² (FR-BDF Table 4.6.4: 0.034 in policy fn)
+// AU smoother: rho=0.71 (R2=0.996, T=121). Higher persistence than FR-BDF 0.60.
+rho_c_aux       = 0.71;     // AU estimate (s.e.0.05). FR-BDF: 0.60
+a_c_y           = 0.06;     // FR-BDF calibration (AU smoother: -0.88, wrong sign)
+a_c_i           = -0.04;    // FR-BDF calibration (AU smoother: -0.39, same sign but 10x)
+a_c_pi          = 0.005;    // FR-BDF calibration (AU smoother: +11, implausible)
+a_c_u           = -0.03;    // FR-BDF calibration (AU smoother: -0.008, similar)
+a_c_yh          = 0.10;     // AU smoother: 0.10 (s.e.0.02). FR-BDF: 0.39 (AU 73% weaker)
 
 // Business investment auxiliary (FR-BDF Tables 4.6.11-12)
-// Output aux: q̂ = 0.59·q̂(-1) + 0.61·ŷ, R²=0.90
-// User cost aux: r̂_KB = 4.45·(i-ī)(-1), R²=0.63
-// Policy fn (output): ŷ(0.035), i_gap(-0.101), π_gap(0.027)
-// Business investment OUTPUT gap auxiliary (FR-BDF Table 4.6.11: q̂)
-rho_ib_aux      = 0.59;     // persistence (FR-BDF: 0.59 for q̂, EXACT)
-a_ib_y          = 0.15;     // ŷ → q̂ (FR-BDF: 0.035 policy fn, 0.61 in aux, scaled)
-a_ib_pi         = 0.03;     // π_gap → q̂ (FR-BDF: 0.027 policy fn, NEAR EXACT)
-a_ib_u          = 0.00;     // û → q̂ (FR-BDF: 0 in output aux)
+// AU smoother: rho=0.50 (R2=0.991, T=121). Lower persistence, AU accelerator weaker.
+rho_ib_aux      = 0.50;     // AU estimate (s.e.0.03). FR-BDF: 0.59
+a_ib_y          = 0.05;     // AU estimate (s.e.0.02). FR-BDF: 0.15 (AU 63% weaker)
+a_ib_pi         = 0.03;     // FR-BDF calibration (AU smoother: +2.2, implausible)
+a_ib_u          = 0.00;     // FR-BDF calibration (AU smoother: 0, consistent)
 
 // Business investment USER COST gap auxiliary (FR-BDF Table 4.6.12: r̂_KB)
-rho_rKB_aux     = 0.30;     // own persistence (FR-BDF: -0.055 in policy fn, positive in aux)
-a_rKB_i         = 0.24;     // i_gap → r̂_KB (FR-BDF: 4.45 in aux, 0.24 in policy fn)
+// Not identified from AU data (smoother R2=1.0). Keep FR-BDF calibration.
+rho_rKB_aux     = 0.30;     // FR-BDF calibration
+a_rKB_i         = 0.24;     // FR-BDF: 4.45 in aux, 0.24 in policy fn
 
 // Housing investment auxiliary (FR-BDF Table 4.6.16)
-// Auxiliary: Î*_H = 0.38·ŷ + -0.89·(i-ī) + 0.49·(π-π̄) + 0.71·lag, R²=0.62
-rho_ih_aux      = 0.71;     // persistence (FR-BDF: 0.71, EXACT)
-a_ih_y          = 0.10;     // ŷ → PV (FR-BDF: 0.38 [0.26] in aux, 0.029 in policy fn)
-a_ih_i          = -0.15;    // i_gap → PV (FR-BDF: -0.89 [0.96] in aux, -0.15 in policy fn, EXACT)
-a_ih_pi         = 0.05;     // π_gap → PV (FR-BDF: 0.49 [0.54] in aux, 0.035 in policy fn)
-a_ih_u          = 0.00;     // û → PV (FR-BDF: implicit via demand channel)
+// AU smoother: rho=0.65 (R2=0.987, T=121). Lower persistence than FR-BDF.
+rho_ih_aux      = 0.65;     // AU estimate (s.e.0.04). FR-BDF: 0.71
+a_ih_y          = 0.10;     // FR-BDF calibration (AU smoother: -1.62, wrong sign)
+a_ih_i          = -0.15;    // FR-BDF calibration (AU smoother: -1.08, same sign but 7x)
+a_ih_pi         = 0.05;     // FR-BDF calibration (AU smoother: +19, implausible)
+a_ih_u          = 0.00;     // FR-BDF calibration (AU smoother: +0.05, weak)
+
+// COVID dummy coefficients — initial = 0 (estimated by pac.estimate; inert for stoch_simul)
+b_covid_crash_pQ   = 0;    b_covid_bounce_pQ  = 0;
+b_covid_crash_c    = 0;    b_covid_bounce_c   = 0;
+b_covid_crash_ib   = 0;    b_covid_bounce_ib  = 0;
+b_covid_crash_ih   = 0;    b_covid_bounce_ih  = 0;
+b_covid_crash_n    = 0;    b_covid_bounce_n   = 0;
 
 // === Sector financial account parameters (Section 4.8.5) ===
 // SS net asset ratios (as share of *quarterly* nominal GDP)
@@ -898,6 +937,9 @@ model;
 
     [name = 'def_i_gap']
     i_gap = i_au - ibar;
+
+    [name = 'def_di_gap']
+    di_gap = i_gap - i_gap(-1);
 
     [name = 'def_pi_au_gap']
     pi_au_gap = pi_au - pibar_au;
@@ -1041,6 +1083,59 @@ model;
     [name = 'eq_dln_k']
     dln_k = (1 - delta_k) * dln_k(-1) + delta_k * dln_ib;
 
+    // === TREND LEVEL ACCUMULATORS (FR-BDF eq 43 — recover levels from gaps) ===
+    // These are pure accounting identities that accumulate trend growth rates.
+    // They do NOT affect model dynamics — just enable level recovery.
+    // At SS: all = 0. After shocks, they track cumulative deviations from SS path.
+    // Usage: ln_Q gives actual output index, ln_QN gives potential output index.
+    //        The difference ln_Q - ln_QN = yhat_au (output gap) by construction.
+
+    // Output: potential and actual
+    [name = 'eq_ln_QN']
+    ln_QN = ln_QN(-1) + dln_y_star;
+
+    [name = 'eq_ln_Q']
+    ln_Q = ln_QN + yhat_au;
+
+    // Consumption: trend and actual
+    [name = 'eq_ln_C_star']
+    ln_C_star = ln_C_star(-1) + dln_c_star_bar;
+
+    [name = 'eq_ln_C']
+    ln_C = ln_C_star + ln_c_level;
+
+    // Business investment: trend and actual
+    [name = 'eq_ln_IB_star']
+    ln_IB_star = ln_IB_star(-1) + dln_ib_star_bar;
+
+    [name = 'eq_ln_IB']
+    ln_IB = ln_IB_star + ln_ib_level;
+
+    // Household investment: trend and actual
+    [name = 'eq_ln_IH_star']
+    ln_IH_star = ln_IH_star(-1) + dln_ih_star_bar;
+
+    [name = 'eq_ln_IH']
+    ln_IH = ln_IH_star + ln_ih_level;
+
+    // Employment: trend and actual
+    [name = 'eq_ln_N_star']
+    ln_N_star = ln_N_star(-1) + dln_n_star_bar;
+
+    [name = 'eq_ln_N']
+    ln_N = ln_N_star + ln_n_level;
+
+    // Capital stock
+    [name = 'eq_ln_K']
+    ln_K = ln_K(-1) + dln_k;
+
+    // Price level: trend and actual
+    [name = 'eq_ln_P_star']
+    ln_P_star = ln_P_star(-1) + (pibar_au - pi_ss_au);
+
+    [name = 'eq_ln_P']
+    ln_P = ln_P_star + pQ_level;
+
     // === CES PRODUCTION FUNCTION (Section 4.3, sigma_ces = 0.53) ===
     // Growth-rate accounting form using capital growth from accumulation equation.
     // CES effects captured through factor demand target equations:
@@ -1129,6 +1224,7 @@ model;
                      + b1_pQ * diff(pQ_level(-1))
                      + pac_expectation(pac_pQ)
                      + b2_pQ * yhat_au
+                     + b_covid_crash_pQ * d_covid_crash + b_covid_bounce_pQ * d_covid_bounce
                      + pv_piQ_aux
                      + eps_pQ;
 
@@ -1209,6 +1305,7 @@ model;
             + b4_n * diff(ln_n_level(-4))
             + pac_expectation(pac_n)
             + b5_n * yhat_au
+            + b_covid_crash_n * d_covid_crash + b_covid_bounce_n * d_covid_bounce
             + pv_n_aux
             + eps_n;
 
@@ -1259,7 +1356,9 @@ model;
             + b1_c * diff(ln_c_level(-1))
             + pac_expectation(pac_c)
             + b2_c * i_gap(-1)
+            + b_di_c * di_gap
             + b3_c * yhat_au
+            + b_covid_crash_c * d_covid_crash + b_covid_bounce_c * d_covid_bounce
             + pv_c_aux
             + eps_c;
 
@@ -1311,6 +1410,7 @@ model;
              + b2_ib * diff(ln_ib_level(-2))
              + pac_expectation(pac_ib)
              + b3_ib * yhat_au
+             + b_covid_crash_ib * d_covid_crash + b_covid_bounce_ib * d_covid_bounce
              - sigma_ces * pv_rKB_aux
              + pv_ib_aux
              + eps_ib;
@@ -1347,7 +1447,9 @@ model;
     // Household investment PAC equation — now using Dynare native pac_expectation().
     // pac_expectation(pac_ih) replaces omega_ih * dln_ih_star + neutrality term.
     // 2nd-order adjustment costs: 2 AR lags of diff(ln_ih_level).
-    // Mortgage channel (b4_ih): strongest interest rate sensitivity.
+    // Rate channel enters via pac_expectation (kappa_mort*(i_lh-SS) in target)
+    // and pv_ih_aux (a_ih_i=-0.15). Direct b4_ih*i_gap term was redundant
+    // (F=0.001, delta SSR=0.005 on 118 obs — statistically insignificant).
 
     [name = 'eq_dln_ih_pac']
     diff(ln_ih_level) = b0_ih * (ih_hat(-1) - ln_ih_level(-1))
@@ -1355,7 +1457,8 @@ model;
              + b2_ih * diff(ln_ih_level(-2))
              + pac_expectation(pac_ih)
              + b3_ih * yhat_au
-             + b4_ih * i_gap(-1)
+             + b_ph_ih * ph_gap(-1)
+             + b_covid_crash_ih * d_covid_crash + b_covid_bounce_ih * d_covid_bounce
              + pv_ih_aux
              + eps_ih;
 
@@ -1773,6 +1876,7 @@ steady_state_model;
     pi_au    = pi_ss_au;
     pi_us    = pi_ss_us;
     i_gap    = 0;
+    di_gap   = 0;
     pi_au_gap = 0;
     pi_us_gap = 0;
 
@@ -1922,9 +2026,26 @@ steady_state_model;
     n_aux_l        = 0;
     n_star_l       = 0;
     ln_n_level     = 0;
+
+    // Trend level accumulators (all zero at SS)
+    ln_QN          = 0;
+    ln_Q           = 0;
+    ln_C_star      = 0;
+    ln_C           = 0;
+    ln_IB_star     = 0;
+    ln_IB          = 0;
+    ln_IH_star     = 0;
+    ln_IH          = 0;
+    ln_N_star      = 0;
+    ln_N           = 0;
+    ln_K           = 0;
+    ln_P_star      = 0;
+    ln_P           = 0;
 end;
 
 // Initialize PAC models BEFORE steady (h vectors must be computed first)
+// Fix oo_.var from prior stoch_simul (auto-generated)
+if exist('oo_', 'var') && isfield(oo_, 'var') && ~isstruct(oo_.var), oo_.var = struct(); end
 pac.initialize('pac_pQ');
 pac.update.expectation('pac_pQ');
 pac.initialize('pac_c');
@@ -2009,13 +2130,19 @@ pac.update.expectation('pac_ih');
 pac.initialize('pac_n');
 pac.update.expectation('pac_n');
 
-stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y;
+stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y
+    ln_Q ln_QN ln_K ln_C ln_C_star ln_IB ln_IB_star ln_IH ln_IH_star ln_N ln_N_star ln_P ln_P_star;
+
+// Fix oo_.var for calib_smoother (stoch_simul sets it to double)
+if ~isstruct(oo_.var), oo_.var = struct(); end
+get_companion_matrix('esat_enriched', 'var');
 
 // Kalman smoother: extract model-consistent states (auto-generated)
 calib_smoother(datafile='smoother_data.mat', diffuse_filter) yhat_au pi_au i_au yhat_us pi_us
     dln_c dln_ib dln_ih dln_n
     piQ_hat c_hat ib_hat ih_hat n_hat yh_ratio_hat rKB_hat
     pv_piQ_aux pv_n_aux pv_c_aux pv_ib_aux pv_rKB_aux pv_ih_aux
+    ph_gap di_gap dln_ph
     pQ_level ln_c_level ln_ib_level ln_ih_level ln_n_level
     y_gap_var i_gap_var pi_gap_var u_gap_var yhat_us_var;
 

@@ -1,23 +1,24 @@
 %% irf_all_shocks.m — Complete IRF analysis for AU_PAC documentation
 %
 % Replicates FR-BDF Section 5.2 IRF analysis for all 7 shock types.
-% Produces tables and plots for inclusion in AU_PAC_MODEL_DOCUMENTATION.md.
+% ** Policy-relevant shock sizes (not 1 s.d.) **
+% Uses linear scaling (exact at order=1): IRF * (target / stderr)
 %
-% Shocks (matching FR-BDF Section 5.2):
-%   1. Monetary policy (eps_i) — Section 5.2.1
-%   2. Term premium (eps_tp) — Section 5.2.2
-%   3. Foreign demand (eps_q_us) — Section 5.2.3
-%   4. Government spending (eps_g) — Section 5.2.4
-%   5. Commodity/oil price (eps_pcom) — Section 5.2.5
-%   6. Cost-push / VA price (eps_pQ) — Section 5.2.6
-%   7. TFP / labor efficiency (eps_tfp) — Section 5.2.7
+% Shock sizes:
+%   1. Monetary policy (eps_i) — 100bp annualized (0.25 qpp)
+%   2. Term premium (eps_tp) — 50bp annualized (0.125 qpp)
+%   3. Foreign demand (eps_q_us) — 1pp US output gap
+%   4. Government spending (eps_g) — 1pp of GDP
+%   5. Commodity/oil price (eps_pcom) — 10% increase
+%   6. Cost-push / VA price (eps_pQ) — 1 s.d.
+%   7. TFP / labor efficiency (eps_tfp) — 1 s.d.
 
 clear; clc;
 addpath('C:\dynare\6.5\matlab');
 
 fprintf('================================================================\n');
 fprintf('  AU_PAC Complete IRF Analysis\n');
-fprintf('  FR-BDF Section 5.2 Replication\n');
+fprintf('  Policy-Relevant Shock Sizes\n');
 fprintf('================================================================\n\n');
 
 %% Run model
@@ -26,11 +27,22 @@ dynare au_pac noclearall nograph;
 fprintf('  %d equations, %d forward-looking vars\n\n', ...
     M_.orig_endo_nbr, sum(abs(oo_.dr.eigval) > 1));
 
-%% Define shocks and variables
+%% Define shocks, scaling, and variables
 shocks = {'eps_i', 'eps_tp', 'eps_q_us', 'eps_g', 'eps_pcom', 'eps_pQ', 'eps_tfp'};
 shock_labels = {'Monetary policy', 'Term premium', 'Foreign demand', ...
                 'Government spending', 'Commodity price', 'Cost-push (VA price)', ...
                 'TFP / labor efficiency'};
+shock_stderrs = [0.027, 0.050, 1.138, 0.300, 3.000, 0.571, 0.200];
+shock_targets = [0.250, 0.125, 1.000, 1.000, 10.00, 0.571, 0.200];
+shock_descriptions = {'100bp annualized', '50bp annualized', '1pp US output gap', ...
+                      '1pp of GDP', '10% increase', '1 s.d.', '1 s.d.'};
+scale_factors = shock_targets ./ shock_stderrs;
+
+fprintf('  Shock scaling:\n');
+for s = 1:length(shocks)
+    fprintf('    %-25s: scale=%.3f (%s)\n', shock_labels{s}, scale_factors(s), shock_descriptions{s});
+end
+fprintf('\n');
 
 vars = {'yhat_au', 'dln_c', 'dln_ib', 'dln_ih', 'dln_x', 'dln_m', ...
         'pi_au', 'piQ', 'pi_w', 'dln_n', 's_gap', 'i_10y', ...
@@ -43,20 +55,22 @@ var_labels = {'Output gap (%)', 'Consumption (%)', 'Business inv. (%)', ...
 
 %% Extract all IRFs
 fprintf('================================================================\n');
-fprintf('  IRF Peak Responses (1 s.d. shocks)\n');
+fprintf('  IRF Peak Responses (policy-relevant shock sizes)\n');
 fprintf('================================================================\n\n');
 
 for s = 1:length(shocks)
-    fprintf('--- %s shock (%s) ---\n', shock_labels{s}, shocks{s});
+    sf = scale_factors(s);
+    fprintf('--- %s shock (%s) [%s, scale=%.3f] ---\n', ...
+        shock_labels{s}, shocks{s}, shock_descriptions{s}, sf);
     fprintf('  %-22s  %10s  %4s\n', 'Variable', 'Peak', 'Q');
 
     for v = 1:length(vars)
         field = [vars{v} '_' shocks{s}];
         if isfield(oo_.irfs, field)
-            irf_j = oo_.irfs.(field);
+            irf_j = oo_.irfs.(field) * sf;
             [pv, pq] = max(abs(irf_j));
             peak = sign(irf_j(pq)) * pv;
-            fprintf('  %-22s  %10.5f  Q%-2d\n', var_labels{v}, peak, pq);
+            fprintf('  %-22s  %10.4f  Q%-2d\n', var_labels{v}, peak, pq);
         end
     end
     fprintf('\n');
@@ -70,6 +84,7 @@ plot_labels = {'Real GDP', 'Consumption', 'Business inv.', 'Housing inv.', ...
                'Wage inflation', 'Employment', 'Exchange rate', '10Y yield'};
 
 for s = 1:length(shocks)
+    sf = scale_factors(s);
     fig = figure('Position', [30 30 1400 800], 'Visible', 'off');
 
     for v = 1:length(plot_vars)
@@ -77,7 +92,7 @@ for s = 1:length(shocks)
         field = [plot_vars{v} '_' shocks{s}];
 
         if isfield(oo_.irfs, field)
-            irf_j = oo_.irfs.(field);
+            irf_j = oo_.irfs.(field) * sf;
             T = length(irf_j);
             plot(1:T, irf_j, 'b-', 'LineWidth', 1.5); hold on;
             plot(1:T, zeros(T,1), 'k:', 'LineWidth', 0.5);
@@ -89,7 +104,7 @@ for s = 1:length(shocks)
         grid on;
     end
 
-    sgtitle(sprintf('AU-PAC: %s Shock (%s)', shock_labels{s}, shocks{s}), 'FontSize', 13);
+    sgtitle(sprintf('AU-PAC: %s Shock [%s]', shock_labels{s}, shock_descriptions{s}), 'FontSize', 13);
     fname = sprintf('irf_%s.png', shocks{s});
     saveas(fig, fname);
     fprintf('Saved: %s\n', fname);
@@ -97,8 +112,9 @@ for s = 1:length(shocks)
 end
 
 %% Detailed table for monetary shock (key shock)
+sf_mon = scale_factors(1);  % monetary shock scale factor
 fprintf('\n================================================================\n');
-fprintf('  Monetary Policy Shock — Detailed Path\n');
+fprintf('  Monetary Policy Shock — Detailed Path (100bp annualized)\n');
 fprintf('================================================================\n');
 
 key_vars_mon = {'yhat_au', 'dln_c', 'dln_ib', 'dln_ih', 'dln_x', 'dln_m', ...
@@ -118,7 +134,7 @@ for q = [1 2 4 8 12 16 20 30 40]
     for v = 1:length(key_vars_mon)
         field = [key_vars_mon{v} '_eps_i'];
         if isfield(oo_.irfs, field) && q <= length(oo_.irfs.(field))
-            fprintf('  %10.5f', oo_.irfs.(field)(q));
+            fprintf('  %10.4f', oo_.irfs.(field)(q) * sf_mon);
         else
             fprintf('  %10s', 'N/A');
         end
@@ -127,8 +143,9 @@ for q = [1 2 4 8 12 16 20 30 40]
 end
 
 %% Detailed table for TFP shock
+sf_tfp = scale_factors(7);  % TFP scale factor (1.0 for 1 s.d.)
 fprintf('\n================================================================\n');
-fprintf('  TFP Shock — Detailed Path\n');
+fprintf('  TFP Shock — Detailed Path (1 s.d.)\n');
 fprintf('================================================================\n');
 
 key_vars_tfp = {'yhat_au', 'dln_c', 'dln_ib', 'dln_n', 'piQ', 'pi_w', ...
@@ -147,7 +164,7 @@ for q = [1 2 4 8 12 16 20 30 40]
     for v = 1:length(key_vars_tfp)
         field = [key_vars_tfp{v} '_eps_tfp'];
         if isfield(oo_.irfs, field) && q <= length(oo_.irfs.(field))
-            fprintf('  %10.5f', oo_.irfs.(field)(q));
+            fprintf('  %10.4f', oo_.irfs.(field)(q) * sf_tfp);
         else
             fprintf('  %10s', 'N/A');
         end
@@ -157,7 +174,7 @@ end
 
 %% Financial accounts response to monetary shock
 fprintf('\n================================================================\n');
-fprintf('  Monetary Shock — Financial Accounts Response\n');
+fprintf('  Monetary Shock — Financial Accounts Response (100bp annualized)\n');
 fprintf('================================================================\n');
 
 fin_vars = {'w_G', 'w_F', 'w_H', 'b_G', 'b_ROW', 'tau_G', 'yf_G'};
@@ -175,7 +192,7 @@ for q = [1 2 4 8 12 20 40]
     for v = 1:length(fin_vars)
         field = [fin_vars{v} '_eps_i'];
         if isfield(oo_.irfs, field) && q <= length(oo_.irfs.(field))
-            fprintf('  %10.6f', oo_.irfs.(field)(q));
+            fprintf('  %10.5f', oo_.irfs.(field)(q) * sf_mon);
         else
             fprintf('  %10s', 'N/A');
         end
@@ -186,26 +203,26 @@ end
 %% Combined overview plot
 fig2 = figure('Position', [30 30 1600 1000], 'Visible', 'off');
 
-overview_shocks = {'eps_i', 'eps_tp', 'eps_q_us', 'eps_g', 'eps_pcom', 'eps_tfp'};
-overview_labels = {'Monetary', 'Term premium', 'Foreign demand', ...
-                   'Govt spending', 'Commodity', 'TFP'};
+overview_idx = [1, 2, 3, 4, 5, 7]; % indices into shocks array
 overview_var = 'yhat_au';
 
-for s = 1:length(overview_shocks)
-    subplot(2, 3, s);
-    field = [overview_var '_' overview_shocks{s}];
+for idx = 1:length(overview_idx)
+    s = overview_idx(idx);
+    sf = scale_factors(s);
+    subplot(2, 3, idx);
+    field = [overview_var '_' shocks{s}];
     if isfield(oo_.irfs, field)
-        irf_j = oo_.irfs.(field);
+        irf_j = oo_.irfs.(field) * sf;
         T = length(irf_j);
         plot(1:T, irf_j, 'b-', 'LineWidth', 1.5); hold on;
         plot(1:T, zeros(T,1), 'k:', 'LineWidth', 0.5);
     end
-    title(sprintf('%s shock', overview_labels{s}), 'FontSize', 10);
+    title(sprintf('%s\n[%s]', shock_labels{s}, shock_descriptions{s}), 'FontSize', 9);
     xlabel('Quarters'); ylabel('Output gap (% dev.)');
     grid on;
 end
 
-sgtitle('AU-PAC: Output Gap Response to Six Shocks', 'FontSize', 14);
+sgtitle('AU-PAC: Output Gap Response to Policy-Relevant Shocks', 'FontSize', 14);
 saveas(fig2, 'irf_overview_output.png');
 fprintf('\nSaved: irf_overview_output.png\n');
 close(fig2);

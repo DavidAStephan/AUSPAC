@@ -193,6 +193,21 @@ var
     // === Employment PAC level variables ===
     n_star_l        // I(1) employment target level (random walk)
     ln_n_level      // employment detrended log-level (diff = dln_n)
+
+    // === Trend level accumulators (FR-BDF eq 43 — recover levels from gaps) ===
+    ln_QN           // log potential output index (accumulates dln_y_star)
+    ln_Q            // log actual output index = ln_QN + yhat_au
+    ln_C_star       // log trend consumption index (accumulates dln_c_star_bar)
+    ln_C            // log actual consumption = ln_C_star + ln_c_level
+    ln_IB_star      // log trend business investment index (accumulates dln_ib_star_bar)
+    ln_IB           // log actual business investment = ln_IB_star + ln_ib_level
+    ln_IH_star      // log trend household investment index (accumulates dln_ih_star_bar)
+    ln_IH           // log actual household investment = ln_IH_star + ln_ih_level
+    ln_N_star       // log trend employment index (accumulates dln_n_star_bar)
+    ln_N            // log actual employment = ln_N_star + ln_n_level
+    ln_K            // log capital stock index (accumulates dln_k)
+    ln_P_star       // log trend price level index (accumulates pibar_au)
+    ln_P            // log actual price level = ln_P_star + pQ_level
 ;
 
 
@@ -303,6 +318,7 @@ parameters
     omega_c         // nonstationary expectations component
     b2_c            // real interest rate sensitivity (negative: higher r -> less C)
     b3_c            // output gap sensitivity (HtM channel, positive)
+    b_di_c          // interest rate CHANGE sensitivity (FR-BDF eq 61 beta_3)
     rho_c_star      // target consumption growth persistence
     kappa_inc       // permanent income sensitivity: PV(yH) -> consumption target
     beta_c          // discount factor for permanent income PV (0.95, paper Section 4.6.1)
@@ -328,6 +344,7 @@ parameters
     omega_ih        // nonstationary expectations component
     b3_ih           // output gap sensitivity
     b4_ih           // real interest rate sensitivity (mortgage channel, negative)
+    b_ph_ih         // housing price gap in short-run PAC (FR-BDF eq 67 beta_3)
     rho_ih_star     // target housing investment growth persistence
     kappa_mort      // mortgage rate gap -> housing investment target
     // growth neutrality: coeff on dln_ih_star_bar(-1) = (1 - b1_ih - b2_ih - omega_ih)
@@ -485,9 +502,9 @@ pi_ss_us        = 0.5;
 lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
 // VA price PAC parameters (calibrated from Table 4.4.3)
-b0_pQ           = 0.06;     // error correction
-b1_pQ           = 0.50;     // persistence
-b2_pQ           = 0.09;     // output gap
+b0_pQ           = 0.028;    // error correction (hybrid smoother OLS, updated companion)
+b1_pQ           = 0.288;    // persistence (hybrid smoother OLS, updated companion)
+b2_pQ           = -0.014;   // output gap (weak Phillips curve)
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
 gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
@@ -498,7 +515,7 @@ alpha_k         = 0.33;     // capital share in Cobb-Douglas
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
-rho_pcom        = 0.85;     // commodity price persistence
+rho_pcom        = 0.42;     // commodity price persistence
 b4_x            = 0.15;     // commodity price -> export volumes
 alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 
@@ -508,31 +525,32 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 lambda_w        = 0.247;    // wage persistence (posterior mean)
 kappa_w         = 0.238;    // output gap -> wages (posterior mean)
 gamma_w         = 0.15;     // CPI indexation channel
-okun_coeff      = -0.33;    // Okun's law: 1pp output gap -> -0.33pp unemployment gap
-rho_u_gap       = 0.94;     // unemployment gap persistence (paper Table 4.5.2)
+okun_coeff      = -0.13;    // Okun's law: 1pp output gap -> -0.13pp unemployment gap
+rho_u_gap       = 0.946;    // unemployment gap persistence (paper Table 4.5.2)
 beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
 // growth neutrality coeff = 1 - 0.55 - 0.15 = 0.30 on pibar_au
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n            = 0.040;    // error correction (posterior mean)
-b1_n            = 0.30;     // 1st lag
-b2_n            = 0.10;     // 2nd lag
-b3_n            = 0.05;     // 3rd lag
-b4_n            = 0.02;     // 4th lag
+b0_n            = 0.062;    // error correction (hybrid smoother OLS, updated companion)
+b1_n            = 0.315;    // 1st lag (hybrid smoother OLS, updated companion)
+b2_n            = -0.187;   // 2nd lag (hybrid smoother OLS, updated companion)
+b3_n            = -0.076;   // 3rd lag (hybrid smoother OLS, updated companion)
+b4_n            = -0.085;   // 4th lag (hybrid smoother OLS, updated companion)
 omega_n         = 0.30;     // expectations/forward component
-b5_n            = 0.12;     // output gap sensitivity
+b5_n            = -0.017;   // output gap sensitivity (hybrid smoother OLS, updated companion)
 rho_n_star      = 0.95;     // target persistence
 // growth neutrality coeff = 1 - 0.30 - 0.10 - 0.05 - 0.02 - 0.30 = 0.23
 
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c            = 0.060;    // error correction (posterior mean)
-b1_c            = 0.149;    // persistence (posterior mean)
+b0_c            = 0.069;    // error correction (hybrid smoother OLS, updated companion)
+b1_c            = 0.047;    // persistence (hybrid smoother OLS, updated companion)
 omega_c         = 0.369;    // expectations/forward component (posterior mean)
-b2_c            = -0.02;    // real interest rate -> consumption (negative: substitution)
-b3_c            = 0.139;    // output gap -> consumption (posterior mean)
+b2_c            = -0.555;   // real interest rate -> consumption (hybrid smoother OLS, updated companion)
+b3_c            = 0.018;    // output gap -> consumption (hybrid smoother OLS, updated companion)
+b_di_c          = 0;        // interest rate CHANGE: OLS=3.39 (wrong sign, reverse causality). Needs IV estimation
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
 beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~25% annual)
@@ -542,11 +560,11 @@ alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib           = 0.030;    // error correction (posterior mean)
-b1_ib           = 0.181;    // 1st lag persistence (posterior mean)
-b2_ib           = 0.10;     // 2nd lag
+b0_ib           = 0.017;    // error correction (hybrid smoother OLS, updated companion)
+b1_ib           = 0.093;    // 1st lag persistence (hybrid smoother OLS, updated companion)
+b2_ib           = -0.045;   // 2nd lag (hybrid smoother OLS, updated companion)
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib           = 0.191;    // output gap -> investment (posterior mean)
+b3_ib           = 0.344;    // output gap -> investment (hybrid smoother OLS, updated companion)
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
@@ -556,12 +574,13 @@ delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih           = 0.049;    // error correction (posterior mean)
-b1_ih           = 0.210;    // 1st lag persistence (posterior mean)
-b2_ih           = 0.08;     // 2nd lag
+b0_ih           = 0.025;    // error correction (hybrid smoother OLS, updated companion)
+b1_ih           = 0.107;    // 1st lag persistence (hybrid smoother OLS, updated companion)
+b2_ih           = -0.037;   // 2nd lag (hybrid smoother OLS, updated companion)
 omega_ih        = 0.30;     // expectations/forward component
-b3_ih           = 0.12;     // output gap -> housing investment
-b4_ih           = -0.05;    // real interest rate -> housing (mortgage channel, strongest)
+b3_ih           = 0.231;    // output gap -> housing investment (hybrid smoother OLS, updated companion)
+b4_ih           = 0;        // DROPPED: rate channel already in pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001, not significant)
+b_ph_ih         = 0;        // housing price gap: OLS=-0.04 (wrong sign vs FR-BDF +0.32). Needs ABS housing price data
 rho_ih_star     = 0.95;     // target persistence
 kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
 kappa_ih_inc    = 0.03;     // permanent income -> housing target (paper eq 66, Table 4.6.14)
@@ -596,21 +615,21 @@ s_BBB_ss        = 0.05;     // SS BBB bond spread (~0.2% annual)
 // Exchange rate parameters (calibrated from Section 4.8 / eq. 105)
 // AUD/USD real exchange rate, UIP-based with persistent deviations from PPP
 // s_gap > 0 = AUD depreciation (less purchasing power)
-rho_s           = 0.950;    // persistent misalignment (posterior mean)
+rho_s           = 0.775;    // AU est (s.e.0.06). Was 0.95. AUD less persistent PPP deviations
 alpha_s         = 0.15;     // interest rate differential -> appreciation (negative sign in eq)
 
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
 // Australia: commodity exports sensitive to world demand, moderate price elasticity
 b0_x            = 0.05;     // error correction (moderate speed)
-b1_x            = 0.30;     // export growth persistence
-b2_x            = 0.25;     // world demand (yhat_us) -> AU exports (strong)
+b1_x            = 0.89;     // AU est 0.886 (s.e.0.044), ABS chain vol, T=104
+b2_x            = 0.25;     // kept: AU est -0.04 wrong sign (proxy data issue)
 b3_x            = 0.10;     // depreciation -> more exports (Marshall-Lerner)
 
 // Import parameters (calibrated from Section 4.7 / Table 4.7.2)
 // Australia: imports track domestic demand closely
 b0_m            = 0.06;     // error correction
-b1_m            = 0.25;     // import growth persistence
-b2_m            = 0.30;     // domestic demand (yhat_au) -> imports (strong, high import share)
+b1_m            = 0.87;     // AU est 0.869 (s.e.0.051), ABS chain vol, T=104
+b2_m            = 0.30;     // kept: AU est -0.12 wrong sign (proxy data issue)
 b3_m            = -0.08;    // depreciation -> fewer imports (negative: price effect)
 
 // Demand deflator parameters (calibrated from Section 4.7)
@@ -618,38 +637,38 @@ b3_m            = -0.08;    // depreciation -> fewer imports (negative: price ef
 // All satisfy growth neutrality: at SS, pi_j = piQ = pibar_au = pi_ss_au
 
 // Consumption deflator: close to CPI, tracks VA price with full pass-through
-rho_pc          = 0.40;     // moderate persistence
-alpha_pc        = 0.30;     // VA price pass-through (rest from pibar_au)
-// neutrality: (1-0.40-0.30) = 0.30 on pibar_au
+rho_pc          = 0.67;     // AU est 0.674 (s.e.0.056), ABS 5206 IPD, T=127
+alpha_pc        = 0.17;     // AU est 0.168 (s.e.0.035), weaker than FR-BDF 0.71
+// neutrality: (1-0.67-0.17) = 0.16 on pibar_au
 
 // Business investment deflator: tracks VA price, less persistent
-rho_pib         = 0.35;     // moderate persistence
-alpha_pib       = 0.25;     // VA price pass-through
-// neutrality: (1-0.35-0.25) = 0.40 on pibar_au
+rho_pib         = 0.70;     // AU est 0.699 (s.e.0.060), ABS 5206 IPD, T=127
+alpha_pib       = 0.19;     // AU est 0.193 (s.e.0.053)
+// neutrality: (1-0.70-0.19) = 0.11 on pibar_au
 
 // Household investment deflator: construction costs, high persistence
-rho_pih         = 0.45;     // higher persistence (construction costs sticky)
-alpha_pih       = 0.25;     // VA price pass-through
-// neutrality: (1-0.45-0.25) = 0.30 on pibar_au
+rho_pih         = 0.49;     // AU est 0.491 (s.e.0.072), ABS 5206 IPD, T=127
+alpha_pih       = 0.40;     // AU est 0.395 (s.e.0.082), stronger than FR-BDF 0.25
+// neutrality: (1-0.49-0.40) = 0.11 on pibar_au
 
 // Export deflator: influenced by world prices via exchange rate
-rho_px          = 0.30;     // lower persistence (commodity price pass-through)
-alpha_px        = 0.20;     // VA price pass-through (weaker: world price taker)
+rho_px          = 0.21;     // AU est 0.214 (s.e.0.069), ABS 5206 IPD, T=127
+alpha_px        = 0.20;     // kept: AU est 2.23 implausible (multicollinearity)
 beta_px         = -0.05;    // depreciation -> higher export prices in domestic currency
-// neutrality: (1-0.30-0.20) = 0.50 on pibar_au (+ beta_px*0 at SS)
+// neutrality: (1-0.21-0.20) = 0.59 on pibar_au (+ beta_px*0 at SS)
 
 // Import deflator: heavily influenced by exchange rate
-rho_pm          = 0.30;     // moderate persistence
-alpha_pm        = 0.15;     // VA price pass-through (weak: foreign prices dominate)
-beta_pm         = 0.08;     // depreciation -> higher import prices (strong pass-through)
-// neutrality: (1-0.30-0.15) = 0.55 on pibar_au (+ beta_pm*0 at SS)
+rho_pm          = 0.28;     // AU est 0.276 (s.e.0.085), ABS 5206 IPD, T=127
+alpha_pm        = 0.38;     // AU est 0.384 (s.e.0.199), stronger than FR-BDF 0.15
+beta_pm         = 0.09;     // AU est (s.e.0.03). Was 0.08. REER pass-through confirmed
+// neutrality: (1-0.28-0.38) = 0.34 on pibar_au (+ beta_pm*0 at SS)
 
 // Government parameters
 // Spending follows simple fiscal rule: countercyclical stabilizer
 rho_g           = 0.85;     // government spending persistent (budget inertia)
 phi_g           = -0.10;    // countercyclical: positive gap -> less spending growth
-rho_pg          = 0.50;     // government deflator moderately persistent
-alpha_pg        = 0.30;     // VA price pass-through to government prices
+rho_pg          = 0.13;     // government deflator moderately persistent
+alpha_pg        = 0.37;     // VA price pass-through to government prices
 // neutrality: (1-0.50-0.30) = 0.20 on pibar_au
 
 // GDP expenditure shares (ABS National Accounts, 2023 averages)
@@ -676,7 +695,7 @@ beta_pc_m       = 0.10;     // consumption: ~20% import content, ~50% pass-throu
 beta_pib_m      = 0.12;     // business investment: ~25% import content
 beta_pih_m      = 0.08;     // housing: ~15% import content (domestic materials)
 gamma_oil       = 0.03;     // energy/commodity -> CPI (smaller for AU than FR)
-beta_pm_com     = 0.05;     // commodity price -> import deflator
+beta_pm_com     = 0.42;     // commodity price -> import deflator
 
 // Import-adjusted demand weights (import content of each expenditure component)
 // From ABS input-output tables, approximate for AU economy
@@ -688,15 +707,15 @@ w_iad_x         = 0.30;     // exports: high re-export content (commodity proces
 
 // Household bank lending rate (Section 4.8.3, eq. 68, Table 4.6.17)
 // Paper: iLH adjusts toward i_10y with spread, persistence rho = 0.88
-rho_lh          = 0.88;     // bank lending rate persistence (paper beta0 = 0.88)
+rho_lh          = 0.97;     // AU est 0.972 (s.e.0.020), RBA F5, T=127. Very persistent
 spread_lh       = 0.40;     // ~1.6% annual AU mortgage spread over 10Y bonds
 // SS: i_lh = i_ss + tp_ss + spread_lh = 1.0491 + 0.30 + 0.40 = 1.7491 (~7.0% annual)
 
 // Housing prices (Section 4.6.3, eq. 69, Table 4.6.18)
-// Paper: AR(2) with rho0=0.48, rho1=0.43; simplified to AR(1) with ~0.90
-rho_ph          = 0.90;     // high persistence (AU housing cycle ~7 year half-life)
-alpha_ph_y      = 0.15;     // output gap -> housing prices (demand/income channel)
-alpha_ph_r      = -0.10;    // rate hike -> lower house prices (credit channel)
+// AU estimate from ABS 6416 RPPI (2003-2021, T=72, R2=0.40)
+rho_ph          = 0.60;     // AU est 0.605 (s.e.0.096). Less persistent than FR-BDF 0.90
+alpha_ph_y      = 0.15;     // kept: AU est 0.088 insignificant (t=0.53)
+alpha_ph_r      = -0.70;    // AU est -0.700 (s.e.0.279). Stronger rate channel (t=2.51)
 kappa_ph        = 0.03;     // housing price gap -> household investment (Tobin's Q)
 
 // Investment target output proportionality (Section 4.6.2, eq. 63)
@@ -874,6 +893,34 @@ model;
     // The (1-delta_k) persistence captures how capital builds up slowly.
     [name = 'eq_dln_k']
     dln_k = (1 - delta_k) * dln_k(-1) + delta_k * dln_ib;
+
+    // === TREND LEVEL ACCUMULATORS (FR-BDF eq 43 — recover levels from gaps) ===
+    [name = 'eq_ln_QN']
+    ln_QN = ln_QN(-1) + dln_y_star;
+    [name = 'eq_ln_Q']
+    ln_Q = ln_QN + yhat_au;
+    [name = 'eq_ln_C_star']
+    ln_C_star = ln_C_star(-1) + dln_c_star_bar;
+    [name = 'eq_ln_C']
+    ln_C = ln_C_star + ln_c_level;
+    [name = 'eq_ln_IB_star']
+    ln_IB_star = ln_IB_star(-1) + dln_ib_star_bar;
+    [name = 'eq_ln_IB']
+    ln_IB = ln_IB_star + ln_ib_level;
+    [name = 'eq_ln_IH_star']
+    ln_IH_star = ln_IH_star(-1) + dln_ih_star_bar;
+    [name = 'eq_ln_IH']
+    ln_IH = ln_IH_star + ln_ih_level;
+    [name = 'eq_ln_N_star']
+    ln_N_star = ln_N_star(-1) + dln_n_star_bar;
+    [name = 'eq_ln_N']
+    ln_N = ln_N_star + ln_n_level;
+    [name = 'eq_ln_K']
+    ln_K = ln_K(-1) + dln_k;
+    [name = 'eq_ln_P_star']
+    ln_P_star = ln_P_star(-1) + (pibar_au - pi_ss_au);
+    [name = 'eq_ln_P']
+    ln_P = ln_P_star + pQ_level;
 
     // === CES PRODUCTION FUNCTION (Section 4.3, sigma_ces = 0.53) ===
     // Growth-rate accounting form using capital growth from accumulation equation.
@@ -1075,6 +1122,7 @@ model;
             + b1_c * diff(ln_c_level(-1))
             + pac_expectation(pac_c)
             + b2_c * i_gap(-1)
+            // b_di_c * di_gap: disabled (b_di_c=0; inline diff crashes Dynare 6.5 preprocessor)
             + b3_c * yhat_au
             + eps_c;
 
@@ -1167,7 +1215,7 @@ model;
     // Household investment PAC equation — now using Dynare native pac_expectation().
     // pac_expectation(pac_ih) replaces omega_ih * dln_ih_star + neutrality term.
     // 2nd-order adjustment costs: 2 AR lags of diff(ln_ih_level).
-    // Mortgage channel (b4_ih): strongest interest rate sensitivity.
+    // Rate channel via pac_expectation (b4_ih dropped: F=0.001).
 
     [name = 'eq_dln_ih_pac']
     diff(ln_ih_level) = b0_ih * (ih_star_l(-1) - ln_ih_level(-1))
@@ -1175,7 +1223,7 @@ model;
              + b2_ih * diff(ln_ih_level(-2))
              + pac_expectation(pac_ih)
              + b3_ih * yhat_au
-             + b4_ih * i_gap(-1)
+             + b_ph_ih * ph_gap(-1)
              + eps_ih;
 
     // =================================================================
@@ -1735,6 +1783,21 @@ steady_state_model;
 
     n_star_l       = 0;
     ln_n_level     = 0;
+
+    // Trend level accumulators (all zero at SS)
+    ln_QN          = 0;
+    ln_Q           = 0;
+    ln_C_star      = 0;
+    ln_C           = 0;
+    ln_IB_star     = 0;
+    ln_IB          = 0;
+    ln_IH_star     = 0;
+    ln_IH          = 0;
+    ln_N_star      = 0;
+    ln_N           = 0;
+    ln_K           = 0;
+    ln_P_star      = 0;
+    ln_P           = 0;
 end;
 
 // Initialize PAC models BEFORE steady (h vectors must be computed first)
@@ -1803,7 +1866,8 @@ end;
 // Compute IRFs
 // -----------------------------------------------------------------------
 
-stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y;
+stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y
+    ln_Q ln_QN ln_K ln_C ln_C_star ln_IB ln_IB_star ln_IH ln_IH_star ln_N ln_N_star ln_P ln_P_star;
 
 // =======================================================================
 // ESTIMATION INFRASTRUCTURE (Phase 7e)

@@ -1,10 +1,19 @@
 %% irf_three_regimes.m — IRFs under 3 expectation regimes
 %
 % Runs all 3 model versions and compares IRFs to monetary policy shock.
+% ** 100bp annualized monetary tightening (0.25 quarterly pp) **
+% Uses linear scaling (exact at order=1): IRF * (0.25 / stderr_eps_i)
 % Output: tables for documentation + comparison plot.
 
 clear; clc;
 addpath('C:\dynare\6.5\matlab');
+
+%% Shock scaling: 100bp annualized = 0.25 quarterly pp
+stderr_eps_i = 0.027;
+target_shock = 0.25;
+scale_factor = target_shock / stderr_eps_i;
+fprintf('  Shock: 100bp annualized = %.3f qpp, scale = %.3f x (1 s.d.)\n\n', ...
+    target_shock, scale_factor);
 
 fprintf('================================================================\n');
 fprintf('  IRF Comparison: 3 Expectation Regimes\n');
@@ -42,7 +51,7 @@ labels = {'Output gap', 'CPI inflation', 'VA price', 'Consumption', ...
           'Wage inflation', 'Exchange rate', '10Y yield', 'Policy rate'};
 
 fprintf('================================================================\n');
-fprintf('  Peak IRFs to monetary policy shock (eps_i, 1 s.d.)\n');
+fprintf('  Peak IRFs to 100bp annualized monetary tightening\n');
 fprintf('================================================================\n');
 fprintf('  %-18s  %10s  %10s  %10s\n', 'Variable', 'VAR-based', 'Hybrid', 'Full MCE');
 fprintf('  %-18s  %10s  %10s  %10s\n', repmat('-',1,18), repmat('-',1,10), repmat('-',1,10), repmat('-',1,10));
@@ -58,7 +67,7 @@ for j = 1:length(vars)
     sources = {irfs_var, irfs_hyb, irfs_mce};
     for k = 1:3
         if isfield(sources{k}, f)
-            irf_j = sources{k}.(f);
+            irf_j = sources{k}.(f) * scale_factor;
             [pv, pq] = max(abs(irf_j));
             peaks(k) = sign(irf_j(pq)) * pv;
             peakqs(k) = pq;
@@ -91,7 +100,7 @@ for j = 1:length(key)
         sources = {irfs_var, irfs_hyb, irfs_mce};
         for k = 1:3
             if isfield(sources{k}, f) && q <= length(sources{k}.(f))
-                vals(k) = sources{k}.(f)(q);
+                vals(k) = sources{k}.(f)(q) * scale_factor;
             end
         end
         fprintf('  %4d  %11.7f  %11.7f  %11.7f\n', q, vals(1), vals(2), vals(3));
@@ -154,7 +163,7 @@ for j = 1:length(plot_vars)
 
     for k = 1:3
         if isfield(sources{k}, f)
-            irf_j = sources{k}.(f);
+            irf_j = sources{k}.(f) * scale_factor;
             T = length(irf_j);
             plot(1:T, irf_j, colors{k}, 'LineWidth', 1.2 + 0.3*(k-1)); hold on;
         end
@@ -170,7 +179,7 @@ for j = 1:length(plot_vars)
     grid on;
 end
 
-sgtitle('Monetary Policy Shock: 3 Expectation Regimes (FR-BDF Fig. 6.2.2)', 'FontSize', 13);
+sgtitle('100bp Monetary Tightening: 3 Expectation Regimes (FR-BDF Fig. 6.2.2)', 'FontSize', 13);
 saveas(fig, 'irf_three_regimes.png');
 fprintf('\n  Saved: irf_three_regimes.png\n');
 close(fig);

@@ -103,6 +103,7 @@ params_c.b0_c = 0.06;      % EC speed
 params_c.b1_c = 0.149;     % AR(1)
 params_c.b2_c = -0.02;     % interest rate gap
 params_c.b3_c = 0.139;     % output gap
+params_c.b_di_c = 0;       % interest rate CHANGE (FR-BDF eq 61)
 params_c.b_covid_crash_c  = 0;
 params_c.b_covid_bounce_c = 0;
 try
@@ -153,7 +154,8 @@ params_ih.b0_ih = 0.049;   % EC speed
 params_ih.b1_ih = 0.210;   % AR(1)
 params_ih.b2_ih = 0.08;    % AR(2)
 params_ih.b3_ih = 0.12;    % output gap
-params_ih.b4_ih = -0.05;   % interest rate gap (mortgage)
+params_ih.b_ph_ih = 0;     % housing price gap (FR-BDF eq 67)
+% b4_ih dropped: rate channel via pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001)
 params_ih.b_covid_crash_ih  = 0;
 params_ih.b_covid_bounce_ih = 0;
 try
@@ -225,6 +227,7 @@ params_c_nls.b0_c = 0.06;
 params_c_nls.b1_c = 0.149;
 params_c_nls.b2_c = -0.02;
 params_c_nls.b3_c = 0.139;
+params_c_nls.b_di_c = 0;
 params_c_nls.b_covid_crash_c  = 0;
 params_c_nls.b_covid_bounce_c = 0;
 try
@@ -263,7 +266,8 @@ params_ih_nls.b0_ih = 0.049;
 params_ih_nls.b1_ih = 0.210;
 params_ih_nls.b2_ih = 0.08;
 params_ih_nls.b3_ih = 0.12;
-params_ih_nls.b4_ih = -0.05;
+params_ih_nls.b_ph_ih = 0;
+% b4_ih dropped: rate channel via pv_ih_aux + pac_expectation (F=0.001)
 params_ih_nls.b_covid_crash_ih  = 0;
 params_ih_nls.b_covid_bounce_ih = 0;
 try

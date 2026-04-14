@@ -79,7 +79,26 @@ i_10y     = T_ext.au_i10 / 4;
 % Wage inflation
 pi_w      = T_ext.au_pi_w;
 
-%% 2b. COVID pulse dummies
+%% 2b. New PAC drivers: di_gap and ph_gap
+di_gap = [0; diff(i_gap)];
+
+% ph_gap: recursive from model equations (no observed housing price data)
+get_param = @(name) M_.params(strcmp(name, M_.param_names));
+rho_ph_val = get_param('rho_ph');
+alpha_ph_y_val = get_param('alpha_ph_y');
+alpha_ph_r_val = get_param('alpha_ph_r');
+dln_ph_rec = zeros(nQ, 1);
+ph_gap = zeros(nQ, 1);
+for t = 2:nQ
+    if ~isnan(yhat_au(t)) && ~isnan(i_gap(t-1))
+        dln_ph_rec(t) = rho_ph_val * dln_ph_rec(t-1) + alpha_ph_y_val * yhat_au(t) + alpha_ph_r_val * i_gap(t-1);
+    else
+        dln_ph_rec(t) = rho_ph_val * dln_ph_rec(t-1);
+    end
+    ph_gap(t) = 0.98 * ph_gap(t-1) + dln_ph_rec(t);
+end
+
+%% 2c. COVID pulse dummies
 d_covid_crash  = zeros(nQ, 1);
 d_covid_bounce = zeros(nQ, 1);
 for t = 1:nQ
@@ -230,6 +249,7 @@ varnames = { ...
     'y_gap_var', 'i_gap_var', 'pi_gap_var', 'u_gap_var', 'yhat_us_var', ...
     'piQ_hat', 'n_hat', 'yh_ratio_hat', 'c_hat', 'ib_hat', 'rKB_hat', 'ih_hat', ...
     'pv_piQ_aux', 'pv_n_aux', 'pv_c_aux', 'pv_ib_aux', 'pv_rKB_aux', 'pv_ih_aux', ...
+    'di_gap', 'ph_gap', ...
     'pQ_level', 'ln_c_level', 'ln_ib_level', 'ln_ih_level', 'ln_n_level', ...
     'dln_c', 'dln_ib', 'dln_ih', 'dln_n', 'piQ', ...
     'dln_n_1', 'dln_n_2', 'dln_n_3', 'dln_ib_1', 'dln_ih_1', ...

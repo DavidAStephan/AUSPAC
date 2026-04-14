@@ -28,6 +28,8 @@ global M_
 
 fprintf('=== Constructing HYBRID PAC dseries (smoothed targets + recursive corrections) ===\n');
 
+get_param = @(name) M_.params(strcmp(name, M_.param_names));
+
 sv = oo_smooth.SmoothedVariables;
 
 %% 1. Load observed data (same as prepare_pac_dseries.m)
@@ -76,7 +78,30 @@ piQ       = piQ - mean(piQ, 'omitnan');
 i_10y     = T_ext.au_i10 / 4;
 pi_w      = T_ext.au_pi_w;
 
-%% 2b. COVID pulse dummies
+%% 2b. New PAC drivers: di_gap and ph_gap
+% di_gap = first difference of i_gap (FR-BDF eq 61, consumption)
+di_gap = [0; diff(i_gap)];
+
+% ph_gap = housing price gap (model variable, from smoother or recursive)
+% Constructed recursively from eq_dln_ph: dln_ph = rho_ph*dln_ph(-1) + alpha_ph_y*yhat + alpha_ph_r*i_gap(-1)
+% then eq_ph_gap: ph_gap = 0.98*ph_gap(-1) + dln_ph
+% Will be overwritten by smoother if available (section 5 below)
+rho_ph_val = get_param('rho_ph');
+alpha_ph_y_val = get_param('alpha_ph_y');
+alpha_ph_r_val = get_param('alpha_ph_r');
+dln_ph_rec = zeros(nQ, 1);
+ph_gap_rec = zeros(nQ, 1);
+for t = 2:nQ
+    if ~isnan(yhat_au(t)) && ~isnan(i_gap(t-1))
+        dln_ph_rec(t) = rho_ph_val * dln_ph_rec(t-1) + alpha_ph_y_val * yhat_au(t) + alpha_ph_r_val * i_gap(t-1);
+    else
+        dln_ph_rec(t) = rho_ph_val * dln_ph_rec(t-1);
+    end
+    ph_gap_rec(t) = 0.98 * ph_gap_rec(t-1) + dln_ph_rec(t);
+end
+ph_gap = ph_gap_rec;  % default; overwritten by smoother below if available
+
+%% 2c. COVID pulse dummies
 d_covid_crash  = zeros(nQ, 1);
 d_covid_bounce = zeros(nQ, 1);
 for t = 1:nQ
@@ -145,6 +170,13 @@ if length(sv_idx) == sv_T
     ib_hat(sv_idx)       = sv.ib_hat;
     rKB_hat(sv_idx)      = sv.rKB_hat;
     ih_hat(sv_idx)       = sv.ih_hat;
+    % Override ph_gap with smoother if available
+    if isfield(sv, 'ph_gap')
+        ph_gap(sv_idx) = sv.ph_gap;
+        fprintf('  ph_gap: using Kalman-smoothed values\n');
+    else
+        fprintf('  ph_gap: smoother field not found, using recursive construction\n');
+    end
     fprintf('  Smoothed auxiliary targets mapped: obs %d-%d (%d quarters)\n', ...
         first_valid, last_valid, sv_T);
 else
@@ -159,7 +191,6 @@ end
 % These are constructed recursively from observed data, NOT from the smoother.
 % The smoother's pv_X_aux values absorb too much of the PAC equation's
 % signal, making structural parameters unidentifiable.
-get_param = @(name) M_.params(strcmp(name, M_.param_names));
 
 rho_pQ_aux  = get_param('rho_pQ_aux');
 a_pQ_y = get_param('a_pQ_y'); a_pQ_i = get_param('a_pQ_i');
@@ -231,6 +262,7 @@ varnames = { ...
     'y_gap_var', 'i_gap_var', 'pi_gap_var', 'u_gap_var', 'yhat_us_var', ...
     'piQ_hat', 'n_hat', 'yh_ratio_hat', 'c_hat', 'ib_hat', 'rKB_hat', 'ih_hat', ...
     'pv_piQ_aux', 'pv_n_aux', 'pv_c_aux', 'pv_ib_aux', 'pv_rKB_aux', 'pv_ih_aux', ...
+    'di_gap', 'ph_gap', ...
     'pQ_level', 'ln_c_level', 'ln_ib_level', 'ln_ih_level', 'ln_n_level', ...
     'dln_c', 'dln_ib', 'dln_ih', 'dln_n', 'piQ', ...
     'dln_n_1', 'dln_n_2', 'dln_n_3', 'dln_ib_1', 'dln_ih_1', ...

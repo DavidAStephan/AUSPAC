@@ -246,11 +246,11 @@ try
     pac_labels = {'VA Price','Consumption','Bus.Inv.','Hhold.Inv.','Employment'};
     pac_oo     = {'pac_pQ','pac_c','pac_ib','pac_ih','pac_n'};
     pac_params = {
-        struct('b0_pQ',0.06,'b1_pQ',0.50,'b2_pQ',0.09)
-        struct('b0_c',0.06,'b1_c',0.149,'b2_c',-0.02,'b3_c',0.139)
-        struct('b0_ib',0.030,'b1_ib',0.181,'b2_ib',0.10,'b3_ib',0.191)
-        struct('b0_ih',0.049,'b1_ih',0.210,'b2_ih',0.08,'b3_ih',0.12,'b4_ih',-0.05)
-        struct('b0_n',0.040,'b1_n',0.30,'b2_n',0.10,'b3_n',0.05,'b4_n',0.02,'b5_n',0.12)
+        struct('b0_pQ',0.06,'b1_pQ',0.50,'b2_pQ',0.09,'b_covid_crash_pQ',0,'b_covid_bounce_pQ',0)
+        struct('b0_c',0.06,'b1_c',0.149,'b2_c',-0.02,'b3_c',0.139,'b_di_c',0,'b_covid_crash_c',0,'b_covid_bounce_c',0)
+        struct('b0_ib',0.030,'b1_ib',0.181,'b2_ib',0.10,'b3_ib',0.191,'b_covid_crash_ib',0,'b_covid_bounce_ib',0)
+        struct('b0_ih',0.049,'b1_ih',0.210,'b2_ih',0.08,'b3_ih',0.12,'b_ph_ih',0,'b_covid_crash_ih',0,'b_covid_bounce_ih',0)
+        struct('b0_n',0.040,'b1_n',0.30,'b2_n',0.10,'b3_n',0.05,'b4_n',0.02,'b5_n',0.12,'b_covid_crash_n',0,'b_covid_bounce_n',0)
     };
 
     for eq = 1:5
