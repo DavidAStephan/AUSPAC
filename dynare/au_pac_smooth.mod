@@ -697,15 +697,15 @@ alpha_s         = 0.15;     // interest rate differential -> appreciation (negat
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
 // Australia: commodity exports sensitive to world demand, moderate price elasticity
 b0_x            = 0.05;     // error correction (moderate speed)
-b1_x            = 0.30;     // export growth persistence
-b2_x            = 0.25;     // world demand (yhat_us) -> AU exports (strong)
+b1_x            = 0.89;     // AU est 0.886 (s.e.0.044), ABS chain vol, T=104
+b2_x            = 0.25;     // kept: AU est -0.04 wrong sign (proxy data issue)
 b3_x            = 0.10;     // depreciation -> more exports (Marshall-Lerner)
 
 // Import parameters (calibrated from Section 4.7 / Table 4.7.2)
 // Australia: imports track domestic demand closely
 b0_m            = 0.06;     // error correction
-b1_m            = 0.25;     // import growth persistence
-b2_m            = 0.30;     // domestic demand (yhat_au) -> imports (strong, high import share)
+b1_m            = 0.87;     // AU est 0.869 (s.e.0.051), ABS chain vol, T=104
+b2_m            = 0.30;     // kept: AU est -0.12 wrong sign (proxy data issue)
 b3_m            = -0.08;    // depreciation -> fewer imports (negative: price effect)
 
 // Demand deflator parameters (calibrated from Section 4.7)
@@ -713,31 +713,31 @@ b3_m            = -0.08;    // depreciation -> fewer imports (negative: price ef
 // All satisfy growth neutrality: at SS, pi_j = piQ = pibar_au = pi_ss_au
 
 // Consumption deflator: close to CPI, tracks VA price with full pass-through
-rho_pc          = 0.40;     // moderate persistence
-alpha_pc        = 0.30;     // VA price pass-through (rest from pibar_au)
-// neutrality: (1-0.40-0.30) = 0.30 on pibar_au
+rho_pc          = 0.67;     // AU est 0.674 (s.e.0.056), ABS 5206 IPD, T=127
+alpha_pc        = 0.17;     // AU est 0.168 (s.e.0.035), weaker than FR-BDF 0.71
+// neutrality: (1-0.67-0.17) = 0.16 on pibar_au
 
 // Business investment deflator: tracks VA price, less persistent
-rho_pib         = 0.35;     // moderate persistence
-alpha_pib       = 0.25;     // VA price pass-through
-// neutrality: (1-0.35-0.25) = 0.40 on pibar_au
+rho_pib         = 0.70;     // AU est 0.699 (s.e.0.060), ABS 5206 IPD, T=127
+alpha_pib       = 0.19;     // AU est 0.193 (s.e.0.053)
+// neutrality: (1-0.70-0.19) = 0.11 on pibar_au
 
 // Household investment deflator: construction costs, high persistence
-rho_pih         = 0.45;     // higher persistence (construction costs sticky)
-alpha_pih       = 0.25;     // VA price pass-through
-// neutrality: (1-0.45-0.25) = 0.30 on pibar_au
+rho_pih         = 0.49;     // AU est 0.491 (s.e.0.072), ABS 5206 IPD, T=127
+alpha_pih       = 0.40;     // AU est 0.395 (s.e.0.082), stronger than FR-BDF 0.25
+// neutrality: (1-0.49-0.40) = 0.11 on pibar_au
 
 // Export deflator: influenced by world prices via exchange rate
-rho_px          = 0.30;     // lower persistence (commodity price pass-through)
-alpha_px        = 0.20;     // VA price pass-through (weaker: world price taker)
+rho_px          = 0.21;     // AU est 0.214 (s.e.0.069), ABS 5206 IPD, T=127
+alpha_px        = 0.20;     // kept: AU est 2.23 implausible (multicollinearity)
 beta_px         = -0.05;    // depreciation -> higher export prices in domestic currency
-// neutrality: (1-0.30-0.20) = 0.50 on pibar_au (+ beta_px*0 at SS)
+// neutrality: (1-0.21-0.20) = 0.59 on pibar_au (+ beta_px*0 at SS)
 
 // Import deflator: heavily influenced by exchange rate
-rho_pm          = 0.30;     // moderate persistence
-alpha_pm        = 0.15;     // VA price pass-through (weak: foreign prices dominate)
+rho_pm          = 0.28;     // AU est 0.276 (s.e.0.085), ABS 5206 IPD, T=127
+alpha_pm        = 0.38;     // AU est 0.384 (s.e.0.199), stronger than FR-BDF 0.15
 beta_pm         = 0.09;     // AU est (s.e.0.03). Was 0.08. REER pass-through confirmed
-// neutrality: (1-0.30-0.15) = 0.55 on pibar_au (+ beta_pm*0 at SS)
+// neutrality: (1-0.28-0.38) = 0.34 on pibar_au (+ beta_pm*0 at SS)
 
 // Government parameters
 // Spending follows simple fiscal rule: countercyclical stabilizer
@@ -783,15 +783,15 @@ w_iad_x         = 0.30;     // exports: high re-export content (commodity proces
 
 // Household bank lending rate (Section 4.8.3, eq. 68, Table 4.6.17)
 // Paper: iLH adjusts toward i_10y with spread, persistence rho = 0.88
-rho_lh          = 0.88;     // bank lending rate persistence (paper beta0 = 0.88)
+rho_lh          = 0.97;     // AU est 0.972 (s.e.0.020), RBA F5, T=127. Very persistent
 spread_lh       = 0.40;     // ~1.6% annual AU mortgage spread over 10Y bonds
 // SS: i_lh = i_ss + tp_ss + spread_lh = 1.0491 + 0.30 + 0.40 = 1.7491 (~7.0% annual)
 
 // Housing prices (Section 4.6.3, eq. 69, Table 4.6.18)
-// Paper: AR(2) with rho0=0.48, rho1=0.43; simplified to AR(1) with ~0.90
-rho_ph          = 0.90;     // high persistence (AU housing cycle ~7 year half-life)
-alpha_ph_y      = 0.15;     // output gap -> housing prices (demand/income channel)
-alpha_ph_r      = -0.10;    // rate hike -> lower house prices (credit channel)
+// AU estimate from ABS 6416 RPPI (2003-2021, T=72, R2=0.40)
+rho_ph          = 0.60;     // AU est 0.605 (s.e.0.096). Less persistent than FR-BDF 0.90
+alpha_ph_y      = 0.15;     // kept: AU est 0.088 insignificant (t=0.53)
+alpha_ph_r      = -0.70;    // AU est -0.700 (s.e.0.279). Stronger rate channel (t=2.51)
 kappa_ph        = 0.03;     // housing price gap -> household investment (Tobin's Q)
 
 // Investment target output proportionality (Section 4.6.2, eq. 63)

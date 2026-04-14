@@ -1,22 +1,26 @@
-function generate_bayesian_mod()
+function generate_bayesian_mod(stage)
 %% generate_bayesian_mod.m
 % Generates au_pac_bayesian.mod from au_pac.mod by:
 %   1. Inserting varobs declaration before the model block
 %   2. Inserting estimated_params block after the shocks block
 %   3. Replacing stoch_simul with estimation() command
 %
-% Priors are centered on iterative OLS estimates (2026-04-13, hybrid+COVID).
+% Priors are centered on iterative OLS estimates (2026-04-14, hybrid+COVID+AU companion).
 % Parameters fixed at calibrated values are not estimated.
 %
-% Two-stage approach supported:
+% Two-stage approach:
 %   Stage 1: mode_compute=4 (csminwel) — find posterior mode (~5 min)
-%   Stage 2: mh_replic=20000, mh_nblocks=2 — MCMC (~1-2 hours)
+%   Stage 2: mode_compute=0, mode_file, mh_replic=20000, mh_nblocks=2 — MCMC (~1-2 hours)
 %
-% Set stage via input: generate_bayesian_mod(stage)
-%   stage=1: mode-finding only (default)
-%   stage=2: MCMC (requires mode file from stage 1)
+% USAGE:
+%   generate_bayesian_mod       % Stage 1 (default)
+%   generate_bayesian_mod(1)    % Stage 1: mode-finding
+%   generate_bayesian_mod(2)    % Stage 2: MCMC from saved mode
 
-fprintf('=== Generating au_pac_bayesian.mod ===\n');
+if nargin < 1, stage = 1; end
+assert(ismember(stage, [1 2]), 'stage must be 1 or 2');
+
+fprintf('=== Generating au_pac_bayesian.mod (Stage %d) ===\n', stage);
 
 moddir = fileparts(mfilename('fullpath'));
 infile  = fullfile(moddir, 'au_pac.mod');
@@ -112,9 +116,14 @@ for k = 1:length(lines)
             outlines{end+1} = '    stderr eps_10y,     inv_gamma_pdf,  0.10,  inf;';
             outlines{end+1} = 'end;';
             outlines{end+1} = '';
-            outlines{end+1} = '// Use calibrated values as starting point (guarantees BK at initial eval)';
-            outlines{end+1} = 'estimated_params_init(use_calibration);';
-            outlines{end+1} = 'end;';
+            if stage == 1
+                outlines{end+1} = '// Use calibrated values as starting point (guarantees BK at initial eval)';
+                outlines{end+1} = 'estimated_params_init(use_calibration);';
+                outlines{end+1} = 'end;';
+            else
+                outlines{end+1} = '// Stage 2: estimated_params_init(use_calibration) NOT compatible with mode_file';
+                outlines{end+1} = '// Starting values come from mode file instead';
+            end
             estparams_inserted = true;
             continue;  % skip the original 'end;' (already written above)
         end
@@ -123,16 +132,31 @@ for k = 1:length(lines)
     % 3. Replace stoch_simul with estimation command
     if ~stochsim_replaced && contains(ln, 'stoch_simul(')
         outlines{end+1} = '// stoch_simul replaced by estimation (auto-generated)';
-        outlines{end+1} = '// Stage 1: posterior mode via csminwel';
         outlines{end+1} = '// diffuse_filter needed for unit root processes (level accumulators)';
-        outlines{end+1} = 'estimation(datafile=''estimation_data.mat'',';
-        outlines{end+1} = '           first_obs=1,';
-        outlines{end+1} = '           mode_compute=4,';
-        outlines{end+1} = '           presample=4,';
-        outlines{end+1} = '           mh_replic=0,';
-        outlines{end+1} = '           diffuse_filter,';
-        outlines{end+1} = '           nograph)';
-        outlines{end+1} = '           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;';
+        if stage == 1
+            outlines{end+1} = '// Stage 1: posterior mode via csminwel';
+            outlines{end+1} = 'estimation(datafile=''estimation_data.mat'',';
+            outlines{end+1} = '           first_obs=1,';
+            outlines{end+1} = '           mode_compute=4,';
+            outlines{end+1} = '           presample=4,';
+            outlines{end+1} = '           mh_replic=0,';
+            outlines{end+1} = '           diffuse_filter,';
+            outlines{end+1} = '           nograph)';
+            outlines{end+1} = '           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;';
+        else
+            outlines{end+1} = '// Stage 2: MCMC from saved posterior mode';
+            outlines{end+1} = 'estimation(datafile=''estimation_data.mat'',';
+            outlines{end+1} = '           first_obs=1,';
+            outlines{end+1} = '           mode_compute=0,';
+            outlines{end+1} = '           mode_file=''au_pac_bayesian/Output/au_pac_bayesian_mode'',';
+            outlines{end+1} = '           presample=4,';
+            outlines{end+1} = '           mh_replic=20000,';
+            outlines{end+1} = '           mh_nblocks=2,';
+            outlines{end+1} = '           mh_jscale=0.4,';
+            outlines{end+1} = '           diffuse_filter,';
+            outlines{end+1} = '           nograph)';
+            outlines{end+1} = '           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;';
+        end
         stochsim_replaced = true;
         skip_until_semi = ~contains(ln, ';');  % flag: skip continuation lines
         continue;
@@ -160,10 +184,12 @@ for k = 1:length(outlines)
 end
 fclose(fid);
 
+if stage == 1, stage_str = 'mode-finding'; else, stage_str = 'MCMC'; end
+fprintf('  Stage: %d (%s)\n', stage, stage_str);
 fprintf('  varobs inserted: %d\n', varobs_inserted);
 fprintf('  estimated_params inserted: %d\n', estparams_inserted);
 fprintf('  stoch_simul replaced: %d\n', stochsim_replaced);
 fprintf('  Output: %s\n', outfile);
-fprintf('=== au_pac_bayesian.mod generated ===\n');
+fprintf('=== au_pac_bayesian.mod generated (Stage %d) ===\n', stage);
 
 end

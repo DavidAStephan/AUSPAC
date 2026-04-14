@@ -15,9 +15,9 @@
 % OBSERVABLES (9):
 %   yhat_au, pi_au, i_au, yhat_us, pi_us, pi_w, dln_c, dln_ib, i_10y
 %
-% ESTIMATED PARAMETERS (27):
+% ESTIMATED PARAMETERS (28):
 %   16 PAC structural params (5 EC speeds, 5 AR1, 3 output gaps, 2 rate/supply, 1 wage)
-%   2 E-SAT params (lambda_w, kappa_w)
+%   3 E-SAT params (lambda_w, gamma_w, kappa_w)
 %   9 shock std devs
 
 clear; clc;
@@ -49,12 +49,12 @@ end
 
 %% 2. Generate au_pac_bayesian.mod
 log_msg('\n--- Generating au_pac_bayesian.mod ---\n');
-generate_bayesian_mod();
+generate_bayesian_mod(1);
 
 %% 3. Run Stage 1: posterior mode
 log_msg('\n--- Stage 1: Posterior mode (mode_compute=4, csminwel) ---\n');
 log_msg('  This runs dynare au_pac_bayesian with mh_replic=0\n');
-log_msg('  Estimated parameters: 18 structural + 9 shock std devs = 27 total\n\n');
+log_msg('  Estimated parameters: 19 structural + 9 shock std devs = 28 total\n\n');
 
 try
     dynare au_pac_bayesian noclearall

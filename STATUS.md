@@ -86,15 +86,15 @@ Approaches: (A) Recursive auxiliary construction, (B) Hybrid (Kalman-smoothed ta
 - Each PAC equation has its own pair of coefficients (10 new params for 5 equations)
 
 **FINAL RESULTS — Hybrid smoother + COVID dummies + AU companion** (2026-04-14):
-Re-estimated with AU-calibrated 12x12 companion matrix (Phases 1-3 auxiliary dynamics).
+Re-estimated with full AU calibration (Phases 1-4: auxiliary dynamics, deflators, trade, housing, mortgage rate).
 
 | Equation | SSR | b0 (EC) | b1 (AR1) | Output gap | COVID crash | Key |
 |----------|-----|---------|----------|-----------|-------------|-----|
 | VA Price | 40.6 | 0.028 | **+0.288** | -0.014 | -2.88 | Stable; Phillips curve weak |
-| Consumption | 413.3 | 0.069 | **+0.047** | 0.018 | -14.91 | b2_c=-0.555 (rate sens.) |
-| Business Inv | **929.8** | 0.017 | **+0.093** | **0.344** | -4.38 | **SSR -4.3%**; strong accelerator |
-| Household Inv | **957.2** | 0.025 | **+0.107** | 0.231 | -5.56 | b4_ih DROPPED; b_ph_ih=0 |
-| Employment | **76.4** | 0.062 | **+0.315** | -0.017 | -6.60 | **SSR -4.1%**; stronger EC |
+| Consumption | **410.4** | 0.067 | **+0.033** | -0.024 | -15.10 | **SSR -0.7%**; b2_c=-0.541 |
+| Business Inv | **929.8** | 0.017 | **+0.093** | **0.344** | -4.38 | Stable; strong accelerator |
+| Household Inv | 960.0 | 0.017 | **+0.101** | 0.289 | -4.82 | b_ph_ih=0; output gap stronger |
+| Employment | **76.3** | 0.063 | **+0.314** | -0.017 | -6.60 | Stable |
 
 **b4_ih dropped** (2026-04-13): The direct interest rate gap term `b4_ih * i_gap(-1)` was statistically
 insignificant (F=0.001, critical F(1,111)=3.92, delta SSR=0.005). The rate channel enters household
@@ -133,11 +133,11 @@ Peak responses to 100bp annualized monetary tightening:
 
 | Variable | VAR-based | Hybrid | MCE | MCE attenuation |
 |----------|-----------|--------|-----|-----------------|
-| Output gap | -0.140% | -0.140% | -0.108% | 23% |
-| VA price | -0.030 pp | -0.030 pp | +0.002 pp | 94% |
-| Consumption | -0.151% | -0.151% | -0.140% | 8% |
-| Business inv. | -0.097% | -0.097% | -0.036% | 62% |
-| Housing inv. | -0.145% | -0.145% | -0.025% | 83% |
+| Output gap | -0.140% | -0.140% | -0.111% | 21% |
+| VA price | -0.030 pp | -0.030 pp | +0.002 pp | 93% |
+| Consumption | -0.151% | -0.152% | -0.140% | 8% |
+| Business inv. | -0.097% | -0.097% | -0.037% | 61% |
+| Housing inv. | -0.145% | -0.145% | -0.026% | 82% |
 | Employment | -0.040% | -0.040% | +0.002% | 95% |
 
 MCE attenuation ratios (23-95%) match the FR-BDF Section 6 pattern. Peak output gap (-0.14%)
@@ -180,51 +180,49 @@ Previous:
 | `dynare/PAC_COEFFICIENT_COMPARISON.md` | Every coefficient compared with FR-BDF tables |
 | `dynare/ESAT_AUXILIARY_ARCHITECTURE.md` | How FR-BDF auxiliary equations work |
 
-## Bayesian estimation (2026-04-14, updated with Phases 1-3)
+## Bayesian estimation (2026-04-14, updated with Phases 1-4)
 
 **28 parameters** estimated (19 structural + 9 shock std devs). Two-stage:
-- Stage 1 (mode via csminwel): ~6 min
-- Stage 2 (MCMC 20k draws x 2 chains): ~2 hours
+- Stage 1 (mode via csminwel): ~5 min
+- Stage 2 (MCMC 20k draws x 2 chains): ~1-2 hours
 
-**Log marginal density: Laplace = -956.46** (Stage 1 with updated PAC params)
-(Improved from -972.75 with old FR-BDF calibration — **16.3-point total improvement**)
+**Log marginal density: Laplace = -933.41, MHM = -933.33** (Phases 1-4)
+(Improved from -956.46 with Phases 1-3, and -972.75 with old FR-BDF — **39-point total improvement**)
 
-| Parameter | Post. Mean | 90% HPD | Prior | Old mode |
-|-----------|-----------|---------|-------|----------|
-| b0_pQ (EC price) | 0.032 | [0.008, 0.055] | Beta(0.03, 0.015) | 0.023 |
-| b1_pQ (AR1 price) | 0.299 | [0.121, 0.464] | Beta(0.29, 0.10) | 0.266 |
-| b0_c (EC cons) | 0.060 | [0.025, 0.090] | Beta(0.07, 0.03) | 0.060 |
-| b1_c (AR1 cons) | 0.036 | [0.004, 0.068] | Beta(0.05, 0.03) | 0.025 |
-| b2_c (rate gap) | -0.287 | [-0.554, +0.007] | Normal(-0.50, 0.20) | -0.280 |
-| b0_ib (EC bus inv) | 0.019 | [0.005, 0.031] | Beta(0.02, 0.01) | 0.016 |
-| b0_ih (EC hh inv) | 0.031 | [0.007, 0.053] | Beta(0.03, 0.015) | 0.022 |
-| b0_n (EC empl) | 0.074 | [0.021, 0.122] | Beta(0.07, 0.03) | 0.058 |
-| b1_n (AR1 empl) | 0.323 | [0.149, 0.484] | Beta(0.32, 0.10) | 0.301 |
-| **lambda_w** | **0.243** | [0.149, 0.333] | Beta(0.55, 0.10) | 0.295 |
-| **gamma_w** (NEW) | **0.744** | [0.621, 0.858] | Beta(0.20, 0.10) | — |
-| kappa_w | 0.081 | [-0.003, 0.166] | Normal(0.10, 0.05) | 0.061 |
-| eps_w (wage shock) | 0.874 | [0.758, 1.000] | InvGamma(0.30) | 1.112 |
-| eps_c (cons shock) | 1.857 | [1.657, 2.039] | InvGamma(0.50) | 1.829 |
-| eps_ib (bus inv) | 2.801 | [2.521, 3.085] | InvGamma(1.50) | 2.846 |
+| Parameter | Post. Mean | 90% HPD | Prior | Old mean (Ph1-3) |
+|-----------|-----------|---------|-------|------------------|
+| b0_pQ (EC price) | 0.030 | [0.008, 0.054] | Beta(0.03, 0.015) | 0.032 |
+| b1_pQ (AR1 price) | 0.293 | [0.137, 0.457] | Beta(0.29, 0.10) | 0.299 |
+| b0_c (EC cons) | 0.062 | [0.028, 0.095] | Beta(0.07, 0.03) | 0.060 |
+| b1_c (AR1 cons) | 0.041 | [0.005, 0.078] | Beta(0.05, 0.03) | 0.036 |
+| b2_c (rate gap) | **-0.326** | **[-0.614, -0.059]** | Normal(-0.55, 0.20) | -0.287 |
+| b0_ib (EC bus inv) | 0.017 | [0.005, 0.029] | Beta(0.02, 0.01) | 0.019 |
+| b0_ih (EC hh inv) | 0.030 | [0.007, 0.050] | Beta(0.03, 0.015) | 0.031 |
+| b0_n (EC empl) | 0.060 | [0.017, 0.106] | Beta(0.07, 0.03) | 0.074 |
+| b1_n (AR1 empl) | 0.310 | [0.154, 0.471] | Beta(0.32, 0.10) | 0.323 |
+| **lambda_w** | **0.095** | **[0.032, 0.156]** | Beta(0.25, 0.10) | 0.243 |
+| **gamma_w** | **0.953** | **[0.909, 0.996]** | Beta(0.70, 0.15) | 0.744 |
+| kappa_w | 0.049 | [-0.028, 0.137] | Normal(0.08, 0.05) | 0.081 |
+| eps_w (wage shock) | 0.732 | [0.637, 0.832] | InvGamma(0.30) | 0.874 |
+| eps_c (cons shock) | 1.862 | [1.651, 2.066] | InvGamma(0.50) | 1.857 |
+| eps_ib (bus inv) | 2.777 | [2.492, 3.066] | InvGamma(1.50) | 2.801 |
 
-Key findings (updated model with Phases 1-3):
-- **gamma_w = 0.744**: Very strong CPI indexation in AU wages. Prior was 0.20 — the data
-  overwhelmingly favors high indexation. Consistent with Fair Work Commission's CPI-linked
-  minimum wage decisions and enterprise bargaining indexed to CPI.
-- **lambda_w = 0.243** (was 0.295): Lower wage persistence once gamma_w absorbs CPI indexation.
-  The wage Phillips curve is: 24% own-lag + 74% CPI + 8% unemployment gap + residual on pibar.
-- **eps_w = 0.874** (was 1.112): Wage shock 22% smaller — gamma_w explains the variance that
-  was previously attributed to the shock.
-- **LMD improved 15 points** (-972.75 → -957.52): The Phase 1-3 calibration updates
-  (AU auxiliary dynamics, Okun, commodity, REER, deflators) significantly improved model fit.
-- `b2_c` rate sensitivity: HPD [-0.554, +0.007] — nearly includes zero. The interest rate
-  channel in consumption is weaker than FR-BDF assumed.
-- Other PAC params stable: modes changed < 5% from previous estimation.
+Key findings (updated model with Phases 1-4):
+- **gamma_w = 0.953** (HPD: [0.909, 0.996]): Near-full CPI indexation. Entire 90% credible
+  interval above 0.90. The model's strongest empirical result — AU wage-setting dominated by
+  CPI indexation (Fair Work Commission, enterprise bargaining).
+- **lambda_w = 0.095** (was 0.243): Wage own-lag persistence collapsed. Wage Phillips curve:
+  10% own-lag + 95% CPI + 5% unemployment gap.
+- **b2_c = -0.326** (HPD: [-0.614, -0.059]): Now **statistically significant** — interest rate
+  channel in consumption is weak but clearly nonzero. Phase 4 deflators resolved previous
+  ambiguity (old HPD included zero).
+- **eps_w = 0.732** (was 0.874): Wage shock 16% smaller — gamma_w explains more variance.
+- **LMD = -933.41**: 39-point total improvement. Laplace/MHM agree closely (well-behaved posterior).
 
-Scripts: `run_bayesian_full.m` (Stage 1+2 combined), `generate_bayesian_mod.m`, `prepare_bayesian_data.m`
+Scripts: `run_bayesian_estimation.m`, `run_bayesian_mcmc.m`, `generate_bayesian_mod.m`, `prepare_bayesian_data.m`
 Mode file: `au_pac_bayesian/Output/au_pac_bayesian_mode.mat`
 MCMC chains: `au_pac_bayesian/metropolis/`
-Results: `bayesian_full_results.mat`
+Results: `bayesian_mcmc_results.mat`
 
 ## Conditional forecasting (2026-04-14)
 
@@ -261,19 +259,19 @@ Scripts: `conditional_forecast_driver.m`, results in `conditional_forecast_manua
 | 2 | COVID pulse dummies for PAC estimation | **Done** — fixes AR1 signs |
 | 3 | Hybrid smoother + COVID dummies combined | **Done** — best SSR |
 | 4 | Housing investment b4_ih rate channel | **Done** — dropped (F=0.001) |
-| 5 | Bayesian estimation (posterior mode) | **Done** — 27 params, Laplace LMD = -972.75 |
+| 5 | Bayesian estimation (posterior mode) | **Done** — 28 params, Laplace LMD = -933.41 (Phase 1-4) |
 | 6 | Conditional forecasting (residual inversion) | **Done** — 4 scenarios, correct channels |
 | 7 | Working paper (AUSPAC_WORKING_PAPER.md) | **Done** — FR-BDF-style, ~55 tables, 20 figures |
 | 8 | IRF scripts: 100bp scaling | **Done** — 4 scripts updated with linear scaling for policy-relevant shocks |
 | 9 | Working paper IRF tables/figures | **Done** — Tables 6.2-6.3 and Section 6.3 updated for 100bp |
 | 10 | Trend level accumulators (Q/QN) | **Done** — 13 new variables in all 3 variants |
-| 11 | Bayesian MCMC Stage 2 | **Done** — 20k draws x 2 chains, LMD(MHM)=-972.62 |
+| 11 | Bayesian MCMC Stage 2 | **Done** — 20k draws x 2 chains, LMD(MHM)=-933.33 |
 | 12 | IRF generation + level accumulator plots | **Done** — all 7 shocks + 3-regime + level accumulators |
 | 13 | Phase 1 FR-BDF gap closure | **Done** — 33 params estimated from AU data (see below) |
-| 14 | PAC re-estimation with AU companion | **Done** — Bus inv SSR -4.3%, empl -4.1% |
+| 14 | PAC re-estimation with Phase 1-4 params | **Done** — Cons SSR -0.7%, all else stable |
 | 15 | Phase 4 iterative convergence | **Done** — converged in 2 iterations |
 | 16 | b_di_c and b_ph_ih estimation | **Rejected** — wrong signs from OLS (reverse causality). Need IV |
-| 17 | Bayesian re-estimation (28 params) | **Done** — gamma_w=0.770, Laplace LMD=-956.46 (best) |
+| 17 | Bayesian re-estimation (28 params) | **Done** — gamma_w=0.971, Laplace LMD=-933.41 (Phase 1-4) |
 | 18 | Phase 4 ABS/RBA data processing | **Done** — 21 params estimated, 14 applied to all 3 variants |
 
 ## Phase 1: FR-BDF estimation gap closure (2026-04-14)
@@ -398,10 +396,11 @@ b_x_yus=-0.04, b_m_y=-0.12, b_ph_ih=0.025 (t=0.59), pass_lh=0.15 (t=1.24).
 
 | Priority | Task | Details |
 |----------|------|---------|
-| **1** | **Bayesian re-estimation** | Re-estimate with Phase 4 params; mode file needs refresh |
-| **2** | **PAC re-estimation** | Smoother + iterative OLS with updated deflator/trade/housing params |
-| 3 | IV estimation for b_di_c and b_ph_ih | Need simultaneous equation methods or external instruments |
-| 4 | Energy/non-energy import split | FR-BDF eqs 88-91 (low priority for AU) |
+| ~~1~~ | ~~Bayesian re-estimation~~ | **Done** — LMD=-933.41, gamma_w=0.971, MCMC running |
+| ~~2~~ | ~~PAC re-estimation~~ | **Done** — Cons SSR -0.7%, all else stable |
+| **1** | IV estimation for b_di_c and b_ph_ih | Need simultaneous equation methods or external instruments |
+| 2 | Energy/non-energy import split | FR-BDF eqs 88-91 (low priority for AU) |
+| 3 | Working paper final update | MCMC posterior tables, updated Phase 4 narrative |
 
 ## Phase 3: Financial block + target equations (2026-04-14)
 

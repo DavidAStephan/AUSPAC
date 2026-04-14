@@ -52,6 +52,11 @@ if isfield(mode_data, 'xparam1')
 end
 fprintf(fid, '\n');
 
+%% Generate Stage 2 .mod file
+fprintf(fid, '--- Generating au_pac_bayesian.mod (Stage 2) ---\n');
+generate_bayesian_mod(2);
+fprintf(fid, '  au_pac_bayesian.mod regenerated with mode_compute=0, mh_replic=20000\n\n');
+
 %% Run MCMC
 fprintf(fid, '--- Running MCMC (mh_replic=20000, mh_nblocks=2) ---\n');
 fprintf(fid, '  Expected runtime: 30-90 min depending on model complexity\n');
