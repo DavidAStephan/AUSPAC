@@ -175,7 +175,6 @@ Previous:
 | Document | Content |
 |----------|---------|
 | `dynare/AUSPAC_WORKING_PAPER.md` | **Primary** — full WP mirroring FR-BDF structure (~55 tables, 20 figures) |
-| `dynare/AU_PAC_MODEL_DOCUMENTATION.md` | Legacy detailed documentation (~1500 lines) |
 | `dynare/FULL_MODEL_COMPARISON.md` | Equation-by-equation AU-PAC vs FR-BDF |
 | `dynare/PAC_COEFFICIENT_COMPARISON.md` | Every coefficient compared with FR-BDF tables |
 | `dynare/ESAT_AUXILIARY_ARCHITECTURE.md` | How FR-BDF auxiliary equations work |
