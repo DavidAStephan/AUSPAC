@@ -14,7 +14,8 @@
 %   7. TFP / labor efficiency (eps_tfp) — 1 s.d.
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 fprintf('================================================================\n');
 fprintf('  AU_PAC Complete IRF Analysis\n');

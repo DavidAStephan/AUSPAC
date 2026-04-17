@@ -15,8 +15,8 @@
 %   - Log: bayesian_mcmc_log.txt
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 logfile = 'bayesian_mcmc_log.txt';
 fid = fopen(logfile, 'w');

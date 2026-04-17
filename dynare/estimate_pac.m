@@ -9,8 +9,8 @@
 % executed (so that M_, oo_ structures exist with JSON model info).
 %
 % USAGE:
-%   >> cd('c:\Users\david\french_model\dynare')
-%   >> addpath('C:\dynare\6.5\matlab');
+%   >> cd(<repo>/dynare)
+%   >> setup_dynare_path()
 %   >> dynare au_pac json=compute noclearall
 %   >> estimate_pac
 %

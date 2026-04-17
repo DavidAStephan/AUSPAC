@@ -2,15 +2,11 @@
 
 ## Prerequisites
 
-- **MATLAB R2019a**: `C:\Program Files\MATLAB\R2019a\bin\matlab.exe`
-- **Dynare 6.5**: `C:\dynare\6.5\matlab`
+- **MATLAB** R2019a or newer
+- **Dynare 6.5** — auto-located by `dynare/setup_dynare_path.m`. Standard install paths are detected on Windows (`C:\dynare\6.5\matlab`, `C:\Program Files\Dynare\6.5\matlab`), macOS (`/Applications/Dynare/6.5-x86_64/matlab`, `/Applications/Dynare/6.5-arm64/matlab`), and Linux (`/usr/lib/dynare/matlab`). Override with `DYNARE_PATH` env var if installed elsewhere.
 - **Data files**: `dataset.csv` (root), `data/extended_dataset.csv`
 
-All commands below assume you start from MATLAB:
-```matlab
-cd('c:\Users\david\french_model\dynare')
-addpath('C:\dynare\6.5\matlab')
-```
+All commands below assume you start from MATLAB in the repo root. Scripts self-locate, so you don't need to `cd` manually unless noted.
 
 ---
 
@@ -36,16 +32,14 @@ This single script runs the full pipeline (takes ~3 min):
 
 ### Stage 1: Data preparation
 
-Scripts in `data/`:
 ```matlab
-cd('c:\Users\david\french_model')
-download_data           % downloads FRED/RBA series to fred_*.csv, rba_*.csv
-                        % produces dataset.csv (9 observables, 1993Q1-2024Q4)
+cd <repo>                 % repo root
+download_data             % downloads FRED/RBA series → fred_*.csv, rba_*.csv, dataset.csv
 ```
 ```matlab
-cd('c:\Users\david\french_model\data')
-download_extended_data  % downloads employment, investment, wages, etc.
-prepare_estimation_data % produces extended_dataset.csv (11 vars, 1993Q1-2023Q3)
+cd <repo>/data
+download_extended_data    % downloads employment, investment, wages, etc.
+prepare_estimation_data   % produces extended_dataset.csv (11 vars, 1993Q1-2023Q3)
 ```
 
 You only need to re-run these if the data needs refreshing.
@@ -53,7 +47,7 @@ You only need to re-run these if the data needs refreshing.
 ### Stage 2: E-SAT core estimation (optional)
 
 ```matlab
-cd('c:\Users\david\french_model')
+cd <repo>
 estimate_esat           % equation-by-equation OLS for 16 E-SAT parameters
 bayesian_estimate       % full MCMC (RW-MH, 10k draws, 2 blocks)
 ```
@@ -61,9 +55,9 @@ bayesian_estimate       % full MCMC (RW-MH, 10k draws, 2 blocks)
 ### Stage 3: Model compilation and IRFs
 
 ```matlab
-cd('c:\Users\david\french_model\dynare')
-addpath('C:\dynare\6.5\matlab')
-dynare au_pac json=compute    % compiles and solves the hybrid model (140 endo, 47 exo)
+cd <repo>/dynare
+setup_dynare_path             % auto-locates Dynare 6.5
+dynare au_pac json=compute    % compiles and solves the hybrid model (154 endo, 47 exo)
 dynare au_pac_var             % VAR-based variant
 dynare au_pac_mce             % full model-consistent expectations variant
 ```
@@ -99,8 +93,7 @@ forward_guidance              % forward guidance experiment
 ### Stage 5b: Bayesian estimation
 
 ```matlab
-cd('c:\Users\david\french_model\dynare')
-addpath('C:\dynare\6.5\matlab')
+cd <repo>/dynare
 run_bayesian_estimation       % Stage 1: posterior mode (~4 min)
 run_bayesian_mcmc             % Stage 2: MCMC from mode (20k draws, 2 chains, ~30-90 min)
 ```
@@ -113,8 +106,7 @@ is commented out for Stage 2.
 ### Stage 5c: Conditional forecasting
 
 ```matlab
-cd('c:\Users\david\french_model\dynare')
-addpath('C:\dynare\6.5\matlab')
+cd <repo>/dynare
 conditional_forecast_driver              % default: RBA tightening scenario
 % Edit the script to select: 'tightening', 'easing', 'recession', 'stagflation'
 ```
@@ -122,7 +114,7 @@ conditional_forecast_driver              % default: RBA tightening scenario
 ### Stage 6: Full system test
 
 ```matlab
-cd('c:\Users\david\french_model')
+cd <repo>
 test_full_system              % 62 tests across 10 stages
 ```
 
@@ -186,7 +178,7 @@ No .mod file changes needed — scaling is applied after `stoch_simul` extractio
 ### To regenerate all IRF plots and tables:
 
 ```matlab
-cd('c:\Users\david\french_model\dynare')
+cd <repo>/dynare
 generate_wp_irfs              % all 7 shocks at policy-relevant sizes → irf_eps_*.png
 generate_three_regime_irfs    % 3-regime comparison → three_regime_*.png + log file
 ```

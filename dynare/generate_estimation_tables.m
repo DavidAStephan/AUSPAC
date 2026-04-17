@@ -8,8 +8,8 @@
 % Output: printed to console as markdown tables for pasting into docs.
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 %% Run model if not already loaded
 if ~exist('oo_', 'var') || ~exist('M_', 'var')

@@ -2,10 +2,11 @@
 % Runs stoch_simul on au_pac.mod and plots key IRFs to a monetary policy shock.
 % Compares against FR-BDF paper benchmarks (Section 6).
 %
-% Usage: run from c:\Users\david\french_model\dynare\
+% Usage: run from <repo>/dynare
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 fprintf('=== IRF Comparison: AUSPAC Model ===\n\n');
 

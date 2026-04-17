@@ -6,10 +6,13 @@ function test_full_system()
 % Dynare models and PAC estimation run in-process.
 
 close all;
-addpath('C:\dynare\6.5\matlab');
 
-projectdir = 'c:\Users\david\french_model';
+projectdir = fileparts(mfilename('fullpath'));
+if isempty(projectdir), projectdir = pwd; end
 dynaredir  = fullfile(projectdir, 'dynare');
+addpath(dynaredir);
+setup_dynare_path();
+
 logfile    = fullfile(dynaredir, 'full_system_test_results.txt');
 
 fid = fopen(logfile, 'w');

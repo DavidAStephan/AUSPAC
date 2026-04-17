@@ -6,15 +6,16 @@
 %
 % Logs results to test_comparison_log.txt for analysis.
 
-logfile = 'c:/Users/david/french_model/dynare/test_comparison_log.txt';
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
+
+logfile = fullfile(pwd, 'test_comparison_log.txt');
 fid = fopen(logfile, 'w');
 fprintf(fid, '=== PAC ESTIMATION: 3-WAY COMPARISON ===\n');
 fprintf(fid, 'Timestamp: %s\n\n', datestr(now));
 fclose(fid);
 
 try
-    addpath('C:/dynare/6.5/matlab');
-    cd('c:/Users/david/french_model/dynare');
 
     %% Pass 1: Dynare preprocessing + companion matrix
     appendlog(logfile, 'Pass 1: dynare au_pac json=compute noclearall...');
