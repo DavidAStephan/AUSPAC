@@ -8,7 +8,7 @@
 % Runs au_pac_var.mod, au_pac.mod (hybrid), au_pac_mce.mod sequentially,
 % saves IRFs to temp .mat files between runs, then overlays.
 %
-% Usage: cd to c:\Users\david\french_model\dynare\ and run in MATLAB.
+% Usage: cd to <repo>/dynare and run in MATLAB.
 %
 % Output:
 %   - three_regime_monetary_irf.png (2-panel FR-BDF Figure 6.2.2 style)
@@ -17,8 +17,8 @@
 %   - Markdown tables printed to console for documentation
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 fprintf('=== Three-Regime IRF Comparison ===\n');
 fprintf('Replicating FR-BDF Figure 6.2.2\n\n');

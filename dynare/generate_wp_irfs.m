@@ -18,8 +18,8 @@
 %   - log_wp_irfs.txt (file-based log)
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 logfile = 'log_wp_irfs.txt';
 fid = fopen(logfile, 'w');

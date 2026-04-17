@@ -12,15 +12,13 @@
 % auxiliary variables instead of crude recursive approximations.
 %
 % USAGE:
-%   >> cd('c:\Users\david\french_model\dynare')
-%   >> addpath('C:\dynare\6.5\matlab')
-%   >> estimate_pac_smooth_driver
+%   >> cd(<repo>/dynare); estimate_pac_smooth_driver
 
 clear; clc;
 
 %% Setup
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 % Open log file
 logfile = 'pac_smooth_estimation_log.txt';

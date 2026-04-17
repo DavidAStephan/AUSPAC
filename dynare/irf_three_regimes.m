@@ -6,7 +6,8 @@
 % Output: tables for documentation + comparison plot.
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 %% Shock scaling: 100bp annualized = 0.25 quarterly pp
 stderr_eps_i = 0.027;

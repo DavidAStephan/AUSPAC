@@ -12,7 +12,8 @@
 %   3. AU-PAC (131 equations — should show no puzzle)
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 fprintf('================================================================\n');
 fprintf('  Forward Guidance Puzzle Test\n');

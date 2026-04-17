@@ -8,9 +8,9 @@
 %            Slow (~1-2 hours), produces posterior distributions
 %
 % USAGE:
-%   >> cd('c:\Users\david\french_model\dynare')
-%   >> addpath('C:\dynare\6.5\matlab')
-%   >> run_bayesian_estimation          % Stage 1 (mode-finding)
+%   >> cd(<repo>/dynare); run_bayesian_estimation
+%   (Dynare is auto-located by setup_dynare_path; set DYNARE_PATH env var
+%    to override the default install locations.)
 %
 % OBSERVABLES (9):
 %   yhat_au, pi_au, i_au, yhat_us, pi_us, pi_w, dln_c, dln_ib, i_10y
@@ -21,8 +21,8 @@
 %   9 shock std devs
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 logfile = 'bayesian_estimation_log.txt';
 fid = fopen(logfile, 'w');

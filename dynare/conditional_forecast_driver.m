@@ -12,15 +12,13 @@
 %   4. Stagflation: simultaneous rate + inflation conditioning
 %
 % USAGE:
-%   >> cd('c:\Users\david\french_model\dynare')
-%   >> addpath('C:\dynare\6.5\matlab')
-%   >> conditional_forecast_driver              % runs default scenario (RBA tightening)
-%   >> conditional_forecast_driver('easing')    % runs easing scenario
+%   >> cd(<repo>/dynare); conditional_forecast_driver              % default scenario
+%   >> conditional_forecast_driver('easing')                       % easing scenario
 %   >> conditional_forecast_driver('custom', scenario_struct)
 
 clear; clc;
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 logfile = 'conditional_forecast_log.txt';
 fid_log = fopen(logfile, 'w');

@@ -7,8 +7,7 @@
 %   3. Calls estimate_pac.m for iterative OLS + NLS estimation
 %
 % USAGE:
-%   >> cd('c:\Users\david\french_model\dynare')
-%   >> estimate_pac_driver
+%   >> cd(<repo>/dynare); estimate_pac_driver
 %
 % REQUIREMENTS:
 %   - Dynare 6.5 on path
@@ -18,8 +17,8 @@
 clear; clc;
 
 %% Setup paths
-addpath('C:\dynare\6.5\matlab');
-cd('c:\Users\david\french_model\dynare');
+cd(fileparts(mfilename('fullpath')));
+setup_dynare_path();
 
 fprintf('================================================================\n');
 fprintf('  AU_PAC STRUCTURAL ESTIMATION DRIVER\n');
