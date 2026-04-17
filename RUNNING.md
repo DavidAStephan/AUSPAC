@@ -150,7 +150,6 @@ test_full_system              % 62 tests across 10 stages
 | `run_bayesian_mcmc.m` | Stage 2: MCMC from mode (20k draws, 2 chains) |
 | `generate_bayesian_mod.m` | Generates `au_pac_bayesian.mod` from `au_pac.mod` |
 | `prepare_bayesian_data.m` | Prepares non-demeaned estimation_data.mat |
-| `run_priority1.m` | Combined: compile + verify + IRFs + 3-regime |
 
 ### dseries construction (dynare/)
 | File | Description |
