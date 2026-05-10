@@ -577,10 +577,10 @@ pi_ss_us        = 0.5;
 // Start conservative to avoid instability; loop gain must be < 1
 lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
-// VA price PAC parameters (hybrid smoother iterative OLS, 2026-04-14)
-b0_pQ = 0.0275;    // error correction (hybrid smoother OLS, updated companion)
-b1_pQ = 0.2878;    // persistence
-b2_pQ = -0.0138;   // output gap (weak Phillips curve)
+// VA price PAC parameters (Bayesian posterior, Phase 1-4 MCMC, 2026-04-14)
+b0_pQ = 0.030;     // EC, posterior mean (90% HPD [0.008, 0.054])
+b1_pQ = 0.293;     // AR1, posterior mean (90% HPD [0.137, 0.457])
+b2_pQ = 0.000;     // output gap, posterior mode (Phillips channel ~0 in short run; pulls through target/ULC)
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
 gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
@@ -598,9 +598,9 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 // Wage Phillips curve parameters (calibrated from Section 4.5.1 / Table 4.5.1)
 // Australia: moderate wage persistence, significant gap sensitivity
 // Forward expectations proxied by pibar_au (inflation anchor)
-lambda_w        = 0.247;    // wage persistence (posterior mean)
-kappa_w         = 0.238;    // output gap -> wages (posterior mean)
-gamma_w         = 0.15;     // CPI indexation channel
+lambda_w        = 0.095;    // wage persistence (Bayesian posterior mean, 90% HPD [0.032, 0.156])
+kappa_w         = 0.049;    // unemployment-gap PV (Bayesian posterior mean, 90% HPD [-0.028, 0.137])
+gamma_w         = 0.953;    // CPI indexation (Bayesian posterior mean, 90% HPD [0.909, 0.996]). Headline AU finding: near-full CPI indexation in AU wage-setting (Fair Work Commission)
 okun_coeff      = -0.13;    // AU OLS estimate (s.e.0.02). FR-BDF: -0.246, old cal: -0.33
 rho_u_gap       = 0.946;    // AU OLS estimate (s.e.0.01). FR-BDF: 0.946, EXACT MATCH
 beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
@@ -608,25 +608,25 @@ beta_w          = 0.98;     // discount for expected unemployment gaps (paper Se
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n = 0.0631;    // error correction (hybrid smoother OLS, updated companion)
-b1_n = 0.3143;    // 1st lag
-b2_n = -0.1869;   // 2nd lag
-b3_n = -0.0763;   // 3rd lag
-b4_n = -0.0852;   // 4th lag
+b0_n = 0.060;     // EC, Bayesian posterior mean (90% HPD [0.017, 0.106])
+b1_n = 0.310;     // AR1, Bayesian posterior mean (90% HPD [0.154, 0.471])
+b2_n = -0.1869;   // 2nd lag (OLS, not in Bayesian estimated_params)
+b3_n = -0.0763;   // 3rd lag (OLS, not in Bayesian estimated_params)
+b4_n = -0.0852;   // 4th lag (OLS, not in Bayesian estimated_params)
 omega_n         = 0.30;     // expectations/forward component
-b5_n = -0.0168;   // output gap sensitivity (weak)
+b5_n = 0.000;     // output gap sensitivity (Bayesian posterior mode ~0)
 rho_n_star      = 0.95;     // target persistence
 // growth neutrality coeff = 1 - 0.30 - 0.10 - 0.05 - 0.02 - 0.30 = 0.23
 
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c = 0.0693;    // error correction (hybrid smoother OLS, updated companion)
-b1_c = 0.0463;    // persistence
+b0_c = 0.062;     // EC, Bayesian posterior mean (90% HPD [0.028, 0.095])
+b1_c = 0.041;     // AR1, Bayesian posterior mean (90% HPD [0.005, 0.078])
 omega_c         = 0.369;    // expectations/forward component (posterior mean)
-b2_c = -0.5588;   // real interest rate -> consumption (stronger than FR-BDF)
-b3_c = 0.0183;    // output gap -> consumption
-b_di_c          = 0;        // interest rate CHANGE: OLS=3.39 (wrong sign, reverse causality). Needs IV estimation
+b2_c = -0.326;    // real rate gap -> consumption, Bayesian posterior mean (90% HPD [-0.614, -0.059]; now significant after Phase 4)
+b3_c = 0.019;     // output gap -> consumption (Bayesian posterior mode)
+b_di_c          = -0.701;   // Phase C Bayesian regularised (IV with monetary-surprise instrument failed identification due to RBA endogeneity); posterior dominated by prior N(-0.71, 0.30^2)
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
 beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~25% annual)
@@ -636,11 +636,11 @@ alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib = 0.0171;    // error correction (hybrid smoother OLS, updated companion)
-b1_ib = 0.0925;    // 1st lag persistence
-b2_ib = -0.0445;   // 2nd lag
+b0_ib = 0.017;    // EC, Bayesian posterior mean (90% HPD [0.005, 0.029])
+b1_ib = 0.087;    // AR1, Bayesian posterior mode
+b2_ib = -0.0445;  // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib = 0.3444;    // output gap -> investment (strong accelerator)
+b3_ib = 0.195;    // output gap -> investment (Bayesian posterior mode; weaker than OLS 0.344, prior pulls)
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
@@ -650,13 +650,13 @@ delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih = 0.0250;    // error correction (hybrid smoother OLS, updated companion)
-b1_ih = 0.1071;    // 1st lag persistence
-b2_ih = -0.0368;   // 2nd lag
+b0_ih = 0.030;    // EC, Bayesian posterior mean (90% HPD [0.007, 0.050])
+b1_ih = 0.088;    // AR1, Bayesian posterior mode
+b2_ih = -0.0368;  // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ih        = 0.30;     // expectations/forward component
-b3_ih = 0.2313;    // output gap -> housing investment
+b3_ih = 0.219;    // output gap -> housing investment (Bayesian posterior mode)
 b4_ih           = 0;        // DROPPED: rate channel already in pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001, not significant)
-b_ph_ih         = 0;        // housing price gap: OLS=-0.04 (wrong sign vs FR-BDF +0.32). Needs ABS housing price data
+b_ph_ih         =  0.215;   // Phase C Bayesian regularised (lag-2 ph_gap IV gave wrong sign on ABS RPPI T=73; prior N(0.32, 0.20^2) dominates). Direct rate channel still enters via pv_ih_aux a_ih_i and pac_expectation kappa_mort.
 rho_ih_star     = 0.95;     // target persistence
 kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
 kappa_ih_inc    = 0.03;     // permanent income -> housing target (paper eq 66, Table 4.6.14)
@@ -697,15 +697,15 @@ alpha_s         = 0.15;     // interest rate differential -> appreciation (negat
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
 // Australia: commodity exports sensitive to world demand, moderate price elasticity
 b0_x            = 0.05;     // error correction (moderate speed)
-b1_x            = 0.89;     // AU est 0.886 (s.e.0.044), ABS chain vol, T=104
-b2_x            = 0.25;     // kept: AU est -0.04 wrong sign (proxy data issue)
+b1_x            = 0.807;    // Phase D AU OLS (ABS 5206 trend volume, T=103, s.e.0.062)
+b2_x            = 0.25;     // Phase D ABS T=103 OLS = -0.15 (t=-2.07, wrong sign — AU exports dominated by commodities to Asia, not US-output-gap-correlated). Kept FR-BDF cal as the structurally-correct sign.
 b3_x            = 0.10;     // depreciation -> more exports (Marshall-Lerner)
 
 // Import parameters (calibrated from Section 4.7 / Table 4.7.2)
 // Australia: imports track domestic demand closely
 b0_m            = 0.06;     // error correction
-b1_m            = 0.87;     // AU est 0.869 (s.e.0.051), ABS chain vol, T=104
-b2_m            = 0.30;     // kept: AU est -0.12 wrong sign (proxy data issue)
+b1_m            = 0.87;     // Phase D ABS Trend T=103 OLS = -0.22 (implausible negative AR1; ABS Trend series over-smoothed for short-run dynamics). Kept prior AU est.
+b2_m            = 0.30;     // Phase D ABS Trend T=103 OLS = +10.57 (t=0.30, unidentified; SE 35.56). Kept FR-BDF cal.
 b3_m            = -0.08;    // depreciation -> fewer imports (negative: price effect)
 
 // Demand deflator parameters (calibrated from Section 4.7)
@@ -807,57 +807,55 @@ beta_pac        = 0.98;
 // Where FR-BDF coefficients are insignificant (large s.e.), we use the point estimate
 // but flag for future re-estimation with Australian data.
 
-// VA price auxiliary (FR-BDF Table 4.4.4: 3-eq chain)
-// Not identified from AU data (smoother R2=1.0). Keep FR-BDF calibration.
-rho_pQ_aux      = 0.70;     // persistence (FR-BDF: ~0.70)
-a_pQ_y          = 0.03;     // ŷ → PV (FR-BDF policy fn: -0.0015, scaled)
-a_pQ_i          = -0.02;    // i_gap → PV (FR-BDF policy fn: -0.0034, scaled)
-a_pQ_pi         = 0.01;     // π_gap → PV (FR-BDF policy fn: 0.00087)
-a_pQ_u          = -0.01;    // û → PV (FR-BDF policy fn: -0.011)
+// === E-SAT auxiliary equations: AU Bayesian posteriors (Phase B, 2026-05-09) ===
+// Re-estimated equation-by-equation on observable AU target proxies (HP-detrended log levels)
+// with Normal priors (sd = max(|prior|/2, 0.03)) centred on FR-BDF or prior AU smoother values.
+// COVID dummies (2020Q2/Q3) absorb pandemic outliers. See estimate_auxiliary_bayesian.m.
+
+// VA price auxiliary (FR-BDF Table 4.4.4)
+rho_pQ_aux      =  0.334;   // Bayesian posterior, 90% CI [0.191, 0.476]; OLS=0.135, FR-BDF=0.70
+a_pQ_y          =  0.043;   // Bayesian posterior, 90% CI [-0.000, 0.087]
+a_pQ_i          = -0.021;   // Bayesian posterior, 90% CI [-0.070, 0.029] (CI crosses 0)
+a_pQ_pi         =  0.007;   // Bayesian posterior, 90% CI [-0.042, 0.057] (CI crosses 0)
+a_pQ_u          = -0.021;   // Bayesian posterior, 90% CI [-0.069, 0.027] (CI crosses 0)
 
 // Employment auxiliary (FR-BDF Table 4.5.7, eq 57)
-// AU smoother: rho=0.56 (R2=0.97, T=121). Coefficients on y/pi implausible.
-// Hybrid: AU rho + FR-BDF coefficient signs, AU i_gap magnitude.
-rho_n_aux       = 0.56;     // AU estimate (s.e.0.03). FR-BDF: 0.67
-a_n_y           = 0.12;     // FR-BDF calibration (AU smoother: -3.32, implausible)
-a_n_i           = -0.03;    // FR-BDF calibration (AU smoother: -1.70, implausible)
-a_n_pi          = 0.05;     // FR-BDF calibration (AU smoother: +42.8, implausible)
-a_n_u           = -0.02;    // FR-BDF calibration (AU smoother: +0.19, wrong sign)
+rho_n_aux       =  0.743;   // Bayesian posterior, 90% CI [0.669, 0.817]; OLS=0.716, prior AU=0.56
+a_n_y           =  0.094;   // Bayesian posterior, 90% CI [0.036, 0.152]; significant
+a_n_i           = -0.031;   // Bayesian posterior, 90% CI [-0.080, 0.018] (CI crosses 0)
+a_n_pi          =  0.057;   // Bayesian posterior, 90% CI [0.013, 0.100]; significant
+a_n_u           = -0.029;   // Bayesian posterior, 90% CI [-0.076, 0.019]
 
-// Household income-output ratio auxiliary (FR-BDF Table 4.6.3)
-// AU smoother: rho=0.93 (R2=1.00, T=121). Close to FR-BDF.
-rho_yh_aux      = 0.93;     // AU estimate (s.e.0.002). FR-BDF: 0.92
-a_yh_y          = 0.12;     // AU estimate (s.e.0.006). FR-BDF: 0.08 (AU 46% larger)
-a_yh_u          = -0.07;    // AU estimate (s.e.0.003). FR-BDF: -0.10 (AU 25% weaker)
+// Household income-output ratio auxiliary (FR-BDF Table 4.6.3) — kept at AU smoother
+// estimate; YH/Y series unavailable in extended_dataset.csv (Phase B did not re-estimate)
+rho_yh_aux      =  0.93;    // AU smoother (s.e.0.002). FR-BDF: 0.92
+a_yh_y          =  0.12;    // AU smoother (s.e.0.006). FR-BDF: 0.08
+a_yh_u          = -0.07;    // AU smoother (s.e.0.003). FR-BDF: -0.10
 
 // Consumption PV² auxiliary (FR-BDF Table 4.6.4)
-// AU smoother: rho=0.71 (R2=0.996, T=121). Higher persistence than FR-BDF 0.60.
-rho_c_aux       = 0.71;     // AU estimate (s.e.0.05). FR-BDF: 0.60
-a_c_y           = 0.06;     // FR-BDF calibration (AU smoother: -0.88, wrong sign)
-a_c_i           = -0.04;    // FR-BDF calibration (AU smoother: -0.39, same sign but 10x)
-a_c_pi          = 0.005;    // FR-BDF calibration (AU smoother: +11, implausible)
-a_c_u           = -0.03;    // FR-BDF calibration (AU smoother: -0.008, similar)
-a_c_yh          = 0.10;     // AU smoother: 0.10 (s.e.0.02). FR-BDF: 0.39 (AU 73% weaker)
+rho_c_aux       =  0.581;   // Bayesian posterior, 90% CI [0.484, 0.679]; OLS=0.515
+a_c_y           =  0.058;   // Bayesian posterior, 90% CI [0.010, 0.107]; significant
+a_c_i           = -0.043;   // Bayesian posterior, 90% CI [-0.092, 0.006] (OLS=-1.865; shrunk)
+a_c_pi          =  0.010;   // Bayesian posterior, 90% CI [-0.038, 0.059] (CI crosses 0)
+a_c_u           = -0.036;   // Bayesian posterior, 90% CI [-0.085, 0.013] (CI crosses 0)
+a_c_yh          =  0.10;    // AU smoother (kept; YH/Y data needed to re-estimate)
 
-// Business investment auxiliary (FR-BDF Tables 4.6.11-12)
-// AU smoother: rho=0.50 (R2=0.991, T=121). Lower persistence, AU accelerator weaker.
-rho_ib_aux      = 0.50;     // AU estimate (s.e.0.03). FR-BDF: 0.59
-a_ib_y          = 0.05;     // AU estimate (s.e.0.02). FR-BDF: 0.15 (AU 63% weaker)
-a_ib_pi         = 0.03;     // FR-BDF calibration (AU smoother: +2.2, implausible)
-a_ib_u          = 0.00;     // FR-BDF calibration (AU smoother: 0, consistent)
+// Business investment auxiliary (FR-BDF Table 4.6.11)
+rho_ib_aux      =  0.694;   // Bayesian posterior, 90% CI [0.598, 0.791]; OLS=0.721
+a_ib_y          =  0.050;   // Bayesian posterior, 90% CI [0.001, 0.099]; marginally significant
+a_ib_pi         =  0.023;   // Bayesian posterior, 90% CI [-0.027, 0.072] (OLS=-1.037; shrunk)
+a_ib_u          =  0.004;   // Bayesian posterior, 90% CI [-0.046, 0.053] (CI crosses 0)
 
 // Business investment USER COST gap auxiliary (FR-BDF Table 4.6.12: r̂_KB)
-// Not identified from AU data (smoother R2=1.0). Keep FR-BDF calibration.
-rho_rKB_aux     = 0.30;     // FR-BDF calibration
-a_rKB_i         = 0.24;     // FR-BDF: 4.45 in aux, 0.24 in policy fn
+rho_rKB_aux     =  0.162;   // Bayesian posterior, 90% CI [0.036, 0.287]; OLS=0.113
+a_rKB_i         =  0.242;   // Bayesian posterior, 90% CI [0.057, 0.428]; significant
 
 // Housing investment auxiliary (FR-BDF Table 4.6.16)
-// AU smoother: rho=0.65 (R2=0.987, T=121). Lower persistence than FR-BDF.
-rho_ih_aux      = 0.65;     // AU estimate (s.e.0.04). FR-BDF: 0.71
-a_ih_y          = 0.10;     // FR-BDF calibration (AU smoother: -1.62, wrong sign)
-a_ih_i          = -0.15;    // FR-BDF calibration (AU smoother: -1.08, same sign but 7x)
-a_ih_pi         = 0.05;     // FR-BDF calibration (AU smoother: +19, implausible)
-a_ih_u          = 0.00;     // FR-BDF calibration (AU smoother: +0.05, weak)
+rho_ih_aux      =  0.699;   // Bayesian posterior, 90% CI [0.600, 0.797]; OLS=0.723
+a_ih_y          =  0.097;   // Bayesian posterior, 90% CI [0.016, 0.178]; significant
+a_ih_i          = -0.152;   // Bayesian posterior, 90% CI [-0.276, -0.029]; significant negative
+a_ih_pi         =  0.042;   // Bayesian posterior, 90% CI [-0.007, 0.092] (CI brushes 0)
+a_ih_u          =  0.004;   // Bayesian posterior, 90% CI [-0.045, 0.053] (CI crosses 0)
 
 // COVID dummy coefficients — initial = 0 (estimated by pac.estimate; inert for stoch_simul)
 b_covid_crash_pQ   = 0;    b_covid_bounce_pQ  = 0;
@@ -2074,10 +2072,10 @@ shocks;
     var eps_pibar_au; stderr 0.01;
     var eps_pibar_us; stderr 0.01;
     var eps_pQ;       stderr 0.571;  // VA price shock (AU OLS residual)
-    var eps_w;        stderr 0.6;    // wage shock (comparable to price Phillips)
+    var eps_w;        stderr 0.732; // wage shock (Bayesian posterior mean, 90% HPD [0.637, 0.832])
     var eps_n;        stderr 0.577;  // employment shock (AU OLS residual)
-    var eps_c;        stderr 1.576;  // consumption shock (AU OLS residual)
-    var eps_ib;       stderr 2.750;  // business investment shock (AU OLS residual)
+    var eps_c;        stderr 1.862;  // consumption shock (Bayesian posterior mean, 90% HPD [1.651, 2.066])
+    var eps_ib;       stderr 2.777;  // business investment shock (Bayesian posterior mean, 90% HPD [2.492, 3.066])
     var eps_ih;       stderr 1.729;  // household investment shock (calibrated — separate data needed)
     var eps_10y;      stderr 0.10;   // long rate shock (small — most variation from short rate)
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)

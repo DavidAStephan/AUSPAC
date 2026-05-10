@@ -1,5 +1,16 @@
 # Diagnosis: Why Three Expectation Regimes Produce Identical IRFs
 
+> **STATUS: RESOLVED (2026-04-14, confirmed 2026-05-09).** The fix described
+> below ("expand the TCM auxiliary equations to include E-SAT state variables")
+> was implemented as the enriched 12-equation `var_model` (`esat_enriched`) that
+> all three model variants now share. STATUS.md Table 6.3 confirms the three
+> regimes now produce different IRFs (MCE attenuation 21–95% across blocks),
+> matching FR-BDF Section 6 qualitatively. This file is retained as a record
+> of the original problem and its diagnosis.
+
+---
+
+
 ## Finding
 
 Running `au_pac_var.mod`, `au_pac.mod` (hybrid), and `au_pac_mce.mod` with a monetary policy shock produces **identical IRFs** for output, consumption, investment, employment, and VA price inflation. Only the 10Y yield, exchange rate, and wage inflation timing differ.

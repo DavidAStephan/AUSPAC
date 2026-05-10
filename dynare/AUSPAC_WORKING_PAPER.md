@@ -910,31 +910,44 @@ Re-estimated with Phase 4 AU parameters (deflators, trade, housing prices, mortg
 
 A joint Bayesian estimation was performed using Dynare's `estimation()` command with `diffuse_filter` (for unit-root level accumulators), starting from calibrated values to ensure BK satisfaction.
 
-### Table 5.6: Bayesian posterior (28 parameters, updated with Phases 1-4)
+### Table 5.6: Bayesian posterior (28 parameters, refreshed under Phase A-D conditioning, 2026-05-10)
 
-Re-estimated with full AU calibration (Phases 1-4: auxiliary dynamics, deflators, trade, housing, mortgage rate) and gamma_w (CPI indexation). Two-stage: csminwel mode + MCMC (20k draws x 2 chains, ~57 min).
+Re-estimated with full AU calibration: Phase A (Bayesian writeback of outer PAC + wage block), Phase B (22 E-SAT auxiliary coefficients estimated by Bayesian shrinkage on observable AU target proxies), Phase C (b_di_c and b_ph_ih Bayesian-regularised), Phase D (b1_x from ABS 5206 chain volumes). Two-stage Bayesian: csminwel mode + Metropolis-Hastings MCMC (20k draws × 2 chains, 53 min wall time on Apple Silicon under Rosetta 2).
 
-| Parameter | Prior | OLS | Post. mean | 90% HPD |
-|-----------|-------|-----|-----------|---------|
-| b0_pQ | Beta(0.03, 0.015) | 0.028 | 0.030 | [0.008, 0.054] |
-| b1_pQ | Beta(0.29, 0.10) | 0.288 | 0.293 | [0.137, 0.457] |
-| b0_c | Beta(0.07, 0.03) | 0.067 | 0.062 | [0.028, 0.095] |
-| b1_c | Beta(0.05, 0.03) | 0.033 | 0.041 | [0.005, 0.078] |
-| b2_c | Normal(-0.55, 0.20) | -0.541 | -0.326 | [-0.614, -0.059] |
-| b0_ib | Beta(0.02, 0.01) | 0.017 | 0.017 | [0.005, 0.029] |
-| b0_ih | Beta(0.03, 0.015) | 0.017 | 0.030 | [0.007, 0.050] |
-| b0_n | Beta(0.07, 0.03) | 0.063 | 0.060 | [0.017, 0.106] |
-| b1_n | Beta(0.32, 0.10) | 0.314 | 0.310 | [0.154, 0.471] |
-| **lambda_w** | Beta(0.25, 0.10) | — | **0.095** | [0.032, 0.156] |
-| **gamma_w** | Beta(0.70, 0.15) | — | **0.953** | [0.909, 0.996] |
-| kappa_w | Normal(0.08, 0.05) | — | 0.049 | [-0.028, 0.137] |
-| stderr eps_w | InvGamma(0.30) | — | 0.732 | [0.637, 0.832] |
-| stderr eps_c | InvGamma(0.50) | — | 1.862 | [1.651, 2.066] |
-| stderr eps_ib | InvGamma(1.50) | — | 2.777 | [2.492, 3.066] |
+| Parameter | Prior | OLS | Post. mean | Post. mode | 90% HPD |
+|-----------|-------|-----|-----------|-----------|---------|
+| b0_pQ | Beta(0.03, 0.015) | 0.028 | 0.0296 | 0.0226 | [0.0068, 0.0512] |
+| b1_pQ | Beta(0.29, 0.10) | 0.288 | 0.2869 | 0.2661 | [0.1389, 0.4482] |
+| b2_pQ | Normal(0.00, 0.05) | -0.014 | 0.0008 | -0.0000 | [-0.0787, 0.0788] |
+| b0_c | Beta(0.07, 0.03) | 0.067 | 0.0639 | 0.0586 | [0.0315, 0.0962] |
+| b1_c | Beta(0.05, 0.03) | 0.033 | 0.0363 | 0.0243 | [0.0032, 0.0630] |
+| b2_c | Normal(-0.55, 0.20) | -0.541 | -0.3180 | -0.3224 | [-0.5824, -0.0345] |
+| b3_c | Normal(0.02, 0.05) | 0.018 | 0.0207 | 0.0194 | [-0.0597, 0.0965] |
+| b0_ib | Beta(0.02, 0.01) | 0.017 | 0.0187 | 0.0157 | [0.0053, 0.0313] |
+| b1_ib | Beta(0.09, 0.05) | 0.093 | 0.0900 | 0.0665 | [0.0190, 0.1568] |
+| **b3_ib** | Normal(0.34, 0.10) | 0.344 | **0.3206** | 0.3149 | [0.1762, 0.4764] |
+| b0_ih | Beta(0.03, 0.015) | 0.017 | 0.0292 | 0.0226 | [0.0108, 0.0474] |
+| b1_ih | Beta(0.11, 0.05) | 0.107 | 0.1154 | 0.0942 | [0.0339, 0.1890] |
+| b3_ih | Normal(0.23, 0.10) | 0.231 | 0.2218 | 0.2308 | [0.0555, 0.3777] |
+| b0_n | Beta(0.06, 0.03) | 0.063 | 0.0572 | 0.0453 | [0.0104, 0.0978] |
+| b1_n | Beta(0.31, 0.10) | 0.314 | 0.3085 | 0.2893 | [0.1472, 0.4630] |
+| b5_n | Normal(0.00, 0.05) | -0.017 | 0.0001 | -0.0000 | [-0.0795, 0.0758] |
+| **lambda_w** | Beta(0.25, 0.10) | — | **0.0938** | 0.0816 | [0.0329, 0.1481] |
+| **gamma_w** | Beta(0.70, 0.15) | — | **0.9535** | **0.9711** | [0.9141, 0.9967] |
+| kappa_w | Normal(0.08, 0.05) | — | 0.0549 | 0.0536 | [-0.0354, 0.1344] |
+| stderr eps_q | InvGamma(0.80) | — | 0.4804 | 0.4771 | [0.4251, 0.5490] |
+| stderr eps_i | InvGamma(0.10) | — | 0.1107 | 0.1097 | [0.0980, 0.1222] |
+| stderr eps_pi | InvGamma(0.60) | — | 0.5923 | 0.5836 | [0.5288, 0.6527] |
+| stderr eps_c | InvGamma(0.50) | — | 1.8435 | 1.8261 | [1.6380, 2.0557] |
+| stderr eps_ib | InvGamma(1.50) | — | 2.7874 | 2.7461 | [2.4950, 3.0756] |
+| stderr eps_ih | InvGamma(2.00) | — | 1.7622 | 0.9217 | [0.4856, 3.6996] |
+| stderr eps_n | InvGamma(0.50) | — | 0.3040 | 0.2303 | [0.1277, 0.4836] |
+| stderr eps_w | InvGamma(0.30) | — | 0.7239 | 0.7064 | [0.6274, 0.8178] |
+| stderr eps_10y | InvGamma(0.10) | — | 0.0656 | 0.0640 | [0.0502, 0.0789] |
 
-**Log marginal density: Laplace = -933.41, MHM = -933.33** (improved from -956.46 with Phases 1-3, and -972.75 with old FR-BDF calibration — **39-point total improvement**)
+**Log marginal density: Laplace = -931.16, MHM = -931.26** (improved from -933.41 / -933.33 baseline, and -972.75 with the original FR-BDF calibration — **+41.6 nat total improvement** from raw FR-BDF; **+2.25 nat improvement** from the Phase 1-4 baseline confirms that Phase A-D AU-data conditioning is empirically beneficial)
 
-Key findings: (1) **gamma_w = 0.953** (90% HPD: [0.909, 0.996]): Near-full CPI indexation in AU wages. The entire 90% credible interval is above 0.90, with the mode at 0.971. This is the model's strongest empirical result — AU wage-setting is dominated by CPI indexation, consistent with Fair Work Commission's CPI-linked minimum wage decisions and enterprise bargaining indexed to CPI. (2) **lambda_w = 0.095** (HPD: [0.032, 0.156]): Wage own-lag persistence is very low once gamma_w absorbs CPI indexation. The wage Phillips curve is: 10% own-lag + 95% CPI + 5% unemployment gap. (3) **eps_w = 0.732** (was 0.874): Wage shock variance down 16% — better structural parameters explain more of the wage dynamics. (4) **b2_c = -0.326** (HPD: [-0.614, -0.059]): Now statistically significant — the interest rate channel in consumption is weak but clearly nonzero. Phase 4 deflator improvements resolved the previous ambiguity (old HPD included zero). (5) **LMD = -933.41**: 39-point total improvement from FR-BDF calibration. The Laplace and MHM estimates agree closely (-933.41 vs -933.33), indicating a well-behaved posterior.
+Key findings: (1) **gamma_w = 0.9535** (mode 0.9711, 90% HPD: [0.9141, 0.9967]): Near-full CPI indexation in AU wages — robust to Phase A-D conditioning. The mode at 0.971 is nearly identical to the 2026-04-14 result, indicating the headline finding does not depend on whether the auxiliary block is calibrated from FR-BDF or estimated from AU data. (2) **b3_ib = 0.3206** (90% HPD: [0.1762, 0.4764]): Business-investment accelerator is materially stronger than the previous estimate (0.195) suggested. With AU-data auxiliary coefficients in the var_model, the joint posterior shifts more weight toward the output-gap channel for business investment. (3) **6 shock std devs newly identified**: eps_q, eps_i, eps_pi, eps_ih, eps_n, eps_10y — previously held at OLS or calibrated values, now have proper posterior distributions. Notably eps_i = 0.1107 (vs prior 0.027) means a 1-s.d. RBA cash-rate shock is ≈ 44 bp annualised, consistent with actual RBA decision cadence. (4) **b2_c = -0.318** (HPD: [-0.582, -0.035]): Consumption interest-rate channel still significant under refresh. (5) **lambda_w = 0.094** (HPD: [0.033, 0.148]): Wage own-lag persistence is very low once gamma_w absorbs CPI indexation — the wage Phillips curve is roughly 10% own-lag + 95% CPI + 5% unemployment gap.
 
 ---
 
