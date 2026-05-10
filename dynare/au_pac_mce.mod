@@ -507,11 +507,11 @@ b1_pQ           = 0.2869;   // AR1, refresh posterior mean (90% HPD [0.1389, 0.4
 b2_pQ           = 0.0008;   // output gap, refresh posterior mean (90% HPD [-0.0787, 0.0788])
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
-gamma_uck       = 0.06;     // user cost pass-through (CES dual, capital share channel)
+gamma_ulc       = 0.21;     // ULC pass-through (Phase G CES log-linear: (1-α)·σ; was 0.12)
+gamma_uck       = 0.11;     // user cost pass-through (Phase G CES log-linear: α·σ; was 0.06)
 
 // --- Cobb-Douglas production function (Stage 9a) ---
-alpha_k         = 0.33;     // capital share in Cobb-Douglas
+alpha_k         = 0.35;     // CES capital-share α (Phase G AU calibration; was 0.33 CD)
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
@@ -568,7 +568,7 @@ b3_ib           = 0.3206;   // output gap -> investment, refresh posterior mean 
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
-delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
+delta_k         = 0.0134;   // quarterly capital depreciation (Phase G ABS 5204: 5.4% annual)
 // growth neutrality coeff = 1 - 0.25 - 0.10 - 0.35 = 0.30
 
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
@@ -687,7 +687,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.53;     // paper Table 4.3.2 estimate for France; adopted for AU
+sigma_ces       = 0.3247;   // CES elasticity (Phase G Stage 1 AU Bayesian regularised)
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient

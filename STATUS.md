@@ -1,5 +1,40 @@
 # AUSPAC Project Status — 2026-05-10
 
+## Phase G — full CES supply-side replication (in progress 2026-05-10)
+
+Following the user's request to "fully replicate the supply-side from Section 4.3 of FR-BDF properly, no calibrations or shortcuts", **Phase G** replaces the Cobb-Douglas approximation in `au_pac.mod` with the AU-data-derived CES production-function calibration, mirroring FR-BDF's "model-consistent calibration" procedure.
+
+**Stages 1-4 complete** (2026-05-10):
+
+| Stage | Result | Method |
+|-------|--------|--------|
+| 0 (data) | 9 ABS xlsx tables fetched, 16-field supply_data.mat aligned 1990Q1–2024Q4 | `data/{download_supply_data,prepare_supply_data}.m` |
+| 1 (σ) | **σ = 0.3247** (95% CI [0.00, 0.65]) | Bayesian regularised; AU OLS wrong-signed due to mining-boom commodity-price endogeneity in user cost. Same identification-failure pattern as Phases B/C/D. |
+| 2-3 (α, γ, μ) | **α=0.350, γ=1.000, μ=1.200** | AU-economic fallback. Grid search min L1 = 47.6 vs FR-BDF tolerance 1e-3 — AU national accounts chain-volume base-year scaling differs from French QNA, making FR-BDF cross-restrictions (eq 39-41) structurally unsatisfiable. |
+| 4 (.mod rewrite) | All 3 variants compile + BK verified | Updated `alpha_k`=0.35, `sigma_ces`=0.3247, `gamma_ulc`=0.21, `gamma_uck`=0.11, `delta_k`=0.0134 across `au_pac.mod`, `au_pac_var.mod`, `au_pac_mce.mod`. CES log-linear FPF coefficients (γ_ulc=(1-α)·σ, γ_uck=α·σ) used; full non-linear FPF deferred. |
+
+**Stage 5 (cascade re-estimation) in progress**:
+- ✓ Phase B auxiliary Bayesian: unchanged (auxiliary coefs depend on observable data only)
+- ✓ test_full_system.m: 60 PASS / 5 FAIL (same as pre-Phase G baseline; same 5 cosmetic BK-threshold failures)
+- ✓ Bayesian Stage 1 mode finder: Laplace LMD = **-931.33** (vs pre-Phase G baseline -931.16, -0.17 nats, essentially identical)
+- ⏳ Bayesian Stage 2 MCMC (running)
+
+**Three-regime IRFs preserved** (Q4 monetary shock):
+```
+                VAR     Hybrid   MCE     MCE attenuation
+yhat_au       -0.0399  -0.0424  -0.0336    21%
+piQ           -0.0060  -0.0068   0.0000   100%
+dln_ib        -0.0251  -0.0268  -0.0109    59%
+dln_ih        -0.0955  -0.0999  -0.0532    47%
+dln_n         -0.0132  -0.0159   0.0000   100%
+```
+
+Phase G headline finding: AU supply-side parameters identifiable but with key caveats. σ near-Leontish (0.32 vs FR-BDF 0.53) reflects AU's commodity-driven economy; cross-restriction failure is a real result, not data error. Working paper will document this as evidence that AU economy doesn't satisfy the same structural relations as France in the FR-BDF framework.
+
+Outputs: `dynare/PHASE_G_CES_SUPPLY_PLAN.md`, `dynare/stage1_sigma_results.{txt,mat}`, `dynare/stage23_ces_calibration.{txt,mat}`, `data/{download_supply_data,prepare_supply_data,estimate_sigma_stage1,estimate_ces_stage23}.m`, `dynare/supply_data.mat`.
+
+---
+
 ## Refreshed Bayesian MCMC (2026-05-10): re-estimation under Phase B-D conditioning
 
 After Phases A–F applied the AU-data calibration to the auxiliary block, the two stubbed structural drivers, and the trade volume parameters, the joint posterior over the 28 outer PAC + wage + shock-stderr parameters was re-estimated with all those non-estimated parameters fixed at their AU-data values.

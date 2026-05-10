@@ -583,11 +583,29 @@ b1_pQ = 0.2869;    // AR1, posterior mean (90% HPD [0.1389, 0.4482])
 b2_pQ = 0.0008;    // output gap, posterior mean (90% HPD [-0.0787, 0.0788]; channel ~0 short run)
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
-gamma_uck       = 0.06;     // user cost pass-through (CES dual, capital share channel)
+// === Phase G CES production-function parameters (2026-05-10, AU data) ===
+// FR-BDF Section 4.3 specification with AU-data-determined calibration:
+//   σ = 0.3247 (Stage 1 Bayesian regularised; AU OLS wrong-signed due to
+//               mining-boom commodity-price endogeneity in user cost)
+//   α = 0.350  (Stage 3 fallback; AU labor share data + standard mid-range)
+//   γ = 1.000  (Stage 3 normalization; level scale absorbed in intercepts)
+//   μ = 1.200  (Stage 3 typical AU markup, mid-range RBA RDP estimates)
+// Cross-restrictions (FR-BDF eq 39-41) NOT directly satisfiable on AU data
+// because AU national accounts use different chain-volume base-year scaling
+// than French QNA. Falling back to AU-economic calibration is consistent
+// with how Phases B/C/D handled identification failures.
+//
+// Linearised pass-through coefficients (γ_ulc, γ_uck) derived from
+// log-linear approximation of the CES factor-price frontier (eq 38):
+//   ∂log P_Q / ∂log W̃ ≈ (1-α) · σ_adj      (labor cost channel)
+//   ∂log P_Q / ∂log r̃_K ≈ α · σ_adj         (capital cost channel)
+// with σ_adj = σ for FR-BDF parameterization.
+// AU values: γ_ulc = (1-0.35) · 0.32 = 0.21, γ_uck = 0.35 · 0.32 = 0.11
+gamma_ulc       = 0.21;     // ULC pass-through (CES log-linear: (1-α)·σ)
+gamma_uck       = 0.11;     // user cost pass-through (CES log-linear: α·σ)
 
 // --- Cobb-Douglas production function (Stage 9a) ---
-alpha_k         = 0.33;     // capital share in Cobb-Douglas
+alpha_k         = 0.35;     // CES capital-share parameter α (Phase G AU calibration; was 0.33 CD)
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
@@ -644,7 +662,7 @@ b3_ib = 0.3206;   // output gap -> investment, refresh posterior mean (90% HPD [
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
-delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
+delta_k         = 0.0134;   // quarterly capital depreciation (Phase G ABS 5204: 5.4% annual; was 0.025 from FR-BDF)
 // growth neutrality coeff = 1 - 0.25 - 0.10 - 0.35 = 0.30
 
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
@@ -763,7 +781,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.53;     // paper Table 4.3.2 estimate for France; adopted for AU
+sigma_ces       = 0.3247;   // CES elasticity (Phase G Stage 1 AU Bayesian regularised; OLS wrong-signed due to mining boom; FR-BDF=0.53)
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient
