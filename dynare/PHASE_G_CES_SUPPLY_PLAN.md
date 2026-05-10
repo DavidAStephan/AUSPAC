@@ -260,12 +260,18 @@ Estimated effort: **~half a day**.
   - `gamma_uck`: 0.06 → **0.11** (CES log-linear: α·σ)
   - `delta_k`: 0.025 → **0.0134** (AU ABS 5204: 5.4% annual depreciation)
   All three Dynare variants compile cleanly with BK rank verified. Three-regime IRFs essentially preserved (supply parameters affect long-run trends, not short-run PAC dynamics).
-- [~] **Stage 5** — Cascade re-estimation (in progress 2026-05-10):
-  - [x] Phase B auxiliary Bayesian: re-run, results unchanged (auxiliary coefs depend on observable data, not supply params)
-  - [x] `test_full_system.m`: 60 PASS / 5 FAIL (same as baseline)
-  - [x] Bayesian Stage 1 mode finder: **Laplace LMD = -931.33** (vs prior baseline -931.16; -0.17 nats, essentially identical)
-  - [ ] Bayesian Stage 2 MCMC (running ~50 min)
-- [ ] Stage 6 — Validate (pending Stage 5b completion)
+- [x] **Stage 5** — Cascade re-estimation (COMPLETE 2026-05-10):
+  - [x] Phase B auxiliary Bayesian: re-run, unchanged
+  - [x] `test_full_system.m`: 60 PASS / 5 FAIL
+  - [x] Bayesian Stage 1 mode finder: **Laplace LMD = -931.33**
+  - [x] Bayesian Stage 2 MCMC (50 min): **MHM LMD = -930.999** (+0.26 nats vs pre-Phase G -931.26)
+  - [x] Posterior writeback to all 3 .mod files
+- [x] **Stage 6** — Validate (COMPLETE 2026-05-10):
+  - [x] All 3 variants compile + BK rank verified
+  - [x] test_full_system: 60 PASS / 5 FAIL (same as baseline)
+  - [x] Three-regime IRFs preserved with FR-BDF-style attenuation (21-100% MCE attenuation across blocks)
+  - [x] gamma_w = 0.9523 (was 0.9535) — AU near-full CPI indexation finding robust to supply specification
+  - [x] b3_ib = 0.3215 (was 0.3206) — strong AU accelerator robust
 
 ## Stage 0 deliverables
 

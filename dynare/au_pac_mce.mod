@@ -502,9 +502,9 @@ pi_ss_us        = 0.5;
 lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
 // VA price PAC parameters (Bayesian posterior, Phase 1-4 MCMC, 2026-04-14)
-b0_pQ           = 0.0296;   // EC, refresh posterior mean 2026-05-10 (90% HPD [0.0068, 0.0512]); LMD=-931.16
-b1_pQ           = 0.2869;   // AR1, refresh posterior mean (90% HPD [0.1389, 0.4482])
-b2_pQ           = 0.0008;   // output gap, refresh posterior mean (90% HPD [-0.0787, 0.0788])
+b0_pQ           = 0.0293;   // Phase G MCMC, 90% HPD [0.0060, 0.0504]
+b1_pQ           = 0.3010;   // Phase G MCMC, 90% HPD [0.1233, 0.4664]
+b2_pQ           = -0.0026;  // Phase G MCMC, 90% HPD [-0.0803, 0.0775]
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
 gamma_ulc       = 0.21;     // ULC pass-through (Phase G CES log-linear: (1-α)·σ; was 0.12)
@@ -522,9 +522,9 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 // Wage Phillips curve parameters (calibrated from Section 4.5.1 / Table 4.5.1)
 // Australia: moderate wage persistence, significant gap sensitivity
 // Forward expectations proxied by pibar_au (inflation anchor)
-lambda_w        = 0.0938;   // wage persistence (refresh posterior mean, 90% HPD [0.0329, 0.1481])
-kappa_w         = 0.0549;   // unemployment-gap PV (refresh posterior mean, 90% HPD [-0.0354, 0.1344])
-gamma_w         = 0.9535;   // CPI indexation (refresh posterior mean, 90% HPD [0.9141, 0.9967]). HEADLINE preserved.
+lambda_w        = 0.0937;   // Phase G MCMC
+kappa_w         = 0.0520;   // Phase G MCMC
+gamma_w         = 0.9523;   // Phase G MCMC, HEADLINE preserved
 okun_coeff      = -0.13;    // Okun's law: 1pp output gap -> -0.13pp unemployment gap
 rho_u_gap       = 0.946;    // unemployment gap persistence (paper Table 4.5.2)
 beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
@@ -532,24 +532,24 @@ beta_w          = 0.98;     // discount for expected unemployment gaps (paper Se
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n            = 0.0572;   // EC, refresh posterior mean (90% HPD [0.0104, 0.0978])
-b1_n            = 0.3085;   // AR1, refresh posterior mean (90% HPD [0.1472, 0.4630])
+b0_n            = 0.0594;   // Phase G MCMC
+b1_n            = 0.3036;   // Phase G MCMC
 b2_n            = -0.187;   // 2nd lag (OLS, not in Bayesian estimated_params)
 b3_n            = -0.076;   // 3rd lag (OLS, not in Bayesian estimated_params)
 b4_n            = -0.085;   // 4th lag (OLS, not in Bayesian estimated_params)
 omega_n         = 0.30;     // expectations/forward component
-b5_n            = 0.0001;   // output gap sensitivity (refresh posterior mean ~0)
+b5_n            = 0.0020;   // Phase G MCMC
 rho_n_star      = 0.95;     // target persistence
 // growth neutrality coeff = 1 - 0.30 - 0.10 - 0.05 - 0.02 - 0.30 = 0.23
 
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c            = 0.0639;   // EC, refresh posterior mean (90% HPD [0.0315, 0.0962])
-b1_c            = 0.0363;   // AR1, refresh posterior mean (90% HPD [0.0032, 0.0630])
+b0_c            = 0.0653;   // Phase G MCMC
+b1_c            = 0.0404;   // Phase G MCMC
 omega_c         = 0.369;    // expectations/forward component (posterior mean, legacy)
-b2_c            = -0.3180;  // real rate gap -> consumption, refresh posterior mean (90% HPD [-0.5824, -0.0345])
-b3_c            = 0.0207;   // output gap -> consumption, refresh posterior mean
+b2_c            = -0.3236;  // Phase G MCMC
+b3_c            = 0.0147;   // Phase G MCMC
 b_di_c          = -0.701;   // Phase C Bayesian regularised; prior N(-0.71, 0.30^2) dominated
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
@@ -560,11 +560,11 @@ alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib           = 0.0187;   // EC, refresh posterior mean (90% HPD [0.0053, 0.0313])
-b1_ib           = 0.0900;   // AR1, refresh posterior mean (90% HPD [0.0190, 0.1568])
+b0_ib           = 0.0190;   // Phase G MCMC
+b1_ib           = 0.0820;   // Phase G MCMC
 b2_ib           = -0.045;   // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib           = 0.3206;   // output gap -> investment, refresh posterior mean (90% HPD [0.1762, 0.4764]); CHANGED from 0.195
+b3_ib           = 0.3215;   // Phase G MCMC
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
@@ -574,11 +574,11 @@ delta_k         = 0.0134;   // quarterly capital depreciation (Phase G ABS 5204:
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih           = 0.0292;   // EC, refresh posterior mean (90% HPD [0.0108, 0.0474])
-b1_ih           = 0.1154;   // AR1, refresh posterior mean (90% HPD [0.0339, 0.1890])
+b0_ih           = 0.0275;   // Phase G MCMC
+b1_ih           = 0.1163;   // Phase G MCMC
 b2_ih           = -0.037;   // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ih        = 0.30;     // expectations/forward component
-b3_ih           = 0.2218;   // output gap -> housing investment, refresh posterior mean
+b3_ih           = 0.2302;   // Phase G MCMC
 b4_ih           = 0;        // DROPPED: rate channel already in pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001, not significant)
 b_ph_ih         =  0.215;   // Phase C Bayesian regularised; prior N(0.32, 0.20^2) dominated
 rho_ih_star     = 0.95;     // target persistence
@@ -1820,21 +1820,21 @@ check;
 // -----------------------------------------------------------------------
 
 shocks;
-    var eps_q;        stderr 0.4804;    // refresh posterior mean (90% HPD [0.4251, 0.5490])
-    var eps_i;        stderr 0.1107;    // refresh posterior mean (90% HPD [0.0980, 0.1222])
-    var eps_pi;       stderr 0.5923;    // refresh posterior mean (90% HPD [0.5288, 0.6527])
+    var eps_q;        stderr 0.4814;   // Phase G MCMC
+    var eps_i;        stderr 0.1105;   // Phase G MCMC
+    var eps_pi;       stderr 0.5896;   // Phase G MCMC
     var eps_q_us;     stderr 1.138;     // AU posterior mode
     var eps_pi_us;    stderr 0.319;     // AU posterior mode
     var eps_ibar;     stderr 0.01;
     var eps_pibar_au; stderr 0.01;
     var eps_pibar_us; stderr 0.01;
     var eps_pQ;       stderr 0.571;  // VA price shock (AU OLS residual)
-    var eps_w;        stderr 0.7239;    // refresh posterior mean (90% HPD [0.6274, 0.8178])
-    var eps_n;        stderr 0.3040;    // refresh posterior mean (90% HPD [0.1277, 0.4836])
-    var eps_c;        stderr 1.8435;    // refresh posterior mean (90% HPD [1.6380, 2.0557])
-    var eps_ib;       stderr 2.7874;    // refresh posterior mean (90% HPD [2.4950, 3.0756])
-    var eps_ih;       stderr 1.7622;    // refresh posterior mean (90% HPD [0.4856, 3.6996], wide CI)
-    var eps_10y;      stderr 0.0656;    // refresh posterior mean (90% HPD [0.0502, 0.0789])
+    var eps_w;        stderr 0.7310;   // Phase G MCMC
+    var eps_n;        stderr 0.4560;   // Phase G MCMC
+    var eps_c;        stderr 1.8535;   // Phase G MCMC
+    var eps_ib;       stderr 2.7651;   // Phase G MCMC
+    var eps_ih;       stderr 1.6027;   // Phase G MCMC
+    var eps_10y;      stderr 0.0652;   // Phase G MCMC
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
     var eps_COE;      stderr 0.15;   // cost of equity spread shock
     var eps_LB_firms; stderr 0.10;   // bank lending spread shock (firms)
