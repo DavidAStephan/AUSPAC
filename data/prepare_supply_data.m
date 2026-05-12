@@ -35,17 +35,27 @@ fprintf('Reading abs_5206_industry_gva.xlsx ... ');
 [d, vol, h] = read_abs(fullfile(datadir, 'abs_5206_industry_gva.xlsx'));
 fprintf('Data1 (volumes): %d obs, %d series\n', length(d), size(vol, 2));
 
-% Sanity: confirm col 52 header contains 'gross value added'
-if ~contains(lower(h{52}), 'gross value added')
-    error('ABS 5206 Tab 6 col 52 header is "%s" — expected GVA at basic prices', h{52});
+% Series Type layout: cols 1-109 = Trend, cols 110-218 = Seasonally Adjusted,
+% cols 219-251 = Original / percentage changes (audit 2026-05-11).
+% v1 of this script used the Trend block (cols 46-55), which produces the
+% smoothing-artifact pathology described in Phase D §4.8 of the paper —
+% Trend series over-smooth their own short-run variation, biasing any
+% regression that involves growth rates or gaps. Switching to the SA block
+% (cols +109 offset = 155-164) preserves Trend's seasonal-correction
+% property without the trend smoothing.
+TREND_TO_SA_OFFSET = 109;
+% Sanity: confirm col 161 (SA GVA at basic prices) is what we expect.
+if ~contains(lower(h{52 + TREND_TO_SA_OFFSET}), 'gross value added')
+    error('ABS 5206 Tab 6 col %d header is "%s" — expected SA GVA at basic prices', ...
+          52 + TREND_TO_SA_OFFSET, h{52 + TREND_TO_SA_OFFSET});
 end
 
-q_total_vol_full = vol(:, 52);
-q_pubadmin_vol = vol(:, 46);
-q_education_vol = vol(:, 47);
-q_health_vol = vol(:, 48);
-q_dwellings_vol = vol(:, 51);
-q_market_vol_full = q_total_vol_full - q_pubadmin_vol - q_education_vol - q_health_vol - q_dwellings_vol;
+q_total_vol_full   = vol(:, 52 + TREND_TO_SA_OFFSET);
+q_pubadmin_vol     = vol(:, 46 + TREND_TO_SA_OFFSET);
+q_education_vol    = vol(:, 47 + TREND_TO_SA_OFFSET);
+q_health_vol       = vol(:, 48 + TREND_TO_SA_OFFSET);
+q_dwellings_vol    = vol(:, 51 + TREND_TO_SA_OFFSET);
+q_market_vol_full  = q_total_vol_full - q_pubadmin_vol - q_education_vol - q_health_vol - q_dwellings_vol;
 
 q_total_vol = align_to_q(d, q_total_vol_full, dates_q);
 q_market_vol = align_to_q(d, q_market_vol_full, dates_q);
@@ -109,12 +119,18 @@ lf_raw = align_to_q(d, v(:, idx_lf), dates_q);
 fprintf('  Labour force SA:         %d valid obs (col %d: %s)\n', sum(~isnan(lf_raw)), idx_lf, h{idx_lf});
 
 %% 3. ABS 6202 Tab 19: hours
-% Same Original/Trend/SA pattern. Col 1=Original, col 2=Trend, col 3=SA.
+% Audit 2026-05-11: this file has only 2 column variants for the all-Persons
+% aggregate — col 1 = Trend, col 2 = Seasonally Adjusted. The prior comment
+% ("Col 1=Original, col 2=Trend, col 3=SA") was wrong, and the "3rd
+% occurrence" fallback was silently picking col 1 (Trend). Now using the
+% explicit SA column via Series Type lookup.
 fprintf('\nReading abs_6202_hours.xlsx ... ');
 [d, v, h] = read_abs(fullfile(datadir, 'abs_6202_hours.xlsx'));
 fprintf('%d obs, %d series\n', length(d), size(v, 2));
 hrs_cols = find(contains(h, 'Monthly hours worked in all jobs ;  Persons ;') & ~contains(h, '>'));
-if length(hrs_cols) >= 3, idx_hrs = hrs_cols(3); else, idx_hrs = hrs_cols(1); end
+% Pick the SA variant. In the current file SA is col 2 (after col 1 Trend).
+% Verify by reading the Series Type metadata row.
+idx_hrs = pick_sa_col(fullfile(datadir, 'abs_6202_hours.xlsx'), hrs_cols);
 hours_total = align_to_q(d, v(:, idx_hrs), dates_q);
 fprintf('  Aggregate hours SA:      %d valid obs (col %d: %s)\n', sum(~isnan(hours_total)), idx_hrs, h{idx_hrs});
 % Hours total is in '000 hours per month; employed is in '000 persons.
@@ -122,28 +138,44 @@ fprintf('  Aggregate hours SA:      %d valid obs (col %d: %s)\n', sum(~isnan(hou
 h_per_worker = hours_total ./ n_total_raw;
 
 %% 4. ABS 6345: WPI
+% Audit 2026-05-11: this file has 9 columns each in Original / SA / Trend
+% (27 cols total, plus aggregates). The previous "ordinary" search keyword
+% didn't match any header (no header contains "ordinary") so the script
+% fell back to idx_wpi = 1, which is Original (col 1 = Private All
+% industries Original) — i.e., a SEASONAL series flowed into the supply
+% data. Now pick the SA Private+Public All industries (col 6).
 fprintf('\nReading abs_6345_wpi.xlsx ... ');
 [d, v, h] = read_abs(fullfile(datadir, 'abs_6345_wpi.xlsx'));
 fprintf('%d obs, %d series\n', length(d), size(v, 2));
-idx_wpi = find(contains(lower(h), 'all industries') & contains(lower(h), 'private') & ...
-               contains(lower(h), 'ordinary'), 1);
-if isempty(idx_wpi)
-    idx_wpi = find(contains(lower(h), 'all sectors') & contains(lower(h), 'ordinary'), 1);
+% Find Private+Public + All industries headers, then pick the SA variant.
+wpi_cands = find(contains(lower(h), 'private and public') & ...
+                  contains(lower(h), 'all industries'));
+if isempty(wpi_cands)
+    error('abs_6345_wpi: no Private+Public All industries column found');
 end
-if isempty(idx_wpi), idx_wpi = 1; end
+idx_wpi = pick_sa_col(fullfile(datadir, 'abs_6345_wpi.xlsx'), wpi_cands);
 wpi = align_to_q(d, v(:, idx_wpi), dates_q);
-fprintf('  WPI:                     %d valid obs (col %d: %s)\n', sum(~isnan(wpi)), idx_wpi, h{idx_wpi});
+fprintf('  WPI (SA):                %d valid obs (col %d: %s)\n', sum(~isnan(wpi)), idx_wpi, h{idx_wpi});
 
 %% 5. ABS 6302: AWE
-% Col 9 = "Earnings; Persons; Total earnings" — the all-employees aggregate
-% that goes back to mid-1990s.
+% Col 9 = "Earnings; Persons; Total earnings".
+% Audit 2026-05-11: the downloaded abs_6302_awe.xlsx contains ONLY Trend
+% variants (all 9 series cols flagged Trend in the Series Type metadata).
+% This is a download-time selection issue (download_supply_data.m fetched
+% the Trend-only sheet, not the full Original/Trend/SA workbook). The AWE
+% series is used only at half-yearly + semi-annual frequencies in the
+% supply-side calibration, so the Trend smoothing has less impact than for
+% the GVA / hours / WPI series, but it is still flagged here as a known
+% gap. To resolve, re-download abs_6302_awe.xlsx from the ABS 6302 Data1
+% sheet (not Trend-only) and update read_abs to pick the SA col explicitly.
 fprintf('\nReading abs_6302_awe.xlsx ... ');
 [d, v, h] = read_abs(fullfile(datadir, 'abs_6302_awe.xlsx'));
 fprintf('%d obs, %d series\n', length(d), size(v, 2));
 idx_awe = find(contains(h, 'Earnings; Persons; Total earnings'), 1);
 if isempty(idx_awe), idx_awe = 9; end
 awe = align_to_q(d, v(:, idx_awe), dates_q);
-fprintf('  AWE Persons Total:       %d valid obs (col %d: %s)\n', sum(~isnan(awe)), idx_awe, h{idx_awe});
+fprintf('  AWE Persons Total (TREND — see comment): %d valid obs (col %d: %s)\n', ...
+        sum(~isnan(awe)), idx_awe, h{idx_awe});
 
 %% 6. ABS 5204 Tab 63: Net capital stock annual
 % Col layout: chain-volumes block first (~112 cols), then current-prices block.
@@ -348,6 +380,37 @@ function [dates, vals, headers] = read_abs(fname, sheet)
     elseif isempty(last_valid)
         dates = NaT(0, 1);
         vals = zeros(0, size(vals, 2));
+    end
+end
+
+function idx_sa = pick_sa_col(fname, candidate_cols)
+%% Pick the Seasonally Adjusted variant from a set of candidate columns.
+%  Reads the Series Type metadata row (row 3 in ABS layout) directly and
+%  filters candidate_cols to the one(s) marked "Seasonally Adjusted".
+%  If none, falls back to "Trend"; if none, returns the first candidate.
+    [~, ~, raw] = xlsread(fname, 'Data1');
+    sa_hits = [];
+    trend_hits = [];
+    for k = 1:length(candidate_cols)
+        c = candidate_cols(k);
+        st = '';
+        if c + 1 <= size(raw, 2)
+            st = char(string(raw{3, c + 1}));
+        end
+        if contains(lower(st), 'seasonally adjusted')
+            sa_hits(end+1) = c; %#ok<AGROW>
+        elseif contains(lower(st), 'trend')
+            trend_hits(end+1) = c; %#ok<AGROW>
+        end
+    end
+    if ~isempty(sa_hits)
+        idx_sa = sa_hits(1);
+    elseif ~isempty(trend_hits)
+        warning('pick_sa_col(%s): no SA candidate found; falling back to Trend col %d', ...
+                fname, trend_hits(1));
+        idx_sa = trend_hits(1);
+    else
+        idx_sa = candidate_cols(1);
     end
 end
 

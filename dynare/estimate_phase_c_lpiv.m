@@ -156,25 +156,35 @@ fprintf('  FINAL b_di_c = %.4f via %s\n\n', final_b_di_c, method_a);
 %% =================================================================
 fprintf('--- B. b_ph_ih: housing price IV ---\n');
 
-%% B.1 Load ABS 6416 RPPI weighted average
-rppi_csv = fullfile(projectdir, 'data', 'abs_rba', 'abs_6416_rppi.csv');
-opts = detectImportOptions(rppi_csv, 'NumHeaderLines', 9);
-opts = setvartype(opts, opts.VariableNames{1}, 'char');
-T_rppi = readtable(rppi_csv, opts);
-fprintf('  RPPI columns: %d, rows: %d\n', width(T_rppi), height(T_rppi));
-
-% First column is date string in d/MM/yyyy format
-rppi_dates_raw = T_rppi.(1);
-rppi_dates = datetime(rppi_dates_raw, 'InputFormat', 'd/MM/yyyy');
-
-% 10th column = weighted average index (after 1 date col + 9 city cols, the 10th from
-% the file = "Weighted average of eight capital cities" index — but readtable may not
-% include the date column in T_rppi.Properties.VariableNames depending on options. Use
-% column index relative to the table.
-rppi_weighted = T_rppi.(10);
-if iscell(rppi_weighted)
-    rppi_weighted = str2double(rppi_weighted);
+%% B.1 Load housing-price series — prefer the spliced 1959+ series if
+%      available (built by splice_housing_prices.py from
+%      house_price_history_long.csv chained to ABS 6416 RPPI).
+%      Fall back to the ABS 6416 weighted average alone if the splice
+%      hasn't been built.
+spliced_csv = fullfile(projectdir, 'data', 'house_price_spliced.csv');
+if exist(spliced_csv, 'file')
+    fprintf('  Using spliced series: data/house_price_spliced.csv\n');
+    T_rppi = readtable(spliced_csv);
+    rppi_dates = datetime(T_rppi.date, 'InputFormat', 'yyyy-MM-dd');
+    rppi_weighted = T_rppi.ph_spliced;
+    rppi_source = 'spliced (1959Q3+; ph_long backcast onto ABS 6416 RPPI at 2003Q3)';
+else
+    fprintf('  Spliced series not found; falling back to ABS 6416 alone\n');
+    rppi_csv = fullfile(projectdir, 'data', 'abs_rba', 'abs_6416_rppi.csv');
+    opts = detectImportOptions(rppi_csv, 'NumHeaderLines', 9);
+    opts = setvartype(opts, opts.VariableNames{1}, 'char');
+    T_rppi = readtable(rppi_csv, opts);
+    rppi_dates_raw = T_rppi.(1);
+    rppi_dates = datetime(rppi_dates_raw, 'InputFormat', 'd/MM/yyyy');
+    rppi_weighted = T_rppi.(10);
+    if iscell(rppi_weighted)
+        rppi_weighted = str2double(rppi_weighted);
+    end
+    rppi_source = 'ABS 6416 RPPI weighted avg (2003Q3+)';
 end
+fprintf('  Source: %s\n', rppi_source);
+fprintf('  Raw points: %d (%s → %s)\n', length(rppi_weighted), ...
+        datestr(rppi_dates(1)), datestr(rppi_dates(end)));
 
 % Filter to quarterly end-of-quarter alignment with main dataset
 rppi_weighted_aligned = nan(nQ, 1);

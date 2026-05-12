@@ -26,9 +26,9 @@ fprintf('Replicating FR-BDF Figure 6.2.2\n\n');
 %% Configuration
 shock_name = 'eps_i';
 T_plot = 80;  % quarters to plot (FR-BDF uses 80)
-stderr_eps_i = 0.027;        % current calibrated stderr
+stderr_eps_i = 0.1105;       % Phase G posterior mean (90% HPD [0.0989, 0.1226])
 target_shock = 0.25;         % 100bp annualized = 0.25 quarterly pp
-scale_factor = target_shock / stderr_eps_i;  % ~9.26
+scale_factor = target_shock / stderr_eps_i;  % ~2.262
 fprintf('  Shock scaling: 100bp annualized = %.3f qpp, scale = %.3f\n\n', ...
     target_shock, scale_factor);
 

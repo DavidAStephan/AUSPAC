@@ -10,7 +10,7 @@ cd(fileparts(mfilename('fullpath')));
 setup_dynare_path();
 
 %% Shock scaling: 100bp annualized = 0.25 quarterly pp
-stderr_eps_i = 0.027;
+stderr_eps_i = 0.1105;   % Phase G posterior mean
 target_shock = 0.25;
 scale_factor = target_shock / stderr_eps_i;
 fprintf('  Shock: 100bp annualized = %.3f qpp, scale = %.3f x (1 s.d.)\n\n', ...
