@@ -588,10 +588,10 @@ pi_ss_us        = 0.5;
 // Start conservative to avoid instability; loop gain must be < 1
 lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
-// VA price PAC parameters (Phase G MCMC, 2026-05-10; LMD = -931.33 Laplace / -930.999 MHM)
-b0_pQ = 0.0302;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0063, 0.0529]
-b1_pQ = 0.2959;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1277, 0.4607]
-b2_pQ = 0.0011;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0786, 0.0858]
+// VA price PAC parameters (Bayesian posterior MCMC refreshed 2026-05-10, Phase A-D conditioning)
+b0_pQ = 0.0296;    // EC, posterior mean (90% HPD [0.0068, 0.0512]); LMD=-931.16
+b1_pQ = 0.2869;    // AR1, posterior mean (90% HPD [0.1389, 0.4482])
+b2_pQ = 0.0008;    // output gap, posterior mean (90% HPD [-0.0787, 0.0788]; channel ~0 short run)
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
 // === Phase G CES production-function parameters (2026-05-10, AU data) ===
@@ -627,9 +627,9 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 // Wage Phillips curve parameters (calibrated from Section 4.5.1 / Table 4.5.1)
 // Australia: moderate wage persistence, significant gap sensitivity
 // Forward expectations proxied by pibar_au (inflation anchor)
-lambda_w        = 0.1003;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0342, 0.1573]
-kappa_w         = 0.0546;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0283, 0.1280]
-gamma_w         = 0.9489;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.9054, 0.9958]
+lambda_w        = 0.0938;   // wage persistence (refresh posterior mean 2026-05-10, 90% HPD [0.0329, 0.1481])
+kappa_w         = 0.0549;   // unemployment-gap PV (refresh posterior mean, 90% HPD [-0.0354, 0.1344])
+gamma_w         = 0.9535;   // CPI indexation (refresh posterior mean, 90% HPD [0.9141, 0.9967]). HEADLINE: near-full CPI indexation, mode at 0.9711 — preserves the AU wage-setting finding under Phase A-D conditioning
 okun_coeff      = -0.13;    // AU OLS estimate (s.e.0.02). FR-BDF: -0.246, old cal: -0.33
 rho_u_gap       = 0.946;    // AU OLS estimate (s.e.0.01). FR-BDF: 0.946, EXACT MATCH
 beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
@@ -637,24 +637,24 @@ beta_w          = 0.98;     // discount for expected unemployment gaps (paper Se
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n = 0.0608;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0156, 0.1065]
-b1_n = 0.3075;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1504, 0.4481]
+b0_n = 0.0572;    // EC, refresh posterior mean (90% HPD [0.0104, 0.0978])
+b1_n = 0.3085;    // AR1, refresh posterior mean (90% HPD [0.1472, 0.4630])
 b2_n = -0.1869;   // 2nd lag (OLS, not in Bayesian estimated_params)
 b3_n = -0.0763;   // 3rd lag (OLS, not in Bayesian estimated_params)
 b4_n = -0.0852;   // 4th lag (OLS, not in Bayesian estimated_params)
 omega_n         = 0.30;     // expectations/forward component
-b5_n = -0.0046;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0836, 0.0797]
+b5_n = 0.0001;    // output gap sensitivity (refresh posterior mean ~0)
 rho_n_star      = 0.95;     // target persistence
 // growth neutrality coeff = 1 - 0.30 - 0.10 - 0.05 - 0.02 - 0.30 = 0.23
 
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c = 0.0621;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0294, 0.0961]
-b1_c = 0.0391;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0065, 0.0754]
+b0_c = 0.0639;    // EC, refresh posterior mean (90% HPD [0.0315, 0.0962])
+b1_c = 0.0363;    // AR1, refresh posterior mean (90% HPD [0.0032, 0.0630])
 omega_c         = 0.369;    // expectations/forward component (posterior mean, legacy)
-b2_c = -0.3375;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.5889, -0.0571]
-b3_c = 0.0225;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0639, 0.0953]
+b2_c = -0.3180;   // real rate gap -> consumption, refresh posterior mean (90% HPD [-0.5824, -0.0345]; significant)
+b3_c = 0.0207;    // output gap -> consumption, refresh posterior mean (90% HPD [-0.0597, 0.0965])
 b_di_c          = -0.701;   // Phase C Bayesian regularised (IV with monetary-surprise instrument failed identification due to RBA endogeneity); posterior dominated by prior N(-0.71, 0.30^2)
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
@@ -665,11 +665,11 @@ alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib = 0.0195;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0047, 0.0323]
-b1_ib = 0.0861;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0196, 0.1503]
+b0_ib = 0.0187;   // EC, refresh posterior mean (90% HPD [0.0053, 0.0313])
+b1_ib = 0.0900;   // AR1, refresh posterior mean (90% HPD [0.0190, 0.1568])
 b2_ib = -0.0445;  // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib = 0.3212;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1825, 0.4828]
+b3_ib = 0.3206;   // output gap -> investment, refresh posterior mean (90% HPD [0.1762, 0.4764]); CHANGED from 0.195 — Phase B-D conditioning revealed stronger AU accelerator
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
@@ -679,13 +679,13 @@ delta_k         = 0.0134;   // quarterly capital depreciation (Phase G ABS 5204:
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih = 0.0299;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0092, 0.0525]
-b1_ih = 0.1051;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0243, 0.1744]
+b0_ih = 0.0292;   // EC, refresh posterior mean (90% HPD [0.0108, 0.0474])
+b1_ih = 0.1154;   // AR1, refresh posterior mean (90% HPD [0.0339, 0.1890])
 b2_ih = -0.0368;  // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ih        = 0.30;     // expectations/forward component
-b3_ih = 0.2261;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0655, 0.3848]
+b3_ih = 0.2218;   // output gap -> housing investment, refresh posterior mean (90% HPD [0.0555, 0.3777])
 b4_ih           = 0;        // DROPPED: rate channel already in pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001, not significant)
-b_ph_ih         =  0.0099;  // Phase C, spliced housing-price series (1959Q3+ via house_price_history_long backcast onto ABS 6416 RPPI at 2003Q3): IV (lag-2 ph_gap; F=432.1) on T=115 obs. Sign now matches FR-BDF +0.32 (was wrong-signed on the 2003+ ABS RPPI alone), but magnitude is much smaller — the AU housing-price-gap channel is close to zero in the longer sample. Direct rate channel still enters via pv_ih_aux a_ih_i and pac_expectation kappa_mort.
+b_ph_ih         =  0.215;   // Phase C Bayesian regularised (lag-2 ph_gap IV gave wrong sign on ABS RPPI T=73; prior N(0.32, 0.20^2) dominates). Direct rate channel still enters via pv_ih_aux a_ih_i and pac_expectation kappa_mort.
 rho_ih_star     = 0.95;     // target persistence
 kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
 kappa_ih_inc    = 0.03;     // permanent income -> housing target (paper eq 66, Table 4.6.14)
@@ -726,15 +726,15 @@ alpha_s         = 0.15;     // interest rate differential -> appreciation (negat
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
 // Australia: commodity exports sensitive to world demand, moderate price elasticity
 b0_x            = 0.05;     // error correction (moderate speed)
-b1_x            = 0.30;     // Phase D v2 (2026-05-11, ABS 5206 SA volumes T=126 + COVID dummies): OLS gave -0.194 (wrong-signed, t=-2.18) — the 0.807 from Phase D v1 was a Trend-smoothing artifact. Kept FR-BDF 0.30. Asian-PMI / China-GDP proxies would help.
-b2_x            = 0.25;     // Phase D v2 (ABS 5206 SA T=126 + COVID dummies): OLS = -0.008 (t=-0.07, indistinguishable from zero). Confirms US output gap is the wrong demand proxy — AU exports respond to China/Asia commodity demand. Kept FR-BDF 0.25 pending Asian-PMI series (Phase K).
+b1_x            = 0.807;    // Phase D AU OLS (ABS 5206 trend volume, T=103, s.e.0.062)
+b2_x            = 0.25;     // Phase D ABS T=103 OLS = -0.15 (t=-2.07, wrong sign — AU exports dominated by commodities to Asia, not US-output-gap-correlated). Kept FR-BDF cal as the structurally-correct sign.
 b3_x            = 0.10;     // depreciation -> more exports (Marshall-Lerner)
 
 // Import parameters (calibrated from Section 4.7 / Table 4.7.2)
 // Australia: imports track domestic demand closely
 b0_m            = 0.06;     // error correction
-b1_m            = 0.2316;   // Phase D v3 (2026-05-11, ABS 5206 SA + IAD demand index + COVID dummies): OLS = +0.232 (s.e. 0.086, t=2.71) — slightly lower than v2 (0.255) when controlling for proper IAD-weighted demand. Still correctly signed and statistically significant.
-b2_m            = 0.3591;   // Phase D v3 (2026-05-11, ABS 5206 SA + IAD demand index): OLS = +0.359 (s.e. 0.101, t=3.56) — Phase K residual RESOLVED. The IAD = w_iad_c·dln_c + w_iad_ib·dln_ib + w_iad_ih·dln_ih + w_iad_g·dln_g + w_iad_x·dln_x correctly captures the demand mix weighted by import content (calibrated weights from paper Table 4.8.3). Was wrong-signed (-0.317, t=-1.01) under yhat_au alone in v2.
+b1_m            = 0.87;     // Phase D ABS Trend T=103 OLS = -0.22 (implausible negative AR1; ABS Trend series over-smoothed for short-run dynamics). Kept prior AU est.
+b2_m            = 0.30;     // Phase D ABS Trend T=103 OLS = +10.57 (t=0.30, unidentified; SE 35.56). Kept FR-BDF cal.
 b3_m            = -0.08;    // depreciation -> fewer imports (negative: price effect)
 
 // Long-run trade elasticities (FR-BDF Section 4.7 / Table 4.7.1-2 proper ECM)
@@ -800,7 +800,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.3374;   // CES elasticity (Phase G Stage 1 v2, 2026-05-11, ABS 5206 Trend→SA audit refresh; was 0.3247 under Trend supply data; Bayesian regularised, prior N(0.53, 0.20^2), data weight 31%; OLS still wrong-signed due to mining boom; FR-BDF=0.53)
+sigma_ces       = 0.3247;   // CES elasticity (Phase G Stage 1 AU Bayesian regularised; OLS wrong-signed due to mining boom; FR-BDF=0.53)
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient
@@ -964,10 +964,8 @@ pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name 
 
 
 // Observable variables for Bayesian estimation (auto-generated)
-// 11 observables matching estimation_data.mat columns.
-// dln_m and dln_x added to identify the new trade-block ECM long-run
-// elasticities (beta_m, gamma_m, beta_x, gamma_x).
-varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dln_m dln_x;
+// 9 observables matching estimation_data.mat columns
+varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
 
 model;
 
@@ -2124,21 +2122,21 @@ check;
 // -----------------------------------------------------------------------
 
 shocks;
-    var eps_q;        stderr 0.5229;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4619, 0.5878]
-    var eps_i;        stderr 0.1102;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0982, 0.1216]
-    var eps_pi;       stderr 0.5846;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.5263, 0.6430]
+    var eps_q;        stderr 0.4804;    // refresh posterior mean (90% HPD [0.4251, 0.5490])
+    var eps_i;        stderr 0.1107;    // refresh posterior mean (90% HPD [0.0980, 0.1222])
+    var eps_pi;       stderr 0.5923;    // refresh posterior mean (90% HPD [0.5288, 0.6527])
     var eps_q_us;     stderr 1.138;     // AU posterior mode
     var eps_pi_us;    stderr 0.319;     // AU posterior mode
     var eps_ibar;     stderr 0.01;
     var eps_pibar_au; stderr 0.01;
     var eps_pibar_us; stderr 0.01;
     var eps_pQ;       stderr 0.571;  // VA price shock (AU OLS residual)
-    var eps_w;        stderr 0.7332;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.6359, 0.8296]
-    var eps_n;        stderr 0.4015;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1229, 0.7341]
-    var eps_c;        stderr 1.8581;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [1.6525, 2.0461]
-    var eps_ib;       stderr 2.7763;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [2.4853, 3.0525]
-    var eps_ih;       stderr 1.6415;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4871, 2.9457]
-    var eps_10y;      stderr 0.0646;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0504, 0.0778]
+    var eps_w;        stderr 0.7239;    // refresh posterior mean (90% HPD [0.6274, 0.8178])
+    var eps_n;        stderr 0.3040;    // refresh posterior mean (90% HPD [0.1277, 0.4836])
+    var eps_c;        stderr 1.8435;    // refresh posterior mean (90% HPD [1.6380, 2.0557])
+    var eps_ib;       stderr 2.7874;    // refresh posterior mean (90% HPD [2.4950, 3.0756])
+    var eps_ih;       stderr 1.7622;    // refresh posterior mean (90% HPD [0.4856, 3.6996], wide CI — weakly identified)
+    var eps_10y;      stderr 0.0656;    // refresh posterior mean (90% HPD [0.0502, 0.0789])
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
     var eps_COE;      stderr 0.15;   // cost of equity spread shock
     var eps_LB_firms; stderr 0.10;   // bank lending spread shock (firms)
@@ -2203,13 +2201,6 @@ estimated_params;
     lambda_w,   beta_pdf,       0.25,   0.10;   // posterior=0.225, away from 0.55 prior
     gamma_w,    beta_pdf,       0.70,   0.15;   // posterior=0.770, very strong AU CPI indexation
     kappa_w,    normal_pdf,     0.08,   0.05;   // posterior=0.080
-    // --- Trade block LR elasticities (FR-BDF Section 4.7 proper ECM) ---
-    // Imports: AU openness rising 1960-now → β_m > 1 strongly supported.
-    // Exports: AU world-demand sensitivity moderate; γ_x positive (Marshall-Lerner).
-    beta_m,     normal_pdf,     1.50,   0.30;   // LR income elasticity of imports
-    gamma_m,    normal_pdf,    -0.40,   0.20;   // LR RER elasticity (negative)
-    beta_x,     normal_pdf,     1.20,   0.30;   // LR foreign-income elasticity of exports
-    gamma_x,    normal_pdf,     0.40,   0.20;   // LR RER elasticity (positive)
     // --- Shock standard deviations ---
     stderr eps_q,       inv_gamma_pdf,  0.80,  inf;
     stderr eps_i,       inv_gamma_pdf,  0.10,  inf;
@@ -2220,8 +2211,6 @@ estimated_params;
     stderr eps_n,       inv_gamma_pdf,  0.50,  inf;
     stderr eps_w,       inv_gamma_pdf,  0.30,  inf;
     stderr eps_10y,     inv_gamma_pdf,  0.10,  inf;
-    stderr eps_m,       inv_gamma_pdf,  1.00,  inf;   // trade-block observable
-    stderr eps_x,       inv_gamma_pdf,  1.20,  inf;   // trade-block observable
 end;
 
 // Stage 2: estimated_params_init(use_calibration) NOT compatible with mode_file
@@ -2246,17 +2235,9 @@ pac.update.expectation('pac_n');
 // stoch_simul replaced by estimation (auto-generated)
 // diffuse_filter needed for unit root processes (level accumulators)
 // Stage 2: MCMC from saved posterior mode
-estimation(datafile='estimation_data.mat',
-           first_obs=1,
-           mode_compute=0,
-           mode_file='au_pac_bayesian/Output/au_pac_bayesian_mode',
-           presample=4,
-           mh_replic=20000,
-           mh_nblocks=2,
-           mh_jscale=0.4,
-           diffuse_filter,
-           nograph)
-           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dln_m dln_x;
+estimation(datafile='estimation_data.mat', first_obs=1, mode_compute=0, mode_file='/Users/davidstephan/Documents/AUSPAC/dynare/au_pac_bayesian/Output/au_pac_bayesian_mode', presample=4, mh_replic=0, mh_nblocks=1, diffuse_filter, nograph) yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
+
+identification(advanced=1, max_dim_cova_group=4, parameter_set=posterior_mode, prior_mc=2000, no_identification_minimal);
 
 // =======================================================================
 // (Estimation infrastructure activated above — original comments removed)
