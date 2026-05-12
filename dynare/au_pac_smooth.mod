@@ -115,10 +115,17 @@ var
     s_gap           // real exchange rate gap (log, + = AUD depreciation)
 
     // === Trade block (Section 4.7) ===
+    // Proper ECM: long-run equilibrium ln_X_eq / ln_M_eq, plus short-run dynamics.
+    // Log-level accumulators are in deviation from SS trend (all SS = 0).
     dln_x           // export volume growth (quarterly log diff)
-    x_gap           // export gap (equilibrium - actual, log level)
+    ln_x_level      // log exports level (deviation, accumulates dln_x)
+    ln_x_eq         // export LR equilibrium (FR-BDF eq 71, deviation form)
+    x_gap           // export EC term: ln_x_eq - ln_x_level
     dln_m           // import volume growth (quarterly log diff)
-    m_gap           // import gap (equilibrium - actual, log level)
+    ln_m_level      // log imports level (deviation, accumulates dln_m)
+    ln_m_eq         // import LR equilibrium (FR-BDF eq 76, deviation form)
+    m_gap           // import EC term: ln_m_eq - ln_m_level
+    ln_d_iad        // log import-weighted demand level (accumulates iad)
 
     // === Demand deflators (Section 4.7) ===
     pi_c            // consumption deflator inflation (quarterly %)
@@ -396,14 +403,18 @@ parameters
     // --- Export parameters (Section 4.7, eqs. 70-73) ---
     b0_x            // error correction speed
     b1_x            // export growth persistence
-    b2_x            // world demand elasticity (yhat_us -> exports)
-    b3_x            // exchange rate elasticity (depreciation -> more exports)
+    b2_x            // SR world demand elasticity (yhat_us -> exports)
+    b3_x            // SR exchange rate elasticity (depreciation -> more exports)
+    beta_x          // LR foreign income elasticity (FR-BDF eq 71)
+    gamma_x         // LR real exchange rate elasticity (depreciation > 0)
 
     // --- Import parameters (Section 4.7, eqs. 74-77) ---
     b0_m            // error correction speed
     b1_m            // import growth persistence
-    b2_m            // domestic demand elasticity (yhat_au -> imports)
-    b3_m            // exchange rate elasticity (depreciation -> fewer imports)
+    b2_m            // SR domestic demand elasticity (iad -> imports)
+    b3_m            // SR exchange rate elasticity (depreciation -> fewer imports)
+    beta_m          // LR income elasticity of imports (FR-BDF eq 76; >1 ⇒ rising openness)
+    gamma_m         // LR real exchange rate elasticity (depreciation < 0)
 
     // --- Demand deflator parameters (Section 4.7, ECM equations) ---
     // All deflators track VA price (piQ) with pass-through + persistence
@@ -707,6 +718,14 @@ b0_m            = 0.06;     // error correction
 b1_m            = 0.87;     // AU est 0.869 (s.e.0.051), ABS chain vol, T=104
 b2_m            = 0.30;     // kept: AU est -0.12 wrong sign (proxy data issue)
 b3_m            = -0.08;    // depreciation -> fewer imports (negative: price effect)
+
+// Long-run trade elasticities (FR-BDF Section 4.7 / Table 4.7.1-2 proper ECM)
+// AU empirical estimates: imports income-elastic (rising openness 1960-now),
+// exports world-demand-elastic; both have real-exchange-rate response.
+beta_m          = 1.50;     // LR income elasticity of imports (AU 1.3-1.7 range)
+gamma_m         = -0.40;    // LR RER elasticity (depreciation -> import volumes fall)
+beta_x          = 1.20;     // LR foreign-income elasticity of exports
+gamma_x         =  0.40;    // LR RER elasticity (depreciation -> export volumes rise)
 
 // Demand deflator parameters (calibrated from Section 4.7)
 // ECM structure: pi_j = rho * pi_j(-1) + alpha * piQ + (1-rho-alpha) * pibar_au
@@ -1537,17 +1556,34 @@ model;
     // TRADE BLOCK (Section 4.7)
     // =================================================================
 
-    // === EXPORTS ECM (eqs. 70-73) ===
-    // Export volumes adjust toward equilibrium determined by world demand
-    // and competitiveness (real exchange rate).
-    // Error correction: x_gap > 0 means exports below equilibrium, pulls up.
-    // World demand channel: yhat_us (proxy for AU's trading partners).
-    // Competitiveness: s_gap > 0 (depreciation) -> more competitive -> more exports.
+    // Log-level accumulators (deviation form, all SS = 0).
+    // ln_x_level, ln_m_level track actual log levels relative to SS trend.
+    // ln_d_iad accumulates the import-weighted demand growth into a level.
+    [name = 'eq_ln_x_level']
+    ln_x_level = ln_x_level(-1) + dln_x;
+
+    [name = 'eq_ln_m_level']
+    ln_m_level = ln_m_level(-1) + dln_m;
+
+    [name = 'eq_ln_d_iad']
+    ln_d_iad = ln_d_iad(-1) + iad;
+
+    // === EXPORTS ECM (FR-BDF eqs. 70-73, proper long-run + short-run) ===
+    // Long run (eq 71): ln(X)_eq = β_x * ln(D_us) + γ_x * ln(RER)
+    //   where ln(D_us) ≈ yhat_us (foreign output level deviation) and
+    //   ln(RER) ≈ s_gap (real exchange rate deviation, + = depreciation).
+    // Error-correction term x_gap = ln_x_eq - ln_x_level: positive when
+    // exports below equilibrium, pulling growth up via b0_x.
+    // Short-run dynamics retain b2_x, b3_x, b4_x as impact-response terms;
+    // beta_x and gamma_x govern long-run equilibrium.
     //
-    // At SS: dln_x = 0, x_gap = 0
+    // At SS: yhat_us = 0, s_gap = 0, ln_x_level = 0  ⇒  ln_x_eq = 0, x_gap = 0.
+
+    [name = 'eq_ln_x_eq']
+    ln_x_eq = beta_x * yhat_us + gamma_x * s_gap;
 
     [name = 'eq_x_gap']
-    x_gap = x_gap(-1) - dln_x;
+    x_gap = ln_x_eq - ln_x_level;
 
     [name = 'eq_dln_x']
     dln_x = b0_x * x_gap(-1)
@@ -1557,23 +1593,23 @@ model;
             + b4_x * dln_pcom
             + eps_x;
 
-    // === IMPORTS ECM (eqs. 74-77) ===
-    // Import volumes adjust toward equilibrium determined by domestic demand
-    // and competitiveness (real exchange rate).
-    // Error correction: m_gap > 0 means imports below equilibrium, pulls up.
-    // Domestic demand channel: yhat_au (income elasticity of imports).
-    // Competitiveness: s_gap > 0 (depreciation) -> imports more expensive -> fewer imports.
+    // === IMPORTS ECM (FR-BDF eqs. 74-77, proper long-run + short-run) ===
+    // Long run (eq 76): ln(M)_eq = β_m * ln(D) + γ_m * ln(RER)
+    //   where ln(D) ≈ ln_d_iad (cumulated import-weighted demand) and
+    //   ln(RER) ≈ s_gap. With β_m > 1 (AU openness rising), import target
+    //   responds more than one-for-one to demand level, generating the
+    //   secular rise in M/GDP that the previous degenerate m_gap couldn't.
+    // Error-correction term m_gap = ln_m_eq - ln_m_level.
+    // Short run keeps b2_m * iad (impact response) and b3_m * s_gap.
     //
-    // At SS: dln_m = 0, m_gap = 0
+    // At SS: ln_d_iad = 0, s_gap = 0, ln_m_level = 0  ⇒  ln_m_eq = 0, m_gap = 0.
+
+    [name = 'eq_ln_m_eq']
+    ln_m_eq = beta_m * ln_d_iad + gamma_m * s_gap;
 
     [name = 'eq_m_gap']
-    m_gap = m_gap(-1) - dln_m;
+    m_gap = ln_m_eq - ln_m_level;
 
-    // Stage 12 fix: Replaced yhat_au with import-adjusted demand (iad).
-    // Paper eqs. 72-75: imports driven by IAD = Σ(w_j * component_j),
-    // with weights = import content shares from input-output tables.
-    // IAD correctly distinguishes high-import-content demand (investment,
-    // exports) from low-import-content demand (government spending).
     [name = 'eq_dln_m']
     dln_m = b0_m * m_gap(-1)
             + b1_m * dln_m(-1)
@@ -1947,11 +1983,16 @@ steady_state_model;
     wacc           = w_COE*(i_ss+tp_ss+s_COE_ss) + w_LB_firms*(i_ss+tp_ss+s_LB_firms_ss) + w_BBB*(i_ss+tp_ss+s_BBB_ss);
     s_gap          = 0;                             // PPP holds at SS
 
-    // Trade block
+    // Trade block (proper ECM, all level deviations zero at SS)
     dln_x          = 0;       // zero export growth in stationary model
+    ln_x_level     = 0;
+    ln_x_eq        = 0;       // = beta_x*0 + gamma_x*0 = 0
     x_gap          = 0;
     dln_m          = 0;       // zero import growth in stationary model
+    ln_m_level     = 0;
+    ln_m_eq        = 0;       // = beta_m*0 + gamma_m*0 = 0
     m_gap          = 0;
+    ln_d_iad       = 0;       // cumulated iad = 0 at SS (iad SS = 0)
 
     // Demand deflators: all converge to pi_ss_au at SS
     pi_c           = pi_ss_au;

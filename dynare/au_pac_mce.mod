@@ -116,10 +116,17 @@ var
     s_gap           // real exchange rate gap (log, + = AUD depreciation)
 
     // === Trade block (Section 4.7) ===
+    // Proper ECM: long-run equilibrium ln_X_eq / ln_M_eq, plus short-run dynamics.
+    // Log-level accumulators are in deviation from SS trend (all SS = 0).
     dln_x           // export volume growth (quarterly log diff)
-    x_gap           // export gap (equilibrium - actual, log level)
+    ln_x_level      // log exports level (deviation, accumulates dln_x)
+    ln_x_eq         // export LR equilibrium (FR-BDF eq 71, deviation form)
+    x_gap           // export EC term: ln_x_eq - ln_x_level
     dln_m           // import volume growth (quarterly log diff)
-    m_gap           // import gap (equilibrium - actual, log level)
+    ln_m_level      // log imports level (deviation, accumulates dln_m)
+    ln_m_eq         // import LR equilibrium (FR-BDF eq 76, deviation form)
+    m_gap           // import EC term: ln_m_eq - ln_m_level
+    ln_d_iad        // log import-weighted demand level (accumulates iad)
 
     // === Demand deflators (Section 4.7) ===
     pi_c            // consumption deflator inflation (quarterly %)
@@ -376,14 +383,18 @@ parameters
     // --- Export parameters (Section 4.7, eqs. 70-73) ---
     b0_x            // error correction speed
     b1_x            // export growth persistence
-    b2_x            // world demand elasticity (yhat_us -> exports)
-    b3_x            // exchange rate elasticity (depreciation -> more exports)
+    b2_x            // SR world demand elasticity (yhat_us -> exports)
+    b3_x            // SR exchange rate elasticity (depreciation -> more exports)
+    beta_x          // LR foreign income elasticity (FR-BDF eq 71)
+    gamma_x         // LR real exchange rate elasticity (depreciation > 0)
 
     // --- Import parameters (Section 4.7, eqs. 74-77) ---
     b0_m            // error correction speed
     b1_m            // import growth persistence
-    b2_m            // domestic demand elasticity (yhat_au -> imports)
-    b3_m            // exchange rate elasticity (depreciation -> fewer imports)
+    b2_m            // SR domestic demand elasticity (iad -> imports)
+    b3_m            // SR exchange rate elasticity (depreciation -> fewer imports)
+    beta_m          // LR income elasticity of imports (FR-BDF eq 76; >1 ⇒ rising openness)
+    gamma_m         // LR real exchange rate elasticity (depreciation < 0)
 
     // --- Demand deflator parameters (Section 4.7, ECM equations) ---
     // All deflators track VA price (piQ) with pass-through + persistence
@@ -501,17 +512,17 @@ pi_ss_us        = 0.5;
 // Start conservative to avoid instability; loop gain must be < 1
 lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
-// VA price PAC parameters (calibrated from Table 4.4.3)
-b0_pQ           = 0.028;    // error correction (hybrid smoother OLS, updated companion)
-b1_pQ           = 0.288;    // persistence (hybrid smoother OLS, updated companion)
-b2_pQ           = -0.014;   // output gap (weak Phillips curve)
+// VA price PAC parameters (Bayesian posterior, Phase 1-4 MCMC, 2026-04-14)
+b0_pQ           = 0.0306;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0063, 0.0529]
+b1_pQ           = 0.2907;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1277, 0.4607]
+b2_pQ           = -0.0001;  // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0786, 0.0858]
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
-gamma_uck       = 0.06;     // user cost pass-through (CES dual, capital share channel)
+gamma_ulc       = 0.21;     // ULC pass-through (Phase G CES log-linear: (1-α)·σ; was 0.12)
+gamma_uck       = 0.11;     // user cost pass-through (Phase G CES log-linear: α·σ; was 0.06)
 
 // --- Cobb-Douglas production function (Stage 9a) ---
-alpha_k         = 0.33;     // capital share in Cobb-Douglas
+alpha_k         = 0.35;     // CES capital-share α (Phase G AU calibration; was 0.33 CD)
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
@@ -522,9 +533,9 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 // Wage Phillips curve parameters (calibrated from Section 4.5.1 / Table 4.5.1)
 // Australia: moderate wage persistence, significant gap sensitivity
 // Forward expectations proxied by pibar_au (inflation anchor)
-lambda_w        = 0.247;    // wage persistence (posterior mean)
-kappa_w         = 0.238;    // output gap -> wages (posterior mean)
-gamma_w         = 0.15;     // CPI indexation channel
+lambda_w        = 0.2899;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0342, 0.1573]
+kappa_w         = 0.0966;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0283, 0.1280]
+gamma_w         = 0.1356;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.9054, 0.9958]
 okun_coeff      = -0.13;    // Okun's law: 1pp output gap -> -0.13pp unemployment gap
 rho_u_gap       = 0.946;    // unemployment gap persistence (paper Table 4.5.2)
 beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
@@ -532,25 +543,25 @@ beta_w          = 0.98;     // discount for expected unemployment gaps (paper Se
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n            = 0.062;    // error correction (hybrid smoother OLS, updated companion)
-b1_n            = 0.315;    // 1st lag (hybrid smoother OLS, updated companion)
-b2_n            = -0.187;   // 2nd lag (hybrid smoother OLS, updated companion)
-b3_n            = -0.076;   // 3rd lag (hybrid smoother OLS, updated companion)
-b4_n            = -0.085;   // 4th lag (hybrid smoother OLS, updated companion)
+b0_n            = 0.0569;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0156, 0.1065]
+b1_n            = 0.3211;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1504, 0.4481]
+b2_n            = -0.187;   // 2nd lag (OLS, not in Bayesian estimated_params)
+b3_n            = -0.076;   // 3rd lag (OLS, not in Bayesian estimated_params)
+b4_n            = -0.085;   // 4th lag (OLS, not in Bayesian estimated_params)
 omega_n         = 0.30;     // expectations/forward component
-b5_n            = -0.017;   // output gap sensitivity (hybrid smoother OLS, updated companion)
+b5_n            = 0.0072;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0836, 0.0797]
 rho_n_star      = 0.95;     // target persistence
 // growth neutrality coeff = 1 - 0.30 - 0.10 - 0.05 - 0.02 - 0.30 = 0.23
 
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c            = 0.069;    // error correction (hybrid smoother OLS, updated companion)
-b1_c            = 0.047;    // persistence (hybrid smoother OLS, updated companion)
-omega_c         = 0.369;    // expectations/forward component (posterior mean)
-b2_c            = -0.555;   // real interest rate -> consumption (hybrid smoother OLS, updated companion)
-b3_c            = 0.018;    // output gap -> consumption (hybrid smoother OLS, updated companion)
-b_di_c          = 0;        // interest rate CHANGE: OLS=3.39 (wrong sign, reverse causality). Needs IV estimation
+b0_c            = 0.0601;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0294, 0.0961]
+b1_c            = 0.0354;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0065, 0.0754]
+omega_c         = 0.369;    // expectations/forward component (posterior mean, legacy)
+b2_c            = -0.3307;  // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.5889, -0.0571]
+b3_c            = 0.0199;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0639, 0.0953]
+b_di_c          = -0.701;   // Phase C Bayesian regularised; prior N(-0.71, 0.30^2) dominated
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
 beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~25% annual)
@@ -560,27 +571,27 @@ alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib           = 0.017;    // error correction (hybrid smoother OLS, updated companion)
-b1_ib           = 0.093;    // 1st lag persistence (hybrid smoother OLS, updated companion)
-b2_ib           = -0.045;   // 2nd lag (hybrid smoother OLS, updated companion)
+b0_ib           = 0.0188;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0047, 0.0323]
+b1_ib           = 0.0801;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0196, 0.1503]
+b2_ib           = -0.045;   // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib           = 0.344;    // output gap -> investment (hybrid smoother OLS, updated companion)
+b3_ib           = 0.3094;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1825, 0.4828]
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
-delta_k         = 0.025;    // quarterly capital depreciation (~10% annual)
+delta_k         = 0.0134;   // quarterly capital depreciation (Phase G ABS 5204: 5.4% annual)
 // growth neutrality coeff = 1 - 0.25 - 0.10 - 0.35 = 0.30
 
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih           = 0.025;    // error correction (hybrid smoother OLS, updated companion)
-b1_ih           = 0.107;    // 1st lag persistence (hybrid smoother OLS, updated companion)
-b2_ih           = -0.037;   // 2nd lag (hybrid smoother OLS, updated companion)
+b0_ih           = 0.0289;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0092, 0.0525]
+b1_ih           = 0.1152;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0243, 0.1744]
+b2_ih           = -0.037;   // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ih        = 0.30;     // expectations/forward component
-b3_ih           = 0.231;    // output gap -> housing investment (hybrid smoother OLS, updated companion)
+b3_ih           = 0.2262;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0655, 0.3848]
 b4_ih           = 0;        // DROPPED: rate channel already in pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001, not significant)
-b_ph_ih         = 0;        // housing price gap: OLS=-0.04 (wrong sign vs FR-BDF +0.32). Needs ABS housing price data
+b_ph_ih         =  0.0099;  // Phase C spliced 1959Q3+ housing-price series; IV (F=432.1, T=115); sign now correct, magnitude near zero
 rho_ih_star     = 0.95;     // target persistence
 kappa_mort      = 0.048;    // mortgage rate gap -> housing target (posterior mean)
 kappa_ih_inc    = 0.03;     // permanent income -> housing target (paper eq 66, Table 4.6.14)
@@ -621,16 +632,24 @@ alpha_s         = 0.15;     // interest rate differential -> appreciation (negat
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
 // Australia: commodity exports sensitive to world demand, moderate price elasticity
 b0_x            = 0.05;     // error correction (moderate speed)
-b1_x            = 0.89;     // AU est 0.886 (s.e.0.044), ABS chain vol, T=104
-b2_x            = 0.25;     // kept: AU est -0.04 wrong sign (proxy data issue)
+b1_x            = 0.30;     // Phase D v2 (ABS 5206 SA, T=126 + COVID dummies): OLS=-0.194 wrong sign; the 0.807 from Trend was smoothing artifact. Kept FR-BDF 0.30.
+b2_x            = 0.25;     // Phase D v2 (ABS 5206 SA T=126): OLS=-0.008, t=-0.07. US output gap is the wrong demand proxy — Asian PMI needed (Phase K).
 b3_x            = 0.10;     // depreciation -> more exports (Marshall-Lerner)
 
 // Import parameters (calibrated from Section 4.7 / Table 4.7.2)
 // Australia: imports track domestic demand closely
 b0_m            = 0.06;     // error correction
-b1_m            = 0.87;     // AU est 0.869 (s.e.0.051), ABS chain vol, T=104
-b2_m            = 0.30;     // kept: AU est -0.12 wrong sign (proxy data issue)
+b1_m            = 0.2316;   // Phase D v3 (ABS 5206 SA + IAD + COVID dummies): OLS=+0.232 (s.e. 0.086, t=2.71)
+b2_m            = 0.3591;   // Phase D v3 (ABS 5206 SA + IAD demand index): OLS=+0.359 (s.e. 0.101, t=3.56) — Phase K residual RESOLVED
 b3_m            = -0.08;    // depreciation -> fewer imports (negative: price effect)
+
+// Long-run trade elasticities (FR-BDF Section 4.7 / Table 4.7.1-2 proper ECM)
+// AU empirical estimates: imports income-elastic (rising openness 1960-now),
+// exports world-demand-elastic; both have real-exchange-rate response.
+beta_m          = 1.50;     // LR income elasticity of imports (AU 1.3-1.7 range)
+gamma_m         = -0.40;    // LR RER elasticity (depreciation -> import volumes fall)
+beta_x          = 1.20;     // LR foreign-income elasticity of exports
+gamma_x         =  0.40;    // LR RER elasticity (depreciation -> export volumes rise)
 
 // Demand deflator parameters (calibrated from Section 4.7)
 // ECM structure: pi_j = rho * pi_j(-1) + alpha * piQ + (1-rho-alpha) * pibar_au
@@ -687,7 +706,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.53;     // paper Table 4.3.2 estimate for France; adopted for AU
+sigma_ces       = 0.3374;   // CES elasticity (Phase G Stage 1 v2, ABS Trend→SA audit refresh; was 0.3247)
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient
@@ -1301,17 +1320,34 @@ model;
     // TRADE BLOCK (Section 4.7)
     // =================================================================
 
-    // === EXPORTS ECM (eqs. 70-73) ===
-    // Export volumes adjust toward equilibrium determined by world demand
-    // and competitiveness (real exchange rate).
-    // Error correction: x_gap > 0 means exports below equilibrium, pulls up.
-    // World demand channel: yhat_us (proxy for AU's trading partners).
-    // Competitiveness: s_gap > 0 (depreciation) -> more competitive -> more exports.
+    // Log-level accumulators (deviation form, all SS = 0).
+    // ln_x_level, ln_m_level track actual log levels relative to SS trend.
+    // ln_d_iad accumulates the import-weighted demand growth into a level.
+    [name = 'eq_ln_x_level']
+    ln_x_level = ln_x_level(-1) + dln_x;
+
+    [name = 'eq_ln_m_level']
+    ln_m_level = ln_m_level(-1) + dln_m;
+
+    [name = 'eq_ln_d_iad']
+    ln_d_iad = ln_d_iad(-1) + iad;
+
+    // === EXPORTS ECM (FR-BDF eqs. 70-73, proper long-run + short-run) ===
+    // Long run (eq 71): ln(X)_eq = β_x * ln(D_us) + γ_x * ln(RER)
+    //   where ln(D_us) ≈ yhat_us (foreign output level deviation) and
+    //   ln(RER) ≈ s_gap (real exchange rate deviation, + = depreciation).
+    // Error-correction term x_gap = ln_x_eq - ln_x_level: positive when
+    // exports below equilibrium, pulling growth up via b0_x.
+    // Short-run dynamics retain b2_x, b3_x, b4_x as impact-response terms;
+    // beta_x and gamma_x govern long-run equilibrium.
     //
-    // At SS: dln_x = 0, x_gap = 0
+    // At SS: yhat_us = 0, s_gap = 0, ln_x_level = 0  ⇒  ln_x_eq = 0, x_gap = 0.
+
+    [name = 'eq_ln_x_eq']
+    ln_x_eq = beta_x * yhat_us + gamma_x * s_gap;
 
     [name = 'eq_x_gap']
-    x_gap = x_gap(-1) - dln_x;
+    x_gap = ln_x_eq - ln_x_level;
 
     [name = 'eq_dln_x']
     dln_x = b0_x * x_gap(-1)
@@ -1321,23 +1357,23 @@ model;
             + b4_x * dln_pcom
             + eps_x;
 
-    // === IMPORTS ECM (eqs. 74-77) ===
-    // Import volumes adjust toward equilibrium determined by domestic demand
-    // and competitiveness (real exchange rate).
-    // Error correction: m_gap > 0 means imports below equilibrium, pulls up.
-    // Domestic demand channel: yhat_au (income elasticity of imports).
-    // Competitiveness: s_gap > 0 (depreciation) -> imports more expensive -> fewer imports.
+    // === IMPORTS ECM (FR-BDF eqs. 74-77, proper long-run + short-run) ===
+    // Long run (eq 76): ln(M)_eq = β_m * ln(D) + γ_m * ln(RER)
+    //   where ln(D) ≈ ln_d_iad (cumulated import-weighted demand) and
+    //   ln(RER) ≈ s_gap. With β_m > 1 (AU openness rising), import target
+    //   responds more than one-for-one to demand level, generating the
+    //   secular rise in M/GDP that the previous degenerate m_gap couldn't.
+    // Error-correction term m_gap = ln_m_eq - ln_m_level.
+    // Short run keeps b2_m * iad (impact response) and b3_m * s_gap.
     //
-    // At SS: dln_m = 0, m_gap = 0
+    // At SS: ln_d_iad = 0, s_gap = 0, ln_m_level = 0  ⇒  ln_m_eq = 0, m_gap = 0.
+
+    [name = 'eq_ln_m_eq']
+    ln_m_eq = beta_m * ln_d_iad + gamma_m * s_gap;
 
     [name = 'eq_m_gap']
-    m_gap = m_gap(-1) - dln_m;
+    m_gap = ln_m_eq - ln_m_level;
 
-    // Stage 12 fix: Replaced yhat_au with import-adjusted demand (iad).
-    // Paper eqs. 72-75: imports driven by IAD = Σ(w_j * component_j),
-    // with weights = import content shares from input-output tables.
-    // IAD correctly distinguishes high-import-content demand (investment,
-    // exports) from low-import-content demand (government spending).
     [name = 'eq_dln_m']
     dln_m = b0_m * m_gap(-1)
             + b1_m * dln_m(-1)
@@ -1712,11 +1748,16 @@ steady_state_model;
     wacc           = w_COE*(i_ss+tp_ss+s_COE_ss) + w_LB_firms*(i_ss+tp_ss+s_LB_firms_ss) + w_BBB*(i_ss+tp_ss+s_BBB_ss);
     s_gap          = 0;                             // PPP holds at SS
 
-    // Trade block
+    // Trade block (proper ECM, all level deviations zero at SS)
     dln_x          = 0;       // zero export growth in stationary model
+    ln_x_level     = 0;
+    ln_x_eq        = 0;       // = beta_x*0 + gamma_x*0 = 0
     x_gap          = 0;
     dln_m          = 0;       // zero import growth in stationary model
+    ln_m_level     = 0;
+    ln_m_eq        = 0;       // = beta_m*0 + gamma_m*0 = 0
     m_gap          = 0;
+    ln_d_iad       = 0;       // cumulated iad = 0 at SS (iad SS = 0)
 
     // Demand deflators: all converge to pi_ss_au at SS
     pi_c           = pi_ss_au;
@@ -1820,21 +1861,21 @@ check;
 // -----------------------------------------------------------------------
 
 shocks;
-    var eps_q;        stderr 0.818;     // AU posterior mode
-    var eps_i;        stderr 0.027;     // AU posterior mode
-    var eps_pi;       stderr 0.584;     // AU posterior mode
+    var eps_q;        stderr 0.5233;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4619, 0.5878]
+    var eps_i;        stderr 0.1103;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0982, 0.1216]
+    var eps_pi;       stderr 0.5872;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.5263, 0.6430]
     var eps_q_us;     stderr 1.138;     // AU posterior mode
     var eps_pi_us;    stderr 0.319;     // AU posterior mode
     var eps_ibar;     stderr 0.01;
     var eps_pibar_au; stderr 0.01;
     var eps_pibar_us; stderr 0.01;
     var eps_pQ;       stderr 0.571;  // VA price shock (AU OLS residual)
-    var eps_w;        stderr 0.6;    // wage shock (comparable to price Phillips)
-    var eps_n;        stderr 0.577;  // employment shock (AU OLS residual)
-    var eps_c;        stderr 1.576;  // consumption shock (AU OLS residual)
-    var eps_ib;       stderr 2.750;  // business investment shock (AU OLS residual)
-    var eps_ih;       stderr 1.729;  // household investment shock (calibrated)
-    var eps_10y;      stderr 0.10;   // long rate shock (small — most variation from short rate)
+    var eps_w;        stderr 0.1486;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.6359, 0.8296]
+    var eps_n;        stderr 0.4430;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1229, 0.7341]
+    var eps_c;        stderr 1.8587;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [1.6525, 2.0461]
+    var eps_ib;       stderr 2.7529;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [2.4853, 3.0525]
+    var eps_ih;       stderr 1.3529;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4871, 2.9457]
+    var eps_10y;      stderr 0.0641;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0504, 0.0778]
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
     var eps_COE;      stderr 0.15;   // cost of equity spread shock
     var eps_LB_firms; stderr 0.10;   // bank lending spread shock (firms)
@@ -1866,7 +1907,7 @@ end;
 // Compute IRFs
 // -----------------------------------------------------------------------
 
-stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y
+stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y dln_m dln_x ln_m_level ln_x_level ln_m_eq ln_x_eq m_gap x_gap
     ln_Q ln_QN ln_K ln_C ln_C_star ln_IB ln_IB_star ln_IH ln_IH_star ln_N ln_N_star ln_P ln_P_star;
 
 // =======================================================================

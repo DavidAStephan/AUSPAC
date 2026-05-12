@@ -964,10 +964,8 @@ pac_model(auxiliary_model_name = esat_enriched, discount = beta_pac, model_name 
 
 
 // Observable variables for Bayesian estimation (auto-generated)
-// 11 observables matching estimation_data.mat columns.
-// dln_m and dln_x added to identify the new trade-block ECM long-run
-// elasticities (beta_m, gamma_m, beta_x, gamma_x).
-varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dln_m dln_x;
+// 9 observables matching estimation_data.mat columns
+varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
 
 model;
 
@@ -2203,13 +2201,6 @@ estimated_params;
     lambda_w,   beta_pdf,       0.25,   0.10;   // posterior=0.225, away from 0.55 prior
     gamma_w,    beta_pdf,       0.70,   0.15;   // posterior=0.770, very strong AU CPI indexation
     kappa_w,    normal_pdf,     0.08,   0.05;   // posterior=0.080
-    // --- Trade block LR elasticities (FR-BDF Section 4.7 proper ECM) ---
-    // Imports: AU openness rising 1960-now → β_m > 1 strongly supported.
-    // Exports: AU world-demand sensitivity moderate; γ_x positive (Marshall-Lerner).
-    beta_m,     normal_pdf,     1.50,   0.30;   // LR income elasticity of imports
-    gamma_m,    normal_pdf,    -0.40,   0.20;   // LR RER elasticity (negative)
-    beta_x,     normal_pdf,     1.20,   0.30;   // LR foreign-income elasticity of exports
-    gamma_x,    normal_pdf,     0.40,   0.20;   // LR RER elasticity (positive)
     // --- Shock standard deviations ---
     stderr eps_q,       inv_gamma_pdf,  0.80,  inf;
     stderr eps_i,       inv_gamma_pdf,  0.10,  inf;
@@ -2220,8 +2211,6 @@ estimated_params;
     stderr eps_n,       inv_gamma_pdf,  0.50,  inf;
     stderr eps_w,       inv_gamma_pdf,  0.30,  inf;
     stderr eps_10y,     inv_gamma_pdf,  0.10,  inf;
-    stderr eps_m,       inv_gamma_pdf,  1.00,  inf;   // trade-block observable
-    stderr eps_x,       inv_gamma_pdf,  1.20,  inf;   // trade-block observable
 end;
 
 // Stage 2: estimated_params_init(use_calibration) NOT compatible with mode_file
@@ -2249,14 +2238,14 @@ pac.update.expectation('pac_n');
 estimation(datafile='estimation_data.mat',
            first_obs=1,
            mode_compute=0,
-           mode_file='au_pac_bayesian/Output/au_pac_bayesian_mode',
+           mode_file='/Users/davidstephan/Documents/AUSPAC/dynare/au_pac_bayesian/Output/au_pac_bayesian_mode',
            presample=4,
-           mh_replic=20000,
-           mh_nblocks=2,
-           mh_jscale=0.4,
+           mh_replic=0,
+           mh_nblocks=1,
+           nobs=118, forecast=8,
            diffuse_filter,
            nograph)
-           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dln_m dln_x;
+           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
 
 // =======================================================================
 // (Estimation infrastructure activated above — original comments removed)
