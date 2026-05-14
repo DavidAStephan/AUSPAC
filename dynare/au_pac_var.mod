@@ -535,11 +535,11 @@ b1_pQ           = 0.2907;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD 
 b2_pQ           = -0.0001;  // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0786, 0.0858]
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-gamma_ulc       = 0.21;     // ULC pass-through (Phase G CES log-linear: (1-α)·σ; was 0.12)
-gamma_uck       = 0.11;     // user cost pass-through (Phase G CES log-linear: α·σ; was 0.06)
+gamma_ulc       = 0.2951;   // ULC pass-through (FR-BDF 2026 CES: (1-α)·σ = 0.55·0.5366); was 0.21
+gamma_uck       = 0.2415;   // user cost pass-through (FR-BDF 2026 CES: α·σ = 0.45·0.5366); was 0.11
 
 // --- Cobb-Douglas production function (Stage 9a) ---
-alpha_k         = 0.35;     // CES capital-share α (Phase G AU calibration; was 0.33 CD)
+alpha_k         = 0.45;     // CES capital-share α (FR-BDF 2026 AU calibration, ABS 5204 Tab 48 capital-income share); was 0.35
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
@@ -723,7 +723,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.3374;   // CES elasticity (Phase G Stage 1 v2, ABS Trend→SA audit refresh; was 0.3247)
+sigma_ces       = 0.5366;   // CES elasticity (FR-BDF 2026 method, 2026-05-14 refresh: labor FOC eq 3 with two-break trend; FR-BDF 2026 reports 0.4951 for France); was 0.3374
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient

@@ -38,10 +38,11 @@ MAT = HERE / "saved_irfs_hybrid.mat"
 
 T_PLOT = 40
 
-# Default panel: gap and growth variables (used for shocks that generate
-# output-gap responses).
+# Default panel: GDP level + inflation + growth variables (used for shocks
+# that generate output-gap responses; follows FR-BDF convention of plotting
+# real GDP level rather than the output gap).
 VARS_GAP = [
-    ("yhat_au",  "Output gap (%)"),
+    ("ln_Q",     "Real GDP (% from SS)"),
     ("pi_au",    "CPI inflation (qpp)"),
     ("piQ",      "VA price infl. (qpp)"),
     ("dln_c",    "Consumption growth"),

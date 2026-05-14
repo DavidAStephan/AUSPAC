@@ -594,29 +594,32 @@ b1_pQ = 0.2907;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1277, 
 b2_pQ = -0.0001;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0786, 0.0858]
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-// === Phase G CES production-function parameters (2026-05-10, AU data) ===
-// FR-BDF Section 4.3 specification with AU-data-determined calibration:
-//   σ = 0.3247 (Stage 1 Bayesian regularised; AU OLS wrong-signed due to
-//               mining-boom commodity-price endogeneity in user cost)
-//   α = 0.350  (Stage 3 fallback; AU labor share data + standard mid-range)
-//   γ = 1.000  (Stage 3 normalization; level scale absorbed in intercepts)
-//   μ = 1.200  (Stage 3 typical AU markup, mid-range RBA RDP estimates)
-// Cross-restrictions (FR-BDF eq 39-41) NOT directly satisfiable on AU data
-// because AU national accounts use different chain-volume base-year scaling
-// than French QNA. Falling back to AU-economic calibration is consistent
-// with how Phases B/C/D handled identification failures.
+// === CES production-function parameters (FR-BDF 2026 method, Dubois et al. WP #1044 §3.1.2) ===
+// FR-BDF Section 3.1 specification with AU-data-determined calibration:
+//   σ = 0.5366 (FR-BDF 2026 method: labor FOC eq 3 with two-break trend Φ̂;
+//               Bayesian posterior, prior N(0.50, 0.20²), AU FD-spec data
+//               weight 64%; FR-BDF 2026 reports σ = 0.4951 for France)
+//   α = 0.450  (AU capital-income share, ABS 5204 Tab 48 compensation/GVA)
+//   γ = 0.046  (analytical from 2019 Q_market/K_total mean; level scale
+//               is units-driven, AU chain-volume convention vs INSEE's;
+//               absent from the linearised model code)
+//   μ = 1.200  (AU aggregate markup, RBA RDP 2018-09 mid-range)
 //
-// Linearised pass-through coefficients (γ_ulc, γ_uck) derived from
-// log-linear approximation of the CES factor-price frontier (eq 38):
-//   ∂log P_Q / ∂log W̃ ≈ (1-α) · σ_adj      (labor cost channel)
-//   ∂log P_Q / ∂log r̃_K ≈ α · σ_adj         (capital cost channel)
-// with σ_adj = σ for FR-BDF parameterization.
-// AU values: γ_ulc = (1-0.35) · 0.32 = 0.21, γ_uck = 0.35 · 0.32 = 0.11
-gamma_ulc       = 0.21;     // ULC pass-through (CES log-linear: (1-α)·σ)
-gamma_uck       = 0.11;     // user cost pass-through (CES log-linear: α·σ)
+// Implements the three FR-BDF 2026 innovations (see data/estimate_ces_2026.m):
+//   1. γ analytical from base-year Q/K (replaces 40k-point grid)
+//   2. σ from labor FOC (replaces investment FOC, which failed on AU and FR data)
+//   3. Two-break trend efficiency at 2002Q2 and 2008Q3 (replaces single-break)
+//
+// Linearised pass-through coefficients (γ_ulc, γ_uck) from the CES factor-
+// price frontier (FR-BDF 2026 eq 4):
+//   ∂log P_Q / ∂log W̃ ≈ (1-α) · σ      (labor cost channel)
+//   ∂log P_Q / ∂log r̃_K ≈ α · σ         (capital cost channel)
+// AU values: γ_ulc = (1-0.45) · 0.5366 = 0.295, γ_uck = 0.45 · 0.5366 = 0.241
+gamma_ulc       = 0.2951;   // ULC pass-through (CES log-linear: (1-α)·σ)
+gamma_uck       = 0.2415;   // user cost pass-through (CES log-linear: α·σ)
 
-// --- Cobb-Douglas production function (Stage 9a) ---
-alpha_k         = 0.35;     // CES capital-share parameter α (Phase G AU calibration; was 0.33 CD)
+// --- CES production function (FR-BDF 2026 calibration, AU data) ---
+alpha_k         = 0.45;     // CES capital-share parameter α (FR-BDF 2026 AU calibration; was 0.35)
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
@@ -800,7 +803,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.3374;   // CES elasticity (Phase G Stage 1 v2, 2026-05-11, ABS 5206 Trend→SA audit refresh; was 0.3247 under Trend supply data; Bayesian regularised, prior N(0.53, 0.20^2), data weight 31%; OLS still wrong-signed due to mining boom; FR-BDF=0.53)
+sigma_ces       = 0.5366;   // CES elasticity (FR-BDF 2026 method, 2026-05-14 refresh: labor FOC eq 3 with two-break trend Φ̂_t; Bayesian posterior prior N(0.50, 0.20²); FR-BDF 2026 reports σ=0.4951 for France; was 0.3374 under 2019-method investment FOC)
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient

@@ -56,7 +56,7 @@ def series(irf_struct, var):
 def fig_two_panel(all_irfs):
     fig, axes = plt.subplots(1, 2, figsize=(10, 4), constrained_layout=True)
     panels = [
-        ("yhat_au", "Output",
+        ("ln_Q", "Real GDP",
          "(deviation from baseline, in %)", False),
         ("piQ", "VA price inflation",
          "(annualized, deviation from baseline, in pp)", True),
@@ -86,7 +86,7 @@ def fig_two_panel(all_irfs):
 
 def fig_full_panel(all_irfs):
     vars_ = [
-        ("yhat_au",  "Output gap"),
+        ("ln_Q",     "Real GDP"),
         ("piQ",      "VA price inflation"),
         ("pi_au",    "CPI inflation"),
         ("dln_c",    "Consumption"),

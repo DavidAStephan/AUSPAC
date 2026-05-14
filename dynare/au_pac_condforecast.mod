@@ -573,11 +573,11 @@ b1_pQ           = 0.50;     // persistence
 b2_pQ           = 0.09;     // output gap
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-gamma_ulc       = 0.12;     // ULC pass-through (CES dual, labor share channel)
-gamma_uck       = 0.06;     // user cost pass-through (CES dual, capital share channel)
+gamma_ulc       = 0.2951;   // ULC pass-through (FR-BDF 2026 CES: (1-α)·σ = 0.55·0.5366); was 0.12
+gamma_uck       = 0.2415;   // user cost pass-through (FR-BDF 2026 CES: α·σ = 0.45·0.5366); was 0.06
 
 // --- Cobb-Douglas production function (Stage 9a) ---
-alpha_k         = 0.33;     // capital share in Cobb-Douglas
+alpha_k         = 0.45;     // CES capital-share α (FR-BDF 2026 AU calibration); was 0.33
 rho_tfp         = 0.99;     // TFP persistence (near unit root)
 
 // --- Commodity price channel (Stage 11b) ---
@@ -759,7 +759,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.53;     // paper Table 4.3.2 estimate for France; adopted for AU
+sigma_ces       = 0.5366;   // CES elasticity (FR-BDF 2026 method); was 0.53 (FR value)
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient

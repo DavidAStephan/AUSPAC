@@ -72,7 +72,7 @@ def fig_irf_overview():
     T_plot = 40
     fig, ax = plt.subplots(figsize=(11, 6), constrained_layout=True)
     for sh, scale, label, color in shocks:
-        field = f"yhat_au_{sh}"
+        field = f"ln_Q_{sh}"
         if not hasattr(ir, field):
             continue
         y = np.atleast_1d(np.array(getattr(ir, field))).ravel() * scale
@@ -80,11 +80,11 @@ def fig_irf_overview():
         ax.plot(range(1, T_use + 1), y[:T_use], label=label,
                 color=color, linewidth=1.6)
     ax.axhline(0, color="black", linewidth=0.4, linestyle=":")
-    ax.set_title("Output-gap responses to seven structural shocks "
+    ax.set_title("Real GDP responses to seven structural shocks "
                  "(hybrid regime, policy-relevant magnitudes)",
                  fontsize=11, fontweight="bold")
     ax.set_xlabel("Quarters")
-    ax.set_ylabel("yhat_au deviation (%)")
+    ax.set_ylabel("Real GDP, % deviation from SS")
     ax.legend(loc="best", fontsize=9)
     ax.grid(True, alpha=0.3)
     ax.set_xlim(1, T_plot)
