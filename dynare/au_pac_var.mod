@@ -115,6 +115,7 @@ var
     s_LB_firms      // bank lending spread for firms (quarterly %)
     s_BBB           // BBB bond spread (quarterly %)
     s_gap           // real exchange rate gap (log, + = AUD depreciation)
+    pv_i_uip        // backward PV of policy-rate gap for UIP (VAR regime AR(1))
 
     // === Trade block (Section 4.7) ===
     // Proper ECM: long-run equilibrium ln_X_eq / ln_M_eq, plus short-run dynamics.
@@ -394,6 +395,7 @@ parameters
     // --- Exchange rate parameters (Section 4.8, eq. 105) ---
     rho_s           // real exchange rate persistence (PPP half-life ~3-5 years)
     alpha_s         // interest rate differential -> exchange rate
+    beta_uip        // UIP NPV discount (VAR regime: backward AR(1) form)
 
     // --- Export parameters (Section 4.7, eqs. 70-73) ---
     b0_x            // error correction speed
@@ -645,6 +647,7 @@ s_BBB_ss        = 0.05;     // SS BBB bond spread (~0.2% annual)
 // s_gap > 0 = AUD depreciation (less purchasing power)
 rho_s           = 0.775;    // AU est (s.e.0.06). Was 0.95. AUD less persistent PPP deviations
 alpha_s         = 0.15;     // interest rate differential -> appreciation (negative sign in eq)
+beta_uip        = 0.92;     // UIP NPV discount (VAR regime: backward AR(1) — slow build-up, no impact jump)
 
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
 // Australia: commodity exports sensitive to world demand, moderate price elasticity
@@ -1334,21 +1337,20 @@ model;
     wacc = w_COE * i_COE + w_LB_firms * i_LB_firms + w_BBB * i_BBB;
 
     // === EXCHANGE RATE (eq. 105) ===
-    // Real exchange rate gap follows modified UIP.
-    // s_gap > 0 = AUD depreciation (weaker purchasing power).
-    // Higher AU interest rates attract capital, appreciating AUD (negative alpha_s).
-    // Persistent deviations from PPP (rho_s ~0.92, half-life ~8 quarters).
+    // Real exchange rate gap follows backward-looking modified UIP under VAR.
+    // Phase Q (2026-05-15): pv_i_uip is now backward AR(1), the E-SAT-style
+    // policy function for the PV of the rate gap. Under VAR expectations
+    // agents do not anticipate the persistent rate path on impact, so
+    // pv_i_uip(0) = 0 and the AUD response builds up slowly — matching the
+    // FR-BDF VAR baseline (no Hybrid amplification through the trade channel).
     //
-    // At SS: s_gap = 0 (PPP holds in long run)
+    // At SS: pv_i_uip = 0, s_gap = 0 (PPP holds in long run).
+    [name = 'eq_pv_i_uip']
+    pv_i_uip = (i_au - ibar) + beta_uip * pv_i_uip(-1);
 
-    // Stage 12 fix: Added inflation differential per paper eq. 104.
-    // Paper: ξ + p_EA - p_F = Σ(i-i_F) - Σ(π_EA - π_F).
-    // Real interest rate differential = (i - π) - (i_F - π_F).
-    // Higher AU inflation reduces real rate attractiveness → AUD depreciates.
-    // Uses same alpha_s coefficient (real rate parity).
     [name = 'eq_s_gap']
     s_gap = rho_s * s_gap(-1)
-            - alpha_s * i_gap
+            - alpha_s * pv_i_uip
             + alpha_s * (pi_au_gap - pi_us_gap)
             + eps_s;
 
@@ -1751,6 +1753,7 @@ steady_state_model;
     i_BBB          = i_ss + tp_ss + s_BBB_ss;        // BBB bond rate at SS
     wacc           = w_COE*(i_ss+tp_ss+s_COE_ss) + w_LB_firms*(i_ss+tp_ss+s_LB_firms_ss) + w_BBB*(i_ss+tp_ss+s_BBB_ss);
     s_gap          = 0;                             // PPP holds at SS
+    pv_i_uip       = 0;                             // backward UIP PV = 0 at SS
 
     // Trade block (proper ECM, all level deviations zero at SS)
     dln_x          = 0;       // zero export growth in stationary model

@@ -98,7 +98,7 @@ VARS_TP = [
 # Per-shock panel variant + auxiliary footer caption noting the model
 # transmission channel for that shock.
 SHOCKS = [
-    ("eps_i", 0.1103, 0.25, VARS_GAP,
+    ("eps_i", 0.1110, 0.25, VARS_GAP,
      "100bp annualized policy tightening",
      "FR-BDF Fig 5.2.1 — Monetary policy shock (eps_i)",
      ""),

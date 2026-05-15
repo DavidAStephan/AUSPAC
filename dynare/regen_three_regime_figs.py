@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
 
-STDERR_EPS_I = 0.1105            # Phase G posterior mean
+STDERR_EPS_I = 0.1110            # Phase Q posterior mean (forward UIP, 2026-05-15)
 TARGET = 0.25                    # 100bp annualized
 SCALE = TARGET / STDERR_EPS_I    # ≈ 2.262
 T_PLOT = 80
