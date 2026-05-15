@@ -5,7 +5,7 @@
 % Usage: run from <repo>/dynare
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 fprintf('=== IRF Comparison: AUSPAC Model ===\n\n');

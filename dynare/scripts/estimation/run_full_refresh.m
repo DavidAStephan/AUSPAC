@@ -6,7 +6,7 @@
 % Wall time: ~90 min MCMC + ~2 min IRF generation + post-processing.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = 'full_refresh_log.txt';
@@ -28,7 +28,7 @@ fprintf('MCMC elapsed: %.0f min\n', toc(t_start)/60);
 %% 2. Extract posterior table
 fprintf('\n=== Extracting posterior summary ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 try
     extract_mcmc_results;
@@ -39,7 +39,7 @@ end
 %% 3. Regenerate three-regime IRFs
 fprintf('\n=== Regenerating IRFs (var, hybrid, mce) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 regimes = {'au_pac_var', 'au_pac', 'au_pac_mce'};

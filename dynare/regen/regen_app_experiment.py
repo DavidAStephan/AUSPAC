@@ -21,7 +21,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-MAT = HERE / "saved_irfs_hybrid.mat"
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
+MAT = DYNARE / "saved_irfs_hybrid.mat"
 
 STDERR_EPS_TP = 0.05            # model calibration
 TARGET = -0.50                  # -200bp annualised (negative because term premium falls)
@@ -67,7 +68,7 @@ def main():
         f"(scale = {TARGET}/σ_tp = {TARGET}/{STDERR_EPS_TP} = {SCALE:+.1f}); "
         "hybrid regime",
         fontsize=12, fontweight="bold")
-    out = HERE / "app_experiment_200bp.png"
+    out = DYNARE / "app_experiment_200bp.png"
     fig.savefig(out, dpi=200)
     plt.close(fig)
     print(f"Saved: {out.name}")

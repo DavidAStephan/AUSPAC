@@ -36,6 +36,12 @@ projectdir = fileparts(mfilename('fullpath'));
 if isempty(projectdir), projectdir = pwd; end
 cd(projectdir);
 
+% Bootstrap MATLAB path: addpath dynare/scripts/* and locate Dynare.
+% Setup is at dynare/setup_dynare_path.m; it must be reachable before
+% any of Stage 4-8 scripts can be called by name.
+addpath(fullfile(projectdir, 'dynare'));
+setup_dynare_path();
+
 t_total = tic;
 
 %% Stage 1: data
@@ -80,7 +86,6 @@ fprintf('\n');
 %% Stage 7: compile all three Dynare model variants and produce IRFs
 fprintf('--- Stage 7/8: Compile all 3 Dynare variants ---\n');
 cd(fullfile(projectdir, 'dynare'));
-setup_dynare_path;
 % noclearall keeps M_/oo_ in workspace; nograph avoids X11 popups in headless mode
 for variant = {'au_pac_var', 'au_pac', 'au_pac_mce'}
     name = variant{1};

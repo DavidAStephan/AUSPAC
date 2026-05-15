@@ -28,7 +28,8 @@ import pandas as pd
 from scipy.io import loadmat
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
+DYNARE = HERE.parent           # dynare/
+ROOT = HERE.parent.parent      # repo root
 
 
 def load_abs_5206_series(series_id):

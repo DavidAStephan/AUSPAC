@@ -25,6 +25,7 @@ from scipy.io import loadmat, savemat
 from datetime import date
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat artefacts
 ROOT = HERE.parent
 DATA = ROOT / "data"
 
@@ -88,7 +89,7 @@ def load_terms_of_trade():
 
 def load_population():
     print("  Loading working-age population from supply_data.mat...")
-    d = loadmat(HERE / "supply_data.mat", squeeze_me=True, struct_as_record=False)
+    d = loadmat(DYNARE / "supply_data.mat", squeeze_me=True, struct_as_record=False)
     pop = np.array(d["pop_bar"]).astype(float)
     # supply_data is quarterly starting 1990Q1; length 140 ⇒ 1990Q1 to 2024Q4
     ln_pop = np.log(pop)
@@ -191,7 +192,7 @@ def ols_coef(y, x):
 def calibrate_channels(ch):
     """Regress each flagged smoothed shock on its candidate channel(s)."""
     print("\n=== Calibrating channels via OLS on smoothed shocks ===")
-    mat = loadmat(HERE / "bayesian_mcmc_results.mat",
+    mat = loadmat(DYNARE / "bayesian_mcmc_results.mat",
                   squeeze_me=True, struct_as_record=False)
     ss = mat["oo_"].SmoothedShocks
     shocks = {}
@@ -236,7 +237,7 @@ def write_mat(ch, calib):
     }
     for k, v in calib.items():
         out[k] = float(v)
-    savemat(HERE / "channel_data.mat", out)
+    savemat(DYNARE / "channel_data.mat", out)
     print(f"\nSaved channel_data.mat (3 obs series + 4 calibrated gammas)")
 
 

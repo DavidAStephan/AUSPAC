@@ -34,7 +34,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-MAT = HERE / "saved_irfs_hybrid.mat"
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
+MAT = DYNARE / "saved_irfs_hybrid.mat"
 
 T_PLOT = 40
 
@@ -179,7 +180,7 @@ def plot_shock(ir, shock_id, stderr, target, variables, target_label,
     if footer_note:
         subtitle += f"\n{footer_note}"
     fig.suptitle(f"{title}\n{subtitle}", fontsize=11, fontweight="bold")
-    out = HERE / f"irf_{shock_id}.png"
+    out = DYNARE / f"irf_{shock_id}.png"
     fig.savefig(out, dpi=200)
     plt.close(fig)
     return out

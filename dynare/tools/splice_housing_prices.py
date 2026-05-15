@@ -29,7 +29,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]   # repo root (was parents[1] when this lived in dynare/)
 DATA = ROOT / "data"
 
 LONG_CSV = DATA / "house_price_history_long.csv"

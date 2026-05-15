@@ -1,10 +1,29 @@
 function setup_dynare_path()
-%% setup_dynare_path — Ensure Dynare 6.5 is on the MATLAB path.
-% Resolution order:
+%% setup_dynare_path — Bootstrap MATLAB path for AUSPAC.
+% Adds every dynare/scripts/* source directory to the MATLAB path, then
+% ensures Dynare 6.5 is reachable.
+%
+% Usage: from a driver that has cd'd into dynare/ (or into the repo root):
+%   setup_dynare_path();
+%
+% Dynare resolution order:
 %   1. already on path (no-op)
 %   2. DYNARE_PATH environment variable
 %   3. OS-specific default install locations
 
+% --- AUSPAC source path ---
+here      = fileparts(mfilename('fullpath'));   % .../dynare
+subdirs   = {'scripts/estimation', 'scripts/analysis', ...
+             'scripts/figures',    'scripts/data_prep', ...
+             'scripts/tests'};
+for k = 1:numel(subdirs)
+    p = fullfile(here, subdirs{k});
+    if exist(p, 'dir')
+        addpath(p);
+    end
+end
+
+% --- Dynare ---
 if ~isempty(which('dynare'))
     return;
 end

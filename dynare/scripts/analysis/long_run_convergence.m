@@ -21,7 +21,7 @@
 % (BK rank satisfied). Reads from oo_.dr after `dynare au_pac noclearall`.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 T_sim = 200;        % quarters

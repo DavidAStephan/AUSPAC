@@ -10,7 +10,7 @@ if isempty(IRF_REGIME)
     error('Set IRF_REGIME to one of au_pac_var, au_pac, au_pac_mce');
 end
 
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 fprintf('=== Regenerating IRFs for %s ===\n', IRF_REGIME);

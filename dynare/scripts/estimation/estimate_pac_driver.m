@@ -17,7 +17,7 @@
 clear; clc;
 
 %% Setup paths
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 fprintf('================================================================\n');

@@ -42,7 +42,8 @@ import matplotlib.dates as mdates
 from datetime import date
 
 HERE = Path(__file__).resolve().parent
-MAT = HERE / "bayesian_mcmc_results.mat"
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat artefacts
+MAT = DYNARE / "bayesian_mcmc_results.mat"
 
 # Smoother sample: 122 quarters from 1994Q3 to 2024Q4
 START = date(1994, 7, 1)
@@ -247,7 +248,7 @@ def main():
             flag = " ARTIFACT (residual at FP precision)"
         log_lines.append(f"  {sid:<10} {eq:<25} std={rstd:.1e} t_lin={tlin:+.2f} {flag}")
 
-    (HERE / "trend_diagnostics_log.txt").write_text("\n".join(log_lines))
+    (DYNARE / "trend_diagnostics_log.txt").write_text("\n".join(log_lines))
     print("\n".join(log_lines))
 
     # Plot
@@ -279,7 +280,7 @@ def main():
         ax.grid(True, alpha=0.3)
     fig.suptitle("AU-PAC smoothed shocks: linear-trend diagnostics",
                  fontsize=13, fontweight="bold")
-    fig.savefig(HERE / "trend_diagnostics.png", dpi=200)
+    fig.savefig(DYNARE / "trend_diagnostics.png", dpi=200)
     plt.close(fig)
     print("\nSaved: trend_diagnostics.png")
 

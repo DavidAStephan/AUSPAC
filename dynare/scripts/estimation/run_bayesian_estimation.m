@@ -21,7 +21,7 @@
 %   9 shock std devs
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = 'bayesian_estimation_log.txt';

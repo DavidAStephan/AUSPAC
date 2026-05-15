@@ -17,6 +17,7 @@ from pathlib import Path
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat artefacts
 ROOT = HERE.parent
 
 
@@ -41,7 +42,7 @@ def main():
     df.index.name = "date"
     df = df.reset_index()
     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-    out = HERE / "trade_volumes_sa.csv"
+    out = DYNARE / "trade_volumes_sa.csv"
     df.to_csv(out, index=False)
     print(f"Saved {len(df)} rows ({df['date'].iloc[0]} to {df['date'].iloc[-1]}) -> {out}")
 

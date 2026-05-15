@@ -17,7 +17,7 @@
 % with a small helper).
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 regimes = {'au_pac_var', 'au_pac', 'au_pac_mce'};

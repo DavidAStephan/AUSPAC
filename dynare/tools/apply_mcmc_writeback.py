@@ -11,11 +11,11 @@ Run after run_bayesian_mcmc.m + extract_mcmc_results.m.
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-WRITEBACK = ROOT / "mcmc_writeback.txt"
-MODS = [ROOT / "au_pac.mod",
-        ROOT / "au_pac_var.mod",
-        ROOT / "au_pac_mce.mod"]
+DYNARE = Path(__file__).resolve().parents[1]   # dynare/
+WRITEBACK = DYNARE / "mcmc_writeback.txt"
+MODS = [DYNARE / "au_pac.mod",
+        DYNARE / "au_pac_var.mod",
+        DYNARE / "au_pac_mce.mod"]
 
 
 def parse_writeback():

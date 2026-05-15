@@ -1,11 +1,20 @@
-%% forward_guidance_v2.m — Forward Guidance Puzzle Test (clean version)
+%% forward_guidance.m — Forward Guidance Puzzle Test (FR-BDF Section 6.3)
 %
-% Splits each Dynare run into its own MATLAB invocation via batch files
-% to avoid PAC workspace pollution between models. Otherwise identical
-% to forward_guidance.m.
+% Tests whether AU-PAC suffers from the forward guidance puzzle.
+% Method: superposition at first order. An N-quarter rate cut =
+% N individual 1-period shocks superposed. Peak effects should grow
+% linearly (no puzzle) not exponentially (puzzle).
+%
+% Compares 3 models (all solved by Dynare):
+%   1. Standard NK     (nk_simple.mod)     — shows the puzzle
+%   2. Discounted NK   (nk_discounted.mod) — partial fix
+%   3. AU-PAC          (au_pac.mod)        — should show no puzzle
+%
+% Each Dynare run executes in its own clear workspace to avoid PAC state
+% pollution between models.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 max_N = 12;

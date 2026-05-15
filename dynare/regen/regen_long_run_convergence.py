@@ -22,7 +22,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-MAT = HERE / "saved_irfs_hybrid.mat"
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
+MAT = DYNARE / "saved_irfs_hybrid.mat"
 
 T_PLOT = 80   # long horizon
 
@@ -86,7 +87,7 @@ def main():
     fig.suptitle("AU-PAC convergence to balanced growth path "
                  "(proxy via long-horizon IRFs, hybrid regime)",
                  fontsize=13, fontweight="bold")
-    out = HERE / "long_run_convergence_proxy.png"
+    out = DYNARE / "long_run_convergence_proxy.png"
     fig.savefig(out, dpi=200)
     plt.close(fig)
     print(f"Saved: {out.name}")

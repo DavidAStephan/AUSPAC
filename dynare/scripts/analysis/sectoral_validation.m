@@ -17,7 +17,7 @@
 %   w_N_ss = 0.08 (NPISH — small net creditor)
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 T_sim = 200;        % quarters for long-run convergence

@@ -5,7 +5,7 @@
 %   Stage 4: three-regime IRFs
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = 'phase_q_uip_log.txt';
@@ -33,7 +33,7 @@ end
 %% Stage 3: extract posterior summary
 fprintf('\n=== Stage 3: Extract posterior ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = 'phase_q_uip_log.txt';
 try
@@ -47,7 +47,7 @@ end
 %% Stage 4: three-regime IRFs
 fprintf('\n=== Stage 4: Three-regime IRFs ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = 'phase_q_uip_log.txt';
 

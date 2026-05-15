@@ -20,7 +20,7 @@
 %   - au_pac_bayesian/metropolis/*.mat (MCMC chains)
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 fprintf('=== Phase J: identification analysis ===\n');

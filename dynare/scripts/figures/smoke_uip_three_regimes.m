@@ -6,7 +6,7 @@
 %% dynare's local-clearing doesn't break the loop.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = 'smoke_uip_log.txt';

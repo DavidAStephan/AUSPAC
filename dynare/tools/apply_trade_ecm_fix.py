@@ -22,6 +22,7 @@ from pathlib import Path
 import sys
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat artefacts
 TARGETS = [
     "au_pac.mod",
     "au_pac_mce.mod",
@@ -253,7 +254,7 @@ def apply_to_file(path):
 def main():
     print("Propagating FR-BDF trade ECM fix to sibling .mod files\n")
     for fname in TARGETS:
-        path = HERE / fname
+        path = DYNARE / fname
         if not path.exists():
             print(f"--- {fname} (NOT FOUND) ---")
             continue

@@ -8,7 +8,7 @@
 % Output: printed to console as markdown tables for pasting into docs.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 %% Run model if not already loaded

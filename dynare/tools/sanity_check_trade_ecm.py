@@ -24,7 +24,8 @@ import numpy as np
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
+DYNARE = HERE.parent           # dynare/
+ROOT = HERE.parent.parent      # repo root
 
 
 def load_5206(series_id):

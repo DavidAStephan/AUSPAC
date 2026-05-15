@@ -10,7 +10,7 @@
 % dynare's local-variable bleed. Total wall time: ~60 min.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = 'phase_q_uip_log.txt';
@@ -40,7 +40,7 @@ end
 %% Stage 2: MCMC
 fprintf('\n=== Stage 2: MCMC (20k × 2 chains) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = 'phase_q_uip_log.txt';
 t_s2 = tic;
@@ -61,7 +61,7 @@ end
 %% Stage 3: Extract posterior
 fprintf('\n=== Stage 3: Extract posterior summary ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = 'phase_q_uip_log.txt';
 try
@@ -75,7 +75,7 @@ end
 %% Stage 4: Three-regime IRFs
 fprintf('\n=== Stage 4: Three-regime IRFs (var, hybrid, mce) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = 'phase_q_uip_log.txt';
 

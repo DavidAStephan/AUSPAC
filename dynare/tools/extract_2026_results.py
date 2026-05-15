@@ -19,6 +19,7 @@ import numpy as np
 import scipy.io as sio
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat artefacts
 os.chdir(HERE)
 
 def fmt(x, decimals=4):
@@ -40,7 +41,7 @@ def load_mat(p):
 out_lines = ["# AUSPAC 2026 paper inputs — auto-generated\n"]
 
 # 1. Try bayesian_mcmc_results.mat (post-extract_mcmc_results)
-mcmc_path = HERE / "bayesian_mcmc_results.mat"
+mcmc_path = DYNARE / "bayesian_mcmc_results.mat"
 mcmc = load_mat(mcmc_path)
 if mcmc is None:
     out_lines.append("## Posteriors\n\nbayesian_mcmc_results.mat not yet available.\n")
@@ -106,9 +107,9 @@ else:
 out_lines.append("\n## IRF peaks (saved_irfs_*.mat)\n")
 
 irf_files = {
-    "var":    HERE / "saved_irfs_var.mat",
-    "hybrid": HERE / "saved_irfs_hybrid.mat",
-    "mce":    HERE / "saved_irfs_mce.mat",
+    "var":    DYNARE / "saved_irfs_var.mat",
+    "hybrid": DYNARE / "saved_irfs_hybrid.mat",
+    "mce":    DYNARE / "saved_irfs_mce.mat",
 }
 
 # Variables to report at peak for the monetary shock (eps_i)
@@ -168,7 +169,7 @@ for v in mon_vars:
     )
 
 # Write
-out_path = HERE / "2026_paper_inputs.md"
+out_path = DYNARE / "2026_paper_inputs.md"
 with open(out_path, "w") as f:
     f.write("\n".join(out_lines))
 print(f"\nWrote {out_path}")

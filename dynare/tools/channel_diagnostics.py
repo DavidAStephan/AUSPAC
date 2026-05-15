@@ -19,15 +19,16 @@ import numpy as np
 from scipy.io import loadmat
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat artefacts
 T = 122
 GFC_BREAK = 54  # obs 54 = 2007Q4
 
 
 def load_data():
-    ss = loadmat(HERE / "bayesian_mcmc_results.mat",
+    ss = loadmat(DYNARE / "bayesian_mcmc_results.mat",
                  squeeze_me=True, struct_as_record=False)["oo_"].SmoothedShocks
     shocks = {nm: np.array(getattr(ss, nm)).ravel()[:T] for nm in ss._fieldnames}
-    ch = loadmat(HERE / "channel_data.mat", squeeze_me=True)
+    ch = loadmat(DYNARE / "channel_data.mat", squeeze_me=True)
     return shocks, ch
 
 

@@ -17,7 +17,7 @@
 %   >> conditional_forecast_driver('custom', scenario_struct)
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = 'conditional_forecast_log.txt';

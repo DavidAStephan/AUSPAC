@@ -2,7 +2,7 @@
 % Reads saved_irfs_{var,hybrid,mce}.mat and prints peak values scaled to
 % 100bp annualized monetary tightening (0.25 qpp / 0.111 stderr ≈ 2.252 scale).
 
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 
 % Posterior mean of stderr_eps_i (from MCMC log)
 stderr_i = 0.1110;

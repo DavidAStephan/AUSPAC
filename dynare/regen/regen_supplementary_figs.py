@@ -16,6 +16,7 @@ import matplotlib.dates as mdates
 from datetime import date
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
 
 # Sample axis: 122 quarters from 1994Q3
 START = date(1994, 7, 1)
@@ -35,7 +36,7 @@ def quarter_dates(start, T):
 
 
 def fig_observables():
-    d = loadmat(HERE / "estimation_data.mat", squeeze_me=True, struct_as_record=False)
+    d = loadmat(DYNARE / "estimation_data.mat", squeeze_me=True, struct_as_record=False)
     keys = [k for k in d if not k.startswith("__")]
     dates_ = quarter_dates(START, T)
     fig, axes = plt.subplots(3, 3, figsize=(12, 8), constrained_layout=True)
@@ -50,13 +51,13 @@ def fig_observables():
         ax.tick_params(labelsize=8)
     fig.suptitle("Nine Bayesian observables, 1994Q3–2024Q4 (122 quarters)",
                  fontsize=13, fontweight="bold")
-    fig.savefig(HERE / "data_observables.png", dpi=200)
+    fig.savefig(DYNARE / "data_observables.png", dpi=200)
     plt.close(fig)
     print("Saved: data_observables.png")
 
 
 def fig_irf_overview():
-    d = loadmat(HERE / "saved_irfs_hybrid.mat", squeeze_me=True,
+    d = loadmat(DYNARE / "saved_irfs_hybrid.mat", squeeze_me=True,
                 struct_as_record=False)
     ir = d[[k for k in d if not k.startswith("__")][0]]
 
@@ -88,7 +89,7 @@ def fig_irf_overview():
     ax.legend(loc="best", fontsize=9)
     ax.grid(True, alpha=0.3)
     ax.set_xlim(1, T_plot)
-    fig.savefig(HERE / "irf_overview_output.png", dpi=200)
+    fig.savefig(DYNARE / "irf_overview_output.png", dpi=200)
     plt.close(fig)
     print("Saved: irf_overview_output.png")
 

@@ -18,7 +18,7 @@
 %   - log_wp_irfs.txt (file-based log)
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = 'log_wp_irfs.txt';

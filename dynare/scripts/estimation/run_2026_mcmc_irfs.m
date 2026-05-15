@@ -2,7 +2,7 @@
 % Stage 1 (mode finding) already completed at 16:09 with LMD=-803.31.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = '2026_refresh_log.txt';
@@ -33,7 +33,7 @@ end
 %% Stage 3: Extract posterior summary
 fprintf('\n=== Extracting posterior summary ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = '2026_refresh_log.txt';
 try
@@ -47,7 +47,7 @@ end
 %% Stage 4: Three-regime IRFs
 fprintf('\n=== Stage 4: Three-regime IRFs (var, hybrid, mce) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = '2026_refresh_log.txt';
 

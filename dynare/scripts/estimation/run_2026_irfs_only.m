@@ -3,7 +3,7 @@
 % because run_2026_mcmc_irfs.m had a clear/scoping bug.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = '2026_refresh_log.txt';

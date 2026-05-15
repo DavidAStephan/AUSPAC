@@ -30,6 +30,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
 
 STDERR_EPS_I = 0.1110            # Phase Q (2026-05-15) posterior mean
 TARGET = 0.25                    # 100bp annualized
@@ -110,7 +111,7 @@ def series_for_panel(irfs, combos):
 def load_irfs():
     out = {}
     for tag, *_ in REGIMES:
-        d = loadmat(HERE / f"saved_irfs_{tag}.mat",
+        d = loadmat(DYNARE / f"saved_irfs_{tag}.mat",
                     squeeze_me=True, struct_as_record=False)
         key = [k for k in d if not k.startswith("__")][0]
         out[tag] = d[key]
@@ -147,7 +148,7 @@ def main():
         "three-regime IRFs (wp736 Fig 6.2.2 layout, Phase Q forward UIP)",
         fontsize=13, fontweight="bold", y=1.04)
 
-    out = HERE / "three_regime_wp736_style.png"
+    out = DYNARE / "three_regime_wp736_style.png"
     fig.savefig(out, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {out.name}")

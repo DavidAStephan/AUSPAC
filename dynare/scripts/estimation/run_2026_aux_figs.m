@@ -5,7 +5,7 @@
 % Wall time estimate: ~15-25 min total (forecast_eval is the slow one).
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = '2026_refresh_log.txt';
@@ -26,7 +26,7 @@ end
 %% 2. Forward guidance (Phase L extended to N=12, ~3 min)
 fprintf('\n=== Forward guidance (v2, N up to 12) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 try
     forward_guidance_v2;
@@ -37,7 +37,7 @@ end
 %% 3. Identification analysis (~1 min)
 fprintf('\n=== Identification analysis (prior/posterior) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 try
     identification_analysis;
@@ -48,7 +48,7 @@ end
 %% 4. Forecast evaluation (24 origins, slow, ~10-15 min)
 fprintf('\n=== Forecast evaluation (24 origins, 2018Q1-2023Q4) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 try
     forecast_eval;

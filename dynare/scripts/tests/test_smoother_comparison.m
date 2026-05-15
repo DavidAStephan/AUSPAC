@@ -6,7 +6,7 @@
 %
 % Logs results to test_comparison_log.txt for analysis.
 
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = fullfile(pwd, 'test_comparison_log.txt');

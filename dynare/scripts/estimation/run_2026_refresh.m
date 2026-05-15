@@ -9,7 +9,7 @@
 % Designed to run unattended in the background.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 logfile = '2026_refresh_log.txt';
@@ -44,7 +44,7 @@ end
 %% Stage 2: MCMC
 fprintf('\n=== Stage 2: MCMC (20k draws × 2 chains) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = '2026_refresh_log.txt';
 
@@ -66,7 +66,7 @@ end
 %% Stage 3: Extract MCMC posterior summary
 fprintf('\n=== Extracting MCMC posterior summary ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = '2026_refresh_log.txt';
 try
@@ -80,7 +80,7 @@ end
 %% Stage 4: Three-regime IRFs
 fprintf('\n=== Stage 4: Three-regime IRFs (var, hybrid, mce) ===\n');
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 logfile = '2026_refresh_log.txt';
 

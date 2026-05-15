@@ -1,7 +1,7 @@
 %% quick_uip_irfs.m — run one regime, save IRFs.
 %% Usage: matlab -batch "cd('...'); regime='au_pac'; tag='hybrid'; run('quick_uip_irfs.m')"
 
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 assert(exist('regime','var')==1, 'must set regime variable');

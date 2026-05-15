@@ -21,6 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
 
 STDERR_EPS_I = 0.1110            # Phase Q posterior mean (forward UIP, 2026-05-15)
 TARGET = 0.25                    # 100bp annualized
@@ -38,7 +39,7 @@ REGIMES = [
 def load_irfs():
     out = {}
     for tag, *_ in REGIMES:
-        d = loadmat(HERE / f"saved_irfs_{tag}.mat",
+        d = loadmat(DYNARE / f"saved_irfs_{tag}.mat",
                     squeeze_me=True, struct_as_record=False)
         key = [k for k in d if not k.startswith("__")][0]
         out[tag] = d[key]
@@ -78,7 +79,7 @@ def fig_two_panel(all_irfs):
     fig.suptitle("Monetary policy tightening (100bp annualized) "
                  "under different expectations",
                  fontsize=13, fontweight="bold")
-    out = HERE / "three_regime_monetary_irf.png"
+    out = DYNARE / "three_regime_monetary_irf.png"
     fig.savefig(out, dpi=300)
     plt.close(fig)
     print(f"  Saved: {out.name}")
@@ -128,7 +129,7 @@ def fig_full_panel(all_irfs):
     fig.suptitle("Three-regime comparison: all variables "
                  "(100bp annualized monetary tightening, Phase G)",
                  fontsize=13, fontweight="bold")
-    out = HERE / "three_regime_full_comparison.png"
+    out = DYNARE / "three_regime_full_comparison.png"
     fig.savefig(out, dpi=300)
     plt.close(fig)
     print(f"  Saved: {out.name}")

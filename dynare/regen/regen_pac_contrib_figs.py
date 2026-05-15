@@ -28,7 +28,8 @@ import matplotlib.dates as mdates
 from datetime import date
 
 HERE = Path(__file__).resolve().parent
-MAT = HERE / "bayesian_mcmc_results.mat"
+DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
+MAT = DYNARE / "bayesian_mcmc_results.mat"
 
 # --- Sample axis ---
 # Estimation: 122 quarters, 1994Q3 .. 2024Q4
@@ -142,7 +143,7 @@ def plot_equation(name, title, contributions, lhs, fname,
     ax_zoom.grid(True, alpha=0.3)
     ax_zoom.legend(loc="best", fontsize=8, ncol=2, framealpha=0.85)
 
-    out = HERE / fname
+    out = DYNARE / fname
     fig.savefig(out, dpi=200)
     plt.close(fig)
     return out
@@ -297,7 +298,7 @@ def main():
                   ylabel="Δ log n (qpp)")
 
     # --- Diagnostics file --------------------------------------------------
-    with (HERE / "contrib_check.txt").open("w") as f:
+    with (DYNARE / "contrib_check.txt").open("w") as f:
         f.write("Dynamic-contributions reconstruction diagnostics\n")
         f.write("Each line: max absolute residual between observed Δy and the "
                 "sum of decomposition channels (using smoothed variables).\n\n")

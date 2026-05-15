@@ -6,7 +6,7 @@
 % Output: tables for documentation + comparison plot.
 
 clear; clc;
-cd(fileparts(mfilename('fullpath')));
+cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
 setup_dynare_path();
 
 %% Shock scaling: 100bp annualized = 0.25 quarterly pp
