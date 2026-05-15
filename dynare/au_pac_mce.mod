@@ -1907,7 +1907,7 @@ end;
 // Compute IRFs
 // -----------------------------------------------------------------------
 
-stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y dln_m dln_x ln_m_level ln_x_level ln_m_eq ln_x_eq m_gap x_gap
+stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y dln_m dln_x ln_m_level ln_x_level ln_m_eq ln_x_eq m_gap x_gap u_gap ln_Q ln_C ln_IB ln_IH ln_N pv_i_uip
     ln_Q ln_QN ln_K ln_C ln_C_star ln_IB ln_IB_star ln_IH ln_IH_star ln_N ln_N_star ln_P ln_P_star;
 
 // =======================================================================
