@@ -33,7 +33,7 @@ get_param = @(name) M_.params(strcmp(name, M_.param_names));
 sv = oo_smooth.SmoothedVariables;
 
 %% 1. Load observed data (same as prepare_pac_dseries.m)
-projectdir = fullfile(fileparts(mfilename('fullpath')), '..');
+projectdir = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');  % up to repo root (post-cleanup fix)
 T_base = readtable(fullfile(projectdir, 'dataset.csv'));
 T_ext  = readtable(fullfile(projectdir, 'data', 'extended_dataset.csv'));
 nQ = height(T_base);

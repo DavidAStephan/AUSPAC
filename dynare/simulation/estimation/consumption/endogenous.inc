@@ -1,0 +1,9 @@
+var
+	c_hat
+	i_gap
+	ln_c_level
+	pac_expectation_pac_c
+	pi_au_gap
+	u_gap
+	yh_ratio_hat
+	yhat_au;

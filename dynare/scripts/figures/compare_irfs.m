@@ -84,8 +84,8 @@ fprintf('Saved: au_pac_irfs_monetary.png\n');
 close(fig);
 
 %% Also compute IRFs to TFP shock (supply-side validation)
-fprintf('\n--- IRF to TFP shock (eps_tfp) ---\n');
-shock_name2 = 'eps_tfp';
+fprintf('\n--- IRF to TFP shock (eps_tfp_LR) ---\n');
+shock_name2 = 'eps_tfp_LR';
 vars_supply = {'dln_y_star', 'dln_tfp', 'dln_prod', 'dln_ulc', 'piQ', 'dln_n_star_bar', 'pi_w', 'yhat_au'};
 labels_supply = {'Potential output growth', 'TFP growth', 'Productivity growth', ...
                  'ULC growth', 'VA price inflation', 'Empl. target growth', ...

@@ -10,7 +10,7 @@ function generate_smoother_mod()
 
 fprintf('=== Generating au_pac_smooth.mod ===\n');
 
-moddir = fileparts(mfilename('fullpath'));
+moddir = pwd;  % caller cd's to dynare/ before invoking (post-cleanup fix)
 infile  = fullfile(moddir, 'au_pac.mod');
 outfile = fullfile(moddir, 'au_pac_smooth.mod');
 

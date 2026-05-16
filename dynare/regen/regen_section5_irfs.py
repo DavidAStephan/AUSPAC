@@ -21,7 +21,7 @@ Shocks and target magnitudes:
   eps_g     1% of GDP government spending shock(σ = 0.3)
   eps_pcom  10% commodity price shock          (σ = 3.0)
   eps_pQ    1 pp VA price inflation shock      (σ = 0.571)
-  eps_tfp   1% TFP shock                       (σ = 0.2)
+  eps_tfp_LR 1% LR-level TFP shock              (σ = 0.01, FR-BDF §5.2.7)
 
 Output: irf_eps_<shock>.png for each shock
 """
@@ -37,13 +37,18 @@ HERE = Path(__file__).resolve().parent
 DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefacts
 MAT = DYNARE / "saved_irfs_hybrid.mat"
 
-T_PLOT = 40
+T_PLOT = 100   # bumped from 40 to track convergence past the ~50q
+               # capital-channel half-life; harmless if .mat is shorter
+               # (series() trims via min(T_PLOT, len(y)) downstream).
 
-# Default panel: GDP level + inflation + growth variables (used for shocks
-# that generate output-gap responses; follows FR-BDF convention of plotting
-# real GDP level rather than the output gap).
+# Default panel: output gap + inflation + growth variables. Earlier versions
+# plotted ln_Q (log GDP level) here, but ln_Q is non-stationary by construction
+# (ln_Q = ln_QN + yhat_au, ln_QN integrates dln_y_star), so it can show a
+# quasi-permanent deviation while every other panel — all stationary growth
+# rates — mean-reverts. We plot the output gap (yhat_au) instead, which is
+# the model's stationary GDP-deviation measure and what FR-BDF §5/6 use.
 VARS_GAP = [
-    ("ln_Q",     "Real GDP (% from SS)"),
+    ("yhat_au",  "Output gap (%)"),
     ("pi_au",    "CPI inflation (qpp)"),
     ("piQ",      "VA price infl. (qpp)"),
     ("dln_c",    "Consumption growth"),
@@ -68,19 +73,21 @@ VARS_LEVEL = [
     ("i_10y",     "10Y yield (qpp)"),
 ]
 
-# TFP-shock panel: only variables that actually move under a TFP shock
-# (the gap model has TFP raise both ln_Q and ln_QN equally, so most
-# variables stay at floating-point-noise level).
+# TFP-shock panel: trace the FR-BDF wp736 §5.2.7 transmission. The shock
+# permanently lifts ln_tfp_LR by 1%; ln_tfp converges to the new LR via
+# AR(1) smoothing (rho_tfp=0.95); ln_QN and ln_Q migrate to the new BGP
+# (≈ +1% with labor-augmenting form, weighted by labor share). The output
+# gap yhat_au stays at zero because both ln_Q and ln_QN move together.
 VARS_TFP = [
-    ("ln_Q",   "Output level (% from SS)"),
-    ("ln_QN",  "Potential output (% from SS)"),
-    ("ln_N",   "Employment level (% from SS)"),
-    ("ln_N_star", "Employment target (% from SS)"),
-    ("pi_w",   "Wage inflation (qpp)"),
-    ("piQ",    "VA price infl. (qpp) — no transmission, ≈0"),
-    ("yhat_au","Output gap (%) — gap by construction ≈0"),
-    ("dln_n",  "Employment growth (qpp) — gap ≈0"),
-    ("i_10y",  "10Y yield (qpp) — no transmission, ≈0"),
+    ("ln_tfp_LR", "Long-run log-TFP (RW with permanent shock)"),
+    ("ln_tfp",    "Smoothed log-TFP (AR(1) toward LR)"),
+    ("ln_Q",      "Output level (% from SS)"),
+    ("ln_QN",     "Potential output (% from SS)"),
+    ("ln_N",      "Employment level (% from SS)"),
+    ("pi_w",      "Wage inflation (qpp)"),
+    ("piQ",       "VA price infl. (qpp)"),
+    ("yhat_au",   "Output gap (%) — ≈0 by construction"),
+    ("i_10y",     "10Y yield (qpp)"),
 ]
 
 # Term-premium-specific panel: financial + level variables.
@@ -132,18 +139,18 @@ SHOCKS = [
      "than short-run gap responses. Gap-variable panels for this shock "
      "would show floating-point noise (~1e-15) — this is structurally "
      "correct, not a bug."),
-    ("eps_tfp", 0.2, 0.2, VARS_TFP,
-     "1 s.d. TFP shock (σ=0.2)",
-     "FR-BDF Fig 5.2.7 — TFP / labour efficiency shock (eps_tfp)",
-     "Note: TFP shocks raise both actual output (ln_Q) and potential output "
-     "(ln_QN) by the same amount in the AU-PAC gap model — so the output "
-     "gap yhat_au = ln_Q − ln_QN stays at zero by construction. With "
-     "rho_tfp = 0.99 (near unit root) the level response is near-permanent "
-     "and grows linearly over the IRF window; we therefore plot at 1 s.d. "
-     "(scale = 1) rather than the 1% normalisation used for other shocks. "
-     "The wage Phillips curve picks up TFP via the productivity term "
-     "(1-lambda_w)·Δln(Prod), which is the only structural channel from "
-     "supply-side TFP into inflation/wage dynamics in this model."),
+    ("eps_tfp_LR", 0.01, 0.01, VARS_TFP,
+     "Permanent +1% level shock to log trend efficiency",
+     "FR-BDF Fig 5.2.7 — Labour efficiency shock (eps_tfp_LR)",
+     "FR-BDF wp736 §5.2.7 specifies this as a *permanent* +1% level shock "
+     "to trend labour efficiency Ē; the resulting IRFs describe transitory "
+     "dynamics toward a new BGP. ln_tfp_LR jumps to +1 immediately; ln_tfp "
+     "converges over ~50q via AR(1) smoothing at rho_tfp=0.95; ln_Q settles "
+     "at a new permanent level (~+0.6% per FR-BDF abstract, weighted by "
+     "labour share). yhat_au stays near zero because actual and potential "
+     "output rise together (gap by construction). Pre-2026-05-15 spec was "
+     "AR(1) on growth-rate dln_tfp with rho=0.99, which integrated 100x "
+     "and produced an exploding ln_Q response — see au_pac.mod commentary."),
 ]
 
 

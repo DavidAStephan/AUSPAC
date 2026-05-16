@@ -55,7 +55,9 @@ var
     // === CES production function (Section 4.3) ===
     dln_k           // capital services growth (quarterly %, from accumulation eq 32)
     dln_y_star      // potential output growth (quarterly %)
-    dln_tfp         // total factor productivity growth (quarterly %)
+    dln_tfp         // total factor productivity growth (quarterly %; transient = ln_tfp - ln_tfp(-1))
+    ln_tfp_LR       // long-run log-TFP level (random walk; FR-BDF wp736 §4.3 Ē_t)
+    ln_tfp          // smoothed log-TFP level (AR(1) toward ln_tfp_LR)
 
     // === Wage-price spiral (Stage 9c) ===
     dln_ulc         // unit labor cost growth (quarterly %)
@@ -81,6 +83,7 @@ var
     dln_c_star_bar  // trend consumption growth
     c_gap           // gap between target and actual consumption (log level)
     pv_yh           // PV of expected future output gaps (permanent income proxy, beta_c=0.95)
+    pv_r_lh_gap     // PV of expected future real lending rate gap (FR-BDF eq 61, audit #26)
 
     // === Demand block: business investment PAC (Section 4.6.2) ===
     dln_ib          // business investment growth (quarterly log diff)
@@ -243,7 +246,7 @@ varexo
     eps_g           // government spending shock
     eps_pg          // government deflator shock
     // Supply block shock (Stage 9a)
-    eps_tfp         // TFP shock
+    eps_tfp_LR      // permanent log-TFP level shock (FR-BDF wp736 §5.2.7, 2026-05-15)
     // Commodity price shock (Stage 11b)
     eps_pcom        // commodity price shock
     // Stage 12: equation audit fixes
@@ -580,7 +583,7 @@ gamma_uck       = 0.2415;   // user cost pass-through (FR-BDF 2026 CES: α·σ =
 
 // --- Cobb-Douglas production function (Stage 9a) ---
 alpha_k         = 0.45;     // CES capital-share α (FR-BDF 2026 AU calibration); was 0.33
-rho_tfp         = 0.99;     // TFP persistence (near unit root)
+rho_tfp         = 0.95;     // smoothing speed (FR-BDF wp736 eq. 127; was 0.99 amplifying eps 100x)
 
 // --- Commodity price channel (Stage 11b) ---
 rho_pcom        = 0.85;     // commodity price persistence
@@ -591,7 +594,10 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 // Australia: moderate wage persistence, significant gap sensitivity
 // Forward expectations proxied by pibar_au (inflation anchor)
 lambda_w        = 0.247;    // wage persistence (posterior mean)
-kappa_w         = 0.238;    // output gap -> wages (posterior mean)
+kappa_w         = 0.32;     // Phase R refit interim (audit #22): FR-BDF wp736
+                            // |β_4| = 0.32 (Table 4.5.3). MCMC re-run required
+                            // post-refit to produce AU posterior under the new
+                            // (-kappa_w·pv_u_gap) sign convention.
 gamma_w         = 0.15;     // CPI indexation channel
 okun_coeff      = -0.33;    // Okun's law: 1pp output gap -> -0.33pp unemployment gap
 rho_u_gap       = 0.94;     // unemployment gap persistence (paper Table 4.5.2)
@@ -956,9 +962,22 @@ model;
             + (1 - lambda_i) * (alpha_i * pi_au_gap(-1) + beta_i * yhat_au(-1))
             + eps_i;
 
+    // Phase S (2026-05-16): FR-BDF wp736 §3.1.1 / §5.2.6 cost-push replication.
+    // The reduced-form quasi-VAR was missing the structural deflator channels
+    // (piQ, pi_m, dln_pcom) that pi_c already had via eq_pi_c. As a result
+    // a positive eps_pQ raised piQ but not pi_au, so the Taylor rule didn't
+    // tighten and the cost-push IRF on ln_Q came out wrong-signed (+0.15% vs
+    // FR-BDF's -0.45%). Adding the structural channels to eq_au_phillips makes
+    // pi_au structurally a function of VA price + import price + commodity,
+    // mirroring the role of pi_C in FR-BDF's deflator block (eqs 79-80) while
+    // preserving the existing Phillips slope (kappa_pi) and own persistence
+    // (lambda_pi) as residual reduced-form components.
     [name = 'eq_au_phillips']
     pi_au_gap = lambda_pi * pi_au_gap(-1)
                 + kappa_pi * yhat_au(-1)
+                + alpha_pc * (piQ - pibar_au)
+                + beta_pc_m * (pi_m - pibar_au)
+                + gamma_oil * dln_pcom
                 + eps_pi;
 
     [name = 'eq_us_is']
@@ -1089,9 +1108,17 @@ model;
                + (1 - alpha_k) * dln_n_star_bar
                + dln_tfp;
 
-    // TFP follows a persistent AR(1) process
+    // === FR-BDF wp736 §4.3 / §5.2.7 TFP block (2026-05-15 refit) ===
+    // eps_tfp_LR is a permanent +1% level shock to log trend efficiency.
+    // See au_pac.mod for the full derivation.
+    [name = 'eq_ln_tfp_LR']
+    ln_tfp_LR = ln_tfp_LR(-1) + eps_tfp_LR;
+
+    [name = 'eq_ln_tfp']
+    ln_tfp    = rho_tfp * ln_tfp(-1) + (1 - rho_tfp) * ln_tfp_LR;
+
     [name = 'eq_dln_tfp']
-    dln_tfp = rho_tfp * dln_tfp(-1) + eps_tfp;
+    dln_tfp   = ln_tfp - ln_tfp(-1);
 
     // === WAGE-PRICE SPIRAL (Stage 9c, upgraded with TFP from Stage 9b) ===
     // Productivity growth: TFP-based (replaces cyclical proxy yhat_au - yhat_au(-1)).
@@ -1194,9 +1221,18 @@ model;
     //   => pi_w_ss = pi_ss (verified)
 
     [name = 'eq_pi_w']
+    // Phase R refit (audit #22 + #23, 2026-05-15):
+    //   #22 — sign flip on unemployment-gap channel (was + kappa_w·pv_u_gap,
+    //         which gave WRONG sign: high unemployment → wage inflation).
+    //         Now: − kappa_w·pv_u_gap with kappa_w > 0 → high unemployment
+    //         → wage deflation, matching FR-BDF eq 49 (-λ·(u-u_N)) and
+    //         eq 52 (β_4 < 0 sign convention).
+    //   #23 — indexation switched from pi_au (VA price) to pi_c (consumer
+    //         price). Workers index to what they buy, not what firms charge
+    //         per unit output. FR-BDF eq 52 uses π_C,t-1 explicitly.
     pi_w = lambda_w * pi_w(-1)
-           + gamma_w * pi_au
-           + kappa_w * pv_u_gap
+           + gamma_w * pi_c
+           - kappa_w * pv_u_gap
            + (1 - lambda_w - gamma_w) * pibar_au
            + (1 - lambda_w) * dln_prod
            + eps_w;
@@ -1210,15 +1246,30 @@ model;
     dln_n_star = rho_n_star * dln_n_star(-1)
                  + (1 - rho_n_star) * dln_n_star_bar;
 
-    // Trend employment growth: derived from inverted production function (Stage 9b).
-    // Stage 12 fix: Added real wage sensitivity from paper eq. 55:
-    //   n* = b0 + q - ē - σ*(w̃ - pQ - ē - h)
-    // In growth rates: dln_n_star depends on productivity AND real wage gap.
-    // rw_gap = pi_w - piQ - dln_prod: real wage growth above productivity.
-    // When real wages rise above productivity, firms reduce labor demand.
-    // At SS: rw_gap = 0 => no effect. dln_tfp = 0 => dln_n_star_bar = 0.
+    // Trend employment growth: derived from inverted production function.
+    // Phase R refit (audit #17 + #21, 2026-05-15): aligned with FR-BDF wp736
+    // eq 55 / eq 36 in growth form:
+    //   n* = b0 + q - ē - h - σ·(w̃ - pQ - ē - h)
+    //   Δn* = Δq - (1-σ)·Δē - σ·Δw̃ + σ·Δp_Q
+    //
+    // With Δē = dln_prod = dln_tfp/(1-α_k) and rw_gap = pi_w - piQ - dln_prod:
+    //   dln_n_star_bar = (yhat_au - yhat_au(-1))    ← Δq channel (was MISSING, #17)
+    //                  - dln_tfp / (1 - alpha_k)     ← sign FIXED + → − (#21)
+    //                  - sigma_ces * rw_gap;          ← real wage gap (Stage 12, retained)
+    //
+    // This expands to: Δyhat_au - (1-σ)/(1-α_k)·dln_tfp - σ·pi_w + σ·piQ
+    // matching FR-BDF eq 36.
+    //
+    // Pre-Phase-R bug: leading sign was +, Δq channel was absent. Net dln_tfp
+    // coefficient was +(1+σ)/(1-α_k) ≈ +2.79 (vs FR-BDF -(1-σ)/(1-α_k) ≈ -0.84,
+    // OPPOSITE sign and 3.3× too large). Audit §4.3 / §4.5 ✗ findings.
+    //
+    // At SS: yhat_au stationary => Δyhat_au = 0; dln_tfp = 0; rw_gap = 0
+    //        => dln_n_star_bar = 0 (verified).
     [name = 'eq_dln_n_star_bar']
-    dln_n_star_bar = dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap;
+    dln_n_star_bar = (yhat_au - yhat_au(-1))
+                   - dln_tfp / (1 - alpha_k)
+                   - sigma_ces * rw_gap;
 
     // Employment gap accumulation (parallel to pQ_gap)
     [name = 'eq_n_gap']
@@ -1271,6 +1322,21 @@ model;
     [name = 'eq_pv_yh']
     pv_yh = (1 - beta_c) * yhat_au + beta_c * pv_yh(+1);
 
+    // Phase R refit (audit #26, 2026-05-15): forward NPV of real lending rate gap.
+    // FR-BDF eq 61 includes α_1·(PV(r_LH) - PV(ī - π̄)) channel that captures
+    // the forward-looking real-rate transmission to consumption (essential for
+    // no-forward-guidance-puzzle property under MCE).
+    //
+    // Pre-Phase-R: eq_dln_c_pac had only b2_c·i_gap(-1) (lagged level) and
+    //   b_di_c·di_gap (current change) — no forward-looking PV channel.
+    // Post-Phase-R: + alpha_c_r · pv_r_lh_gap term added below.
+    //
+    // At SS: i_lh = i_ss + tp_ss + spread_lh, pi_c = pi_ss_au
+    //        => bracket = 0 => pv_r_lh_gap = 0 (verified).
+    [name = 'eq_pv_r_lh_gap']
+    pv_r_lh_gap = (1 - beta_c) * (i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au))
+                + beta_c * pv_r_lh_gap(+1);
+
     // Consumption target (paper eq 59): c* = a0 + PV(yH) + alpha1*(rLH - r_bar).
     // In growth rates: dln_c_star_bar = kappa_inc*d(pv_yh) + alpha_c_r*d(r_lh_gap).
     // Real lending rate gap: (i_lh - pi_c) - (i_ss + tp_ss + spread_lh - pi_ss_au).
@@ -1296,6 +1362,7 @@ model;
     diff(ln_c_level) = b0_c * (c_hat(-1) - ln_c_level(-1))
             + b1_c * diff(ln_c_level(-1))
             + pac_expectation(pac_c)
+            + alpha_c_r * pv_r_lh_gap                      // Phase R refit (audit #26): FR-BDF eq 61 PV(r_LH) channel
             + b2_c * i_gap(-1)
             + b3_c * yhat_au
             + b_covid_crash_c * d_covid_crash + b_covid_bounce_c * d_covid_bounce
@@ -1832,6 +1899,8 @@ steady_state_model;
     dln_k        = 0;         // zero capital growth at SS (gap model)
     dln_y_star   = 0;         // zero potential output growth at SS (gap model)
     dln_tfp      = 0;         // zero TFP growth at SS
+    ln_tfp_LR    = 0;         // FR-BDF Ē_t residual at baseline (gap model)
+    ln_tfp       = 0;         // smoothed TFP level converges to ln_tfp_LR = 0
 
     // Wage-price spiral (Stage 9c)
     dln_prod     = 0;         // zero productivity growth at SS
@@ -1859,6 +1928,7 @@ steady_state_model;
 
     // Household consumption PAC
     pv_yh          = 0;       // permanent income PV = 0 at SS (gap model)
+    pv_r_lh_gap    = 0;       // real lending rate PV = 0 at SS (audit #26, FR-BDF eq 61)
     dln_c          = 0;       // zero consumption growth in stationary model
     dln_c_star     = 0;
     dln_c_star_bar = 0;
@@ -2031,7 +2101,7 @@ shocks;
     var eps_pm;       stderr 0.7;    // import deflator shock (exchange rate volatility)
     var eps_g;        stderr 0.3;    // government spending shock (small, policy-driven)
     var eps_pg;       stderr 0.3;    // government deflator shock
-    var eps_tfp;      stderr 0.2;    // TFP shock (Stage 9a)
+    var eps_tfp_LR;   stderr 0.01;   // FR-BDF §5.2.7: permanent +1% LR level shock (2026-05-15)
     var eps_pcom;     stderr 3.0;    // commodity price shock (Stage 11b, volatile)
     // Stage 12: new shocks
     var eps_lh;       stderr 0.15;   // bank lending rate shock (credit conditions)

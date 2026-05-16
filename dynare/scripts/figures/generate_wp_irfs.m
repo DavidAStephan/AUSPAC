@@ -54,7 +54,7 @@ shock_config = {
     'eps_g',     'Government spending',   0.300, 1.000,  '1pp of GDP',                      '6.3.3';
     'eps_pcom',  'Commodity price',       3.000, 10.00,  '10% commodity price increase',    '6.3.4';
     'eps_pQ',    'Cost-push (VA price)',  0.571, 0.571,  '1 s.d.',                          '6.3.5';
-    'eps_tfp',   'TFP',                  0.200, 0.200,  '1 s.d.',                          '6.3.6';
+    'eps_tfp_LR',   'TFP',                  0.200, 0.200,  '1 s.d.',                          '6.3.6';
 };
 
 nShocks = size(shock_config, 1);

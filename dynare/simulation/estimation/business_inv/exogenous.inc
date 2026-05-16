@@ -1,0 +1,18 @@
+varexo
+	dln_pcom
+	eps_ib
+	eps_var_ib
+	eps_var_rKB
+	i_gap
+	ib_hat
+	ibar
+	piQ
+	pi_au_gap
+	pi_m
+	pi_us_gap
+	pibar_au
+	pibar_us
+	rKB_hat
+	u_gap
+	yhat_au
+	yhat_us;

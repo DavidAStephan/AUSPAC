@@ -10,14 +10,23 @@
 %   >> extract_mcmc_results
 
 clear; clc;
+% Post-cleanup fix: this script is at dynare/scripts/estimation/ but
+% bayesian_mcmc_results.mat is written to dynare/ by run_bayesian_mcmc.
 this_dir = fileparts(mfilename('fullpath'));
 if isempty(this_dir), this_dir = pwd; end
+dynare_dir = fullfile(this_dir, '..', '..');     % up to dynare/
 
-mcmc_file = fullfile(this_dir, 'bayesian_mcmc_results.mat');
+mcmc_file = fullfile(dynare_dir, 'bayesian_mcmc_results.mat');
+if ~exist(mcmc_file, 'file')
+    % fallback: maybe already at dynare/
+    mcmc_file = fullfile(pwd, 'bayesian_mcmc_results.mat');
+end
 if ~exist(mcmc_file, 'file')
     error('bayesian_mcmc_results.mat not found. Run run_bayesian_mcmc.m first.');
 end
 load(mcmc_file, 'oo_', 'M_');
+% Now cd to dynare/ for output writes
+cd(dynare_dir);
 
 fprintf('=== AU-PAC Bayesian MCMC results extractor ===\n\n');
 

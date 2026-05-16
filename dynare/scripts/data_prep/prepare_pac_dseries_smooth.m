@@ -34,7 +34,7 @@ fprintf('  Sample length: %d quarters\n', T);
 
 %% Identify the start date from the smoother
 % calib_smoother stores dates info; extract from the data we prepared
-projectdir = fullfile(fileparts(mfilename('fullpath')), '..');
+projectdir = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');  % up to repo root (post-cleanup fix)
 T_base = readtable(fullfile(projectdir, 'dataset.csv'));
 base_dates = datetime(T_base.date, 'InputFormat', 'yyyy-MM-dd');
 
@@ -110,7 +110,7 @@ end
 fprintf('  Smoothed variables found: %d, missing: %d\n', n_found, n_missing);
 
 % Override COVID dummies with actual 0/1 values (not from smoother)
-projectdir_sm = fullfile(fileparts(mfilename('fullpath')), '..');
+projectdir_sm = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');  % up to repo root (post-cleanup fix)
 T_base_sm = readtable(fullfile(projectdir_sm, 'dataset.csv'));
 base_dates_sm = datetime(T_base_sm.date, 'InputFormat', 'yyyy-MM-dd');
 covid_crash_idx  = find(strcmp('d_covid_crash', smooth_varnames));

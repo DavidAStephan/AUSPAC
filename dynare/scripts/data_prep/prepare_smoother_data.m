@@ -22,7 +22,7 @@ function prepare_smoother_data()
 fprintf('=== Preparing smoother data for calib_smoother ===\n');
 
 %% Load raw data
-projectdir = fullfile(fileparts(mfilename('fullpath')), '..');
+projectdir = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');  % up to repo root (post-cleanup fix)
 T_base = readtable(fullfile(projectdir, 'dataset.csv'));
 T_ext  = readtable(fullfile(projectdir, 'data', 'extended_dataset.csv'));
 nQ = height(T_base);
@@ -109,7 +109,7 @@ dln_c = vars{6}; dln_ib = vars{7}; dln_ih = vars{8}; dln_n = vars{9};
 
 %% Write Dynare-compatible .m data file
 % Format: each variable as a column vector, plus 'initial_period' for dates
-outfile = fullfile(fileparts(mfilename('fullpath')), 'smoother_data.m');
+outfile = fullfile(pwd, 'smoother_data.m');  % write to caller's cwd (dynare/)
 fid = fopen(outfile, 'w');
 
 % Parse start date
@@ -139,7 +139,7 @@ fclose(fid);
 fprintf('Wrote %s (%d obs x 9 variables)\n', outfile, T);
 
 %% Also save as .mat (Dynare accepts both)
-save(fullfile(fileparts(mfilename('fullpath')), 'smoother_data.mat'), ...
+save(fullfile(pwd, 'smoother_data.mat'), ...
     'yhat_au', 'pi_au', 'i_au', 'yhat_us', 'pi_us', ...
     'dln_c', 'dln_ib', 'dln_ih', 'dln_n');
 fprintf('Wrote smoother_data.mat\n');

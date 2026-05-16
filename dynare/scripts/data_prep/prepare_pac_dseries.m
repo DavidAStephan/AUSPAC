@@ -22,7 +22,7 @@ global M_
 fprintf('=== Constructing PAC estimation dseries ===\n');
 
 %% 1. Load observed data
-projectdir = fullfile(fileparts(mfilename('fullpath')), '..');
+projectdir = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');  % up to repo root (post-cleanup fix)
 T_base = readtable(fullfile(projectdir, 'dataset.csv'));
 T_ext  = readtable(fullfile(projectdir, 'data', 'extended_dataset.csv'));
 nQ = height(T_base);

@@ -22,7 +22,7 @@ assert(ismember(stage, [1 2]), 'stage must be 1 or 2');
 
 fprintf('=== Generating au_pac_bayesian.mod (Stage %d) ===\n', stage);
 
-moddir = fileparts(mfilename('fullpath'));
+moddir = pwd;  % caller cd's to dynare/ before invoking (post-cleanup fix)
 infile  = fullfile(moddir, 'au_pac.mod');
 outfile = fullfile(moddir, 'au_pac_bayesian.mod');
 

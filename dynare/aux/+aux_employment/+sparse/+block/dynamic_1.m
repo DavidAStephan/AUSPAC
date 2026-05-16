@@ -1,0 +1,22 @@
+function [y, T] = dynamic_1(y, x, params, steady_state, sparse_rowval, sparse_colval, sparse_colptr, T)
+  y(21)=params(2)*y(1)-params(3)*(y(3)-y(2))+params(1)*y(5)+x(1);
+  y(23)=y(3)*params(4)+(1-params(4))*(y(2)*params(5)+y(1)*params(6))+x(2);
+  y(22)=y(2)*params(7)+y(1)*params(8)+params(17)*(y(10)-y(8))+params(18)*(y(11)-y(8))+params(19)*y(12)+x(3);
+  y(24)=params(15)*y(4)+y(1)*params(16)+x(9);
+  y(25)=y(5)*params(9)+x(4);
+  y(26)=params(10)*y(6)+y(5)*params(11)+x(5);
+  y(27)=params(12)*y(7)+(1-params(12))*params(20)+x(6);
+  y(28)=y(8)*params(13)+(1-params(13))*params(21)+x(7);
+  y(29)=params(14)*y(9)+(1-params(14))*params(22)+x(8);
+  y(30)=y(10)*params(23)+params(21)*(1-params(23))+x(10);
+  y(31)=y(11)*params(24)+params(21)*(1-params(24))+x(11);
+  y(32)=y(12)*params(25)+x(12);
+  y(33)=params(26)*y(13)+y(1)*params(27)+y(3)*params(28)+y(2)*params(29)+y(4)*params(30)+x(13);
+  y(36)=y(15);
+  y(37)=y(16);
+  y(38)=y(17);
+  y(39)=y(18);
+  y(40)=params(38)+y(1)*params(39)+y(3)*params(40)+y(2)*params(41)+y(4)*params(42)+y(5)*params(43)+y(6)*params(44)+y(7)*params(45)+y(8)*params(46)+y(9)*params(47)+y(10)*params(48)+y(11)*params(49)+y(12)*params(50)+y(13)*params(51);
+  y(35)=x(14)+y(21)*params(36)+params(31)*(y(13)-y(14))+params(32)*y(36)+params(33)*y(37)+params(34)*y(38)+params(35)*y(39)+y(40);
+  y(34)=y(14)+y(35);
+end

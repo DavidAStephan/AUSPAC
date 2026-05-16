@@ -9,7 +9,7 @@ function prepare_bayesian_data()
 
 fprintf('=== Preparing Bayesian estimation data (non-demeaned) ===\n');
 
-projectdir = fullfile(fileparts(mfilename('fullpath')), '..');
+projectdir = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');  % up to repo root (post-cleanup fix)
 
 T_base = readtable(fullfile(projectdir, 'dataset.csv'));
 T_ext  = readtable(fullfile(projectdir, 'data', 'extended_dataset.csv'));

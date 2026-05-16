@@ -67,7 +67,7 @@ def fig_irf_overview():
         ("eps_g",    1.0 / 0.3,       "1% govt spending shock",  "tab:green"),
         ("eps_pcom", 10.0 / 3.0,      "10% commodity price",     "tab:orange"),
         ("eps_pQ",   1.0 / 0.571,     "1pp cost-push shock",     "tab:purple"),
-        ("eps_tfp",  1.0 / 0.2,       "1% TFP shock",            "tab:brown"),
+        ("eps_tfp_LR",  1.0 / 0.2,       "1% TFP shock",            "tab:brown"),
         ("eps_tp",   0.25 / 0.05,     "100bp term-premium",      "tab:pink"),
     ]
     T_plot = 40

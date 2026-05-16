@@ -26,7 +26,9 @@ DYNARE = HERE.parent  # dynare/ workspace where MATLAB writes .mat/.png artefact
 STDERR_EPS_I = 0.1110            # Phase Q posterior mean (forward UIP, 2026-05-15)
 TARGET = 0.25                    # 100bp annualized
 SCALE = TARGET / STDERR_EPS_I    # ≈ 2.262
-T_PLOT = 80
+T_PLOT = 200                     # bumped from 80 alongside .mod stoch_simul(irf=200)
+                                 # so we can see ln_K / ln_Q convergence past the
+                                 # ~50q capital-channel half-life
 SHOCK = "eps_i"
 
 REGIMES = [
@@ -47,6 +49,15 @@ def load_irfs():
 
 
 def series(irf_struct, var):
+    # Synthetic series: dln_q = first difference of ln_Q. The model only saves
+    # ln_Q (a non-stationary log level by construction: ln_Q = ln_QN + yhat_au,
+    # ln_QN = ln_QN(-1) + dln_y_star). The level integrates the slow capital
+    # channel, so plotting ln_Q next to dln_c (a growth rate) is misleading —
+    # different transformations, different mean-reversion speeds. Plotting
+    # dln_q against dln_c puts both on the same footing.
+    if var == "dln_q":
+        ln_Q = series(irf_struct, "ln_Q") / SCALE   # undo scaling, redo below
+        return np.diff(np.concatenate([[0.0], ln_Q])) * SCALE
     field = f"{var}_{SHOCK}"
     if not hasattr(irf_struct, field):
         return np.zeros(T_PLOT)
@@ -57,8 +68,11 @@ def series(irf_struct, var):
 def fig_two_panel(all_irfs):
     fig, axes = plt.subplots(1, 2, figsize=(10, 4), constrained_layout=True)
     panels = [
-        ("ln_Q", "Real GDP",
-         "(deviation from baseline, in %)", False),
+        # Output gap is the model's stationary measure of GDP deviation
+        # (yhat_au = ln_Q - ln_QN by construction). FR-BDF Fig 6.2.2 plots
+        # the gap, not the level — replicate that convention.
+        ("yhat_au", "Output gap",
+         "(deviation from potential, in %)", False),
         ("piQ", "VA price inflation",
          "(annualized, deviation from baseline, in pp)", True),
     ]
@@ -86,8 +100,13 @@ def fig_two_panel(all_irfs):
 
 
 def fig_full_panel(all_irfs):
+    # GDP shown as growth (dln_q) so it's apples-to-apples with the component
+    # growth rates (dln_c, dln_ib, dln_ih, dln_n). Plotting ln_Q here would
+    # mix a non-stationary log level (which integrates the slow capital
+    # channel via ln_QN) against stationary growth rates, making GDP look
+    # "stuck" while components revert.
     vars_ = [
-        ("ln_Q",     "Real GDP"),
+        ("dln_q",    "GDP growth"),
         ("piQ",      "VA price inflation"),
         ("pi_au",    "CPI inflation"),
         ("dln_c",    "Consumption"),

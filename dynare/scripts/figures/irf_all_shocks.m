@@ -11,7 +11,7 @@
 %   4. Government spending (eps_g) — 1pp of GDP
 %   5. Commodity/oil price (eps_pcom) — 10% increase
 %   6. Cost-push / VA price (eps_pQ) — 1 s.d.
-%   7. TFP / labor efficiency (eps_tfp) — 1 s.d.
+%   7. TFP / labor efficiency (eps_tfp_LR) — 1 s.d.
 
 clear; clc;
 cd(fullfile(fileparts(mfilename('fullpath')), '..', '..'));  % up to dynare/
@@ -29,7 +29,7 @@ fprintf('  %d equations, %d forward-looking vars\n\n', ...
     M_.orig_endo_nbr, sum(abs(oo_.dr.eigval) > 1));
 
 %% Define shocks, scaling, and variables
-shocks = {'eps_i', 'eps_tp', 'eps_q_us', 'eps_g', 'eps_pcom', 'eps_pQ', 'eps_tfp'};
+shocks = {'eps_i', 'eps_tp', 'eps_q_us', 'eps_g', 'eps_pcom', 'eps_pQ', 'eps_tfp_LR'};
 shock_labels = {'Monetary policy', 'Term premium', 'Foreign demand', ...
                 'Government spending', 'Commodity price', 'Cost-push (VA price)', ...
                 'TFP / labor efficiency'};
@@ -163,7 +163,7 @@ fprintf('\n');
 for q = [1 2 4 8 12 16 20 30 40]
     fprintf('  Q%-12d', q);
     for v = 1:length(key_vars_tfp)
-        field = [key_vars_tfp{v} '_eps_tfp'];
+        field = [key_vars_tfp{v} '_eps_tfp_LR'];
         if isfield(oo_.irfs, field) && q <= length(oo_.irfs.(field))
             fprintf('  %10.4f', oo_.irfs.(field)(q) * sf_tfp);
         else

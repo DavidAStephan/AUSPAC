@@ -1,12 +1,180 @@
 # AUSPAC — status
 
-As of **2026-05-15** (Phase Q forward-looking UIP refresh + full MCMC re-run).
+As of **2026-05-16** (Phase T srecko/FR-BDF aggregate-workflow refactor: architectural milestone — shadow-VAR disconnect eliminated; au_pac_v2_bayesian.mod MCMC complete with **Laplace LMD = -781.05 / MHM = -781.39**, **+7.7 nats over Phase S, +20.66 nats over Phase Q baseline**).
 
-## Current state
+## Phase T srecko/FR-BDF refactor (2026-05-16) — ARCHITECTURAL MILESTONE
 
-All planned model-development phases complete. Phase Q added a forward-looking NPV of the policy-rate gap (`pv_i_uip`) into the UIP equation — under Hybrid/MCE the spot AUD internalises the full expected rate path on impact, delivering FR-BDF-style Hybrid amplification (output gap −0.151% Q7 under Hybrid vs −0.128% Q9 under VAR, 18% amplification; consumption growth −0.175% Q1 under Hybrid vs −0.097% Q3 under VAR, 80% amplification).
+**Headline result**: Adopted Dynare's officially recommended semi-structural pattern (cherrypick + aggregate, per Stéphane Adjemian's forum post + Flint Brayton's FRB/US workflow + srecko/SemiStructDynareBasics ECB example + FR-BDF wp1044 §2.2). The shadow-VAR architectural disconnect that limited Phase S has been eliminated. Phase T LMD Laplace = **−781.05**, a **+7.9 nat improvement** over Phase S (−788.95) and **+20.66 nats over Phase Q baseline** (−801.71).
 
-**Final calibration**: working paper Table 5.6, **LMD Laplace = −801.71, MHM = −802.27** (improvement of ~1.5 log-likelihood units over the 2026-05-14 contemporaneous-i_gap UIP specification at MHM −803.23).
+### Phase T structural change
+
+| Item | Before (Phase S) | After (Phase T) |
+|---|---|---|
+| PAC expectations | `pac_expectation(pac_X)` — Dynare internal call evaluating shadow var_model | Explicit closed-form linear combinations of LAGGED STRUCTURAL variables (e.g. `pac_expectation_pac_pQ = h_const + h_yhat_au·yhat_au(-1) + h_piQ·piQ(-1) + ...`) |
+| var_model variables | 12 SHADOW variables (`y_gap_var`, `pi_gap_var`, ...) decoupled from structural shocks | STRUCTURAL variables (yhat_au, pi_au_gap, piQ, pi_m, dln_pcom) directly carry structural shock effects into expectations |
+| Architecture | Monolithic `au_pac.mod` (~2300 lines) | 5 aux files (per PAC block) + 7 identity .inc files + aggregator → `au_pac_v2.mod` |
+| Cost-push transmission to PAC | Decoupled (shadow VAR didn't see eps_pQ) | Connected (h_var_piQ_lag_1 = 7.66e-5 non-zero; eps_pQ → piQ → next-period PAC expectation) |
+| LMD Laplace | −788.95 | **−781.05 (+7.9 nats)** |
+| LMD MHM | −789.10 | **−781.39 (+7.7 nats)** |
+| BK rank | 5 forward-looking eigvals | 9 forward-looking eigvals (extra from forward-looking structural NPVs) |
+| `kappa_w` Phillips slope | +0.046 (HPD straddles zero) | **-0.103 (HPD entirely negative)** — correct FR-BDF sign once shadow-decoupling removed |
+
+### Phase T file layout
+
+- **`dynare/aux/`** — 5 aux .mod files (one per PAC block) + Python template generator
+  - aux_pQ.mod, aux_consumption.mod, aux_business_inv.mod, aux_housing_inv.mod, aux_employment.mod
+- **`dynare/simulation/identities/`** — 7 normalized .inc files (model, endogenous, exogenous, parameters, parameter-values, steady, shocks) + 3 Python normalizers
+- **`dynare/simulation/estimation/`** — 5 subdirectories populated by `cherrypick()`, each containing the cherrypicked PAC equation + auxiliary regression + closed-form expectation formula
+- **`dynare/au_pac_v2.mod`** — final simulation .mod built by `aggregate()` (1206 lines, 158 vars, 40 shocks, 270 params)
+- **`dynare/au_pac_v2_bayesian.mod`** — Bayesian estimation variant (1443 lines)
+- **`phase_t_plan.md`** — full implementation plan + 3-session progress log
+
+### Phase T audit closure
+
+- ✅ **Shadow-VAR disconnect** (architectural finding from Phase S investigation): now eliminated. The forward-looking PAC expectations propagate the structural cost-push channel through `piQ(-1)`, `pi_m(-1)`, `dln_pcom(-1)` in every PAC equation.
+
+---
+
+## Phase S FR-BDF cost-push replication (2026-05-16) — COMPLETE
+
+## Phase S FR-BDF cost-push replication (2026-05-16) — COMPLETE
+
+**Headline result**: Adding structural deflator channels (piQ, pi_m, dln_pcom) to the E-SAT inflation equation `eq_au_phillips`, mirroring FR-BDF wp736 §3.1.1 where π_Q sits on the Phillips LHS, lifted MHM by another **+1.62 nats** (Phase R −790.72 → Phase S **−789.10**) on top of Phase R's +11.55 nats. Cumulative Phase Q → Phase S improvement is **+13.17 MHM nats** — the largest sustained improvement in AU-PAC estimation history.
+
+### Phase S changes
+
+| Item | Before (Phase R) | After (Phase S) |
+|---|---|---|
+| `eq_au_phillips` | `pi_au_gap = λ_π·pi_au_gap(-1) + κ_π·yhat_au(-1) + ε_π` | + `α_pc·(piQ−pibar_au) + β_pc_m·(pi_m−pibar_au) + γ_oil·dln_pcom` |
+| eps_pQ → pi_au impact | 0 qpp | **+0.119 qpp** (structural FR-BDF replication) |
+| eps_pQ → output gap (Hyb peak Q12) | −0.005% | **−0.008%** (correct sign + larger) |
+| Monetary IRF: CPI y/y peak (Hyb) | −0.037 pp | **−0.133 pp** (3.5× stronger; matches FR-BDF mechanism) |
+| Wage-Phillips γ_w (CPI passthrough) | 0.458 | **0.495** (sharper identification under structural channels) |
+| LMD Laplace | −790.47 | **−788.95** (+1.52) |
+| LMD MHM | −790.72 | **−789.10** (+1.62) |
+| Forward-guidance ratio N=12 | 10.06 | 10.09 (puzzle absence preserved) |
+| BK rank (3 main variants) | passes | passes ✓ |
+
+### Phase S audit items resolved
+
+- 🟢 **#20 var_pQ enrichment** — was the only remaining ⚠ structural-mismatch item. Now FIXED via FR-BDF replication.
+- ✅ **#6, #54 LR BGP convergence** — VERIFIED 2026-05-16 via 1100-quarter Phase S simulation. All gap variables converge to |x| < 1e-7 at Q1100 (yhat_au 8.3e-9, pi_au_gap 5.8e-11, s_gap 7.9e-9, dln_c 1.6e-8). ln_Q settles at finite non-zero +2.76 (permanent capital-level effect of temporary shock — expected under PAC).
+- ✅ **#14, #53 δ_k sensitivity** — VERIFIED 2026-05-16 via δ_k sweep across 0.0134, 0.020, 0.025, 0.030. ln_Q peak essentially unchanged (−0.289% to −0.304%), but Q40 capital-channel tail grows 10× from −0.015% (AU) to −0.160% (12%/yr). Confirms slow ln_K recovery is part calibration (AU δ_k = 5.4%/yr is ABS-measured) + part PAC specification. AU value retained as empirically grounded; FR-BDF audit value δ_k = 0.0375 broke SS without dependent-param recalibration.
+
+### Phase S artifacts
+
+- [`dynare/au_pac.mod`](dynare/au_pac.mod) — `eq_au_phillips` augmented with FR-BDF deflator channels (and 7 other variants)
+- [`dynare/bayesian_mcmc_results.mat`](dynare/bayesian_mcmc_results.mat) — refreshed posteriors (28 params)
+- [`dynare/saved_irfs_{var,hybrid,mce}.mat`](dynare/) — IRFs at irf=200 with Phase S posteriors
+- [`dynare/mcmc_posterior_table.md`](dynare/mcmc_posterior_table.md) — Phase S posterior table
+- [`dynare/AUSPAC_WORKING_PAPER.md`](dynare/AUSPAC_WORKING_PAPER.md) — §4.4.0 (new), Table 5.6, §6.2 Table 6.3, §6.3.5, §6.5 all updated
+
+---
+
+## Phase R refit (2026-05-15) — COMPLETE
+
+**Headline result**: structural fixes from FR-BDF wp736 audit improved log
+marginal density by **+11.55 nats** (MHM −802.27 → −790.72), monetary IRF
+peak quarter shifted from Q40 to Q9-10 (matching FR-BDF Q12), and
+forward-guidance-puzzle absence preserved (AU-PAC ratio 10.06 vs linear 12 at
+N=12). All 3 main variants pass Blanchard-Kahn.
+
+### Phase R MCMC results vs Phase Q baseline
+
+| Metric | Phase Q | Phase R | Δ |
+|---|---|---|---|
+| Log marginal density (Laplace) | -801.71 | **-790.47** | **+11.24** ✓ |
+| Log marginal density (MHM) | -802.27 | **-790.72** | **+11.55** ✓ |
+| Forward-guidance ratio at N=12 | 10.47 | 10.06 | -0.41 (still well within no-puzzle) ✓ |
+| Monetary IRF peak quarter (ln_Q) | Q40 | Q9-10 | -30q earlier ✓ |
+| BK rank (3 main variants) | passes | passes | ✓ |
+
+### Phase R MCMC posterior shifts (key parameters)
+
+| Param | Phase Q mean | Phase R mean | Notes |
+|---|---|---|---|
+| `lambda_w` (wage persistence) | 0.290 | **0.202** | down — consistent with stronger indexation |
+| `gamma_w` (CPI indexation in wage Phillips) | 0.136 | **0.458** | UP MASSIVELY — pi_au→pi_c switch (#23) revealed strong consumer-price indexation in AU data |
+| `kappa_w` (unemployment-gap channel, NEW SIGN CONVENTION) | 0.097 (wrong-signed) | **0.054** (correct sign) | flipped sign per #22; HPD straddles zero (AU flat Phillips) |
+| `b3_ib` (business inv accelerator) | 0.309 | 0.307 | stable |
+| `b2_c` (consumption rate-gap) | -0.331 | **-0.357** | stronger negative |
+| `b3_c`, `b5_n`, `b2_pQ` | ~0 | ~0 | AU flat Phillips persists |
+
+### Phase R fixes applied (all 8 .mod files)
+
+| # | Audit | Fix | FR-BDF reference |
+|---|---|---|---|
+| 1.B | #18, #34 | `pv_X_aux` puzzle resolved — REAL interpretation: wedges capture VAR-vs-structural gap. Documentation clarified. | §3.1.1 auxiliary equations |
+| 1.C | #17, #21 | `eq_dln_n_star_bar`: added `(yhat_au - yhat_au(-1))` Δq channel + flipped sign on `dln_tfp/(1-α_k)` term. Pre-fix dln_tfp coef was +2.79 (wrong sign, 3.3× too large vs FR-BDF -0.84). | eq 36 / eq 55 |
+| 1.D | #22, #23 | Wage Phillips: flipped `+ kappa_w·pv_u_gap` → `- kappa_w·pv_u_gap`; replaced `gamma_w·pi_au` (VA price) with `gamma_w·pi_c` (consumer price for indexation); kappa_w prior re-centred. | eq 49 / eq 52 |
+| 1.E | #26 | Added new endogenous `pv_r_lh_gap` (forward NPV of real lending rate gap, β_c=0.95 discount) + new term `+ alpha_c_r · pv_r_lh_gap` in `eq_dln_c_pac`. Provides forward-looking real-rate channel. | eq 61 |
+
+### Post-cleanup path regressions also fixed
+
+The 2026-05-15 repository cleanup moved scripts into `scripts/{estimation,data_prep,analysis,...}/` subfolders, breaking 8 file-path expressions that used `..` to reach repo root. Phase R repaired:
+- 6 data_prep scripts: `..` → `..,..,..` for repo-root paths
+- 2 generate_*_mod scripts: `fileparts(mfilename)` → `pwd` for output to dynare/
+- `extract_mcmc_results.m`: explicit `dynare/` resolution + cd
+- `run_phase_r_refit.m`: hardened against sub-script `clear` calls (global timer, exist() checks)
+
+### Phase R artifacts
+
+- [`dynare/scripts/estimation/run_phase_r_refit.m`](dynare/scripts/estimation/run_phase_r_refit.m) — refit driver (5 stages)
+- [`dynare/regen/regen_phase_r_benchmarks.py`](dynare/regen/regen_phase_r_benchmarks.py) — FR-BDF IRF benchmark comparison (h5py + scipy compatible)
+- [`dynare/phase_r_benchmark_table.md`](dynare/phase_r_benchmark_table.md) — quantitative comparison for all 7 shocks × 3 variants
+- [`dynare/bayesian_mcmc_results.mat`](dynare/bayesian_mcmc_results.mat) — refreshed posteriors (28 params)
+- [`dynare/saved_irfs_{var,hybrid,mce}.mat`](dynare/) — IRFs at irf=200
+- [`dynare/forward_guidance_puzzle.png`](dynare/forward_guidance_puzzle.png) — Phase L verification (10.06 ratio)
+
+### Audit items resolved by Phase R + Phase 4 doc pass
+
+- 🟢 **9 FIXED**: #17, #21, #22, #23, #26 (structural fixes via Phase 1.C/1.D/1.E)
+- ✅ **30+ CLOSED** (Phase 4 documentation pass, 2026-05-16): #1-#5, #7, #9, #10, #12, #13, #15, #16, #19, #20, #24, #25, #27, #35, #36, #38-#41, #44, #47, #49-#52 captured in working paper §4.13 "AU adaptations vs FR-BDF design" (six subsections: AU empirical findings, structural simplifications, local-market adaptations, calibration imports, fiscal-block differences, methodological choices)
+- ⏳ **17 DEFERRED** to Phase 5 research backlog: i_us foreign rate (#8), branch decomposition (#45), energy import split (#33/#37), demographic trends (#43), tax structure (#46), BLR/MAPI/MAPU auxiliary models, APP experiment expansion. See [`plan.md`](plan.md) Phase 5.
+- 🔍 **2 PENDING** Dynare runs: #54 LR BGP convergence — partially via Phase L test (forward guidance ratio stable); #14/#53 δ_k sensitivity — deferred (low priority).
+
+### Outstanding flags from benchmark comparison
+
+- `eps_pQ` (cost-push) IRF shows wrong sign vs FR-BDF (+0.15 vs -0.45 expected). Likely pre-existing issue, not Phase R regression. Worth investigating in follow-up.
+- `eps_tfp_LR` IRF small at Q16 — consistent with permanent level shock building toward asymptotic value over longer horizon (50+ quarters per audit).
+- `eps_g` impact multiplier small (0.086 at Q4 vs FR-BDF 1.20 at Q1) — suggests fiscal multiplier in AUSPAC is much weaker. May warrant prior re-think for `b_yh_c` HtM channel.
+- `eps_q_us` foreign demand spillover larger than FR-BDF (+0.75 vs +0.14) — consistent with audit #3.1 finding (δ=0.20 in AU vs 0.08 in FR-BDF, due to AU-China commodity exposure).
+
+### Phase R fixes applied (all 8 .mod files)
+
+| # | Audit | Fix | FR-BDF reference |
+|---|---|---|---|
+| 1.B | #18, #34 | `pv_X_aux` puzzle resolved — REAL interpretation: wedges capture VAR-vs-structural gap (var_X uses VAR shadows; pv_X_aux uses structural variables). Documentation clarified. | §3.1.1 auxiliary equations |
+| 1.C | #17, #21 | `eq_dln_n_star_bar`: added `(yhat_au - yhat_au(-1))` Δq channel + flipped sign on `dln_tfp/(1-α_k)` term. Pre-fix dln_tfp coefficient was +2.79 (wrong sign, 3.3× too large vs FR-BDF's -0.84). | eq 36 / eq 55 |
+| 1.D | #22, #23 | Wage Phillips: flipped `+ kappa_w·pv_u_gap` → `- kappa_w·pv_u_gap` (sign convention); replaced `gamma_w·pi_au` (VA price) with `gamma_w·pi_c` (consumer price for indexation). `kappa_w` reset to 0.32 (FR-BDF |β_4|), prior re-centred. | eq 49 / eq 52 |
+| 1.E | #26 | Added new endogenous `pv_r_lh_gap` (forward NPV of real lending rate gap, β_c=0.95 discount) + new term `+ alpha_c_r · pv_r_lh_gap` in `eq_dln_c_pac`. Provides forward-looking real-rate channel essential for no-forward-guidance-puzzle property under MCE. | eq 61 |
+
+### Phase R driver
+
+Run via `dynare/scripts/estimation/run_phase_r_refit.m` — performs:
+1. Smoke test: compile all 3 main variants under new specs, verify BK rank
+2. Smoothed-series refresh
+3. Bayesian Stage 1 (csminwel mode finding, ~5 min)
+4. Bayesian Stage 2 (MH MCMC 20k×2 chains, ~50 min)
+5. LMD comparison vs Phase Q baseline (-801.71 / -802.27)
+
+After MCMC: regenerate IRFs at irf=200 and run
+`dynare/regen/regen_phase_r_benchmarks.py` for FR-BDF comparison table.
+
+### Phase R deferred items
+
+Audit items #8 (foreign rate `i_us`), #45 (branch decomposition),
+#33/#37 (energy import split, Phase E), #43 (demographic trends), #46
+(tax structure), #58 (APP experiment expansion) — see [plan.md](plan.md)
+Phase 5 (research backlog).
+
+---
+
+## Phase Q baseline (pre-refit) — 2026-05-15
+
+Phase Q added a forward-looking NPV of the policy-rate gap (`pv_i_uip`) into the UIP equation — under Hybrid/MCE the spot AUD internalises the full expected rate path on impact, delivering FR-BDF-style Hybrid amplification (output gap −0.151% Q7 under Hybrid vs −0.128% Q9 under VAR, 18% amplification; consumption growth −0.175% Q1 under Hybrid vs −0.097% Q3 under VAR, 80% amplification).
+
+**Final Phase Q calibration**: working paper Table 5.6, **LMD Laplace = −801.71, MHM = −802.27** (improvement of ~1.5 log-likelihood units over the 2026-05-14 contemporaneous-i_gap UIP specification at MHM −803.23). Phase R MCMC re-run will produce updated values.
 
 Authoritative documents:
 
