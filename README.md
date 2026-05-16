@@ -9,10 +9,12 @@ variables, 47 exogenous shocks, and 258 parameters; five PAC behavioural
 equations govern value-added prices, consumption, business investment,
 household investment, and employment.
 
-Status: **Phase G complete** (Phases A–G, 2026-05-10). All behavioural
-parameters are estimated or Bayesian-regularised on AU data. Headline
-results in [`dynare/AUSPAC_WORKING_PAPER.md`](dynare/AUSPAC_WORKING_PAPER.md).
-Open follow-ups in [`dynare/NEXT_STEPS.md`](dynare/NEXT_STEPS.md).
+Status: **v3.0 — Phase T architecture** (tagged 2026-05-16). Bayesian MCMC
+MHM log marginal density = **−781.39** (+20.66 cumulative nats over Phase Q
+baseline). PAC expectations now use the FR-BDF wp1044 / srecko / Brayton
+policy-function pattern. Full status, phase trajectory, and open items in
+[`STATUS.md`](STATUS.md). Working paper in
+[`dynare/AUSPAC_WORKING_PAPER.md`](dynare/AUSPAC_WORKING_PAPER.md).
 
 ---
 
@@ -52,7 +54,7 @@ Each script reads from and writes back to `dynare/` (where the
 AUSPAC/
 ├── README.md                          (you are here)
 ├── RUNNING.md                         step-by-step MATLAB run instructions
-├── STATUS.md                          phase log / development history
+├── STATUS.md                          v3.0 status + phase trajectory + open items
 ├── make_paper_results.m               top-level reproduction driver
 ├── run_all.m                          legacy E-SAT pipeline driver
 ├── test_full_system.m                 end-to-end regression test
@@ -76,10 +78,16 @@ AUSPAC/
 │   └── estimate_ces_*.m / estimate_sigma_stage1.m  (CES calibration drivers)
 │
 └── dynare/                            ▼ models, source, outputs ▼
-    ├── au_pac.mod                     Hybrid model (financial-forward, PAC-backward)
-    ├── au_pac_var.mod                 VAR-based (all-backward) variant
-    ├── au_pac_mce.mod                 Full MCE (all-forward) variant
-    ├── au_pac_bayesian.mod            Bayesian estimation .mod
+    ├── au_pac_v2.mod                  ★ v3.0 production model (Phase T policy-function)
+    ├── au_pac_v2_bayesian.mod         ★ v3.0 Bayesian estimation model
+    ├── aux/                           ★ 5 PAC aux files (estimation inputs)
+    ├── simulation/identities/         ★ normalized .inc files + Python normalizers
+    ├── simulation/estimation/         ★ cherrypicked .inc bundles (5 subdirs)
+    │
+    ├── au_pac.mod                     Phase S Hybrid model (preserved for paper §6.2)
+    ├── au_pac_var.mod                 Phase S VAR variant (preserved)
+    ├── au_pac_mce.mod                 Phase S MCE variant (preserved)
+    ├── au_pac_bayesian.mod            Phase S Bayesian estimation .mod
     ├── au_pac_smooth.mod              Kalman smoother .mod
     ├── au_pac_condforecast.mod        Conditional forecast .mod
     ├── au_pac_identification.mod      Identification analysis .mod
@@ -91,8 +99,9 @@ AUSPAC/
     ├── setup_dynare_path.m            path bootstrap (addpath scripts/* + Dynare)
     │
     ├── AUSPAC_WORKING_PAPER.md        the working paper (live, beside its PNGs)
-    ├── NEXT_STEPS.md                  forward-looking task list (Phases I–O)
-    ├── 2026_paper_inputs.md           paper-input scratch
+    ├── mcmc_posterior_table_phase_t.md ★ v3.0 posteriors (Table 5.6 source)
+    ├── phase_r_benchmark_table.md     Phase R IRF benchmark vs FR-BDF
+    ├── forecast_eval_table.md         Section 5.5 recursive forecast RMSEs
     ├── *_README.md                    data + dseries READMEs
     │
     ├── scripts/
