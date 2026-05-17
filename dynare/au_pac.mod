@@ -519,6 +519,7 @@ parameters
     a_pQ_i          // interest rate gap (cost channel)
     a_pQ_pi         // inflation gap (FR-BDF policy fn: 0.00087)
     a_pQ_u          // unemployment gap (wage → ULC channel, FR-BDF: û coeff = -0.011)
+    a_pQ_w          // Phase U: lagged efficient-wage-inflation channel (FR-BDF Table 4.4.4: +1.2e-2)
 
     // Employment (FR-BDF Table 4.5.7, eq 57: n̂* = f(ŷ, i, π, û, n̂*))
     rho_n_aux       // own persistence (FR-BDF: 0.67)
@@ -874,6 +875,7 @@ a_pQ_y          =  0.043;   // Bayesian posterior, 90% CI [-0.000, 0.087]
 a_pQ_i          = -0.021;   // Bayesian posterior, 90% CI [-0.070, 0.029] (CI crosses 0)
 a_pQ_pi         =  0.007;   // Bayesian posterior, 90% CI [-0.042, 0.057] (CI crosses 0)
 a_pQ_u          = -0.021;   // Bayesian posterior, 90% CI [-0.069, 0.027] (CI crosses 0)
+a_pQ_w          =  0.012;   // Phase U: FR-BDF wp736 Table 4.4.4 lagged efficient-wage-inflation regressor
 
 // Employment auxiliary (FR-BDF Table 4.5.7, eq 57)
 rho_n_aux       =  0.743;   // Bayesian posterior, 90% CI [0.669, 0.817]; OLS=0.716, prior AU=0.56
@@ -1312,7 +1314,7 @@ model;
     // this for follow-up verification via dedicated MCE-only IRF test.
 
     [name = 'eq_pv_piQ_aux']
-    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1);
+    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1) + a_pQ_w * (pi_w(-1) - pibar_au(-1));
     [name = 'eq_pv_n_aux']
     pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1) + a_n_u * u_gap(-1);
     [name = 'eq_pv_c_aux']

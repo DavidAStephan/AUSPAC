@@ -7,6 +7,9 @@ di_gap = i_gap - i_gap(-1);
 [name='pi_au']
 pi_au = pi_au_gap + pibar_au;
 
+[name='def_pi_w_gap']
+pi_w_gap = pi_w - pibar_au;
+
 [name='pi_us']
 pi_us = pi_us_gap + pibar_us;
 
@@ -17,7 +20,29 @@ yhat_au = delta * yhat_us + lambda_q * yhat_au(-1) - sigma_q * (i_gap(-1) - pi_a
 i_gap = lambda_i * i_gap(-1) + (1 - lambda_i) * (alpha_i * pi_au_gap(-1) + beta_i * yhat_au(-1)) + eps_i;
 
 [name='eq_au_phillips']
-pi_au_gap = lambda_pi * pi_au_gap(-1) + kappa_pi * yhat_au(-1) + alpha_pc * (piQ - pibar_au) + beta_pc_m * (pi_m - pibar_au) + gamma_oil * dln_pcom + eps_pi;
+// Phase V: FR-BDF wp736 eq (80) ECM rewrite. Now combines the original
+// Phillips slack term with the FR-BDF structural deflator form:
+//   pi_C = (1-β0-β1)·π̄_Q + β0·π_Q + β1·π_Q(-1) + β2·Δ(P_MNRJ/P̄)
+//        + β3·(p_C(-1) - p*_C(-1)) + ε
+// In AU-PAC gap form this becomes pi_au_gap regressed on lagged gap (lambda_pi),
+// slack (kappa_pi · yhat), contemporaneous + lagged VA-price gaps (alpha_pc + alpha_pc_lag),
+// contemporaneous import-price gap (beta_pc_m), commodity (gamma_oil), and the
+// ECM term anchoring cumulative log CPI to the weighted average of cumulative
+// log VA-price + log import-price (target = (1-omega_pc)·pQ_level + omega_pc·p_M_level).
+pi_au_gap = lambda_pi * pi_au_gap(-1) + kappa_pi * yhat_au(-1)
+          + alpha_pc * (piQ - pibar_au) + alpha_pc_lag * (piQ(-1) - pibar_au(-1))
+          + beta_pc_m * (pi_m - pibar_au) + gamma_oil * dln_pcom
+          + b_ECM_pc * (p_C_star_level(-1) - p_C_level(-1))
+          + eps_pi;
+
+[name='def_p_C_level']
+p_C_level = p_C_level(-1) + pi_au_gap;
+
+[name='def_p_M_level']
+p_M_level = p_M_level(-1) + (pi_m - pibar_au);
+
+[name='def_p_C_star_level']
+p_C_star_level = (1 - omega_pc) * pQ_level + omega_pc * p_M_level;
 
 [name='eq_us_is']
 yhat_us = lambda_q_us * yhat_us(-1) + eps_q_us;
@@ -122,7 +147,7 @@ piQ_star_bar = pibar_au;
 pQ_gap = pQ_star_level - pQ_level;
 
 [name='eq_pv_piQ_aux']
-pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1);
+pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1) + a_pQ_w * pi_w_gap(-1);
 
 [name='eq_pv_n_aux']
 pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1) + a_n_u * u_gap(-1);

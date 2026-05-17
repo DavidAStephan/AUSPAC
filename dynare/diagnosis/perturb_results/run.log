@@ -1,0 +1,30 @@
+
+=== baseline : baseline posterior re-run ===
+  OK 1.6s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_baseline.mat
+
+=== alpha_pc_FR : FR-BDF passthrough (0.17->0.71) ===
+  OK 0.9s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_alpha_pc_FR.mat
+
+=== kappa_pi_FR : FR-BDF Phillips slope (0.037->0.08) ===
+  OK 0.9s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_kappa_pi_FR.mat
+
+=== kappa_pi_steep : steep Phillips slope (->0.20) ===
+  OK 1.0s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_kappa_pi_steep.mat
+
+=== lambda_i_FR : FR-BDF Taylor smoothing (0.96->0.85) ===
+  OK 1.1s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_lambda_i_FR.mat
+
+=== b2_pQ_hi : VA-price output-gap slope (~0->0.10) ===
+  OK 0.9s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_b2_pQ_hi.mat
+
+=== kappa_w_steep : wage Phillips slope (-0.10->-0.30) ===
+  OK 0.9s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_kappa_w_steep.mat
+
+=== gamma_ulc_hi : ULC pass-through (0.30->0.50) ===
+  OK 0.9s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_gamma_ulc_hi.mat
+
+=== beta_uip_zero : kill forward-NPV UIP FX channel ===
+  OK 0.9s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_beta_uip_zero.mat
+
+=== joint_FR : jointly alpha_pc + kappa_pi to FR-BDF ===
+  OK 0.9s -> /Users/davidstephan/Documents/AUSPAC/dynare/diagnosis/perturb_results/irf_joint_FR.mat

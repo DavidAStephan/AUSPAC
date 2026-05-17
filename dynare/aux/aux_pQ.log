@@ -1,0 +1,29 @@
+Starting Dynare (version 6.5).
+Calling Dynare with arguments: noclearall
+Starting preprocessing of the model file ...
+Substitution of Diff operator: added 2 auxiliary variables and equations.
+Found 18 equation(s).
+Evaluating expressions...
+Computing static model derivatives (order 1).
+Normalizing the static model...
+Finding the optimal block decomposition of the static model...
+15 block(s) found:
+  14 recursive block(s) and 1 simultaneous block(s).
+  the largest simultaneous block has 3 equation(s)
+                                 and 3 feedback variable(s).
+Computing dynamic model derivatives (order 2).
+Normalizing the dynamic model...
+Finding the optimal block decomposition of the dynamic model...
+1 block(s) found:
+  1 recursive block(s) and 0 simultaneous block(s).
+  the largest simultaneous block has 0 equation(s)
+                                 and 0 feedback variable(s).
+JSON written after Computing step.
+Preprocessing completed.
+Preprocessing time: 0h00m00s.
+
+Parameters declarations and calibrations are saved in aux_pQ/model/pac-expectations/pac_pQ-parameters.inc.
+Expectation unrolled expression is saved in aux_pQ/model/pac-expectations/pac_pQ-expression.inc.
+Expectation dseries expression is saved in +aux_pQ/+pac_expectations/+pac_pQ/evaluate.m.
+
+Total computing time : 0h00m00s

@@ -1,3 +1,8 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
 # The AU-PAC Model: A Semi-Structural Macroeconomic Model for Australia
 
 ## David Stephan

@@ -23,6 +23,10 @@ var
 	dln_ulc
 	dln_prod
 	pi_w
+	pi_w_gap
+	p_C_level
+	p_M_level
+	p_C_star_level
 	u_gap
 	pv_u_gap
 	dln_n

@@ -145,3 +145,21 @@ b_covid_bounce_c = 0;
 b_covid_bounce_ib = 0;
 b_covid_bounce_ih = 0;
 b_covid_bounce_n = 0;
+// Phase U: wage->piQ_hat regression coefficient.
+// FR-BDF wp736 eq (45) regresses the long-run VA-price target on
+// efficient wage inflation with coefficient 0.59. AU-PAC adopts the
+// same value (the projection of the LR VA-price target onto the E-SAT
+// state previously had no wage regressor, breaking the wage-price
+// spiral; see dynare/PRICE_RESPONSE_DIAGNOSIS.md).
+a_pQ_w = 0.59;
+// Phase V: FR-BDF wp736 eq (80) ECM rewrite of the consumer price equation.
+// omega_pc      - LR import-price weight in CPI target (FR-BDF eq 79 β0_LR = 0.23;
+//                 AU IAD weight w_iad_c = 0.20 — same neighbourhood, calibrate to 0.23).
+// alpha_pc_lag  - lagged VA-price passthrough (FR-BDF eq 80 β1 = 0.16).
+// b_ECM_pc      - error-correction speed of pi_au_gap toward (p_C_star - p_C) gap
+//                 (FR-BDF eq 80 |β3| = 0.05; the FR-BDF sign convention has
+//                 β3 = -0.05 on (p_C - p*_C); we adopt b_ECM_pc = +0.05 on
+//                 (p_C_star_level - p_C_level), same direction).
+omega_pc       = 0.23;
+alpha_pc_lag   = 0.16;
+b_ECM_pc       = 0.05;

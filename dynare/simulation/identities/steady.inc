@@ -155,6 +155,11 @@
     pQ_level       = 0;
     pQ_star_level  = 0;
 
+    // Phase V: ECM consumer price level accumulators (zero at SS — gap form)
+    p_C_level       = 0;
+    p_M_level       = 0;
+    p_C_star_level  = 0;
+
     // Consumption PAC TCM + level variables
     c_aux_l        = 0;
     c_star_l       = 0;

@@ -1,7 +1,6 @@
 varexo
 	dln_pcom
 	eps_pQ
-	eps_var_pQ
 	i_gap
 	ibar
 	piQ
@@ -9,6 +8,7 @@ varexo
 	pi_au_gap
 	pi_m
 	pi_us_gap
+	pi_w_gap
 	pibar_au
 	pibar_us
 	u_gap

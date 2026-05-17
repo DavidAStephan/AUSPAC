@@ -104,6 +104,10 @@ var
 	pi_us
 	pi_us_gap
 	pi_w
+	pi_w_gap
+	p_C_level
+	p_M_level
+	p_C_star_level
 	pi_x
 	pibar_au
 	pibar_us
@@ -166,6 +170,7 @@ parameters
 	a_pQ_i
 	a_pQ_pi
 	a_pQ_u
+	a_pQ_w
 	a_pQ_y
 	a_rKB_i
 	a_yh_u
@@ -174,6 +179,7 @@ parameters
 	alpha_i
 	alpha_k
 	alpha_pc
+	alpha_pc_lag
 	alpha_pcom
 	alpha_pg
 	alpha_ph_r
@@ -225,6 +231,7 @@ parameters
 	b_covid_crash_ih
 	b_covid_crash_n
 	b_covid_crash_pQ
+	b_ECM_pc
 	b_di_c
 	b_ph_ih
 	beta_c
@@ -317,6 +324,7 @@ parameters
 	h_pac_pQ_var_pi_au_gap_lag_1
 	h_pac_pQ_var_pi_m_lag_1
 	h_pac_pQ_var_pi_us_gap_lag_1
+	h_pac_pQ_var_pi_w_gap_lag_1
 	h_pac_pQ_var_pibar_au_lag_1
 	h_pac_pQ_var_pibar_us_lag_1
 	h_pac_pQ_var_u_gap_lag_1
@@ -352,6 +360,7 @@ parameters
 	omega_ih
 	omega_n
 	omega_pQ
+	omega_pc
 	phi_g
 	pi_ss_au
 	pi_ss_us
@@ -422,24 +431,26 @@ parameters
 a_pQ_i = 0;
 a_pQ_pi = 0;
 a_pQ_u = 0;
+a_pQ_w = 0.59;
 a_pQ_y = 0.05;
 b0_pQ = 0.0294;
 b1_pQ = 0.2784;
 b2_pQ = 0.0022;
-h_pac_pQ_constant = 5.687212675830823e-05;
-h_pac_pQ_var_dln_pcom_lag_1 = 4.495410244811677e-06;
-h_pac_pQ_var_i_gap_lag_1 = -0.000794351036554313;
+h_pac_pQ_constant = 0.001946071186670553;
+h_pac_pQ_var_dln_pcom_lag_1 = 0.0001536409820677057;
+h_pac_pQ_var_i_gap_lag_1 = -0.002435702890037659;
 h_pac_pQ_var_ibar_lag_1 = 0;
 h_pac_pQ_var_piQ_hat_lag_1 = 0.007092422141294697;
-h_pac_pQ_var_piQ_lag_1 = 7.662951548350418e-05;
-h_pac_pQ_var_pi_au_gap_lag_1 = 9.58567860410706e-05;
-h_pac_pQ_var_pi_m_lag_1 = 2.651481663728039e-05;
+h_pac_pQ_var_piQ_lag_1 = 0.002620973684701352;
+h_pac_pQ_var_pi_au_gap_lag_1 = 0.003260621111529395;
+h_pac_pQ_var_pi_m_lag_1 = 0.0009066281617903416;
 h_pac_pQ_var_pi_us_gap_lag_1 = 0;
-h_pac_pQ_var_pibar_au_lag_1 = -0.0001941397349340778;
+h_pac_pQ_var_pi_w_gap_lag_1 = 0.006211377646453626;
+h_pac_pQ_var_pibar_au_lag_1 = -0.006641315745164579;
 h_pac_pQ_var_pibar_us_lag_1 = 0;
-h_pac_pQ_var_u_gap_lag_1 = 0;
-h_pac_pQ_var_yhat_au_lag_1 = 0.001266942253030019;
-h_pac_pQ_var_yhat_us_lag_1 = 0.001005330445612462;
+h_pac_pQ_var_u_gap_lag_1 = -0.002669492571821966;
+h_pac_pQ_var_yhat_au_lag_1 = 0.003973412935271122;
+h_pac_pQ_var_yhat_us_lag_1 = 0.003086445211867006;
 rho_pQ_aux = 0.85;
 a_c_i = -0.04;
 a_c_pi = 0.005;
@@ -625,6 +636,10 @@ beta_m = 1.5;
 gamma_m = -0.4;
 rho_pc = 0.67;
 alpha_pc = 0.17;
+// Phase V: FR-BDF eq (80) ECM-style additions to eq_au_phillips
+alpha_pc_lag = 0.16;   // FR-BDF eq (80) β1 lagged-VA-price passthrough
+b_ECM_pc     = 0.05;   // FR-BDF eq (80) |β3| error-correction speed
+omega_pc     = 0.23;   // FR-BDF eq (79) β0_LR import weight in CPI target
 rho_pib = 0.7;
 alpha_pib = 0.19;
 rho_pih = 0.49;
@@ -743,13 +758,13 @@ varexo
 model;
 
 	[blockname='',name='pac_expectation_pac_pQ']
-	pac_expectation_pac_pQ =  h_pac_pQ_constant + h_pac_pQ_var_yhat_au_lag_1*yhat_au(-1) + h_pac_pQ_var_i_gap_lag_1*i_gap(-1) + h_pac_pQ_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_pQ_var_u_gap_lag_1*u_gap(-1) + h_pac_pQ_var_yhat_us_lag_1*yhat_us(-1) + h_pac_pQ_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_pQ_var_ibar_lag_1*ibar(-1) + h_pac_pQ_var_pibar_au_lag_1*pibar_au(-1) + h_pac_pQ_var_pibar_us_lag_1*pibar_us(-1) + h_pac_pQ_var_piQ_lag_1*piQ(-1) + h_pac_pQ_var_pi_m_lag_1*pi_m(-1) + h_pac_pQ_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_pQ_var_piQ_hat_lag_1*piQ_hat(-1);
+	pac_expectation_pac_pQ =  h_pac_pQ_constant + h_pac_pQ_var_yhat_au_lag_1*yhat_au(-1) + h_pac_pQ_var_i_gap_lag_1*i_gap(-1) + h_pac_pQ_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_pQ_var_u_gap_lag_1*u_gap(-1) + h_pac_pQ_var_yhat_us_lag_1*yhat_us(-1) + h_pac_pQ_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_pQ_var_ibar_lag_1*ibar(-1) + h_pac_pQ_var_pibar_au_lag_1*pibar_au(-1) + h_pac_pQ_var_pibar_us_lag_1*pibar_us(-1) + h_pac_pQ_var_piQ_lag_1*piQ(-1) + h_pac_pQ_var_pi_m_lag_1*pi_m(-1) + h_pac_pQ_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_pQ_var_pi_w_gap_lag_1*pi_w_gap(-1) + h_pac_pQ_var_piQ_hat_lag_1*piQ_hat(-1);
 
 	[blockname='',name='pQ_level']
 	diff(pQ_level) =  b0_pQ*(piQ_hat(-1)-pQ_level(-1))+b1_pQ*diff(pQ_level(-1))+pac_expectation_pac_pQ+yhat_au*b2_pQ+eps_pQ;
 
 	[blockname='',name='piQ_hat']
-	piQ_hat =  rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+eps_var_pQ;
+	piQ_hat =  rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+pi_w_gap(-1)*a_pQ_w+eps_var_pQ;
 
 	[blockname='',name='pac_expectation_pac_c']
 	pac_expectation_pac_c =  h_pac_c_constant + h_pac_c_var_yhat_au_lag_1*yhat_au(-1) + h_pac_c_var_i_gap_lag_1*i_gap(-1) + h_pac_c_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_c_var_u_gap_lag_1*u_gap(-1) + h_pac_c_var_yhat_us_lag_1*yhat_us(-1) + h_pac_c_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_c_var_ibar_lag_1*ibar(-1) + h_pac_c_var_pibar_au_lag_1*pibar_au(-1) + h_pac_c_var_pibar_us_lag_1*pibar_us(-1) + h_pac_c_var_piQ_lag_1*piQ(-1) + h_pac_c_var_pi_m_lag_1*pi_m(-1) + h_pac_c_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_c_var_yh_ratio_hat_lag_1*yh_ratio_hat(-1) + h_pac_c_var_c_hat_lag_1*c_hat(-1);
@@ -802,6 +817,9 @@ model;
 	[blockname='',name='pi_au']
 	pi_au =  pi_au_gap + pibar_au;
 
+[name='def_pi_w_gap']
+	pi_w_gap = pi_w - pibar_au;
+
 	[blockname='',name='pi_us']
 	pi_us =  pi_us_gap + pibar_us;
 
@@ -812,7 +830,17 @@ model;
 	i_gap =  lambda_i * i_gap(-1) + (1 - lambda_i) * (alpha_i * pi_au_gap(-1) + beta_i * yhat_au(-1)) + eps_i;
 
 	[blockname='',name='pi_au_gap']
-	pi_au_gap =  lambda_pi * pi_au_gap(-1) + kappa_pi * yhat_au(-1) + alpha_pc * (piQ - pibar_au) + beta_pc_m * (pi_m - pibar_au) + gamma_oil * dln_pcom + eps_pi;
+// Phase V: FR-BDF eq (80) ECM rewrite — see PRICE_RESPONSE_DIAGNOSIS.md
+	pi_au_gap =  lambda_pi * pi_au_gap(-1) + kappa_pi * yhat_au(-1) + alpha_pc * (piQ - pibar_au) + alpha_pc_lag * (piQ(-1) - pibar_au(-1)) + beta_pc_m * (pi_m - pibar_au) + gamma_oil * dln_pcom + b_ECM_pc * (p_C_star_level(-1) - p_C_level(-1)) + eps_pi;
+
+[blockname='',name='def_p_C_level']
+	p_C_level = p_C_level(-1) + pi_au_gap;
+
+[blockname='',name='def_p_M_level']
+	p_M_level = p_M_level(-1) + (pi_m - pibar_au);
+
+[blockname='',name='def_p_C_star_level']
+	p_C_star_level = (1 - omega_pc) * pQ_level + omega_pc * p_M_level;
 
 	[blockname='',name='yhat_us']
 	yhat_us =  lambda_q_us * yhat_us(-1) + eps_q_us;
@@ -917,7 +945,7 @@ model;
 	pQ_gap =  pQ_star_level - pQ_level;
 
 	[blockname='',name='pv_piQ_aux']
-	pv_piQ_aux =  rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1);
+	pv_piQ_aux =  rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1) + a_pQ_w * pi_w_gap(-1);
 
 	[blockname='',name='pv_n_aux']
 	pv_n_aux =  rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1) + a_n_u * u_gap(-1);
@@ -1210,6 +1238,7 @@ steady_state_model;
     u_gap        = 0;         // unemployment at equilibrium at SS
     pv_u_gap     = 0;         // PV of future unemployment gaps = 0 at SS
     pi_w         = pi_ss_au;  // wages grow at LR inflation rate at SS
+    pi_w_gap     = 0;         // Phase U: SS deviation of pi_w from pibar_au
 
     // Employment PAC
     dln_n          = 0;       // zero employment growth in stationary model
@@ -1325,6 +1354,11 @@ steady_state_model;
     pQ_level       = 0;
     pQ_star_level  = 0;
 
+    // Phase V: ECM consumer price level accumulators (zero at SS — gap form)
+    p_C_level       = 0;
+    p_M_level       = 0;
+    p_C_star_level  = 0;
+
     // Consumption PAC TCM + level variables
     c_aux_l        = 0;
     c_star_l       = 0;
@@ -1363,43 +1397,50 @@ end;
 
 
 // ===================================================================
-// Phase T MCMC posterior writeback (2026-05-16)
+// Phase V MCMC posterior writeback (2026-05-17, Laplace LMD=-780.58, MHM=-781.71)
 // ===================================================================
-b0_pQ       = 0.0330;
-b1_pQ       = 0.2795;
-b2_pQ       = 0.0077;
-b0_c        = 0.0559;
-b1_c        = 0.0375;
-b2_c        = -0.3284;
-b3_c        = 0.0147;
-b0_ib       = 0.0188;
-b1_ib       = 0.0884;
-b3_ib       = 0.3225;
-b0_ih       = 0.0306;
-b1_ih       = 0.1123;
-b3_ih       = 0.2237;
-b0_n        = 0.0564;
-b1_n        = 0.3116;
-b5_n        = -0.0023;
-lambda_w    = 0.2091;
-gamma_w     = 0.3536;
-kappa_w     = -0.1025;
+b0_pQ       = 0.0300;
+b1_pQ       = 0.2803;
+b2_pQ       = 0.0035;
+b0_c        = 0.0577;
+b1_c        = 0.0387;
+b2_c        = -0.3427;
+b3_c        = 0.0215;
+b0_ib       = 0.0181;
+b1_ib       = 0.0809;
+b3_ib       = 0.3120;
+b0_ih       = 0.0309;
+b1_ih       = 0.1111;
+b3_ih       = 0.2211;
+b0_n        = 0.0638;
+b1_n        = 0.3118;
+b5_n        = 0.0050;
+lambda_w    = 0.2112;
+gamma_w     = 0.3476;
+kappa_w     = -0.1111;
+// Phase U + V newly estimated parameters:
+alpha_pc     = 0.2013;   // VA -> CPI passthrough (vs Phase T calibrated 0.17, FR-BDF 0.71)
+kappa_pi     = 0.0057;   // Phillips slack (vs Phase T calibrated 0.0374)
+lambda_pi    = 0.1744;   // CPI persistence (vs Phase T calibrated 0.2902)
+a_pQ_w       = 0.4367;   // wage -> piQ_hat (Phase U addition; AU data strongly supports)
+alpha_pc_lag = 0.1135;   // lagged VA-price passthrough (Phase V addition)
+b_ECM_pc     = 0.0601;   // ECM speed in eq_au_phillips (Phase V addition)
 
 shocks;
-    var eps_q;          stderr 0.5372;
-    var eps_i;          stderr 0.1112;
-    var eps_pi;         stderr 0.5346;
+    var eps_q;          stderr 0.5356;
+    var eps_i;          stderr 0.1105;
+    var eps_pi;         stderr 0.4867;
     var eps_q_us;       stderr 1.138;
     var eps_pi_us;      stderr 0.319;
     var eps_ibar;       stderr 0.01;
     var eps_pibar_au;   stderr 0.01;
     var eps_pibar_us;   stderr 0.01;
     var eps_pQ;         stderr 0.571;
-    var eps_w;          stderr 0.1407;
-    var eps_n;          stderr 0.4797;
-    var eps_c;          stderr 1.8364;
-    var eps_ib;         stderr 2.7469;
-    var eps_ih;         stderr 1.3377;
+    var eps_w;          stderr 0.1397;
+    var eps_n;          stderr 0.4852;
+    var eps_c;          stderr 1.8362;
+    var eps_ib;         stderr 2.7211;
+    var eps_ih;         stderr 1.3938;
     var eps_10y;        stderr 0.0656;
     var eps_tp;         stderr 0.05;
     var eps_COE;        stderr 0.1;

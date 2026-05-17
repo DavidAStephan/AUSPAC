@@ -28,6 +28,8 @@ var
     ibar            pibar_au        pibar_us
     // E-SAT auxiliary structural states (Phase T addition: structural piQ, pi_m, dln_pcom)
     piQ             pi_m            dln_pcom
+    // Phase U addition: wage inflation gap — re-opens the wage->piQ_hat channel
+    pi_w_gap
     // VA-price aux regression target (the trend_component target for the PAC)
     piQ_hat
     // Cumulative levels for the PAC equation (LHS of eq_piQ_pac is diff(pQ_level))
@@ -38,7 +40,7 @@ varexo
     eps_q           eps_i           eps_pi          eps_q_us
     eps_pi_us       eps_ibar        eps_pibar_au    eps_pibar_us
     eps_u_gap       eps_piQ         eps_pi_m        eps_pcom
-    eps_var_pQ      eps_pQ
+    eps_pi_w        eps_var_pQ      eps_pQ
 ;
 
 parameters
@@ -54,11 +56,14 @@ parameters
     // SS anchors
     i_ss            pi_ss_au        pi_ss_us
     // piQ_hat auxiliary regression coefficients
-    rho_pQ_aux      a_pQ_y          a_pQ_i          a_pQ_pi         a_pQ_u
+    // (Phase U: a_pQ_w added — wage->piQ_hat channel per FR-BDF wp736 Table 4.4.4)
+    rho_pQ_aux      a_pQ_y          a_pQ_i          a_pQ_pi         a_pQ_u          a_pQ_w
     // piQ AR coefficient (simple AR1 for var_model purposes)
     rho_piQ
     // pi_m, dln_pcom AR coefficients (simple AR1 for var_model purposes)
     rho_pi_m        rho_pcom
+    // pi_w_gap reduced-form companion-matrix coefficients (Phase U)
+    rho_pi_w_gap    a_w_pi          a_w_u
     // VA-price PAC short-run coefficients
     b0_pQ           b1_pQ           b2_pQ
     // PAC discount factor
@@ -82,8 +87,23 @@ i_ss            = 1.0491;       pi_ss_au        = 0.625;        pi_ss_us        
 
 rho_pQ_aux      = 0.85;
 a_pQ_y          = 0.05;         a_pQ_i          = 0.0;          a_pQ_pi         = 0.0;          a_pQ_u          = 0.0;
+// Phase U: a_pQ_w calibrated to FR-BDF wp736 eq (45) coefficient on the
+// efficient wage inflation regressor in the long-run VA-price target
+// equation: π*_Q = 0.59*(πW - Δē) + 0.41*π̄*_Q. AU-PAC's var_piQ_hat
+// regresses on the LAGGED state (var_model requires pure-VAR-(1) form),
+// so we adopt 0.59 to match the structural projection magnitude FR-BDF
+// uses. The Table 4.4.4 policy-function coefficient (1.2e-2) is the
+// implied DISCOUNTED-SUM impulse coefficient and corresponds to our
+// h_pac_pQ_var_pi_w_gap_lag_1 (derived automatically by pac.print).
+a_pQ_w          = 0.59;
 
 rho_piQ         = 0.85;         rho_pi_m        = 0.7;          rho_pcom        = 0.42;
+// pi_w_gap reduced-form for the var_model: AR(1) plus CPI-indexation + slack.
+// Calibration follows the AU posterior wage Phillips reduced to gap form:
+//   pi_w ~ 0.21*pi_w(-1) + 0.35*pi_c - 0.10*pv_u_gap + ...
+// pv_u_gap is forward-looking and not a var_model state, so we use u_gap(-1) as
+// the backward-looking analogue with a smaller coefficient.
+rho_pi_w_gap    = 0.21;         a_w_pi          = 0.35;         a_w_u           = -0.05;
 
 b0_pQ           = 0.0294;       b1_pQ           = 0.2784;       b2_pQ           = 0.0022;
 beta_pac        = 0.98;
@@ -100,6 +120,7 @@ var_model(model_name = esat_pQ,
         'var_yhat_us', 'var_pi_us_gap',
         'var_ibar', 'var_pibar_au', 'var_pibar_us',
         'var_piQ', 'var_pi_m', 'var_dln_pcom',
+        'var_pi_w_gap',
         'var_piQ_hat'
     ]);
 
@@ -155,10 +176,25 @@ model;
     dln_pcom = rho_pcom*dln_pcom(-1) + eps_pcom;
 
     // ---------------------------------------------------------------
+    // Phase U addition: wage inflation gap in pure-VAR form. The full
+    // wage Phillips with forward-looking pv_u_gap lives in simulation
+    // model.inc; here we use the AR + CPI-indexation + lagged-u reduced
+    // form so the var_model companion matrix can map shocks to wages
+    // into piQ_hat expectations.
+    // ---------------------------------------------------------------
+    [name = 'var_pi_w_gap']
+    pi_w_gap = rho_pi_w_gap*pi_w_gap(-1) + a_w_pi*pi_au_gap(-1) + a_w_u*u_gap(-1) + eps_pi_w;
+
+    // ---------------------------------------------------------------
     // piQ_hat auxiliary regression (the TARGET projection for VA-price PAC)
+    // Phase U: pi_w_gap(-1) added per FR-BDF wp736 Table 4.4.4 — the
+    // lagged efficient-wage-inflation regressor that re-opens the
+    // wage->price spiral. Coefficient calibration: FR-BDF reports
+    // +1.2e-2 in Table 4.4.4; we adopt the same value pending Phase B
+    // re-estimation of the projection coefficients on AU data.
     // ---------------------------------------------------------------
     [name = 'var_piQ_hat']
-    piQ_hat = rho_pQ_aux*piQ_hat(-1) + a_pQ_y*yhat_au(-1) + a_pQ_i*i_gap(-1) + a_pQ_pi*pi_au_gap(-1) + a_pQ_u*u_gap(-1) + eps_var_pQ;
+    piQ_hat = rho_pQ_aux*piQ_hat(-1) + a_pQ_y*yhat_au(-1) + a_pQ_i*i_gap(-1) + a_pQ_pi*pi_au_gap(-1) + a_pQ_u*u_gap(-1) + a_pQ_w*pi_w_gap(-1) + eps_var_pQ;
 
     // ---------------------------------------------------------------
     // VA-price PAC equation — this is what pac.print expands
@@ -185,6 +221,7 @@ shocks;
     var eps_piQ;        stderr 0.571;
     var eps_pi_m;       stderr 0.5;
     var eps_pcom;       stderr 3.0;
+    var eps_pi_w;       stderr 0.1407;
     var eps_var_pQ;     stderr 0.01;
     var eps_pQ;         stderr 0.571;
 end;
