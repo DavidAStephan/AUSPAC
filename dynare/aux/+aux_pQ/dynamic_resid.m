@@ -32,14 +32,14 @@ residual = zeros(18, 1);
     residual(7) = (y(23)) - (params(12)*y(7)+(1-params(12))*params(20)+x(it_, 6));
     residual(8) = (y(24)) - (y(8)*params(13)+(1-params(13))*params(21)+x(it_, 7));
     residual(9) = (y(25)) - (params(14)*y(9)+(1-params(14))*params(22)+x(it_, 8));
-    residual(10) = (y(26)) - (y(10)*params(29)+params(21)*(1-params(29))+x(it_, 10));
-    residual(11) = (y(27)) - (y(11)*params(30)+params(21)*(1-params(30))+x(it_, 11));
-    residual(12) = (y(28)) - (y(12)*params(31)+x(it_, 12));
-    residual(13) = (y(29)) - (params(32)*y(13)+y(2)*params(33)+y(4)*params(34)+x(it_, 13));
-    residual(14) = (y(30)) - (params(23)*y(14)+y(1)*params(24)+y(3)*params(25)+y(2)*params(26)+y(4)*params(27)+y(13)*params(28)+x(it_, 14));
-    residual(15) = (y(32)) - (x(it_, 15)+y(17)*params(37)+params(35)*(y(14)-y(15))+params(36)*y(33)+y(34));
-    residual(16) = (y(32)) - (y(31)-y(15));
+    residual(10) = (y(26)) - (y(10)*params(23)+params(21)*(1-params(23))+x(it_, 10));
+    residual(11) = (y(27)) - (y(11)*params(24)+params(21)*(1-params(24))+x(it_, 11));
+    residual(12) = (y(28)) - (y(12)*params(25)+x(it_, 12));
+    residual(13) = (y(29)) - (params(26)*y(13)+params(21)*(1-params(26))+x(it_, 13));
+    residual(14) = (y(31)) - (y(15)+y(29)-params(21));
+    residual(15) = (y(32)) - (x(it_, 14)+y(17)*params(29)+params(27)*(y(15)-y(14))+params(28)*y(33)+y(34));
+    residual(16) = (y(32)) - (y(30)-y(14));
     residual(17) = (y(33)) - (y(16));
-    residual(18) = (y(34)) - (params(39)+y(1)*params(40)+y(3)*params(41)+y(2)*params(42)+y(4)*params(43)+y(5)*params(44)+y(6)*params(45)+y(7)*params(46)+y(8)*params(47)+y(9)*params(48)+y(10)*params(49)+y(11)*params(50)+y(12)*params(51)+y(13)*params(52)+y(14)*params(53));
+    residual(18) = (y(34)) - (params(31)+y(1)*params(32)+y(3)*params(33)+y(2)*params(34)+y(4)*params(35)+y(5)*params(36)+y(6)*params(37)+y(7)*params(38)+y(8)*params(39)+y(9)*params(40)+y(10)*params(41)+y(11)*params(42)+y(12)*params(43)+y(13)*params(44));
 
 end

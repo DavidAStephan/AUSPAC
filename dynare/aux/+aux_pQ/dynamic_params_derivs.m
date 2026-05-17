@@ -52,8 +52,8 @@ function [rp, gp, rpp, gpp, hp, g3p] = dynamic_params_derivs(y, x, params, stead
 %           from model file (.mod)
 
 T = NaN(0,1);
-rp = zeros(18, 53);
-gp = zeros(18, 49, 53);
+rp = zeros(18, 44);
+gp = zeros(18, 48, 44);
 if nargout >= 3
 rpp = zeros(0,4);
 gpp = zeros(0,5);

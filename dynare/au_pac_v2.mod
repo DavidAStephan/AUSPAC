@@ -81,9 +81,7 @@ var
 	m_gap
 	n_gap
 	n_hat
-	pQ_gap
 	pQ_level
-	pQ_star_level
 	pac_expectation_pac_c
 	pac_expectation_pac_ib
 	pac_expectation_pac_ih
@@ -92,8 +90,6 @@ var
 	ph_gap
 	piQ
 	piQ_hat
-	piQ_star
-	piQ_star_bar
 	pi_au
 	pi_au_gap
 	pi_c
@@ -253,8 +249,6 @@ parameters
 	gamma_m
 	gamma_oil
 	gamma_reval
-	gamma_uck
-	gamma_ulc
 	gamma_w
 	gamma_x
 	h_pac_c_constant
@@ -380,7 +374,6 @@ parameters
 	rho_n_aux
 	rho_n_star
 	rho_pQ_aux
-	rho_pQ_star
 	rho_pc
 	rho_pcom
 	rho_pg
@@ -436,14 +429,14 @@ a_pQ_y = 0.05;
 b0_pQ = 0.0294;
 b1_pQ = 0.2784;
 b2_pQ = 0.0022;
-h_pac_pQ_constant = 0.000453020614950036;
+h_pac_pQ_constant = 0.0005236870666278106;
 h_pac_pQ_var_dln_pcom_lag_1 = 3.553534636190619e-05;
 h_pac_pQ_var_i_gap_lag_1 = -0.001354039809492274;
 h_pac_pQ_var_ibar_lag_1 = 0;
 h_pac_pQ_var_piQ_hat_lag_1 = 0.0006855541194920155;
 h_pac_pQ_var_piQ_lag_1 = 0.0006086782909132557;
 h_pac_pQ_var_pi_au_gap_lag_1 = 0.00073477552040113;
-h_pac_pQ_var_pi_m_lag_1 = 0.0002102211942374728;
+h_pac_pQ_var_pi_m_lag_1 = 9.715487155303405e-05;
 h_pac_pQ_var_pi_us_gap_lag_1 = 0;
 h_pac_pQ_var_pi_w_gap_lag_1 = 0.001165346490302144;
 h_pac_pQ_var_pibar_au_lag_1 = -0.001543732469070786;
@@ -463,14 +456,14 @@ b0_c = 0.0736;
 b1_c = 0.0375;
 b2_c = -0.333;
 b3_c = 0.022;
-h_pac_c_constant = 0.0002800460744787948;
+h_pac_c_constant = 0.0003458937173372549;
 h_pac_c_var_c_hat_lag_1 = 0.01053776568397507;
 h_pac_c_var_dln_pcom_lag_1 = 3.955325021801383e-05;
 h_pac_c_var_i_gap_lag_1 = -0.008845224594859128;
 h_pac_c_var_ibar_lag_1 = 0;
 h_pac_c_var_piQ_lag_1 = 0.000556405469182104;
 h_pac_c_var_pi_au_gap_lag_1 = 0.0009453289296049802;
-h_pac_c_var_pi_m_lag_1 = 0.0002157371750746554;
+h_pac_c_var_pi_m_lag_1 = 0.000110380946501119;
 h_pac_c_var_pi_us_gap_lag_1 = 0;
 h_pac_c_var_pibar_au_lag_1 = -0.001220216363422831;
 h_pac_c_var_pibar_us_lag_1 = 0;
@@ -488,14 +481,14 @@ b0_ib = 0.018;
 b1_ib = 0.0818;
 b2_ib = 0;
 b3_ib = 0.3144;
-h_pac_ib_constant = 6.705446366019327e-05;
+h_pac_ib_constant = 7.573080503659149e-05;
 h_pac_ib_var_dln_pcom_lag_1 = 4.138196594744458e-06;
 h_pac_ib_var_i_gap_lag_1 = -0.0001901434807020625;
 h_pac_ib_var_ib_hat_lag_1 = 0.001432177690824942;
 h_pac_ib_var_ibar_lag_1 = 0;
 h_pac_ib_var_piQ_lag_1 = 7.633289925954891e-05;
 h_pac_ib_var_pi_au_gap_lag_1 = 8.419450803018518e-05;
-h_pac_ib_var_pi_m_lag_1 = 2.51357467261738e-05;
+h_pac_ib_var_pi_m_lag_1 = 1.125360052393662e-05;
 h_pac_ib_var_pi_us_gap_lag_1 = 0;
 h_pac_ib_var_pibar_au_lag_1 = -0.0002087557878420321;
 h_pac_ib_var_pibar_us_lag_1 = 0;
@@ -513,14 +506,14 @@ b0_ih = 0.0309;
 b1_ih = 0.108;
 b2_ih = 0;
 b3_ih = 0.2322;
-h_pac_ih_constant = 0.0001546141898334982;
+h_pac_ih_constant = 0.0001774926117370777;
 h_pac_ih_var_dln_pcom_lag_1 = 1.13610208085596e-05;
 h_pac_ih_var_i_gap_lag_1 = -0.00875225154469619;
 h_pac_ih_var_ibar_lag_1 = 0;
 h_pac_ih_var_ih_hat_lag_1 = 0.003325377021469034;
 h_pac_ih_var_piQ_lag_1 = 0.0001983570643411463;
 h_pac_ih_var_pi_au_gap_lag_1 = 0.0002327047507059199;
-h_pac_ih_var_pi_m_lag_1 = 6.763626104733636e-05;
+h_pac_ih_var_pi_m_lag_1 = 3.103078600160914e-05;
 h_pac_ih_var_pi_us_gap_lag_1 = 0;
 h_pac_ih_var_pibar_au_lag_1 = -0.0005133760291220796;
 h_pac_ih_var_pibar_us_lag_1 = 0;
@@ -538,14 +531,14 @@ b2_n = 0;
 b3_n = 0;
 b4_n = 0;
 b5_n = -0.0007;
-h_pac_n_constant = 0.0006930318433303621;
+h_pac_n_constant = 0.0008405020359839308;
 h_pac_n_var_dln_pcom_lag_1 = 8.270836000520397e-05;
 h_pac_n_var_i_gap_lag_1 = -0.007115738670505818;
 h_pac_n_var_ibar_lag_1 = 0;
 h_pac_n_var_n_hat_lag_1 = 0.01200933966843916;
 h_pac_n_var_piQ_lag_1 = 0.001238776935157444;
 h_pac_n_var_pi_au_gap_lag_1 = 0.001769861660252333;
-h_pac_n_var_pi_m_lag_1 = 0.000464659226165104;
+h_pac_n_var_pi_m_lag_1 = 0.0002287069179193933;
 h_pac_n_var_pi_us_gap_lag_1 = 0;
 h_pac_n_var_pibar_au_lag_1 = -0.002812287110651132;
 h_pac_n_var_pibar_us_lag_1 = 0;
@@ -572,9 +565,6 @@ pi_ss_au = 0.625;
 pi_ss_us = 0.5;
 lambda_dom = 0.399;
 omega_pQ = 0.46;
-rho_pQ_star = 0.95;
-gamma_ulc = 0.2951;
-gamma_uck = 0.2415;
 alpha_k = 0.45;
 rho_tfp = 0.95;
 rho_pcom = 0.42;
@@ -860,9 +850,6 @@ model;
 	[blockname='',name='piQ']
 	piQ =  (pQ_level - pQ_level(-1)) + pi_ss_au;
 
-	[blockname='',name='pQ_star_level']
-	pQ_star_level =  pQ_star_level(-1) + (piQ_star - pi_ss_au);
-
 	[blockname='',name='dln_c']
 	dln_c =  ln_c_level - ln_c_level(-1);
 
@@ -934,15 +921,6 @@ model;
 
 	[blockname='',name='dln_ulc']
 	dln_ulc =  pi_w - dln_prod;
-
-	[blockname='',name='piQ_star']
-	piQ_star =  rho_pQ_star * piQ_star(-1) + gamma_ulc * dln_ulc + gamma_uck * dln_uc_k + (1 - rho_pQ_star - gamma_ulc) * pibar_au;
-
-	[blockname='',name='piQ_star_bar']
-	piQ_star_bar =  pibar_au;
-
-	[blockname='',name='pQ_gap']
-	pQ_gap =  pQ_star_level - pQ_level;
 
 	[blockname='',name='pv_piQ_aux']
 	pv_piQ_aux =  rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1) + a_pQ_w * pi_w_gap(-1);
@@ -1229,10 +1207,7 @@ steady_state_model;
     dln_ulc      = pi_ss_au;  // ULC grows at inflation rate at SS
 
     // VA price block
-    piQ_star     = pi_ss_au;
-    piQ_star_bar = pi_ss_au;
     piQ          = pi_ss_au;
-    pQ_gap       = 0;
 
     // Wage Phillips curve
     u_gap        = 0;         // unemployment at equilibrium at SS
@@ -1352,7 +1327,6 @@ steady_state_model;
 
     // Log-level variables for PAC (zero at SS — gap model, everything demeaned)
     pQ_level       = 0;
-    pQ_star_level  = 0;
 
     // Phase V: ECM consumer price level accumulators (zero at SS — gap form)
     p_C_level       = 0;

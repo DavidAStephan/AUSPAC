@@ -12,9 +12,6 @@ var
 	pi_au_gap
 	pi_us_gap
 	piQ
-	piQ_star
-	piQ_star_bar
-	pQ_gap
 	dln_k
 	dln_y_star
 	dln_tfp
@@ -116,7 +113,6 @@ var
 	i_N
 	b_ROW
 	pQ_level
-	pQ_star_level
 	ln_c_level
 	ln_ib_level
 	ln_ih_level

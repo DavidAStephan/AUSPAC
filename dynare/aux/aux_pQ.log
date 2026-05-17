@@ -6,6 +6,7 @@ Found 18 equation(s).
 Evaluating expressions...
 Computing static model derivatives (order 1).
 Normalizing the static model...
+Normalization failed with cutoff, trying symbolic normalization...
 Finding the optimal block decomposition of the static model...
 15 block(s) found:
   14 recursive block(s) and 1 simultaneous block(s).
@@ -21,9 +22,3 @@ Finding the optimal block decomposition of the dynamic model...
 JSON written after Computing step.
 Preprocessing completed.
 Preprocessing time: 0h00m00s.
-
-Parameters declarations and calibrations are saved in aux_pQ/model/pac-expectations/pac_pQ-parameters.inc.
-Expectation unrolled expression is saved in aux_pQ/model/pac-expectations/pac_pQ-expression.inc.
-Expectation dseries expression is saved in +aux_pQ/+pac_expectations/+pac_pQ/evaluate.m.
-
-Total computing time : 0h00m00s

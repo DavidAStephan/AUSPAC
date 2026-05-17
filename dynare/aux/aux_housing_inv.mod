@@ -29,7 +29,7 @@ parameters
     rho_u_gap       okun_coeff
     alpha_pc        beta_pc_m       gamma_oil
     i_ss            pi_ss_au        pi_ss_us
-    rho_piQ         rho_pi_m        rho_pcom
+    rho_piQ         rho_pm        rho_pcom
     rho_ih_aux      a_ih_y          a_ih_i          a_ih_pi         a_ih_u
     b0_ih           b1_ih           b2_ih           b3_ih
     beta_pac
@@ -43,7 +43,8 @@ lambda_ibar     = 0.985;        lambda_pibar    = 0.93;         lambda_pibar_us 
 rho_u_gap       = 0.94;         okun_coeff      = -0.33;
 alpha_pc        = 0.17;         beta_pc_m       = 0.10;         gamma_oil       = 0.03;
 i_ss            = 1.0491;       pi_ss_au        = 0.625;        pi_ss_us        = 0.5;
-rho_piQ         = 0.85;         rho_pi_m        = 0.7;          rho_pcom        = 0.42;
+// Phase X (2026-05-17): rho_pm renamed/unified with model.inc structural value 0.28.
+rho_piQ         = 0.85;         rho_pm          = 0.28;         rho_pcom        = 0.42;
 // Phase W (2026-05-17): aux-regression coefficients re-templated from
 // calibration.inc Bayesian posteriors (Phase B 2026-05-09).
 rho_ih_aux      = 0.699;         a_ih_y          = 0.097;         a_ih_i          = -0.152;
@@ -97,7 +98,7 @@ model;
     piQ = rho_piQ*piQ(-1) + (1-rho_piQ)*pi_ss_au + eps_piQ;
 
     [name = 'var_pi_m']
-    pi_m = rho_pi_m*pi_m(-1) + (1-rho_pi_m)*pi_ss_au + eps_pi_m;
+    pi_m = rho_pm*pi_m(-1) + (1-rho_pm)*pi_ss_au + eps_pi_m;
 
     [name = 'var_dln_pcom']
     dln_pcom = rho_pcom*dln_pcom(-1) + eps_pcom;

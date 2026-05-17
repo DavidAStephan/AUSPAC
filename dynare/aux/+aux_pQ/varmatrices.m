@@ -6,7 +6,7 @@ if nargin<3
 end
 
 if strcmp(model_name, 'esat_pQ')
-    ar = zeros(14, 14, 1);
+    ar = zeros(13, 13, 1);
     ar(1,1,1) = params(2);
     ar(1,3,1) = params(3);
     ar(1,2,1) = (-params(3));
@@ -28,39 +28,32 @@ if strcmp(model_name, 'esat_pQ')
     ar(7,7,1) = params(12);
     ar(8,8,1) = params(13);
     ar(9,9,1) = params(14);
-    ar(10,10,1) = params(29);
-    ar(11,11,1) = params(30);
-    ar(12,12,1) = params(31);
-    ar(13,3,1) = params(33);
-    ar(13,4,1) = params(34);
-    ar(13,13,1) = params(32);
-    ar(14,1,1) = params(24);
-    ar(14,3,1) = params(26);
-    ar(14,2,1) = params(25);
-    ar(14,4,1) = params(27);
-    ar(14,13,1) = params(28);
-    ar(14,14,1) = params(23);
+    ar(10,10,1) = params(23);
+    ar(11,11,1) = params(24);
+    ar(12,12,1) = params(25);
+    ar(13,13,1) = params(26);
     if nargout>1
-        a0 = eye(14);
+        a0 = eye(13);
         if reducedform
             for i=1:1
                 ar(:,:,i) = a0\ar(:,:,i);
             end
             if nargout<3
-                a0 = eye(14);
+                a0 = eye(13);
             end
         end
         if nargout>2
-            constants = zeros(14,1);
+            constants = zeros(13,1);
             constants(7) = (1-params(12))*params(20);
             constants(8) = (1-params(13))*params(21);
             constants(9) = (1-params(14))*params(22);
-            constants(10) = params(21)*(1-params(29));
-            constants(11) = params(21)*(1-params(30));
+            constants(10) = params(21)*(1-params(23));
+            constants(11) = params(21)*(1-params(24));
+            constants(13) = params(21)*(1-params(26));
         end
         if reducedform
             constants = a0\constants;
-            a0 = eye(14);
+            a0 = eye(13);
         end
     end
     return

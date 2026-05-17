@@ -10,7 +10,7 @@
 , {"residual": {"lhs": "pibar_au", "rhs": "pibar_au*lambda_pibar+(1-lambda_pibar)*pi_ss_au+eps_pibar_au"}}
 , {"residual": {"lhs": "pibar_us", "rhs": "pibar_us*lambda_pibar_us+(1-lambda_pibar_us)*pi_ss_us+eps_pibar_us"}}
 , {"residual": {"lhs": "piQ", "rhs": "piQ*rho_piQ+pi_ss_au*(1-rho_piQ)+eps_piQ"}}
-, {"residual": {"lhs": "pi_m", "rhs": "pi_m*rho_pi_m+pi_ss_au*(1-rho_pi_m)+eps_pi_m"}}
+, {"residual": {"lhs": "pi_m", "rhs": "pi_m*rho_pm+pi_ss_au*(1-rho_pm)+eps_pi_m"}}
 , {"residual": {"lhs": "dln_pcom", "rhs": "dln_pcom*rho_pcom+eps_pcom"}}
 , {"residual": {"lhs": "ih_hat", "rhs": "ih_hat*rho_ih_aux+yhat_au*a_ih_y+i_gap*a_ih_i+pi_au_gap*a_ih_pi+u_gap*a_ih_u+eps_var_ih"}}
 , {"residual": {"lhs": "AUX_DIFF_165", "rhs": "eps_ih+yhat_au*b3_ih+b0_ih*(ih_hat-ln_ih_level)+b1_ih*AUX_DIFF_LAG_168+b2_ih*AUX_DIFF_LAG_177+pac_expectation_pac_ih"}}
@@ -42,7 +42,7 @@
 , {"eq": 8, "col": 8, "var": "pibar_au", "val": "1-lambda_pibar"}
 , {"eq": 9, "col": 9, "var": "pibar_us", "val": "1-lambda_pibar_us"}
 , {"eq": 10, "col": 10, "var": "piQ", "val": "1-rho_piQ"}
-, {"eq": 11, "col": 11, "var": "pi_m", "val": "1-rho_pi_m"}
+, {"eq": 11, "col": 11, "var": "pi_m", "val": "1-rho_pm"}
 , {"eq": 12, "col": 12, "var": "dln_pcom", "val": "1-rho_pcom"}
 , {"eq": 13, "col": 1, "var": "yhat_au", "val": "(-a_ih_y)"}
 , {"eq": 13, "col": 2, "var": "pi_au_gap", "val": "(-a_ih_pi)"}

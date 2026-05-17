@@ -1,14 +1,14 @@
 b0_pQ = 0.0294;
 b1_pQ = 0.2784;
 b2_pQ = 0.0022;
-h_pac_pQ_constant = 0.000453020614950036;
+h_pac_pQ_constant = 0.0005236870666278106;
 h_pac_pQ_var_dln_pcom_lag_1 = 3.553534636190619e-05;
 h_pac_pQ_var_i_gap_lag_1 = -0.001354039809492274;
 h_pac_pQ_var_ibar_lag_1 = 0;
 h_pac_pQ_var_piQ_hat_lag_1 = 0.0006855541194920155;
 h_pac_pQ_var_piQ_lag_1 = 0.0006086782909132557;
 h_pac_pQ_var_pi_au_gap_lag_1 = 0.00073477552040113;
-h_pac_pQ_var_pi_m_lag_1 = 0.0002102211942374728;
+h_pac_pQ_var_pi_m_lag_1 = 9.715487155303405e-05;
 h_pac_pQ_var_pi_us_gap_lag_1 = 0;
 h_pac_pQ_var_pi_w_gap_lag_1 = 0.001165346490302144;
 h_pac_pQ_var_pibar_au_lag_1 = -0.001543732469070786;

@@ -31,10 +31,7 @@
     dln_ulc      = pi_ss_au;  // ULC grows at inflation rate at SS
 
     // VA price block
-    piQ_star     = pi_ss_au;
-    piQ_star_bar = pi_ss_au;
     piQ          = pi_ss_au;
-    pQ_gap       = 0;
 
     // Wage Phillips curve
     u_gap        = 0;         // unemployment at equilibrium at SS
@@ -153,7 +150,6 @@
 
     // Log-level variables for PAC (zero at SS — gap model, everything demeaned)
     pQ_level       = 0;
-    pQ_star_level  = 0;
 
     // Phase V: ECM consumer price level accumulators (zero at SS — gap form)
     p_C_level       = 0;

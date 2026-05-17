@@ -150,6 +150,8 @@ The Expectation SATellite model (E-SAT) is a structural VAR with 11 core equatio
 
 $$\hat{y}_t = \lambda_q \hat{y}_{t-1} + \delta \hat{y}^{US}_t - \sigma_q (i_{t-1} - \bar{i}_{t-1} - \pi^{gap}_{t-1}) + \lambda_{dom} \hat{y}^{dom}_t + \varepsilon^q_t$$
 
+**Deviation from FR-BDF wp736**: the final term $\lambda_{dom} \hat{y}^{dom}_t$ is AU-PAC-specific and has no counterpart in FR-BDF's IS curve, which uses only $\hat{y}^{US}$ (the foreign-output spillover) and the lagged real interest gap. We include $\hat{y}^{dom}$ — an expenditure-share-weighted aggregate of contemporaneous domestic-demand growth ($w_c \dot{c} + w_{ib} \dot{i_b} + w_{ih} \dot{i_h} + w_g \dot{g} + w_x \dot{x} - w_m \dot{m}$, see §4.10 below) — to close the Keynesian multiplier loop. Without this term the structural feedback from consumption/investment shocks back to the output gap, and hence into the Taylor rule, runs only through the foreign-output channel, which empirically understates aggregate-demand transmission in an open small commodity economy where domestic absorption is the dominant gap-mover. The Bayesian posterior mean for $\lambda_{dom}$ is 0.40, four times the prior centre of 0.10, indicating the data strongly supports a substantial domestic-demand feedback (§5).
+
 **Australian Phillips curve** (eq. 2):
 
 $$\pi^{gap}_t = \lambda_\pi \pi^{gap}_{t-1} + \kappa_\pi \hat{y}_{t-1} + \varepsilon^\pi_t$$
@@ -235,15 +237,17 @@ All 5 PAC equations share this enriched var_model for h-vector computation.
 
 Each auxiliary equation takes the form: $\hat{X}_t = \rho_X \hat{X}_{t-1} + a_{X,y} \hat{y}_{t-1} + a_{X,i} \tilde{i}_{t-1} + a_{X,\pi} \tilde{\pi}_{t-1} + a_{X,u} \tilde{u}_{t-1} + ...$
 
-| Auxiliary | Own lag (rho) | y_gap | i_gap | pi_gap | u_gap | Other | wp736 ref |
+Values shown are the Phase W Bayesian posterior means from [`simulation/identities/calibration.inc`](simulation/identities/calibration.inc) (Phase B re-estimation 2026-05-09; activated 2026-05-17).
+
+| Auxiliary | Own lag (rho) | y_gap | i_gap | pi_gap | u_gap | Other | wp736 ref (France) |
 |-----------|--------------|-------|-------|--------|-------|-------|------------|
-| piQ_hat | 0.70 | 0.03 | -0.02 | 0.01 | -0.05 | — | Table 4.4.4 |
-| n_hat | 0.67 | 0.12 | -0.03 | 0.05 | -0.04 | — | Table 4.5.7 |
-| yh_ratio_hat | 0.92 | 0.32 | — | — | -0.08 | — | Table 4.6.3 |
-| c_hat | 0.60 | 0.06 | -0.04 | 0.01 | -0.03 | a_c_yh=0.39 | Table 4.6.4 |
-| ib_hat | 0.59 | 0.15 | — | 0.04 | -0.02 | — | Table 4.6.11 |
-| rKB_hat | 0.55 | — | 0.24 | — | — | — | Table 4.6.12 |
-| ih_hat | 0.71 | 0.08 | -0.08 | 0.05 | -0.03 | — | Table 4.6.16 |
+| piQ_hat | 0.334 | 0.043 | -0.021 | 0.007 | -0.021 | a_pQ_w=0.437 (Phase U) | Table 4.4.4 (FR rho=0.70) |
+| n_hat | 0.743 | 0.094 | -0.031 | 0.057 | -0.029 | — | Table 4.5.7 |
+| yh_ratio_hat | 0.93 | 0.12 | — | — | -0.07 | — | Table 4.6.3 |
+| c_hat | 0.581 | 0.058 | -0.043 | 0.010 | -0.036 | a_c_yh=0.10 | Table 4.6.4 |
+| ib_hat | 0.694 | 0.050 | — | 0.023 | 0.004 | — | Table 4.6.11 |
+| rKB_hat | 0.162 | — | 0.242 | — | — | — | Table 4.6.12 |
+| ih_hat | 0.699 | 0.097 | -0.152 | 0.042 | 0.004 | — | Table 4.6.16 |
 
 Persistence parameters and auxiliary coefficients are estimated on AU observable target proxies via Bayesian shrinkage; the wp736 references provide the cross-equation specification.
 
@@ -380,28 +384,21 @@ The VA price equation is central because this deflator enters all other price eq
 
 #### 4.3.1 Target equation (Factor price frontier, FR-BDF eq 38)
 
-The long run of the VA price is derived from the CES dual cost function (eq. 13):
+**Theoretical motivation** (FR-BDF wp736 §4.4.1 / Dubois et al. 2026 §3.5.15). The long-run VA price is anchored to the CES dual cost function: in log-deviation form, the implied target inflation can be written as
 
-$$\pi^{Q*}_t = \rho^*_{pQ} \pi^{Q*}_{t-1} + \gamma_{ULC} \Delta \ln ULC_t + \gamma_{UCK} \Delta \ln UC^K_t + (1 - \rho^*_{pQ} - \gamma_{ULC}) \bar{\pi}_t$$
+$$\pi^{Q*}_t \approx \rho^*_{pQ} \pi^{Q*}_{t-1} + \gamma_{ULC} \Delta \ln ULC_t + \gamma_{UCK} \Delta \ln UC^K_t + (1 - \rho^*_{pQ} - \gamma_{ULC}) \bar{\pi}_t$$
 
-where $\Delta \ln ULC = \pi_w - \Delta \ln Prod$ and $\Delta \ln UC^K = UC^K_t - UC^K_{t-1}$.
+with $\gamma_{ULC} = (1-\alpha)\sigma$ and $\gamma_{UCK} = \alpha\sigma$ from the FR-BDF 2026 CES dual (§4.2). At AU calibration $\sigma=0.5366$, $\alpha=0.45$: $\gamma_{ULC} \approx 0.295$ and $\gamma_{UCK} \approx 0.241$.
 
-### Table 4.3.1: VA price target coefficients
-
-| Parameter | Symbol | Value | Description |
-|-----------|--------|-------|-------------|
-| Target persistence | rho_pQ_star | 0.95 | Calibrated |
-| ULC pass-through | gamma_ulc | **0.2951** | $(1-\alpha)\sigma = 0.55 \times 0.5366$ (FR-BDF 2026 CES dual) |
-| User cost pass-through | gamma_uck | **0.2415** | $\alpha\sigma = 0.45 \times 0.5366$ (FR-BDF 2026 CES dual) |
-| Inflation anchor | 1-rho-gamma | derived | Growth neutrality |
-
-**Growth neutrality**: At SS, $\pi^{Q*} = (\rho + \gamma_{ULC} + (1-\rho-\gamma_{ULC})) \times \pi_{SS} = \pi_{SS}$. Verified.
+**AU-PAC implementation note (Phase Y, 2026-05-17)**: AU-PAC does NOT carry the analytical $\pi^{Q*}$ equation as a separately-coded structural equation. Following FR-BDF wp736 Table 4.4.4 and ECB-BASE WAPRO conventions — both of which operationalise the PAC target as a single aux regression onto the satellite VAR state, not as two parallel objects — the canonical AU-PAC target is the var_model state $\widehat{\pi Q}_t$ (`piQ_hat`) described in §4.3.3 below. The CES factor-price frontier above is the theoretical reference for the long-run anchor; in the simulation, that anchor is enforced through (i) the BGP-consistent E-SAT state vector that $\widehat{\pi Q}_t$ projects onto and (ii) the inflation-anchor coefficient $(1-\rho_{pQ,aux})$ in the regression. Earlier versions (Phase Q–X) carried `eq_piQ_star`, `eq_pQ_star_level`, `eq_pQ_gap` as orphan diagnostic equations; these were removed in Phase Y to eliminate the dual-target ambiguity. They were verified to have zero effect on simulation dynamics (no other equation referenced them on the RHS); their removal left the Laplace LMD and MHM LMD numerically identical.
 
 #### 4.3.2 Short-run PAC equation (FR-BDF eq 44)
 
 The short-run dynamics use the PAC framework with Dynare's `pac_expectation()` (eq. 14):
 
-$$\Delta pQ^{level}_t = b^{pQ}_0 (\pi^{Q*,level}_{t-1} - pQ^{level}_{t-1}) + b^{pQ}_1 \Delta pQ^{level}_{t-1} + pac\_exp(pac\_pQ) + b^{pQ}_2 \hat{y}_t + \varepsilon^{pQ}_t$$
+$$\Delta pQ^{level}_t = b^{pQ}_0 (\widehat{\pi Q}_{t-1} - pQ^{level}_{t-1}) + b^{pQ}_1 \Delta pQ^{level}_{t-1} + pac\_exp(pac\_pQ) + b^{pQ}_2 \hat{y}_t + \varepsilon^{pQ}_t$$
+
+where the ECM term pulls $pQ^{level}$ toward $\widehat{\pi Q}_{t-1}$ — the var_model aux regression of the VA-price target onto the augmented E-SAT state (§4.3.3) — and $pac\_exp(pac\_pQ)$ projects the discounted-sum future of $\widehat{\pi Q}$ via the policy-function coefficients computed by `pac.print()`. Both the ECM target and the PAC-expectation projection reference the SAME object ($\widehat{\pi Q}$), matching FR-BDF wp736 Table 4.4.4 and ECB-BASE WAPRO architecture.
 
 ### Table 4.3.2: VA price short-run coefficients
 
@@ -418,11 +415,13 @@ $$\Delta pQ^{level}_t = b^{pQ}_0 (\pi^{Q*,level}_{t-1} - pQ^{level}_{t-1}) + b^{
 
 The output gap coefficient ($b^{pQ}_2$) is statistically indistinguishable from zero in the posterior (90% HPD straddling 0), indicating that the Phillips-curve channel operates primarily through the target equation (ULC and user-cost pass-through with $\gamma_{ULC}+\gamma_{UCK}=0.54$ — see §4.2) rather than the short-run ad hoc term. Growth neutrality is verified: $1 - 0.293 - 0.452 \approx 0.26$.
 
-#### 4.3.3 E-SAT auxiliary (FR-BDF Table 4.4.4)
+#### 4.3.3 E-SAT auxiliary regression (FR-BDF Table 4.4.4)
 
-The VA price auxiliary equation in the var_model (eq. 15):
+The VA-price auxiliary equation in the var_model — the canonical PAC target after Phase Y — projects $\widehat{\pi Q}$ onto the augmented E-SAT state vector with Bayesian posterior coefficients from [`simulation/identities/calibration.inc`](simulation/identities/calibration.inc):
 
-$$\widehat{\pi Q}_t = 0.70 \widehat{\pi Q}_{t-1} + 0.03 \hat{y}_{t-1} - 0.02 \tilde{i}_{t-1} + 0.01 \tilde{\pi}_{t-1} - 0.05 \tilde{u}_{t-1}$$
+$$\widehat{\pi Q}_t = 0.334\, \widehat{\pi Q}_{t-1} + 0.043\, \hat{y}_{t-1} - 0.021\, \tilde{i}_{t-1} + 0.007\, \tilde{\pi}_{t-1} - 0.021\, \tilde{u}_{t-1} + 0.437\, \tilde{\pi}^w_{t-1} + \varepsilon^{aux,pQ}_t$$
+
+(Phase W posteriors; Phase U wage-channel re-estimate for $a_{pQ,w} = 0.437$.) Compare FR-BDF wp736 Table 4.4.4 which reports $\rho_{pQ,aux} = 0.70$ (more persistent than the AU posterior 0.334) and a contemporaneous wage coefficient of 0.59 on $\tilde{\pi}^w = \pi^w - \Delta\bar{e}$ in the analytical eq (45). AU-PAC applies the coefficient to LAGGED $\tilde{\pi}^w_{gap} = \pi^w - \bar{\pi}^{au}$ (var_model requires pure-VAR form; the gap subtracts the inflation anchor rather than the efficiency trend). The Phase U AU re-estimation found 0.437 on the AU sample — the production runtime value.
 
 #### 4.3.4 Dynamic contributions
 
@@ -434,11 +433,17 @@ $$\widehat{\pi Q}_t = 0.70 \widehat{\pi Q}_{t-1} + 0.03 \hat{y}_{t-1} - 0.02 \ti
 
 #### 4.4.0 E-SAT inflation equation and expectation formation
 
-The model's CPI inflation gap $\tilde{\pi}^{au}_t$ evolves according to a reduced-form Phillips equation augmented with the FR-BDF structural deflator channels (wp736 §3.1.1):
+The model's CPI inflation gap $\tilde{\pi}^{au}_t$ evolves according to a reduced-form Phillips equation augmented with the FR-BDF structural deflator channels (wp736 §3.1.1) plus two AU-specific Phase V additions:
 
-$$\tilde{\pi}^{au}_t = \lambda_\pi \, \tilde{\pi}^{au}_{t-1} + \kappa_\pi \, \hat{y}_{t-1} + \alpha_{pc} (\pi^Q_t - \bar{\pi}^{au}_t) + \beta_{pc,m} (\pi^m_t - \bar{\pi}^{au}_t) + \gamma_{oil} \Delta\ln pcom_t + \varepsilon^\pi_t$$
+$$\tilde{\pi}^{au}_t = \lambda_\pi \, \tilde{\pi}^{au}_{t-1} + \kappa_\pi \, \hat{y}_{t-1} + \alpha_{pc} (\pi^Q_t - \bar{\pi}^{au}_t) + \alpha_{pc,lag} (\pi^Q_{t-1} - \bar{\pi}^{au}_{t-1}) + \beta_{pc,m} (\pi^m_t - \bar{\pi}^{au}_t) + \gamma_{oil} \Delta\ln pcom_t + b_{ECM,pc} (p^{C,\ast}_{t-1} - p^C_{t-1}) + \varepsilon^\pi_t$$
 
-with $\alpha_{pc} = 0.17$, $\beta_{pc,m} = 0.10$, $\gamma_{oil} = 0.03$ (estimated single-equation OLS on AU data, matching the `eq_pi_c` calibration). The reduced-form persistence $\lambda_\pi$ and Phillips slope $\kappa_\pi$ are jointly Bayesian-estimated with the rest of the model. This makes $\pi^{au}$ structurally a function of value-added price ($\pi^Q$), import price ($\pi^m$), and commodity inflation ($\Delta\ln pcom$), mirroring the role of $\pi^C$ in the FR-BDF deflator block (wp736 eqs 79–80). Growth neutrality holds at the steady state: $\tilde{\pi}^{au}_t = 0$, $\pi^Q = \bar{\pi}^{au}$, $\pi^m = \bar{\pi}^{au}$, $\Delta\ln pcom = 0$ ⇒ all RHS terms vanish.
+with $\alpha_{pc} = 0.20$, $\alpha_{pc,lag} = 0.11$, $\beta_{pc,m} = 0.10$, $\gamma_{oil} = 0.03$, $b_{ECM,pc} = 0.06$ (Bayesian posterior modes for $\alpha_{pc}$, $\alpha_{pc,lag}$, $b_{ECM,pc}$; calibrated for the others). The reduced-form persistence $\lambda_\pi$ and Phillips slope $\kappa_\pi$ are jointly Bayesian-estimated with the rest of the model. The cumulative CPI target $p^{C,\ast}_t$ is constructed as $p^{C,\ast}_t = (1-\omega_{pc}) p^Q_t + \omega_{pc} p^M_t$ with the IAD-weighted import share $\omega_{pc} = 0.23$ (matching the long-run CPI target eq 79 of wp736).
+
+**Deviations from FR-BDF wp736**: two terms in the equation above are AU-PAC-specific and have no counterpart in the FR-BDF Phillips curve (wp736 eq 28).
+  - *Lagged VA-price passthrough* $\alpha_{pc,lag}(\pi^Q_{t-1} - \bar{\pi}^{au}_{t-1})$: wp736 has only the contemporaneous $\alpha_{pc}$ term. We add the one-quarter lag to capture the empirical AU pattern that import-content-heavy components of the consumer basket reprice with a lag of about a quarter; the joint $\alpha_{pc} + \alpha_{pc,lag}$ total passthrough (~0.31) better matches the AU long-run elasticity of CPI to VA prices than $\alpha_{pc}$ alone.
+  - *ECM correction* $b_{ECM,pc}(p^{C,\ast}_{t-1} - p^C_{t-1})$: in FR-BDF, the long-run anchoring of CPI runs through the consumption deflator's own two-equation target-plus-ECM structure (wp736 eqs 79-80). Because AUSPAC collapses that two-equation structure into the single `eq_pi_c` reduced form (see §4.9), the long-run anchor would otherwise be lost; we re-introduce it via this ECM term directly inside the Phillips curve. This is a pragmatic AU innovation, not a theoretical refinement — its function is to keep the cumulative CPI trajectory pinned to the weighted VA+import target rather than drifting freely under reduced-form cost-push shocks.
+
+Growth neutrality holds at the steady state: $\tilde{\pi}^{au}_t = 0$, $\pi^Q = \bar{\pi}^{au}$, $\pi^m = \bar{\pi}^{au}$, $\Delta\ln pcom = 0$, and at the BGP $p^{C,\ast} = p^C$ so the ECM term vanishes. All RHS terms vanish at the SS.
 
 **PAC expectation formation: policy-function approach.** Following FR-BDF wp1044 §2.2 + §3.2.3 ("expectations are computed as policy functions obtained from inversion of the estimated core E-SAT, supplemented by the auxiliary equations"), the discounted present values appearing as `pac_expectation(pac_X)` in the five PAC short-run equations (§§4.3.2, 4.4.2, 4.5.2, 4.6.2, 4.7.2) are pre-computed as explicit closed-form linear combinations of lagged structural state variables:
 
@@ -747,11 +752,20 @@ Trade volumes use the ABS 5206 Seasonally-Adjusted chain volume measures (series
 
 The long-run elasticities (β_m, β_x, γ_m, γ_x) are calibrated at sensible AU values and given Normal priors centred there (Section 5.4, Table 5.6). A bivariate Engle-Granger style OLS of log volumes on log consumption (1959Q3–2025Q4) gives β_m ≈ +1.73 (t = +113) and β_x ≈ +1.56 (t = +119); the model priors at 1.50 and 1.20 sit within one standard deviation. The short-run coefficient `b1_m` is set to its OLS estimate on the SA sample (+0.232, s.e. 0.086, t=2.71); `b1_x`, `b2_x`, and `b2_m` are kept at calibrated values pending Asian-PMI / commodity-demand proxies that would help identify the SR foreign-demand channel for AU exports. The COVID-period dummies are sizeable for both exports (crash -10.14, bounce -7.11; tourism and education exports did not recover in 2020Q3) and imports (crash -14.39, bounce +6.27). Adding `Δln M` and `Δln X` to the set of Bayesian observables (Table 5.1) gives the long-run elasticities their own data identification — previously the trade block was econometrically inert because no observable mapped to it.
 
-### 4.9 Demand deflators (FR-BDF Section 4.7)
+### 4.9 Demand deflators (FR-BDF Section 4.7) — AU reduced-form simplification
 
-All demand deflators follow ECM equations tracking the VA price with partial pass-through, anchored to the long-run inflation target. General form (eq. 36):
+AUSPAC's six demand deflators (consumption, business investment, household investment, exports, imports, and government consumption) are modelled as **single-equation reduced forms** combining own-lag persistence with contemporaneous cost-push regressors and a growth-neutrality anchor on $\bar{\pi}$. General form (eq. 36):
 
 $$\pi^j_t = \rho_j \pi^j_{t-1} + \alpha_j \pi^Q_t + \beta_{j,m} \pi^M_t + ... + (1 - \rho_j - \alpha_j - \beta_{j,m} - ...) \bar{\pi}_t + \varepsilon^j_t$$
+
+**Deviation from FR-BDF wp736 / wp1044**: FR-BDF specifies each deflator as a **two-equation error-correction model** — an explicit long-run target $p^{j,\ast}$ (an IAD-weighted combination of $p^Q$, $p^{MO}$ (non-energy import), $p^{MNRJ}$ (energy import), plus block-specific trend or competitor terms) and a short-run equation that includes an error-correction term $\beta_{j,EC} [p^j_{t-1} - p^{j,\ast}_{t-1}]$ pulling each deflator back toward its target. AUSPAC carries no $p^{j,\ast}$ target variables and no ECM term in any of its six deflator equations; the long-run anchoring runs instead through the growth-neutrality constraint on $\bar{\pi}$. The two main consequences:
+
+  - **No energy / non-energy import split** in the deflator block — AUSPAC's $\pi^M$ is a single aggregate import-price series and the commodity channel enters separately as an exogenous AR(1) `dln_pcom` rather than as $\pi^{MNRJ}$ inside the deflator targets. The energy-import passthrough that FR-BDF wp1044 §3.6 emphasises (especially the post-2022 surge) is therefore captured imperfectly through `dln_pcom + gamma_oil` rather than through a dedicated $p^{MNRJ}$ regressor.
+  - **CPI long-run anchoring is recovered inside the Phillips curve** (§4.4.0 above) via the $b_{ECM,pc}(p^{C,\ast}_{t-1} - p^C_{t-1})$ ECM term rather than inside `eq_pi_c`. This keeps the cumulative CPI trajectory pinned to a weighted VA+import target without re-introducing the full FR-BDF target/ECM structure across all six deflators.
+
+The reduced-form simplification was a deliberate choice for AU estimation tractability — six additional latent target processes would have increased the estimation surface substantially with limited identification gain on the AU sample (1993Q1–2024Q4, 128 quarters). The FR-BDF wp1044 §3.6 architecture is preserved as a reference for future restoration if AU data quality or sample length permits joint identification of all 12 deflator equations + targets.
+
+The full set of AU-estimated reduced-form coefficients:
 
 ### Table 4.9.1: Consumption deflator (FR-BDF eqs 79-80)
 
@@ -1446,6 +1460,18 @@ AU-PAC's short rate is set endogenously by an RBA Taylor rule responding to AU i
 
 The US enters as the foreign bloc in E-SAT. The AU–US demand spillover ($\delta = 0.20$) captures the trade and financial channel linking US conditions to Australia, while the US inflation process influences Australian import prices and exchange-rate dynamics.
 
+### Architectural deviations from FR-BDF
+
+AU-PAC diverges from FR-BDF wp736 / wp1044 along three architectural dimensions that are not market-structure-driven (the four subsections above) but model-design simplifications adopted for AU estimation tractability. They are documented at their primary locations in §3.1 (IS curve), §4.4.0 (Phillips curve), and §4.9 (demand deflators); this subsection collects them for a reader specifically interested in the AU-vs-FR-BDF map.
+
+| AU innovation | Where | FR-BDF analogue | Rationale |
+|---|---|---|---|
+| Domestic-demand feedback term $\lambda_{dom}\hat{y}^{dom}_t$ in the IS curve | [§3.1](#31-the-e-sat-expectation-satellite-model), eq (1) | No analogue — wp736 IS curve has only $\hat{y}^{US}$ + interest gap | Closes the Keynesian multiplier loop; data strongly supports a 4× larger feedback than the prior centre. |
+| Two Phase V additions in the Phillips curve: lagged VA-price passthrough $\alpha_{pc,lag}(\pi^Q_{t-1} - \bar{\pi}^{au}_{t-1})$ and an ECM correction $b_{ECM,pc}(p^{C,\ast}_{t-1} - p^C_{t-1})$ | [§4.4.0](#440-e-sat-inflation-equation-and-expectation-formation) | $\alpha_{pc,lag}$: no analogue. $b_{ECM,pc}$: replaces the long-run-target ECM that lives inside `eq_pi_c` in wp736 eq 80. | $\alpha_{pc,lag}$: captures empirical AU lagged import-component repricing. $b_{ECM,pc}$: pragmatic device to restore CPI long-run anchoring after collapsing the deflator ECM structure (next row). |
+| Demand-deflator reduced-form collapse: 6 single-equation AR(1)+cost-push deflators (`eq_pi_c`, `eq_pi_ib`, `eq_pi_ih`, `eq_pi_x`, `eq_pi_m`, `eq_pi_g`) instead of 12 paired target+ECM equations | [§4.9](#49-demand-deflators-fr-bdf-section-47--au-reduced-form-simplification) | wp736 eqs 79-88 / wp1044 eqs 51-55, 112-114: each deflator carries an explicit IAD-weighted long-run target $p^{j,\ast}$ and a short-run equation with an ECM term | Six additional latent target processes would substantially enlarge the estimation surface with limited identification on 128 quarters of AU data. Long-run anchoring is recovered via the Phillips-curve ECM term ($b_{ECM,pc}$ above). |
+
+These deviations are intentional and were preserved through Phase Q–X estimation cycles. They are flagged explicitly here (rather than buried in the equation specifications) so that a researcher porting AU-PAC to another country or extending it back toward the full FR-BDF target/ECM structure can identify the exact code-level entry points.
+
 ---
 
 ## Appendix A: Complete Variable List
@@ -1466,15 +1492,14 @@ The US enters as the foreign bloc in E-SAT. The AU–US demand spillover ($\delt
 | pi_au_gap | AU inflation gap | 0 |
 | pi_us_gap | US inflation gap | 0 |
 
-### A.2 VA Price Block (5 variables)
+### A.2 VA Price Block (2 variables)
 
 | Variable | Description | SS value |
 |----------|-------------|----------|
 | piQ | VA price inflation (quarterly %) | 0.625 |
-| piQ_star | VA price target inflation | 0.625 |
-| piQ_star_bar | VA price trend inflation | 0.625 |
-| pQ_gap | VA price gap | 0 |
 | pQ_level | VA price log-level accumulator | 0 |
+
+(Pre-Phase-Y also carried `piQ_star`, `piQ_star_bar`, `pQ_gap`, `pQ_star_level` as diagnostic-only orphan variables. These were removed 2026-05-17 — see §4.3.1.)
 
 ### A.3 Supply Block (5 variables)
 
@@ -1550,7 +1575,7 @@ The US enters as the foreign bloc in E-SAT. The AU–US demand spillover ($\delt
 
 ### A.8 var_model Shadow + PAC Levels (27 variables)
 
-12 var_model shadow variables (y_gap_var, i_gap_var, etc.) plus 7 auxiliary targets (piQ_hat, n_hat, c_hat, etc.) plus 6 pv_aux correction terms plus log-level accumulators (ln_c_level, ln_ib_level, ln_ih_level, ln_n_level, pQ_star_level).
+12 var_model shadow variables (y_gap_var, i_gap_var, etc.) plus 7 auxiliary targets (piQ_hat, n_hat, c_hat, etc.) plus 6 pv_aux correction terms plus log-level accumulators (ln_c_level, ln_ib_level, ln_ih_level, ln_n_level, pQ_level).
 
 ---
 

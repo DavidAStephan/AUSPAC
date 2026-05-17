@@ -61,7 +61,7 @@ parameters
     // piQ AR coefficient (simple AR1 for var_model purposes)
     rho_piQ
     // pi_m, dln_pcom AR coefficients (simple AR1 for var_model purposes)
-    rho_pi_m        rho_pcom
+    rho_pm        rho_pcom
     // pi_w_gap reduced-form companion-matrix coefficients (Phase U)
     rho_pi_w_gap    a_w_pi          a_w_u
     // VA-price PAC short-run coefficients
@@ -102,7 +102,10 @@ a_pQ_u          = -0.021;       // posterior 90% CI [-0.069, 0.027] (CI crosses 
 // production runtime value (au_pac_v2.mod Phase U+V override block).
 a_pQ_w          = 0.4367;
 
-rho_piQ         = 0.85;         rho_pi_m        = 0.7;          rho_pcom        = 0.42;
+// Phase X (2026-05-17): rho_pm renamed from rho_pi_m and value unified
+// with model.inc/parameter-values.inc structural value (0.28 vs prior aux
+// reduced-form 0.7) for self-consistency at pac.print time.
+rho_piQ         = 0.85;         rho_pm          = 0.28;         rho_pcom        = 0.42;
 // pi_w_gap reduced-form for the var_model: AR(1) plus CPI-indexation + slack.
 // Calibration follows the AU posterior wage Phillips reduced to gap form:
 //   pi_w ~ 0.21*pi_w(-1) + 0.35*pi_c - 0.10*pv_u_gap + ...
@@ -175,7 +178,7 @@ model;
     piQ = rho_piQ*piQ(-1) + (1-rho_piQ)*pi_ss_au + eps_piQ;
 
     [name = 'var_pi_m']
-    pi_m = rho_pi_m*pi_m(-1) + (1-rho_pi_m)*pi_ss_au + eps_pi_m;
+    pi_m = rho_pm*pi_m(-1) + (1-rho_pm)*pi_ss_au + eps_pi_m;
 
     [name = 'var_dln_pcom']
     dln_pcom = rho_pcom*dln_pcom(-1) + eps_pcom;

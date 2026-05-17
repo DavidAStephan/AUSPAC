@@ -62,9 +62,6 @@ pibar_us = lambda_pibar_us * pibar_us(-1) + (1 - lambda_pibar_us) * pi_ss_us + e
 [name='eq_piQ_from_level']
 piQ = (pQ_level - pQ_level(-1)) + pi_ss_au;
 
-[name='eq_pQ_star_level']
-pQ_star_level = pQ_star_level(-1) + (piQ_star - pi_ss_au);
-
 [name='eq_dln_c_from_level']
 dln_c = ln_c_level - ln_c_level(-1);
 
@@ -136,15 +133,6 @@ dln_prod = dln_tfp / (1 - alpha_k);
 
 [name='eq_dln_ulc']
 dln_ulc = pi_w - dln_prod;
-
-[name='eq_piQ_star']
-piQ_star = rho_pQ_star * piQ_star(-1) + gamma_ulc * dln_ulc + gamma_uck * dln_uc_k + (1 - rho_pQ_star - gamma_ulc) * pibar_au;
-
-[name='eq_piQ_star_bar']
-piQ_star_bar = pibar_au;
-
-[name='eq_pQ_gap']
-pQ_gap = pQ_star_level - pQ_level;
 
 [name='eq_pv_piQ_aux']
 pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1) + a_pQ_w * pi_w_gap(-1);
