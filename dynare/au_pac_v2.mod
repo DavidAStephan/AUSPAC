@@ -436,21 +436,21 @@ a_pQ_y = 0.05;
 b0_pQ = 0.0294;
 b1_pQ = 0.2784;
 b2_pQ = 0.0022;
-h_pac_pQ_constant = 0.001946071186670553;
-h_pac_pQ_var_dln_pcom_lag_1 = 0.0001536409820677057;
-h_pac_pQ_var_i_gap_lag_1 = -0.002435702890037659;
+h_pac_pQ_constant = 0.000453020614950036;
+h_pac_pQ_var_dln_pcom_lag_1 = 3.553534636190619e-05;
+h_pac_pQ_var_i_gap_lag_1 = -0.001354039809492274;
 h_pac_pQ_var_ibar_lag_1 = 0;
-h_pac_pQ_var_piQ_hat_lag_1 = 0.007092422141294697;
-h_pac_pQ_var_piQ_lag_1 = 0.002620973684701352;
-h_pac_pQ_var_pi_au_gap_lag_1 = 0.003260621111529395;
-h_pac_pQ_var_pi_m_lag_1 = 0.0009066281617903416;
+h_pac_pQ_var_piQ_hat_lag_1 = 0.0006855541194920155;
+h_pac_pQ_var_piQ_lag_1 = 0.0006086782909132557;
+h_pac_pQ_var_pi_au_gap_lag_1 = 0.00073477552040113;
+h_pac_pQ_var_pi_m_lag_1 = 0.0002102211942374728;
 h_pac_pQ_var_pi_us_gap_lag_1 = 0;
-h_pac_pQ_var_pi_w_gap_lag_1 = 0.006211377646453626;
-h_pac_pQ_var_pibar_au_lag_1 = -0.006641315745164579;
+h_pac_pQ_var_pi_w_gap_lag_1 = 0.001165346490302144;
+h_pac_pQ_var_pibar_au_lag_1 = -0.001543732469070786;
 h_pac_pQ_var_pibar_us_lag_1 = 0;
-h_pac_pQ_var_u_gap_lag_1 = -0.002669492571821966;
-h_pac_pQ_var_yhat_au_lag_1 = 0.003973412935271122;
-h_pac_pQ_var_yhat_us_lag_1 = 0.003086445211867006;
+h_pac_pQ_var_u_gap_lag_1 = -0.001037504482199218;
+h_pac_pQ_var_yhat_au_lag_1 = 0.001309415581591862;
+h_pac_pQ_var_yhat_us_lag_1 = 0.001031305130438237;
 rho_pQ_aux = 0.85;
 a_c_i = -0.04;
 a_c_pi = 0.005;
@@ -463,21 +463,21 @@ b0_c = 0.0736;
 b1_c = 0.0375;
 b2_c = -0.333;
 b3_c = 0.022;
-h_pac_c_constant = 0.0006742793619455438;
-h_pac_c_var_c_hat_lag_1 = 0.01127365966106677;
-h_pac_c_var_dln_pcom_lag_1 = 9.524344261723165e-05;
-h_pac_c_var_i_gap_lag_1 = -0.01594054308536918;
+h_pac_c_constant = 0.0002800460744787948;
+h_pac_c_var_c_hat_lag_1 = 0.01053776568397507;
+h_pac_c_var_dln_pcom_lag_1 = 3.955325021801383e-05;
+h_pac_c_var_i_gap_lag_1 = -0.008845224594859128;
 h_pac_c_var_ibar_lag_1 = 0;
-h_pac_c_var_piQ_lag_1 = 0.001339735559562112;
-h_pac_c_var_pi_au_gap_lag_1 = 0.002284070893352868;
-h_pac_c_var_pi_m_lag_1 = 0.0005194713197557417;
+h_pac_c_var_piQ_lag_1 = 0.000556405469182104;
+h_pac_c_var_pi_au_gap_lag_1 = 0.0009453289296049802;
+h_pac_c_var_pi_m_lag_1 = 0.0002157371750746554;
 h_pac_c_var_pi_us_gap_lag_1 = 0;
-h_pac_c_var_pibar_au_lag_1 = -0.002938053858430724;
+h_pac_c_var_pibar_au_lag_1 = -0.001220216363422831;
 h_pac_c_var_pibar_us_lag_1 = 0;
-h_pac_c_var_u_gap_lag_1 = -0.01906591160833707;
-h_pac_c_var_yh_ratio_hat_lag_1 = 0.01564220331264332;
-h_pac_c_var_yhat_au_lag_1 = 0.03140157993427454;
-h_pac_c_var_yhat_us_lag_1 = 0.0186942864966065;
+h_pac_c_var_u_gap_lag_1 = -0.007309734434297452;
+h_pac_c_var_yh_ratio_hat_lag_1 = 0.01002197187779131;
+h_pac_c_var_yhat_au_lag_1 = 0.01090617676217883;
+h_pac_c_var_yhat_us_lag_1 = 0.006501609785602032;
 rho_c_aux = 0.6;
 rho_yh_aux = 0.6;
 a_ib_pi = 0.04;
@@ -488,21 +488,21 @@ b0_ib = 0.018;
 b1_ib = 0.0818;
 b2_ib = 0;
 b3_ib = 0.3144;
-h_pac_ib_constant = 0.0001354518417331411;
-h_pac_ib_var_dln_pcom_lag_1 = 8.360349013065057e-06;
-h_pac_ib_var_i_gap_lag_1 = -0.0008547629277072771;
-h_pac_ib_var_ib_hat_lag_1 = 0.0009663059095514861;
+h_pac_ib_constant = 6.705446366019327e-05;
+h_pac_ib_var_dln_pcom_lag_1 = 4.138196594744458e-06;
+h_pac_ib_var_i_gap_lag_1 = -0.0001901434807020625;
+h_pac_ib_var_ib_hat_lag_1 = 0.001432177690824942;
 h_pac_ib_var_ibar_lag_1 = 0;
-h_pac_ib_var_piQ_lag_1 = 0.0001542008226894693;
-h_pac_ib_var_pi_au_gap_lag_1 = 0.0001705017791889772;
-h_pac_ib_var_pi_m_lag_1 = 5.077856507779174e-05;
+h_pac_ib_var_piQ_lag_1 = 7.633289925954891e-05;
+h_pac_ib_var_pi_au_gap_lag_1 = 8.419450803018518e-05;
+h_pac_ib_var_pi_m_lag_1 = 2.51357467261738e-05;
 h_pac_ib_var_pi_us_gap_lag_1 = 0;
-h_pac_ib_var_pibar_au_lag_1 = -0.0004217023345402872;
+h_pac_ib_var_pibar_au_lag_1 = -0.0002087557878420321;
 h_pac_ib_var_pibar_us_lag_1 = 0;
 h_pac_ib_var_rKB_hat_lag_1 = 0;
-h_pac_ib_var_u_gap_lag_1 = -0.0003441608781608857;
-h_pac_ib_var_yhat_au_lag_1 = 0.001088053886041616;
-h_pac_ib_var_yhat_us_lag_1 = 0.0009287277213658311;
+h_pac_ib_var_u_gap_lag_1 = 8.755875036522933e-05;
+h_pac_ib_var_yhat_au_lag_1 = 0.0002409149502218592;
+h_pac_ib_var_yhat_us_lag_1 = 0.0002065844286071973;
 rho_ib_aux = 0.6;
 rho_rKB_aux = 0.55;
 a_ih_i = -0.08;
@@ -513,20 +513,20 @@ b0_ih = 0.0309;
 b1_ih = 0.108;
 b2_ih = 0;
 b3_ih = 0.2322;
-h_pac_ih_constant = 0.0002952487953424539;
-h_pac_ih_var_dln_pcom_lag_1 = 2.171770053907446e-05;
-h_pac_ih_var_i_gap_lag_1 = -0.005932505507758543;
+h_pac_ih_constant = 0.0001546141898334982;
+h_pac_ih_var_dln_pcom_lag_1 = 1.13610208085596e-05;
+h_pac_ih_var_i_gap_lag_1 = -0.00875225154469619;
 h_pac_ih_var_ibar_lag_1 = 0;
-h_pac_ih_var_ih_hat_lag_1 = 0.003489281244959838;
-h_pac_ih_var_piQ_lag_1 = 0.0003789139784760678;
-h_pac_ih_var_pi_au_gap_lag_1 = 0.0004510471509181633;
-h_pac_ih_var_pi_m_lag_1 = 0.0001292355053522546;
+h_pac_ih_var_ih_hat_lag_1 = 0.003325377021469034;
+h_pac_ih_var_piQ_lag_1 = 0.0001983570643411463;
+h_pac_ih_var_pi_au_gap_lag_1 = 0.0002327047507059199;
+h_pac_ih_var_pi_m_lag_1 = 6.763626104733636e-05;
 h_pac_ih_var_pi_us_gap_lag_1 = 0;
-h_pac_ih_var_pibar_au_lag_1 = -0.000980547556376248;
+h_pac_ih_var_pibar_au_lag_1 = -0.0005133760291220796;
 h_pac_ih_var_pibar_us_lag_1 = 0;
-h_pac_ih_var_u_gap_lag_1 = -0.001380215014894354;
-h_pac_ih_var_yhat_au_lag_1 = 0.002437848282466869;
-h_pac_ih_var_yhat_us_lag_1 = 0.001942354276707757;
+h_pac_ih_var_u_gap_lag_1 = 0.0001783494219255467;
+h_pac_ih_var_yhat_au_lag_1 = 0.001163071255682311;
+h_pac_ih_var_yhat_us_lag_1 = 0.0009368676540363051;
 rho_ih_aux = 0.71;
 a_n_i = -0.03;
 a_n_pi = 0.05;
@@ -538,20 +538,20 @@ b2_n = 0;
 b3_n = 0;
 b4_n = 0;
 b5_n = -0.0007;
-h_pac_n_constant = 0.0005771377228976953;
-h_pac_n_var_dln_pcom_lag_1 = 6.879462437572688e-05;
-h_pac_n_var_i_gap_lag_1 = -0.006623884041659378;
+h_pac_n_constant = 0.0006930318433303621;
+h_pac_n_var_dln_pcom_lag_1 = 8.270836000520397e-05;
+h_pac_n_var_i_gap_lag_1 = -0.007115738670505818;
 h_pac_n_var_ibar_lag_1 = 0;
-h_pac_n_var_n_hat_lag_1 = 0.008781444550283712;
-h_pac_n_var_piQ_lag_1 = 0.001031093012695416;
-h_pac_n_var_pi_au_gap_lag_1 = 0.00146654361417723;
-h_pac_n_var_pi_m_lag_1 = 0.000386654567862486;
+h_pac_n_var_n_hat_lag_1 = 0.01200933966843916;
+h_pac_n_var_piQ_lag_1 = 0.001238776935157444;
+h_pac_n_var_pi_au_gap_lag_1 = 0.001769861660252333;
+h_pac_n_var_pi_m_lag_1 = 0.000464659226165104;
 h_pac_n_var_pi_us_gap_lag_1 = 0;
-h_pac_n_var_pibar_au_lag_1 = -0.002341167937194218;
+h_pac_n_var_pibar_au_lag_1 = -0.002812287110651132;
 h_pac_n_var_pibar_us_lag_1 = 0;
-h_pac_n_var_u_gap_lag_1 = -0.003887990514606526;
-h_pac_n_var_yhat_au_lag_1 = 0.007907813420173734;
-h_pac_n_var_yhat_us_lag_1 = 0.005310281575643715;
+h_pac_n_var_u_gap_lag_1 = -0.00338814814623208;
+h_pac_n_var_yhat_au_lag_1 = 0.007274501999296703;
+h_pac_n_var_yhat_us_lag_1 = 0.004853092324333788;
 rho_n_aux = 0.67;
 delta = 0.1989;
 lambda_q = 0.6959;
@@ -1425,6 +1425,76 @@ lambda_pi    = 0.1744;   // CPI persistence (vs Phase T calibrated 0.2902)
 a_pQ_w       = 0.4367;   // wage -> piQ_hat (Phase U addition; AU data strongly supports)
 alpha_pc_lag = 0.1135;   // lagged VA-price passthrough (Phase V addition)
 b_ECM_pc     = 0.0601;   // ECM speed in eq_au_phillips (Phase V addition)
+
+// ====================================================================
+// Phase W: calibration.inc Bayesian-posterior overrides for the
+// aux-regression parameters (inserted 2026-05-17).
+//
+// The auto-generated parameter block above (≈ lines 431-555) inherits
+// PLACEHOLDER values from dynare/aux/aux_*.mod (Phase S OLS starting
+// points). The Bayesian posteriors live in
+// simulation/identities/calibration.inc but that file is not @#included
+// by any .mod — without this block the production model runs the *_hat
+// variable processes with stale dynamics.
+//
+// Effect: these overrides change piQ_hat / c_hat / ib_hat / ih_hat /
+// n_hat / yh_ratio_hat / rKB_hat at runtime (see model equations
+// around au_pac_v2.mod:767-809), which feeds into PAC equations via
+// (i) the b0_*·(*_hat(-1) - level(-1)) ECM term and (ii) the
+// h_pac_*_var_*_hat_lag_1 policy-function coefficient.
+//
+// Caveat: the h_pac_*_var_*_lag_1 coefficients themselves were
+// generated by pac.print() against the placeholder VAR, so the
+// policy-function projection is no longer fully self-consistent with
+// the runtime *_hat process. Full consistency requires re-templating
+// the aux .mod files from these posteriors and re-running
+// cherrypick + aggregate.
+// ====================================================================
+
+// VA-price PAC auxiliary (calibration.inc:310-315)
+rho_pQ_aux   =  0.334;   // posterior 90% CI [0.191, 0.476]; was 0.85
+a_pQ_y       =  0.043;   // posterior 90% CI [-0.000, 0.087]; was 0.05
+a_pQ_i       = -0.021;   // posterior 90% CI [-0.070, 0.029]; was 0
+a_pQ_pi      =  0.007;   // posterior 90% CI [-0.042, 0.057]; was 0
+a_pQ_u       = -0.021;   // posterior 90% CI [-0.069, 0.027]; was 0
+// a_pQ_w already overridden at line 1425 to AU posterior 0.4367.
+
+// Employment PAC auxiliary (calibration.inc:317-322)
+rho_n_aux    =  0.743;   // posterior 90% CI [0.669, 0.817]; was 0.67
+a_n_y        =  0.094;   // posterior 90% CI [0.036, 0.152]; was 0.12
+a_n_i        = -0.031;   // posterior 90% CI [-0.080, 0.018]; was -0.03
+a_n_pi       =  0.057;   // posterior 90% CI [0.013, 0.100]; was 0.05
+a_n_u        = -0.029;   // posterior 90% CI [-0.076, 0.019]; was -0.04
+
+// Household income-output ratio auxiliary (calibration.inc:324-328)
+rho_yh_aux   =  0.93;    // AU smoother (s.e. 0.002); was 0.6
+a_yh_y       =  0.12;    // AU smoother (s.e. 0.006); was 0.4
+a_yh_u       = -0.07;    // AU smoother (s.e. 0.003); was -0.2
+
+// Consumption PAC auxiliary (calibration.inc:330-336)
+rho_c_aux    =  0.581;   // posterior 90% CI [0.484, 0.679]; was 0.6
+a_c_y        =  0.058;   // posterior 90% CI [0.010, 0.107]; was 0.06
+a_c_i        = -0.043;   // posterior 90% CI [-0.092, 0.006]; was -0.04
+a_c_pi       =  0.010;   // posterior 90% CI [-0.038, 0.059]; was 0.005
+a_c_u        = -0.036;   // posterior 90% CI [-0.085, 0.013]; was -0.03
+a_c_yh       =  0.10;    // AU smoother (YH/Y data unavailable); was 0.39
+
+// Business-investment PAC auxiliary (calibration.inc:338-342)
+rho_ib_aux   =  0.694;   // posterior 90% CI [0.598, 0.791]; was 0.6
+a_ib_y       =  0.050;   // posterior 90% CI [0.001, 0.099]; was 0.15
+a_ib_pi      =  0.023;   // posterior 90% CI [-0.027, 0.072]; was 0.04
+a_ib_u       =  0.004;   // posterior 90% CI [-0.046, 0.053]; was -0.02
+
+// Business-investment USER COST gap auxiliary (calibration.inc:344-346)
+rho_rKB_aux  =  0.162;   // posterior 90% CI [0.036, 0.287]; was 0.55
+a_rKB_i      =  0.242;   // posterior 90% CI [0.057, 0.428]; was 0.24
+
+// Housing-investment PAC auxiliary (calibration.inc:348-353)
+rho_ih_aux   =  0.699;   // posterior 90% CI [0.600, 0.797]; was 0.71
+a_ih_y       =  0.097;   // posterior 90% CI [0.016, 0.178]; was 0.08
+a_ih_i       = -0.152;   // posterior 90% CI [-0.276, -0.029]; was -0.08
+a_ih_pi      =  0.042;   // posterior 90% CI [-0.007, 0.092]; was 0.05
+a_ih_u       =  0.004;   // posterior 90% CI [-0.045, 0.053]; was -0.03
 
 shocks;
     var eps_q;          stderr 0.5356;

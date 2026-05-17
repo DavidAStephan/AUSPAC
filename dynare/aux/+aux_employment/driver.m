@@ -16,7 +16,6 @@ options_.dynare_version = '6.5';
 % Some global variables initialization
 %
 global_initialization;
-options_.nograph = true;
 M_.exo_names = cell(14,1);
 M_.exo_names_tex = cell(14,1);
 M_.exo_names_long = cell(14,1);
@@ -852,15 +851,15 @@ M_.params(24) = 0.7;
 rho_pi_m = M_.params(24);
 M_.params(25) = 0.42;
 rho_pcom = M_.params(25);
-M_.params(26) = 0.67;
+M_.params(26) = 0.743;
 rho_n_aux = M_.params(26);
-M_.params(27) = 0.12;
+M_.params(27) = 0.094;
 a_n_y = M_.params(27);
-M_.params(28) = (-0.03);
+M_.params(28) = (-0.031);
 a_n_i = M_.params(28);
-M_.params(29) = 0.05;
+M_.params(29) = 0.057;
 a_n_pi = M_.params(29);
-M_.params(30) = (-0.04);
+M_.params(30) = (-0.029);
 a_n_u = M_.params(30);
 M_.params(31) = 0.0578;
 b0_n = M_.params(31);

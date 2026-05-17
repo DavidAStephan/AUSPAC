@@ -85,17 +85,22 @@ alpha_pc        = 0.17;         beta_pc_m       = 0.10;         gamma_oil       
 
 i_ss            = 1.0491;       pi_ss_au        = 0.625;        pi_ss_us        = 0.5;
 
-rho_pQ_aux      = 0.85;
-a_pQ_y          = 0.05;         a_pQ_i          = 0.0;          a_pQ_pi         = 0.0;          a_pQ_u          = 0.0;
-// Phase U: a_pQ_w calibrated to FR-BDF wp736 eq (45) coefficient on the
-// efficient wage inflation regressor in the long-run VA-price target
-// equation: π*_Q = 0.59*(πW - Δē) + 0.41*π̄*_Q. AU-PAC's var_piQ_hat
-// regresses on the LAGGED state (var_model requires pure-VAR-(1) form),
-// so we adopt 0.59 to match the structural projection magnitude FR-BDF
-// uses. The Table 4.4.4 policy-function coefficient (1.2e-2) is the
-// implied DISCOUNTED-SUM impulse coefficient and corresponds to our
-// h_pac_pQ_var_pi_w_gap_lag_1 (derived automatically by pac.print).
-a_pQ_w          = 0.59;
+// Phase W (2026-05-17): aux-regression coefficients re-templated from
+// calibration.inc Bayesian posteriors (Phase B 2026-05-09). Pre-Phase-W
+// values were Phase S OLS placeholders (rho_pQ_aux=0.85, a_pQ_{y,i,pi,u}={0.05,0,0,0}).
+// FR-BDF wp736 Table 4.4.4 reference: rho_pQ_aux=0.70 (more persistent than AU posterior).
+rho_pQ_aux      = 0.334;        // posterior 90% CI [0.191, 0.476]
+a_pQ_y          = 0.043;        // posterior 90% CI [-0.000, 0.087]
+a_pQ_i          = -0.021;       // posterior 90% CI [-0.070, 0.029] (CI crosses 0)
+a_pQ_pi         = 0.007;        // posterior 90% CI [-0.042, 0.057] (CI crosses 0)
+a_pQ_u          = -0.021;       // posterior 90% CI [-0.069, 0.027] (CI crosses 0)
+// a_pQ_w: wage->piQ_hat projection coefficient. FR-BDF wp736 eq (45) Table 4.4.4
+// reports 0.59 [s.e. 0.09] on contemporaneous π̃_W = π_W - Δē. AU-PAC applies
+// the coefficient to LAGGED pi_w_gap = π_W - π̄ (var_model requires pure-VAR
+// form; pi_w_gap subtracts the inflation anchor rather than the efficiency
+// trend). Phase U AU re-estimation found 0.4367 on the AU sample; that's the
+// production runtime value (au_pac_v2.mod Phase U+V override block).
+a_pQ_w          = 0.4367;
 
 rho_piQ         = 0.85;         rho_pi_m        = 0.7;          rho_pcom        = 0.42;
 // pi_w_gap reduced-form for the var_model: AR(1) plus CPI-indexation + slack.

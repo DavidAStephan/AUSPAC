@@ -44,8 +44,10 @@ rho_u_gap       = 0.94;         okun_coeff      = -0.33;
 alpha_pc        = 0.17;         beta_pc_m       = 0.10;         gamma_oil       = 0.03;
 i_ss            = 1.0491;       pi_ss_au        = 0.625;        pi_ss_us        = 0.5;
 rho_piQ         = 0.85;         rho_pi_m        = 0.7;          rho_pcom        = 0.42;
-rho_n_aux       = 0.67;          a_n_y           = 0.12;          a_n_i           = -0.03;
-a_n_pi          = 0.05;          a_n_u           = -0.04;
+// Phase W (2026-05-17): aux-regression coefficients re-templated from
+// calibration.inc Bayesian posteriors (Phase B 2026-05-09).
+rho_n_aux       = 0.743;         a_n_y           = 0.094;         a_n_i           = -0.031;
+a_n_pi          = 0.057;         a_n_u           = -0.029;
 b0_n            = 0.0578;        b1_n            = 0.3118;        b2_n            = 0.0;           b3_n            = 0.0;           b4_n            = 0.0;           b5_n            = -0.0007;
 beta_pac        = 0.98;
 

@@ -2,7 +2,7 @@
 
 **Version**: v3.0 (tagged 2026-05-16, branch `fix/cross-platform-paths`)
 **Architecture**: Phase T policy-function PAC expectations (FR-BDF wp1044 §2.2 / srecko / Brayton)
-**Headline metric**: MHM log marginal density = **−781.39** (+20.66 cumulative nats vs Phase Q baseline)
+**Headline metric**: MHM log marginal density = **−780.47** (+0.92 nats vs Phase T MHM; Laplace = **−779.30**, +1.75 nats vs Phase T Laplace). Cumulative Phase Q → Phase W MHM improvement: **+21.58 nats**.
 
 ---
 
@@ -29,8 +29,9 @@ AUSPAC is the Australian replication of FR-BDF (Banque de France WP #736 Lemoine
 | Phase R | 2026-05-15 | −790.72 | +11.55 | Wage Phillips CPI indexation; employment-target Δq + dln_tfp signs; consumption `pv_r_lh_gap` real-rate channel |
 | Phase S | 2026-05-16 | −789.10 | +1.62 | FR-BDF cost-push replication via structural deflator channels in `eq_au_phillips` |
 | **Phase T (v3.0)** | 2026-05-16 | **−781.39** | **+7.71** | **srecko/FR-BDF aggregate workflow — policy-function PAC expectations replace shadow-VAR `pac_expectation()` calls** |
+| **Phase W** | 2026-05-17 | **−780.47** | **+0.92** | **Self-consistent activation of `calibration.inc` Bayesian-posterior aux-regression coefficients.** Two-part fix: (i) runtime override block at [au_pac_v2.mod:1429](dynare/au_pac_v2.mod#L1429) and [au_pac_v2_bayesian.mod:708](dynare/au_pac_v2_bayesian.mod#L708) for the 24 `rho_*_aux`/`a_*_y/i/pi/u/yh` parameters (the `*_hat` variable processes); (ii) re-templated [aux/aux_*.mod](dynare/aux/) and re-ran `dynare`+`cherrypick` for each of 5 PAC blocks, refreshing the 73 `h_pac_*` policy-function coefficients computed by `pac.print()`. Partial fix (runtime override only) gave +0.77 nats Laplace; full fix (h_pac_* refresh) added another +0.97 nats Laplace. Fresh 20k×2-chain MCMC (47.6 min) confirms MHM gain of +0.92 nats; Laplace gain of +1.75 nats. |
 
-**Cumulative Phase Q → Phase T improvement: +20.66 MHM nats.**
+**Cumulative Phase Q → Phase W MHM improvement: +21.58 nats.**
 
 ### Notable v3.0 findings
 
@@ -41,6 +42,8 @@ AUSPAC is the Australian replication of FR-BDF (Banque de France WP #736 Lemoine
 3. **Forward-guidance puzzle absence preserved**: AU-PAC ratio = 10.14 at N=12 (standard NK saturates at 1.79; linear reference is 12.0). Within ±1% across the entire Phase R → S → T refit history.
 
 4. **Two-layer architecture solved**: Phase Q–S inherited the FRB/US shadow-VAR workaround for Dynare's pure-VAR constraint on `var_model` equations. Phase T adopts the official Dynare semi-structural workflow (Stéphane Adjemian; matches FR-BDF wp1044 §3.2.3): aux files compute the policy function via `pac.print()`, `cherrypick()` extracts simulation-ready equations, `aggregate()` combines them with structural identities into the production .mod. Structural shocks now flow into forward PAC expectations via lagged structural-variable terms in the closed-form expectation formulas.
+
+5. **Phase W — orphaned `calibration.inc` activated, then fully consistent (2026-05-17)**: surfaced by a triple-check audit of FR-BDF vs AUSPAC price equations. The Phase T workflow had two parallel sources of truth for the 24 auxiliary-regression parameters (`rho_pQ_aux`, `a_pQ_y/i/pi/u`, the consumption/employment/investment analogues, the `rho_yh_aux`/`a_yh_*` projection, and `rho_rKB_aux`/`a_rKB_i`): the aux .mod files carried Phase S OLS placeholders, while `simulation/identities/calibration.inc` carried the Phase B Bayesian posterior modes — but no `.mod` file ever `@#include`d `calibration.inc`, so the placeholders won at runtime. Largest gap: `rho_pQ_aux` ran at 0.85 vs posterior 0.334 (2.5× too persistent); `a_pQ_{i,pi,u}` ran at zero vs nonzero posteriors. Fix in two stages: **(stage 1, +0.77 nats Laplace)** runtime override block at end of `au_pac_v2.mod` / `au_pac_v2_bayesian.mod` calibration sections (Dynare uses last-assignment-wins) — corrects the `*_hat` variable processes but leaves `h_pac_*` policy-function coefficients computed against the old VAR. **(stage 2, +0.97 nats Laplace on top of stage 1)** re-templated [dynare/aux/aux_*.mod](dynare/aux/) calibration blocks from the same posteriors, re-ran `dynare`+`cherrypick` for all 5 PAC blocks via [phaseW_recherrypick.m](dynare/phaseW_recherrypick.m), and patched the 73 refreshed `h_pac_*` coefficients into the production .mod files. **(stage 3 — verification)** fresh 20k×2-chain MCMC (47.6 min wall time) under the new self-consistent calibration: Laplace LMD = −779.30 (+1.75 nats vs Phase T); MHM LMD = **−780.47** (+0.92 nats vs Phase T). Largest h_pac_* movement: `h_pac_pQ_var_piQ_hat_lag_1` shrank ~10× (from 0.0071 to 0.00069) reflecting the much shorter projection horizon under `rho_pQ_aux=0.334` vs 0.85.
 
 ---
 
