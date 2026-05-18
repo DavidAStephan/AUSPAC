@@ -54,6 +54,11 @@ pi_us_gap = lambda_pi_us * pi_us_gap(-1) + kappa_pi_us * yhat_us(-1) + eps_pi_us
 ibar = lambda_ibar * ibar(-1) + (1 - lambda_ibar) * i_ss + eps_ibar;
 
 [name='eq_pibar_au']
+// Round 1.3 (Cogley-Sbordone time-varying anchor) tested 2026-05-18 and
+// REJECTED: Laplace LMD worsened by 1.88 nats (-779.30 → -781.18) on a
+// fresh csminwel mode search. delta_pibar posterior mode pulled to 0.024
+// (well below prior mean 0.07); the extra parameter cost exceeded the
+// tiny likelihood gain. AU data prefers the simple AR(1) anchor.
 pibar_au = lambda_pibar * pibar_au(-1) + (1 - lambda_pibar) * pi_ss_au + eps_pibar_au;
 
 [name='eq_pibar_us']
@@ -388,4 +393,29 @@ w_N = 0.98 * w_N(-1) + 0.02 * w_N_ss + b_N;
 
 [name='eq_b_ROW']
 b_ROW = -(b_F + b_G + b_H + b_N);
+
+// =====================================================================
+// Round 1.1 — HICP-style headline-decomposition reporting block
+// One-way projections of headline CPI onto core/food/energy and
+// tradeables/non-tradeables splits, plus a trimmed-mean smoother.
+// Zero feedback into existing dynamics; new endogenous variables only.
+// =====================================================================
+
+[name='eq_pi_au_food']
+pi_au_food = delta_food_piQ * piQ + (1 - delta_food_piQ) * pibar_au + delta_food_pcom * dln_pcom;
+
+[name='eq_pi_au_energy']
+pi_au_energy = delta_energy_pm * pi_m + (1 - delta_energy_pm) * pibar_au + delta_energy_pcom * dln_pcom;
+
+[name='eq_pi_au_core']
+pi_au_core = (pi_au - w_cpi_food * pi_au_food - w_cpi_energy * pi_au_energy) / (1 - w_cpi_food - w_cpi_energy);
+
+[name='eq_pi_au_trad']
+pi_au_trad = delta_trad_pm * pi_m + (1 - delta_trad_pm) * pibar_au + delta_trad_pcom * dln_pcom + delta_trad_s * s_gap;
+
+[name='eq_pi_au_nontrad']
+pi_au_nontrad = (pi_au - w_cpi_trad * pi_au_trad) / (1 - w_cpi_trad);
+
+[name='eq_pi_au_trim']
+pi_au_trim = rho_trim * pi_au_trim(-1) + (1 - rho_trim) * (delta_trim_piQ * piQ + (1 - delta_trim_piQ) * pibar_au);
 

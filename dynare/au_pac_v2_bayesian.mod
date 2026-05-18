@@ -92,6 +92,12 @@ var
 	piQ_hat
 	pi_au
 	pi_au_gap
+	pi_au_food
+	pi_au_energy
+	pi_au_core
+	pi_au_trad
+	pi_au_nontrad
+	pi_au_trim
 	pi_c
 	pi_g
 	pi_ib
@@ -419,6 +425,18 @@ parameters
 	w_ih
 	w_m
 	w_x
+	w_cpi_food
+	w_cpi_energy
+	w_cpi_trad
+	delta_food_piQ
+	delta_food_pcom
+	delta_energy_pm
+	delta_energy_pcom
+	delta_trad_pm
+	delta_trad_pcom
+	delta_trad_s
+	rho_trim
+	delta_trim_piQ
 ;
 
 a_pQ_i = 0;
@@ -765,6 +783,28 @@ a_ih_y       =  0.097;
 a_ih_i       = -0.152;
 a_ih_pi      =  0.042;
 a_ih_u       =  0.004;
+
+// ====================================================================
+// Round 1.1 (2026-05-18): HICP-style headline-decomposition reporting
+// block. Weights from ABS Cat. 6401.0 (CPI weights, 2025 reweight) and
+// RBA Bulletin (tradeables share). Identity-preserving:
+//   pi_au ≡ w_food·pi_au_food + w_energy·pi_au_energy
+//         + (1 - w_food - w_energy)·pi_au_core
+//   pi_au ≡ w_trad·pi_au_trad + (1 - w_trad)·pi_au_nontrad
+// One-way reporting; zero feedback into the rest of the model.
+// ====================================================================
+w_cpi_food        = 0.17;
+w_cpi_energy      = 0.07;
+w_cpi_trad        = 0.35;
+delta_food_piQ    = 0.65;
+delta_food_pcom   = 0.20;
+delta_energy_pm   = 0.50;
+delta_energy_pcom = 0.60;
+delta_trad_pm     = 0.85;
+delta_trad_pcom   = 0.15;
+delta_trad_s      = -0.10;
+rho_trim          = 0.85;
+delta_trim_piQ    = 0.70;
 
 
 varexo
@@ -1248,6 +1288,29 @@ model;
 	[blockname='',name='b_ROW']
 	b_ROW =  -(b_F + b_G + b_H + b_N);
 
+	// Round 1.1: HICP-style headline-decomposition reporting block.
+	// One-way projections of headline CPI onto core/food/energy and
+	// tradeables/non-tradeables splits, plus a trimmed-mean smoother.
+	// Zero feedback into existing dynamics.
+
+	[blockname='',name='pi_au_food']
+	pi_au_food = delta_food_piQ * piQ + (1 - delta_food_piQ) * pibar_au + delta_food_pcom * dln_pcom;
+
+	[blockname='',name='pi_au_energy']
+	pi_au_energy = delta_energy_pm * pi_m + (1 - delta_energy_pm) * pibar_au + delta_energy_pcom * dln_pcom;
+
+	[blockname='',name='pi_au_core']
+	pi_au_core = (pi_au - w_cpi_food * pi_au_food - w_cpi_energy * pi_au_energy) / (1 - w_cpi_food - w_cpi_energy);
+
+	[blockname='',name='pi_au_trad']
+	pi_au_trad = delta_trad_pm * pi_m + (1 - delta_trad_pm) * pibar_au + delta_trad_pcom * dln_pcom + delta_trad_s * s_gap;
+
+	[blockname='',name='pi_au_nontrad']
+	pi_au_nontrad = (pi_au - w_cpi_trad * pi_au_trad) / (1 - w_cpi_trad);
+
+	[blockname='',name='pi_au_trim']
+	pi_au_trim = rho_trim * pi_au_trim(-1) + (1 - rho_trim) * (delta_trim_piQ * piQ + (1 - delta_trim_piQ) * pibar_au);
+
 end;
 
 steady_state_model;
@@ -1438,6 +1501,15 @@ steady_state_model;
     ln_K           = 0;
     ln_P_star      = 0;
     ln_P           = 0;
+
+    // Round 1.1: HICP reporting block — all components at SS = pi_ss_au
+    // (identity-preserving: weighted averages of pi_ss_au equal pi_ss_au)
+    pi_au_food     = pi_ss_au;
+    pi_au_energy   = pi_ss_au;
+    pi_au_core     = pi_ss_au;
+    pi_au_trad     = pi_ss_au;
+    pi_au_nontrad  = pi_ss_au;
+    pi_au_trim     = pi_ss_au;
 end;
 
 shocks;

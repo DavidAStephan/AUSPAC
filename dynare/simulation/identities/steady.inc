@@ -190,3 +190,12 @@
     ln_K           = 0;
     ln_P_star      = 0;
     ln_P           = 0;
+
+    // Round 1.1: HICP reporting block — all components at SS = pi_ss_au
+    // (identity-preserving: weighted averages of pi_ss_au are pi_ss_au)
+    pi_au_food     = pi_ss_au;
+    pi_au_energy   = pi_ss_au;
+    pi_au_core     = pi_ss_au;
+    pi_au_trad     = pi_ss_au;
+    pi_au_nontrad  = pi_ss_au;
+    pi_au_trim     = pi_ss_au;

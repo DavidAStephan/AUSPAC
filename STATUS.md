@@ -1,8 +1,8 @@
 # AUSPAC — Project status
 
-**Version**: v3.1 (tagged 2026-05-17, branch `fix/cross-platform-paths`)
-**Architecture**: Phase T policy-function PAC expectations (FR-BDF wp1044 §2.2 / Adjemian-Brayton-Zimic), with Phases W/X/Y architectural cleanup completed.
-**Headline metric**: MHM log marginal density = **−780.47** (Laplace = **−779.30**). Cumulative Phase Q → Phase Y MHM improvement: **+21.80 nats**.
+**Version**: v3.1.1 (Round 1.1 added 2026-05-18, branch `fix/cross-platform-paths`)
+**Architecture**: Phase T policy-function PAC expectations (FR-BDF wp1044 §2.2 / Adjemian-Brayton-Zimic), with Phases W/X/Y architectural cleanup completed, plus Round 1.1 HICP-style reporting block.
+**Headline metric**: MHM log marginal density = **−780.47** (Laplace = **−779.30**). Cumulative Phase Q → Phase Y MHM improvement: **+21.80 nats**. Round 1.1 is a one-way reporting block — LMD unchanged by design.
 
 ---
 
@@ -32,8 +32,10 @@ AUSPAC is the Australian replication of FR-BDF (Banque de France WP #736 Lemoine
 | **Phase W** | 2026-05-17 | **−780.47** | **+0.92** | Self-consistent activation of `calibration.inc` Bayesian-posterior aux-regression coefficients. Two-stage fix: runtime override block in the production .mod files for the 24 `rho_*_aux` / `a_*_y/i/pi/u/yh` parameters, then re-templated aux .mod files and re-cherrypicked all 5 PAC blocks to refresh the 73 `h_pac_*` policy-function coefficients. Verified by fresh 20k×2-chain MCMC. Laplace gain +1.75 nats. |
 | Phase X | 2026-05-17 | (Laplace −779.30) | +0.00 | Parameter-name unification: aux files' `rho_pi_m` renamed to `rho_pm` (value 0.28) to match `model.inc`. Eliminates the only aux-vs-identities parameter-name drift. Neutral LMD; kept for naming consistency. |
 | **Phase Y** | 2026-05-17 | (MHM −780.47) | +0.00 | Orphan-equation removal: `eq_piQ_star`, `eq_piQ_star_bar`, `eq_pQ_star_level`, `eq_pQ_gap` and parameters `rho_pQ_star`, `gamma_ulc`, `gamma_uck` deleted from `model.inc` and the production .mod files. They were verified-orphan diagnostic equations (never on the RHS of any other equation). Removal leaves `piQ_hat` as the canonical VA-price PAC target, matching FR-BDF wp736 Table 4.4.4 and ECB-BASE WAPRO single-target architecture. LMD unchanged. |
+| **Round 1.1** | 2026-05-18 | (MHM −780.4699, Laplace −779.3031) | +0.00 | HICP-style headline-decomposition reporting block: 6 new endogenous reporting variables (`pi_au_food`, `pi_au_energy`, `pi_au_core`, `pi_au_trad`, `pi_au_nontrad`, `pi_au_trim`) and 12 calibrated parameters (CPI weights from ABS Cat. 6401, tradeables share from RBA). Identity-preserving decomposition: pi_au ≡ Σ w_i·component_i to machine precision. Zero feedback into existing dynamics, so cached MCMC re-loads with bit-identical Laplace/MHM. |
+| Round 1.3 (REJECTED) | 2026-05-18 | (control −779.3032 vs candidate −781.1822) | **−1.88** | Cogley-Sbordone time-varying inflation attractor `+ delta_pibar·(pi_au(-1) − pibar_au(-1))` in eq_pibar_au, with `delta_pibar` estimated under Beta(0.07, 0.04) prior. Fresh 7.8-min csminwel mode search: posterior mode 0.024 (data pulls toward zero), Laplace LMD −781.18. Matched control with delta_pibar pinned at 0: Laplace LMD −779.30 (identical to cached baseline → confirms csminwel ≡ MCMC mode on this model). Result: data does not support time-varying anchor on the AU sample; parameter cost (1.88 nats) exceeds the tiny likelihood gain. Implied Bayes factor 0.15 in favor of the simpler model. Reverted. |
 
-**Cumulative Phase Q → Phase Y MHM improvement: +21.80 nats.**
+**Cumulative Phase Q → Phase Y MHM improvement: +21.80 nats** (unchanged by Round 1.1, which adds reporting only).
 
 ### Notable v3.1 architecture (post-audit)
 

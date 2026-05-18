@@ -160,3 +160,26 @@ a_pQ_w = 0.59;
 omega_pc       = 0.23;
 alpha_pc_lag   = 0.16;
 b_ECM_pc       = 0.05;
+// Round 1.1 (2026-05-18): HICP-style headline-decomposition reporting block.
+// Weights from ABS Cat. 6401.0 (CPI weights, 2025 reweight) and RBA Bulletin
+// (tradeables share). The decomposition is identity-preserving:
+//   pi_au ≡ w_cpi_food·pi_au_food + w_cpi_energy·pi_au_energy
+//         + (1 - w_cpi_food - w_cpi_energy)·pi_au_core
+//   pi_au ≡ w_cpi_trad·pi_au_trad + (1 - w_cpi_trad)·pi_au_nontrad
+// pi_au_food, pi_au_energy, pi_au_trad are reduced-form projections onto
+// existing drivers (piQ, pi_m, pibar_au, dln_pcom, s_gap); pi_au_core and
+// pi_au_nontrad are residuals that close each identity. pi_au_trim is an
+// AR(1) smoother around the underlying VA-price trend (RBA trimmed-mean
+// proxy). Zero feedback into the rest of the model (reporting only).
+w_cpi_food        = 0.17;    // Food + non-alc bev (ABS 6401)
+w_cpi_energy      = 0.07;    // Auto fuel + electricity + gas
+w_cpi_trad        = 0.35;    // RBA tradeables share
+delta_food_piQ    = 0.65;    // Food ← domestic VA price (meat, dairy, fresh produce)
+delta_food_pcom   = 0.20;    // Food ← global agricultural commodity passthrough
+delta_energy_pm   = 0.50;    // Energy ← imported fuel
+delta_energy_pcom = 0.60;    // Energy ← global oil/gas passthrough
+delta_trad_pm     = 0.85;    // Tradeables ← imports (dominant)
+delta_trad_pcom   = 0.15;    // Tradeables ← commodity passthrough
+delta_trad_s      = -0.10;   // Tradeables ← FX (AUD appreciation lowers prices)
+rho_trim          = 0.85;    // Trimmed-mean persistence
+delta_trim_piQ    = 0.70;    // Trimmed mean ← underlying VA-price trend

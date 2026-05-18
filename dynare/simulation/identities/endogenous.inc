@@ -129,4 +129,10 @@ var
 	ln_N
 	ln_K
 	ln_P_star
-	ln_P;
+	ln_P
+	pi_au_food
+	pi_au_energy
+	pi_au_core
+	pi_au_trad
+	pi_au_nontrad
+	pi_au_trim;

@@ -825,6 +825,46 @@ The full set of AU-estimated reduced-form coefficients:
 
 **Growth neutrality verification**: At SS, $\pi^j = \pi^Q = \bar{\pi} = \pi_{SS}$ for all deflators. The sum of all coefficients on inflation-type terms equals 1 for each. Verified for all 6 deflators.
 
+### 4.9.7 HICP-style headline-decomposition reporting block (Round 1.1, 2026-05-18)
+
+Following ECB-BASE §3.2.3 and FR-BDF wp1044 §3.6.4, AUSPAC v3.1.1 adds a six-variable headline-CPI decomposition reporting layer. The decomposition is purely *one-way*: each new variable is a deterministic function of existing model objects, with **zero feedback** into the structural dynamics, the wage Phillips curve, or the Taylor rule. Adding the block leaves both the cached Bayesian posterior and the IRFs of all existing variables bit-identical (Laplace LMD = $-779.30$ before and after; MHM LMD = $-780.47$ before and after).
+
+**Components and equations.** Three new core/food/energy split variables and three new tradeables/non-tradeables/trimmed-mean variables:
+
+$$\pi^{food}_t = \delta_{food,Q}\,\pi^Q_t + (1-\delta_{food,Q})\,\bar{\pi}_t + \delta_{food,com}\,\Delta\ln p^{com}_t$$
+$$\pi^{energy}_t = \delta_{energy,M}\,\pi^M_t + (1-\delta_{energy,M})\,\bar{\pi}_t + \delta_{energy,com}\,\Delta\ln p^{com}_t$$
+$$\pi^{core}_t = \frac{\pi^{au}_t - w^{food}\,\pi^{food}_t - w^{energy}\,\pi^{energy}_t}{1 - w^{food} - w^{energy}}$$
+$$\pi^{trad}_t = \delta_{trad,M}\,\pi^M_t + (1-\delta_{trad,M})\,\bar{\pi}_t + \delta_{trad,com}\,\Delta\ln p^{com}_t + \delta_{trad,s}\,s^{gap}_t$$
+$$\pi^{nontrad}_t = \frac{\pi^{au}_t - w^{trad}\,\pi^{trad}_t}{1 - w^{trad}}$$
+$$\pi^{trim}_t = \rho_{trim}\,\pi^{trim}_{t-1} + (1-\rho_{trim})\bigl[\delta_{trim,Q}\,\pi^Q_t + (1-\delta_{trim,Q})\,\bar{\pi}_t\bigr]$$
+
+The core and non-tradeables components are residual identities that close the decompositions $\pi^{au} \equiv w^{food}\pi^{food} + w^{energy}\pi^{energy} + (1{-}w^{food}{-}w^{energy})\pi^{core}$ and $\pi^{au} \equiv w^{trad}\pi^{trad} + (1{-}w^{trad})\pi^{nontrad}$. Adding-up is exact to machine precision (verified at $-1.7 \times 10^{-16}$).
+
+**Calibration.** Weights from ABS Cat. 6401.0 (CPI 2025 reweight) and RBA Bulletin tradeables share. Projection coefficients ($\delta$) calibrated to typical AU passthrough magnitudes.
+
+| Parameter | Value | Source |
+|-----------|-------|--------|
+| $w^{food}$ | 0.17 | ABS 6401 food + non-alcoholic beverages |
+| $w^{energy}$ | 0.07 | ABS 6401 automotive fuel + electricity + gas |
+| $w^{trad}$ | 0.35 | RBA Bulletin tradeables share |
+| $\delta_{food,Q}$ | 0.65 | Domestic VA dominance in food (meat, dairy, fresh produce) |
+| $\delta_{food,com}$ | 0.20 | Global agricultural commodity passthrough |
+| $\delta_{energy,M}$ | 0.50 | Imported-fuel share |
+| $\delta_{energy,com}$ | 0.60 | Oil/gas global passthrough |
+| $\delta_{trad,M}$ | 0.85 | Tradeables dominated by imports |
+| $\delta_{trad,com}$ | 0.15 | Commodity passthrough |
+| $\delta_{trad,s}$ | $-0.10$ | FX passthrough (AUD↑ → tradeables↓) |
+| $\rho_{trim}$ | 0.85 | Trimmed-mean persistence |
+| $\delta_{trim,Q}$ | 0.70 | Trimmed mean tracks underlying VA-price trend |
+
+**IRF validation.** Shock responses on impact (post-Round-1.1 IRFs, $t=1$):
+
+- $\pi^{food}\,/\,\varepsilon^{pcom}$: $+0.600$ — matches $\delta_{food,com}\,\sigma_{pcom} = 0.20 \times 3.0$.
+- $\pi^{energy}\,/\,\varepsilon^{pcom}$: $+2.431$ — matches $\delta_{energy,com}\,\sigma_{pcom} + \delta_{energy,M}\,(\beta_{pm,com}\,\sigma_{pcom}) = 1.80 + 0.50 \times 1.26$.
+- $\pi^{core}\,/\,\varepsilon^{pi}$: $+0.641$ — matches the residual identity $\pi^{au}_{\varepsilon_{pi}}\,/\,(1-w^{food}-w^{energy}) = 0.487 / 0.76$.
+
+**Use cases.** The decomposition enables direct comparison with RBA inflation reporting (trimmed-mean, weighted-median, tradeables/non-tradeables), richer post-2022 inflation-surge attribution, and a foundation for the energy-block routing in Round 2.1 (oil + gas split, FR-BDF wp1044 Appx E), which will replace the calibrated $\delta_{energy,com}$ passthrough with a structural synthetic energy price index.
+
 ### 4.10 Financial variables (FR-BDF Section 4.8)
 
 #### 4.10.1 Term structure (FR-BDF eqs 95-97)
