@@ -56,7 +56,9 @@ var
     // === CES production function (Section 4.3) ===
     dln_k           // capital services growth (quarterly %, from accumulation eq 32)
     dln_y_star      // potential output growth (quarterly %)
-    dln_tfp         // total factor productivity growth (quarterly %)
+    dln_tfp         // total factor productivity growth (quarterly %; transient = ln_tfp - ln_tfp(-1))
+    ln_tfp_LR       // long-run log-TFP level (random walk; FR-BDF wp736 §4.3 Ē_t)
+    ln_tfp          // smoothed log-TFP level (AR(1) toward ln_tfp_LR)
 
     // === Wage-price spiral (Stage 9c) ===
     dln_ulc         // unit labor cost growth (quarterly %)
@@ -82,6 +84,7 @@ var
     dln_c_star_bar  // trend consumption growth
     c_gap           // gap between target and actual consumption (log level)
     pv_yh           // PV of expected future output gaps (permanent income proxy, beta_c=0.95)
+    pv_r_lh_gap     // PV of expected future real lending rate gap (FR-BDF eq 61, audit #26)
 
     // === Demand block: business investment PAC (Section 4.6.2) ===
     dln_ib          // business investment growth (quarterly log diff)
@@ -113,6 +116,7 @@ var
     s_LB_firms      // bank lending spread for firms (quarterly %)
     s_BBB           // BBB bond spread (quarterly %)
     s_gap           // real exchange rate gap (log, + = AUD depreciation)
+    pv_i_uip        // forward PV of policy-rate gap for UIP (kappa_uip ~0.92)
 
     // === Trade block (Section 4.7) ===
     // Proper ECM: long-run equilibrium ln_X_eq / ln_M_eq, plus short-run dynamics.
@@ -260,8 +264,8 @@ varexo
     // Government shocks
     eps_g           // government spending shock
     eps_pg          // government deflator shock
-    // Supply block shock (Stage 9a)
-    eps_tfp         // TFP shock
+    // Supply block shock (FR-BDF wp736 §5.2.7 — permanent +1% level shock to trend efficiency)
+    eps_tfp_LR      // permanent log-TFP level shock (replaces growth-rate eps_tfp, 2026-05-15)
     // Commodity price shock (Stage 11b)
     eps_pcom        // commodity price shock
     // Stage 12: equation audit fixes
@@ -399,6 +403,7 @@ parameters
     // --- Exchange rate parameters (Section 4.8, eq. 105) ---
     rho_s           // real exchange rate persistence (PPP half-life ~3-5 years)
     alpha_s         // interest rate differential -> exchange rate
+    beta_uip        // UIP NPV discount (forward in Hybrid/MCE, backward AR(1) in VAR)
 
     // --- Export parameters (Section 4.7, eqs. 70-73) ---
     b0_x            // error correction speed
@@ -514,6 +519,7 @@ parameters
     a_pQ_i          // interest rate gap (cost channel)
     a_pQ_pi         // inflation gap (FR-BDF policy fn: 0.00087)
     a_pQ_u          // unemployment gap (wage → ULC channel, FR-BDF: û coeff = -0.011)
+    a_pQ_w          // Phase U: lagged efficient-wage-inflation channel (FR-BDF Table 4.4.4: +1.2e-2)
 
     // Employment (FR-BDF Table 4.5.7, eq 57: n̂* = f(ŷ, i, π, û, n̂*))
     rho_n_aux       // own persistence (FR-BDF: 0.67)
@@ -589,35 +595,40 @@ pi_ss_us        = 0.5;
 lambda_dom      = 0.399;    // demand feedback weight (posterior mean from Stage 8)
 
 // VA price PAC parameters (Phase G MCMC, 2026-05-10; LMD = -931.33 Laplace / -930.999 MHM)
-b0_pQ = 0.0306;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0063, 0.0529]
-b1_pQ = 0.2907;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1277, 0.4607]
-b2_pQ = -0.0001;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0786, 0.0858]
+b0_pQ = 0.0282;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0063, 0.0529]
+b1_pQ = 0.2842;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1277, 0.4607]
+b2_pQ = -0.0065;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0786, 0.0858]
 omega_pQ        = 0.46;     // nonstationary share
 rho_pQ_star     = 0.95;     // target persistence
-// === Phase G CES production-function parameters (2026-05-10, AU data) ===
-// FR-BDF Section 4.3 specification with AU-data-determined calibration:
-//   σ = 0.3247 (Stage 1 Bayesian regularised; AU OLS wrong-signed due to
-//               mining-boom commodity-price endogeneity in user cost)
-//   α = 0.350  (Stage 3 fallback; AU labor share data + standard mid-range)
-//   γ = 1.000  (Stage 3 normalization; level scale absorbed in intercepts)
-//   μ = 1.200  (Stage 3 typical AU markup, mid-range RBA RDP estimates)
-// Cross-restrictions (FR-BDF eq 39-41) NOT directly satisfiable on AU data
-// because AU national accounts use different chain-volume base-year scaling
-// than French QNA. Falling back to AU-economic calibration is consistent
-// with how Phases B/C/D handled identification failures.
+// === CES production-function parameters (FR-BDF 2026 method, Dubois et al. WP #1044 §3.1.2) ===
+// FR-BDF Section 3.1 specification with AU-data-determined calibration:
+//   σ = 0.5366 (FR-BDF 2026 method: labor FOC eq 3 with two-break trend Φ̂;
+//               Bayesian posterior, prior N(0.50, 0.20²), AU FD-spec data
+//               weight 64%; FR-BDF 2026 reports σ = 0.4951 for France)
+//   α = 0.450  (AU capital-income share, ABS 5204 Tab 48 compensation/GVA)
+//   γ = 0.046  (analytical from 2019 Q_market/K_total mean; level scale
+//               is units-driven, AU chain-volume convention vs INSEE's;
+//               absent from the linearised model code)
+//   μ = 1.200  (AU aggregate markup, RBA RDP 2018-09 mid-range)
 //
-// Linearised pass-through coefficients (γ_ulc, γ_uck) derived from
-// log-linear approximation of the CES factor-price frontier (eq 38):
-//   ∂log P_Q / ∂log W̃ ≈ (1-α) · σ_adj      (labor cost channel)
-//   ∂log P_Q / ∂log r̃_K ≈ α · σ_adj         (capital cost channel)
-// with σ_adj = σ for FR-BDF parameterization.
-// AU values: γ_ulc = (1-0.35) · 0.32 = 0.21, γ_uck = 0.35 · 0.32 = 0.11
-gamma_ulc       = 0.21;     // ULC pass-through (CES log-linear: (1-α)·σ)
-gamma_uck       = 0.11;     // user cost pass-through (CES log-linear: α·σ)
+// Implements the three FR-BDF 2026 innovations (see data/estimate_ces_2026.m):
+//   1. γ analytical from base-year Q/K (replaces 40k-point grid)
+//   2. σ from labor FOC (replaces investment FOC, which failed on AU and FR data)
+//   3. Two-break trend efficiency at 2002Q2 and 2008Q3 (replaces single-break)
+//
+// Linearised pass-through coefficients (γ_ulc, γ_uck) from the CES factor-
+// price frontier (FR-BDF 2026 eq 4):
+//   ∂log P_Q / ∂log W̃ ≈ (1-α) · σ      (labor cost channel)
+//   ∂log P_Q / ∂log r̃_K ≈ α · σ         (capital cost channel)
+// AU values: γ_ulc = (1-0.45) · 0.5366 = 0.295, γ_uck = 0.45 · 0.5366 = 0.241
+gamma_ulc       = 0.2951;   // ULC pass-through (CES log-linear: (1-α)·σ)
+gamma_uck       = 0.2415;   // user cost pass-through (CES log-linear: α·σ)
 
-// --- Cobb-Douglas production function (Stage 9a) ---
-alpha_k         = 0.35;     // CES capital-share parameter α (Phase G AU calibration; was 0.33 CD)
-rho_tfp         = 0.99;     // TFP persistence (near unit root)
+// --- CES production function (FR-BDF 2026 calibration, AU data) ---
+alpha_k         = 0.45;     // CES capital-share parameter α (FR-BDF 2026 AU calibration; was 0.35)
+rho_tfp         = 0.95;     // smoothing speed for ln_tfp -> ln_tfp_LR transition.
+                            // FR-BDF wp736 eq. 127 uses ρ_HT = 0.95 for trend smoothing
+                            // (~14q half-life). Earlier 0.99 amplified eps_tfp 100x.
 
 // --- Commodity price channel (Stage 11b) ---
 rho_pcom        = 0.42;     // AU est (s.e.0.08). Was 0.85. IMF commodity index much less persistent
@@ -627,9 +638,14 @@ alpha_pcom      = 0.10;     // commodity price -> export deflator pass-through
 // Wage Phillips curve parameters (calibrated from Section 4.5.1 / Table 4.5.1)
 // Australia: moderate wage persistence, significant gap sensitivity
 // Forward expectations proxied by pibar_au (inflation anchor)
-lambda_w        = 0.2899;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0342, 0.1573]
-kappa_w         = 0.0966;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0283, 0.1280]
-gamma_w         = 0.1356;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.9054, 0.9958]
+lambda_w        = 0.2017;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0342, 0.1573]
+kappa_w         = 0.0544;     // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0288, 0.1420]
+                            // |β_4| = 0.32 (Table 4.5.3). MCMC re-run required
+                            // post-refit to produce AU posterior under the new
+                            // (-kappa_w·pv_u_gap) sign convention. Pre-refit
+                            // posterior was 0.0966 with HPD [-0.028, 0.128]
+                            // under the wrong-signed equation.
+gamma_w         = 0.4579;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.9054, 0.9958]
 okun_coeff      = -0.13;    // AU OLS estimate (s.e.0.02). FR-BDF: -0.246, old cal: -0.33
 rho_u_gap       = 0.946;    // AU OLS estimate (s.e.0.01). FR-BDF: 0.946, EXACT MATCH
 beta_w          = 0.98;     // discount for expected unemployment gaps (paper Section 4.5.1)
@@ -637,24 +653,24 @@ beta_w          = 0.98;     // discount for expected unemployment gaps (paper Se
 
 // Employment PAC parameters (calibrated from Table 4.5.3, 4th-order adjustment costs)
 // Australia: labor market is relatively flexible vs France
-b0_n = 0.0569;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0156, 0.1065]
-b1_n = 0.3211;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1504, 0.4481]
+b0_n = 0.0616;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0156, 0.1065]
+b1_n = 0.3109;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1504, 0.4481]
 b2_n = -0.1869;   // 2nd lag (OLS, not in Bayesian estimated_params)
 b3_n = -0.0763;   // 3rd lag (OLS, not in Bayesian estimated_params)
 b4_n = -0.0852;   // 4th lag (OLS, not in Bayesian estimated_params)
 omega_n         = 0.30;     // expectations/forward component
-b5_n = 0.0072;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0836, 0.0797]
+b5_n = 0.0037;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0836, 0.0797]
 rho_n_star      = 0.95;     // target persistence
 // growth neutrality coeff = 1 - 0.30 - 0.10 - 0.05 - 0.02 - 0.30 = 0.23
 
 // Household consumption PAC parameters (calibrated from Section 4.6.1 / Table 4.6.1)
 // Australia: moderate consumption smoothing, significant HtM share (~30%)
 // 1st-order adjustment costs (simplest PAC form)
-b0_c = 0.0601;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0294, 0.0961]
-b1_c = 0.0354;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0065, 0.0754]
+b0_c = 0.0720;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0294, 0.0961]
+b1_c = 0.0345;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0065, 0.0754]
 omega_c         = 0.369;    // expectations/forward component (posterior mean, legacy)
-b2_c = -0.3307;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.5889, -0.0571]
-b3_c = 0.0199;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0639, 0.0953]
+b2_c = -0.3570;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.5889, -0.0571]
+b3_c = 0.0202;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [-0.0639, 0.0953]
 b_di_c          = -0.701;   // Phase C Bayesian regularised (IV with monetary-surprise instrument failed identification due to RBA endogeneity); posterior dominated by prior N(-0.71, 0.30^2)
 rho_c_star      = 0.95;     // target persistence
 kappa_inc       = 0.050;    // permanent income sensitivity (posterior mean)
@@ -665,11 +681,11 @@ alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6
 // Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
 // Australia: investment more volatile than consumption, strong accelerator
 // 2nd-order adjustment costs
-b0_ib = 0.0188;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0047, 0.0323]
-b1_ib = 0.0801;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0196, 0.1503]
+b0_ib = 0.0177;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0047, 0.0323]
+b1_ib = 0.0849;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0196, 0.1503]
 b2_ib = -0.0445;  // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ib        = 0.35;     // expectations/forward component
-b3_ib = 0.3094;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1825, 0.4828]
+b3_ib = 0.3074;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1825, 0.4828]
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
@@ -679,11 +695,11 @@ delta_k         = 0.0134;   // quarterly capital depreciation (Phase G ABS 5204:
 // Household investment PAC parameters (calibrated from Section 4.6.3 / Table 4.6.3)
 // Australia: housing highly interest-rate sensitive (variable-rate mortgages)
 // 2nd-order adjustment costs
-b0_ih = 0.0289;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0092, 0.0525]
-b1_ih = 0.1152;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0243, 0.1744]
+b0_ih = 0.0284;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0092, 0.0525]
+b1_ih = 0.1194;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0243, 0.1744]
 b2_ih = -0.0368;  // 2nd lag (OLS, not in Bayesian estimated_params)
 omega_ih        = 0.30;     // expectations/forward component
-b3_ih = 0.2262;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0655, 0.3848]
+b3_ih = 0.2328;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0655, 0.3848]
 b4_ih           = 0;        // DROPPED: rate channel already in pv_ih_aux (a_ih_i=-0.15) + pac_expectation (F=0.001, not significant)
 b_ph_ih         =  0.0099;  // Phase C, spliced housing-price series (1959Q3+ via house_price_history_long backcast onto ABS 6416 RPPI at 2003Q3): IV (lag-2 ph_gap; F=432.1) on T=115 obs. Sign now matches FR-BDF +0.32 (was wrong-signed on the 2003+ ABS RPPI alone), but magnitude is much smaller — the AU housing-price-gap channel is close to zero in the longer sample. Direct rate channel still enters via pv_ih_aux a_ih_i and pac_expectation kappa_mort.
 rho_ih_star     = 0.95;     // target persistence
@@ -722,6 +738,10 @@ s_BBB_ss        = 0.05;     // SS BBB bond spread (~0.2% annual)
 // s_gap > 0 = AUD depreciation (less purchasing power)
 rho_s           = 0.775;    // AU est (s.e.0.06). Was 0.95. AUD less persistent PPP deviations
 alpha_s         = 0.15;     // interest rate differential -> appreciation (negative sign in eq)
+beta_uip        = 0.92;     // UIP forward-NPV discount. Standard NPV form (coeff 1 on i_gap).
+                            // Under Hybrid/MCE, pv_i_uip jumps to ~4.5x i_gap on impact
+                            // -> AUD appreciation jumps -> export/import channel
+                            // -> FR-BDF-style Hybrid amplification.
 
 // Export parameters (calibrated from Section 4.7 / Table 4.7.1)
 // Australia: commodity exports sensitive to world demand, moderate price elasticity
@@ -800,7 +820,7 @@ w_m             = 0.23;     // imports (subtracted)
 // CES substitution elasticity (paper Table 4.3.2: sigma = 0.53)
 // CES substitution elasticity: governs employment target (eq 55), investment target
 // (eq 63), and VA price target (unit cost dual, eqs 42-43).
-sigma_ces       = 0.3374;   // CES elasticity (Phase G Stage 1 v2, 2026-05-11, ABS 5206 Trend→SA audit refresh; was 0.3247 under Trend supply data; Bayesian regularised, prior N(0.53, 0.20^2), data weight 31%; OLS still wrong-signed due to mining boom; FR-BDF=0.53)
+sigma_ces       = 0.5366;   // CES elasticity (FR-BDF 2026 method, 2026-05-14 refresh: labor FOC eq 3 with two-break trend Φ̂_t; Bayesian posterior prior N(0.50, 0.20²); FR-BDF 2026 reports σ=0.4951 for France; was 0.3374 under 2019-method investment FOC)
 
 // Import price pass-through to domestic deflators (Section 4.7, IAD weights)
 // beta_j_m = import content share * partial pass-through coefficient
@@ -855,6 +875,7 @@ a_pQ_y          =  0.043;   // Bayesian posterior, 90% CI [-0.000, 0.087]
 a_pQ_i          = -0.021;   // Bayesian posterior, 90% CI [-0.070, 0.029] (CI crosses 0)
 a_pQ_pi         =  0.007;   // Bayesian posterior, 90% CI [-0.042, 0.057] (CI crosses 0)
 a_pQ_u          = -0.021;   // Bayesian posterior, 90% CI [-0.069, 0.027] (CI crosses 0)
+a_pQ_w          =  0.012;   // Phase U: FR-BDF wp736 Table 4.4.4 lagged efficient-wage-inflation regressor
 
 // Employment auxiliary (FR-BDF Table 4.5.7, eq 57)
 rho_n_aux       =  0.743;   // Bayesian posterior, 90% CI [0.669, 0.817]; OLS=0.716, prior AU=0.56
@@ -993,9 +1014,22 @@ model;
             + (1 - lambda_i) * (alpha_i * pi_au_gap(-1) + beta_i * yhat_au(-1))
             + eps_i;
 
+    // Phase S (2026-05-16): FR-BDF wp736 §3.1.1 / §5.2.6 cost-push replication.
+    // The reduced-form quasi-VAR was missing the structural deflator channels
+    // (piQ, pi_m, dln_pcom) that pi_c already had via eq_pi_c. As a result
+    // a positive eps_pQ raised piQ but not pi_au, so the Taylor rule didn't
+    // tighten and the cost-push IRF on ln_Q came out wrong-signed (+0.15% vs
+    // FR-BDF's -0.45%). Adding the structural channels to eq_au_phillips makes
+    // pi_au structurally a function of VA price + import price + commodity,
+    // mirroring the role of pi_C in FR-BDF's deflator block (eqs 79-80) while
+    // preserving the existing Phillips slope (kappa_pi) and own persistence
+    // (lambda_pi) as residual reduced-form components.
     [name = 'eq_au_phillips']
     pi_au_gap = lambda_pi * pi_au_gap(-1)
                 + kappa_pi * yhat_au(-1)
+                + alpha_pc * (piQ - pibar_au)
+                + beta_pc_m * (pi_m - pibar_au)
+                + gamma_oil * dln_pcom
                 + eps_pi;
 
     [name = 'eq_us_is']
@@ -1179,9 +1213,26 @@ model;
                + (1 - alpha_k) * dln_n_star_bar
                + dln_tfp;
 
-    // TFP follows a persistent AR(1) process
+    // === TFP block aligned with FR-BDF wp736 §4.3 / §5.2.7 (2026-05-15 refit) ===
+    // Old spec was `dln_tfp = rho_tfp·dln_tfp(-1) + eps_tfp` with rho_tfp = 0.99.
+    // That made eps_tfp a growth-rate shock that integrated 1/(1-0.99) = 100×
+    // into the log-TFP level — a unit eps_tfp produced a +100-log-unit shift
+    // in ln_QN, exploding the eps_tfp IRF panel.
+    //
+    // FR-BDF instead specifies a permanent +1% LEVEL shock to trend efficiency
+    // Ē_t (§5.2.7 footnote 83), with AR(1) smoothing of the residual to give
+    // a "smooth transmission of shocks" (§4.3 assumption iii). Encode that as:
+    //   1. ln_tfp_LR follows a random walk, eps_tfp_LR = the permanent level innovation
+    //   2. ln_tfp converges to ln_tfp_LR via AR(1) with rate (1-rho_tfp)
+    //   3. dln_tfp is the implied transient growth rate
+    [name = 'eq_ln_tfp_LR']
+    ln_tfp_LR = ln_tfp_LR(-1) + eps_tfp_LR;
+
+    [name = 'eq_ln_tfp']
+    ln_tfp    = rho_tfp * ln_tfp(-1) + (1 - rho_tfp) * ln_tfp_LR;
+
     [name = 'eq_dln_tfp']
-    dln_tfp = rho_tfp * dln_tfp(-1) + eps_tfp;
+    dln_tfp   = ln_tfp - ln_tfp(-1);
 
     // === WAGE-PRICE SPIRAL (Stage 9c, upgraded with TFP from Stage 9b) ===
     // Productivity growth: TFP-based (replaces cyclical proxy yhat_au - yhat_au(-1)).
@@ -1227,16 +1278,43 @@ model;
     // unemployment gap (û). Absent in MCE (forward leads capture everything).
 
     // =================================================================
-    // BACKWARD EXPECTATION CORRECTIONS (additive first-order wedge)
+    // VAR-vs-STRUCTURAL WEDGE TERMS (audit Phase 0 #18 / #34, 2026-05-15)
     // =================================================================
-    // These AR(1) terms represent the DIFFERENCE between E-SAT simplified
-    // forecasts and the full model RE solution. They create the backward/
-    // forward wedge at first-order perturbation. The var_model h-vectors
-    // provide the structural framework; these terms provide the quantitative
-    // differentiation. Absent in MCE (forward leads already capture everything).
+    // The model carries TWO parallel representations of each gap variable:
+    //   1. var_X equations in esat_enriched (var_pQ, var_n, etc.) — use
+    //      the VAR shadow variables (y_gap_var, i_gap_var, pi_gap_var,
+    //      u_gap_var) declared at lines 158-162. These are pure VAR(1)
+    //      forecasts used by Dynare's pac_expectation() to compute the
+    //      h-vector contributions to PV(Δx*) under VAR-based expectations.
+    //
+    //   2. pv_X_aux equations below — same AR(1) structure but applied
+    //      to the STRUCTURAL gap variables (yhat_au, i_gap, pi_au_gap,
+    //      u_gap). These follow the full structural model (incl. the
+    //      lambda_dom·yhat_dom Keynesian-multiplier bridge in eq_au_is).
+    //
+    // The wedge captures the discrepancy: under a structural shock that
+    // doesn't have a matching eps_var_* shock, y_gap_var ≠ yhat_au, so
+    // the simplified VAR forecast diverges from full-model realization.
+    // pv_X_aux corrects for this divergence.
+    //
+    // Cross-reference to FR-BDF wp736:
+    //   §3.1.1 (auxiliary equations) — describes adding aux equations to
+    //     E-SAT for variables outside the core
+    //   §4.7 deflator equations 80, 82, 84, 86, 89, 91 — FR-BDF uses
+    //     explicit β·[p_j(-1) - p*_j(-1)] level-correction terms; AUSPAC
+    //     uses pv_X_aux as a functionally similar substitute since AU's
+    //     deflator equations don't carry separate p*_j target equations
+    //
+    // Behaviour under MCE: code comment previously stated "absent in MCE"
+    // but pv_X_aux equations remain in au_pac_mce.mod. Theory says under
+    // MCE the forward leads in pac_expectation should fully capture the
+    // expected target dynamics, making pv_X_aux a (near-)redundant lagged
+    // correction. Empirically the MCE IRFs satisfy BK and produce sensible
+    // dynamics, so any double-counting is small. Audit action #55 flags
+    // this for follow-up verification via dedicated MCE-only IRF test.
 
     [name = 'eq_pv_piQ_aux']
-    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1);
+    pv_piQ_aux = rho_pQ_aux * pv_piQ_aux(-1) + a_pQ_y * yhat_au(-1) + a_pQ_i * i_gap(-1) + a_pQ_pi * pi_au_gap(-1) + a_pQ_u * u_gap(-1) + a_pQ_w * (pi_w(-1) - pibar_au(-1));
     [name = 'eq_pv_n_aux']
     pv_n_aux = rho_n_aux * pv_n_aux(-1) + a_n_y * yhat_au(-1) + a_n_i * i_gap(-1) + a_n_pi * pi_au_gap(-1) + a_n_u * u_gap(-1);
     [name = 'eq_pv_c_aux']
@@ -1284,9 +1362,18 @@ model;
     //   => pi_w_ss = pi_ss (verified)
 
     [name = 'eq_pi_w']
+    // Phase R refit (audit #22 + #23, 2026-05-15):
+    //   #22 — sign flip on unemployment-gap channel (was + kappa_w·pv_u_gap,
+    //         which gave WRONG sign: high unemployment → wage inflation).
+    //         Now: − kappa_w·pv_u_gap with kappa_w > 0 → high unemployment
+    //         → wage deflation, matching FR-BDF eq 49 (-λ·(u-u_N)) and
+    //         eq 52 (β_4 < 0 sign convention).
+    //   #23 — indexation switched from pi_au (VA price) to pi_c (consumer
+    //         price). Workers index to what they buy, not what firms charge
+    //         per unit output. FR-BDF eq 52 uses π_C,t-1 explicitly.
     pi_w = lambda_w * pi_w(-1)
-           + gamma_w * pi_au
-           + kappa_w * pv_u_gap
+           + gamma_w * pi_c
+           - kappa_w * pv_u_gap
            + (1 - lambda_w - gamma_w) * pibar_au
            + (1 - lambda_w) * dln_prod
            + eps_w;
@@ -1300,15 +1387,30 @@ model;
     dln_n_star = rho_n_star * dln_n_star(-1)
                  + (1 - rho_n_star) * dln_n_star_bar;
 
-    // Trend employment growth: derived from inverted production function (Stage 9b).
-    // Stage 12 fix: Added real wage sensitivity from paper eq. 55:
-    //   n* = b0 + q - ē - σ*(w̃ - pQ - ē - h)
-    // In growth rates: dln_n_star depends on productivity AND real wage gap.
-    // rw_gap = pi_w - piQ - dln_prod: real wage growth above productivity.
-    // When real wages rise above productivity, firms reduce labor demand.
-    // At SS: rw_gap = 0 => no effect. dln_tfp = 0 => dln_n_star_bar = 0.
+    // Trend employment growth: derived from inverted production function.
+    // Phase R refit (audit #17 + #21, 2026-05-15): aligned with FR-BDF wp736
+    // eq 55 / eq 36 in growth form:
+    //   n* = b0 + q - ē - h - σ·(w̃ - pQ - ē - h)
+    //   Δn* = Δq - (1-σ)·Δē - σ·Δw̃ + σ·Δp_Q
+    //
+    // With Δē = dln_prod = dln_tfp/(1-α_k) and rw_gap = pi_w - piQ - dln_prod:
+    //   dln_n_star_bar = (yhat_au - yhat_au(-1))    ← Δq channel (was MISSING, #17)
+    //                  - dln_tfp / (1 - alpha_k)     ← sign FIXED + → − (#21)
+    //                  - sigma_ces * rw_gap;          ← real wage gap (Stage 12, retained)
+    //
+    // This expands to: Δyhat_au - (1-σ)/(1-α_k)·dln_tfp - σ·pi_w + σ·piQ
+    // matching FR-BDF eq 36.
+    //
+    // Pre-Phase-R bug: leading sign was +, Δq channel was absent. Net dln_tfp
+    // coefficient was +(1+σ)/(1-α_k) ≈ +2.79 (vs FR-BDF -(1-σ)/(1-α_k) ≈ -0.84,
+    // OPPOSITE sign and 3.3× too large). Audit §4.3 / §4.5 ✗ findings.
+    //
+    // At SS: yhat_au stationary => Δyhat_au = 0; dln_tfp = 0; rw_gap = 0
+    //        => dln_n_star_bar = 0 (verified).
     [name = 'eq_dln_n_star_bar']
-    dln_n_star_bar = dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap;
+    dln_n_star_bar = (yhat_au - yhat_au(-1))
+                   - dln_tfp / (1 - alpha_k)
+                   - sigma_ces * rw_gap;
 
     // Employment gap accumulation (parallel to pQ_gap)
     [name = 'eq_n_gap']
@@ -1361,6 +1463,21 @@ model;
     [name = 'eq_pv_yh']
     pv_yh = (1 - beta_c) * yhat_au + beta_c * pv_yh(+1);
 
+    // Phase R refit (audit #26, 2026-05-15): forward NPV of real lending rate gap.
+    // FR-BDF eq 61 includes α_1·(PV(r_LH) - PV(ī - π̄)) channel that captures
+    // the forward-looking real-rate transmission to consumption (essential for
+    // no-forward-guidance-puzzle property under MCE).
+    //
+    // Pre-Phase-R: eq_dln_c_pac had only b2_c·i_gap(-1) (lagged level) and
+    //   b_di_c·di_gap (current change) — no forward-looking PV channel.
+    // Post-Phase-R: + alpha_c_r · pv_r_lh_gap term added below.
+    //
+    // At SS: i_lh = i_ss + tp_ss + spread_lh, pi_c = pi_ss_au
+    //        => bracket = 0 => pv_r_lh_gap = 0 (verified).
+    [name = 'eq_pv_r_lh_gap']
+    pv_r_lh_gap = (1 - beta_c) * (i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au))
+                + beta_c * pv_r_lh_gap(+1);
+
     // Consumption target (paper eq 59): c* = a0 + PV(yH) + alpha1*(rLH - r_bar).
     // In growth rates: dln_c_star_bar = kappa_inc*d(pv_yh) + alpha_c_r*d(r_lh_gap).
     // Real lending rate gap: (i_lh - pi_c) - (i_ss + tp_ss + spread_lh - pi_ss_au).
@@ -1386,6 +1503,7 @@ model;
     diff(ln_c_level) = b0_c * (c_hat(-1) - ln_c_level(-1))
             + b1_c * diff(ln_c_level(-1))
             + pac_expectation(pac_c)
+            + alpha_c_r * pv_r_lh_gap                      // Phase R refit (audit #26): FR-BDF eq 61 PV(r_LH) channel
             + b2_c * i_gap(-1)
             + b_di_c * di_gap
             + b3_c * yhat_au
@@ -1546,21 +1664,27 @@ model;
     wacc = w_COE * i_COE + w_LB_firms * i_LB_firms + w_BBB * i_BBB;
 
     // === EXCHANGE RATE (eq. 105) ===
-    // Real exchange rate gap follows modified UIP.
+    // Real exchange rate gap follows forward-looking modified UIP.
     // s_gap > 0 = AUD depreciation (weaker purchasing power).
     // Higher AU interest rates attract capital, appreciating AUD (negative alpha_s).
     // Persistent deviations from PPP (rho_s ~0.92, half-life ~8 quarters).
     //
-    // At SS: s_gap = 0 (PPP holds in long run)
+    // Phase Q (2026-05-15): replaced contemporaneous i_gap with forward NPV
+    // pv_i_uip = i_gap + beta_uip*pv_i_uip(+1) = NPV of expected i_gap path.
+    // Standard NPV (coefficient 1 on i_gap, not 1-beta) so the impact response
+    // is *amplified* by 1/(1-beta_uip*lambda_i) ≈ 4.55x at beta=0.92.
+    // Under Hybrid/MCE, forward agents internalise the persistent rate path on
+    // impact: pv_i_uip jumps to ~4.5x i_gap -> AUD appreciation jumps -> exports
+    // fall / imports rise on impact -> FR-BDF-style Hybrid amplification through
+    // the trade channel.
+    //
+    // At SS: pv_i_uip = 0, s_gap = 0 (PPP holds in long run).
+    [name = 'eq_pv_i_uip']
+    pv_i_uip = (i_au - ibar) + beta_uip * pv_i_uip(+1);
 
-    // Stage 12 fix: Added inflation differential per paper eq. 104.
-    // Paper: ξ + p_EA - p_F = Σ(i-i_F) - Σ(π_EA - π_F).
-    // Real interest rate differential = (i - π) - (i_F - π_F).
-    // Higher AU inflation reduces real rate attractiveness → AUD depreciates.
-    // Uses same alpha_s coefficient (real rate parity).
     [name = 'eq_s_gap']
     s_gap = rho_s * s_gap(-1)
-            - alpha_s * i_gap
+            - alpha_s * pv_i_uip
             + alpha_s * (pi_au_gap - pi_us_gap)
             + eps_s;
 
@@ -1932,6 +2056,8 @@ steady_state_model;
     dln_k        = 0;         // zero capital growth at SS (gap model)
     dln_y_star   = 0;         // zero potential output growth at SS (gap model)
     dln_tfp      = 0;         // zero TFP growth at SS
+    ln_tfp_LR    = 0;         // FR-BDF Ē_t residual at baseline (gap model)
+    ln_tfp       = 0;         // smoothed TFP level converges to ln_tfp_LR = 0 at SS
 
     // Wage-price spiral (Stage 9c)
     dln_prod     = 0;         // zero productivity growth at SS
@@ -1959,6 +2085,7 @@ steady_state_model;
 
     // Household consumption PAC
     pv_yh          = 0;       // permanent income PV = 0 at SS (gap model)
+    pv_r_lh_gap    = 0;       // real lending rate PV = 0 at SS (audit #26, FR-BDF eq 61)
     dln_c          = 0;       // zero consumption growth in stationary model
     dln_c_star     = 0;
     dln_c_star_bar = 0;
@@ -1994,6 +2121,7 @@ steady_state_model;
     i_BBB          = i_ss + tp_ss + s_BBB_ss;        // BBB bond rate at SS
     wacc           = w_COE*(i_ss+tp_ss+s_COE_ss) + w_LB_firms*(i_ss+tp_ss+s_LB_firms_ss) + w_BBB*(i_ss+tp_ss+s_BBB_ss);
     s_gap          = 0;                             // PPP holds at SS
+    pv_i_uip       = 0;                             // forward UIP PV = 0 at SS (i_au = ibar)
 
     // Trade block (proper ECM, all level deviations zero at SS)
     dln_x          = 0;       // zero export growth in stationary model
@@ -2116,21 +2244,21 @@ check;
 // -----------------------------------------------------------------------
 
 shocks;
-    var eps_q;        stderr 0.5233;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4619, 0.5878]
-    var eps_i;        stderr 0.1103;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0982, 0.1216]
-    var eps_pi;       stderr 0.5872;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.5263, 0.6430]
+    var eps_q;        stderr 0.5269;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4619, 0.5878]
+    var eps_i;        stderr 0.1095;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0982, 0.1216]
+    var eps_pi;       stderr 0.5901;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.5263, 0.6430]
     var eps_q_us;     stderr 1.138;     // AU posterior mode
     var eps_pi_us;    stderr 0.319;     // AU posterior mode
     var eps_ibar;     stderr 0.01;
     var eps_pibar_au; stderr 0.01;
     var eps_pibar_us; stderr 0.01;
     var eps_pQ;       stderr 0.571;  // VA price shock (AU OLS residual)
-    var eps_w;        stderr 0.1486;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.6359, 0.8296]
-    var eps_n;        stderr 0.4430;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1229, 0.7341]
-    var eps_c;        stderr 1.8587;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [1.6525, 2.0461]
-    var eps_ib;       stderr 2.7529;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [2.4853, 3.0525]
-    var eps_ih;       stderr 1.3529;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4871, 2.9457]
-    var eps_10y;      stderr 0.0641;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0504, 0.0778]
+    var eps_w;        stderr 0.1528;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.6359, 0.8296]
+    var eps_n;        stderr 0.3917;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1229, 0.7341]
+    var eps_c;        stderr 1.8134;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [1.6525, 2.0461]
+    var eps_ib;       stderr 2.7719;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [2.4853, 3.0525]
+    var eps_ih;       stderr 1.3698;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.4871, 2.9457]
+    var eps_10y;      stderr 0.0649;    // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0504, 0.0778]
     var eps_tp;       stderr 0.05;   // term premium shock (small, persistent)
     var eps_COE;      stderr 0.15;   // cost of equity spread shock
     var eps_LB_firms; stderr 0.10;   // bank lending spread shock (firms)
@@ -2145,7 +2273,9 @@ shocks;
     var eps_pm;       stderr 0.7;    // import deflator shock (exchange rate volatility)
     var eps_g;        stderr 0.3;    // government spending shock (small, policy-driven)
     var eps_pg;       stderr 0.3;    // government deflator shock
-    var eps_tfp;      stderr 0.2;    // TFP shock (Stage 9a)
+    var eps_tfp_LR;   stderr 0.01;   // FR-BDF wp736 §5.2.7: permanent +1% LR-level
+                                     // shock to log trend efficiency. Replaces the
+                                     // old growth-rate eps_tfp ~N(0, 0.2²) (2026-05-15).
     var eps_pcom;     stderr 3.0;    // commodity price shock (Stage 11b, volatile)
     // Stage 12: new shocks
     var eps_lh;       stderr 0.15;   // bank lending rate shock (credit conditions)
@@ -2181,7 +2311,7 @@ pac.update.expectation('pac_ih');
 pac.initialize('pac_n');
 pac.update.expectation('pac_n');
 
-stoch_simul(order=1, irf=40, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y dln_m dln_x ln_m_level ln_x_level ln_m_eq ln_x_eq m_gap x_gap
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y dln_m dln_x ln_m_level ln_x_level ln_m_eq ln_x_eq m_gap x_gap u_gap ln_Q ln_C ln_IB ln_IH ln_N pv_i_uip
     ln_Q ln_QN ln_K ln_C ln_C_star ln_IB ln_IB_star ln_IH ln_IH_star ln_N ln_N_star ln_P ln_P_star;
 
 // =======================================================================

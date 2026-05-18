@@ -1,7 +1,7 @@
 # AUSPAC — A Semi-Structural Macroeconomic Model for Australia
 
 **AU-PAC** is the Australian adaptation of the Banque de France's FR-BDF
-model (Lemoine et al., 2019, [WP #736](wp736.pdf)). It is a
+model (Lemoine et al., 2019, [WP #736](references/wp736.pdf)). It is a
 semi-structural macroeconomic model with Polynomial Adjustment Costs (PAC),
 explicit expectations from a 12-equation satellite VAR, and a CES supply
 block estimated on Australian data. The model covers 154 endogenous
@@ -9,10 +9,12 @@ variables, 47 exogenous shocks, and 258 parameters; five PAC behavioural
 equations govern value-added prices, consumption, business investment,
 household investment, and employment.
 
-Status: **Phase G complete** (Phases A–G, 2026-05-10). All behavioural
-parameters are estimated or Bayesian-regularised on AU data. Headline
-results in [`dynare/AUSPAC_WORKING_PAPER.md`](dynare/AUSPAC_WORKING_PAPER.md).
-Open follow-ups in [`dynare/NEXT_STEPS.md`](dynare/NEXT_STEPS.md).
+Status: **v3.0 — Phase T architecture** (tagged 2026-05-16). Bayesian MCMC
+MHM log marginal density = **−781.39** (+20.66 cumulative nats over Phase Q
+baseline). PAC expectations now use the FR-BDF wp1044 / srecko / Brayton
+policy-function pattern. Full status, phase trajectory, and open items in
+[`STATUS.md`](STATUS.md). Working paper in
+[`dynare/AUSPAC_WORKING_PAPER.md`](dynare/AUSPAC_WORKING_PAPER.md).
 
 ---
 
@@ -33,105 +35,145 @@ under Rosetta 2 (most of which is the 20k-draw × 2-chain Bayesian MCMC).
 For figure-only refreshes from saved artefacts (no Dynare/MATLAB needed):
 
 ```bash
-cd dynare
 pip install scipy matplotlib
-python3 regen_three_regime_figs.py        # Figs 6.1, 6.2
-python3 regen_pac_contrib_figs.py         # Figs 4.3.1, 4.4.1, 4.5.1, 4.6.1, 4.7.1
-python3 regen_section5_irfs.py            # Figs 6.3–6.9 (per-shock IRF panels)
-python3 regen_long_run_convergence.py     # Fig 6.0 (long-run convergence proxy)
-python3 regen_app_experiment.py           # Fig 6.14 (APP-style 200bp experiment)
+python3 dynare/regen/regen_three_regime_figs.py        # Figs 6.1, 6.2
+python3 dynare/regen/regen_pac_contrib_figs.py         # Figs 4.3.1, 4.4.1, 4.5.1, 4.6.1, 4.7.1
+python3 dynare/regen/regen_section5_irfs.py            # Figs 6.3–6.9 (per-shock IRF panels)
+python3 dynare/regen/regen_long_run_convergence.py     # Fig 6.0 (long-run convergence proxy)
+python3 dynare/regen/regen_app_experiment.py           # Fig 6.14 (APP-style 200bp experiment)
 ```
+
+Each script reads from and writes back to `dynare/` (where the
+`saved_irfs_*.mat` and PNG outputs live), regardless of where it's invoked.
 
 ---
 
 ## Repository layout
 
 ```
-auspac/
+AUSPAC/
 ├── README.md                          (you are here)
 ├── RUNNING.md                         step-by-step MATLAB run instructions
-├── STATUS.md                          phase log / development history
-├── wp736.pdf                          FR-BDF source paper (Lemoine et al. 2019)
+├── STATUS.md                          v3.0 status + phase trajectory + open items
 ├── make_paper_results.m               top-level reproduction driver
-├── run_all.m                          end-to-end pipeline runner
-├── download_data.m                    FRED / RBA / ABS data fetch
-├── dataset.csv                        E-SAT core dataset (auto-built)
-├── data/
-│   └── extended_dataset.csv           demand-side dataset
-└── dynare/                            ▼ all model code lives here ▼
-    ├── au_pac.mod                     Hybrid model (financial-forward, PAC-backward)
-    ├── au_pac_var.mod                 VAR-based (all-backward) variant
-    ├── au_pac_mce.mod                 Full MCE (all-forward) variant
-    ├── au_pac_bayesian.mod            Bayesian estimation .mod
+├── run_all.m                          legacy E-SAT pipeline driver
+├── test_full_system.m                 end-to-end regression test
+├── download_data.m / estimate_esat.m / esat_model.m / bayesian_estimate.m
+│                                      legacy E-SAT chain (root for compat)
+├── dataset.csv / data.mat / params.mat
+│                                      E-SAT outputs (gitignored)
+│
+├── references/                        source PDFs
+│   ├── wp736.pdf                      FR-BDF source paper (Lemoine et al. 2019)
+│   ├── FR-BDF-update.pdf              FR-BDF 2026 update (Dubois et al.)
+│   └── RBA_mon_transmission.pdf       RBA monetary transmission reference
+│
+├── data/                              raw + downloaded data
+│   ├── abs_rba/                       ABS / RBA xlsx + csv
+│   ├── extended_dataset.csv           demand-side dataset
+│   ├── house_price_*.csv              housing-price series
+│   ├── io_tables_australia.xlsx       2019 input-output tables
+│   ├── download_*.m                   data fetch scripts
+│   ├── prepare_*.m                    data prep scripts
+│   └── estimate_ces_*.m / estimate_sigma_stage1.m  (CES calibration drivers)
+│
+└── dynare/                            ▼ models, source, outputs ▼
+    ├── au_pac_v2.mod                  ★ v3.0 production model (Phase T policy-function)
+    ├── au_pac_v2_bayesian.mod         ★ v3.0 Bayesian estimation model
+    ├── aux/                           ★ 5 PAC aux files (estimation inputs)
+    ├── simulation/identities/         ★ normalized .inc files + Python normalizers
+    ├── simulation/estimation/         ★ cherrypicked .inc bundles (5 subdirs)
+    │
+    ├── au_pac.mod                     Phase S Hybrid model (preserved for paper §6.2)
+    ├── au_pac_var.mod                 Phase S VAR variant (preserved)
+    ├── au_pac_mce.mod                 Phase S MCE variant (preserved)
+    ├── au_pac_bayesian.mod            Phase S Bayesian estimation .mod
     ├── au_pac_smooth.mod              Kalman smoother .mod
+    ├── au_pac_condforecast.mod        Conditional forecast .mod
+    ├── au_pac_identification.mod      Identification analysis .mod
+    ├── au_pac_recursive.mod           Recursive forecast .mod
+    ├── au_esat.mod / au_esat_est.mod  Auxiliary E-SAT VAR
+    ├── nk_simple.mod / nk_discounted.mod
+    │                                  NK benchmarks for forward-guidance test
     │
-    ├── AUSPAC_WORKING_PAPER.md        the working paper (live)
-    ├── NEXT_STEPS.md                  forward-looking task list (Phases I–O)
+    ├── setup_dynare_path.m            path bootstrap (addpath scripts/* + Dynare)
     │
-    ├── estimate_pac.m                 iterative-OLS PAC estimation
-    ├── estimate_phase_c_lpiv.m        Phase C: b_di_c, b_ph_ih (Bayesian shrinkage)
-    ├── estimate_phase_d_trade.m       Phase D: b1_x from ABS 5206
-    ├── run_bayesian_estimation.m      Bayesian Stage 1 (csminwel mode)
-    ├── run_bayesian_mcmc.m            Bayesian Stage 2 (Metropolis-Hastings)
-    ├── extract_mcmc_results.m         post-MCMC table generator
+    ├── AUSPAC_WORKING_PAPER.md        the working paper (live, beside its PNGs)
+    ├── mcmc_posterior_table_phase_t.md ★ v3.0 posteriors (Table 5.6 source)
+    ├── phase_r_benchmark_table.md     Phase R IRF benchmark vs FR-BDF
+    ├── forecast_eval_table.md         Section 5.5 recursive forecast RMSEs
+    ├── *_README.md                    data + dseries READMEs
     │
-    ├── generate_three_regime_irfs.m   3-regime monetary IRF comparison (canonical)
-    ├── generate_wp_irfs.m             per-shock IRF panels (canonical)
-    ├── forward_guidance.m             forward-guidance puzzle test
-    ├── forecast_eval.m                Phase I recursive forecast evaluation driver
-    ├── identification_analysis.m      Phase J identification diagnostics driver
-    ├── long_run_convergence.m         FR-BDF Fig 5.1.1 long-run convergence driver
+    ├── scripts/
+    │   ├── estimation/                Bayesian + PAC + Phase B/C/D estimators,
+    │   │                              run_bayesian_*.m, run_2026_*.m, run_phase_q_*.m
+    │   ├── figures/                   IRF generators (generate_*_irfs.m, irf_*.m,
+    │   │                              compare_irfs.m, quick_uip_irfs.m)
+    │   ├── analysis/                  forward_guidance, forecast_eval,
+    │   │                              conditional_forecast, identification,
+    │   │                              long_run_convergence, sectoral_validation
+    │   ├── data_prep/                 prepare_pac_dseries*.m, prepare_*_data.m
+    │   └── tests/                     test_smoother_comparison.m
     │
-    ├── regen_three_regime_figs.py     Python helper (no MATLAB)
-    ├── regen_pac_contrib_figs.py      Python helper (no MATLAB)
-    ├── regen_section5_irfs.py         Python helper (no MATLAB)
-    ├── regen_long_run_convergence.py  Python helper (no MATLAB)
-    ├── regen_app_experiment.py        Python helper (no MATLAB)
+    ├── regen/                         Python figure-regen helpers (Phase H)
+    │   └── regen_*.py                 reads .mat from dynare/, writes PNG to dynare/
     │
-    ├── bayesian_mcmc_results.mat      Phase G MCMC posterior (smoother + chains)
-    ├── saved_irfs_{var,hybrid,mce}.mat IRFs for all 45 shocks × 24 vars × 40Q
-    ├── estimation_data.mat            122-quarter estimation dataset
+    ├── tools/                         Python data tools + appliers
+    │   ├── build_*.py / splice_*.py / trend_*.py / channel_*.py
+    │   ├── sanity_check_*.py / imports_*.py
+    │   ├── extract_2026_results.py
+    │   └── apply_mcmc_writeback.py / apply_trade_ecm_fix.py
     │
-    └── (figures: *.png — auto-generated)
+    ├── bayesian_mcmc_results.mat      Phase G MCMC posterior (gitignored)
+    ├── saved_irfs_{var,hybrid,mce}.mat IRFs for all 45 shocks × 24 vars × 40Q (gitignored)
+    ├── estimation_data.mat            122-quarter estimation dataset (gitignored)
+    │
+    └── (figures: *.png — auto-generated, gitignored)
 ```
+
+`dynare/setup_dynare_path.m` is the bootstrap entry point: it adds every
+`dynare/scripts/*` subfolder to the MATLAB path and then locates Dynare 6.5.
+Drivers cd into `dynare/` and call `setup_dynare_path()` once at the top.
 
 ---
 
 ## Reproducing paper results
 
+All paths below are relative to the repo root.
+
 ### Tables in the paper
 
-| Table | Source                                                | Script                                       |
-|-------|-------------------------------------------------------|----------------------------------------------|
-| 5.6   | `bayesian_mcmc_log.txt`                                | `run_bayesian_mcmc.m` → `extract_mcmc_results.m` |
-| 5.7   | `phase_c_results.txt`                                  | `estimate_phase_c_lpiv.m`                    |
-| 6.1   | Hard-coded from steady-state computation               | manual                                       |
-| 6.2   | `saved_irfs_*.mat`                                     | `regen_three_regime_figs.py` (verify table values) |
-| 6.3   | `saved_irfs_*.mat`                                     | as above                                     |
-| 6.5   | `conditional_forecast_driver.m`                        | `conditional_forecast_driver.m`              |
-| 6.6   | `forward_guidance.m`                                   | `forward_guidance.m`                         |
+| Table | Source                                  | Script                                                              |
+|-------|-----------------------------------------|---------------------------------------------------------------------|
+| 5.6   | `dynare/bayesian_mcmc_log.txt`           | `dynare/scripts/estimation/run_bayesian_mcmc.m` → `extract_mcmc_results.m` |
+| 5.7   | `dynare/phase_c_results.txt`             | `dynare/scripts/estimation/estimate_phase_c_lpiv.m`                 |
+| 6.1   | Hard-coded from steady-state computation | manual                                                              |
+| 6.2   | `dynare/saved_irfs_*.mat`                | `dynare/regen/regen_three_regime_figs.py` (verify table values)     |
+| 6.3   | `dynare/saved_irfs_*.mat`                | as above                                                            |
+| 6.5   | `dynare/scripts/analysis/conditional_forecast_driver.m` | `conditional_forecast_driver.m`                      |
+| 6.6   | `dynare/scripts/analysis/forward_guidance.m`            | `forward_guidance.m`                                 |
 
 ### Figures in the paper
 
-| Figure | File                                          | Script                                  |
-|--------|-----------------------------------------------|-----------------------------------------|
-| 4.3.1  | `contrib_piQ.png`                              | `regen_pac_contrib_figs.py`             |
-| 4.4.1  | `contrib_n.png`                                | as above                                |
-| 4.5.1  | `contrib_c.png`                                | as above                                |
-| 4.6.1  | `contrib_ib.png`                               | as above                                |
-| 4.7.1  | `contrib_ih.png`                               | as above                                |
-| 6.0    | `long_run_convergence_proxy.png`               | `regen_long_run_convergence.py`         |
-| 6.1    | `three_regime_monetary_irf.png`                | `regen_three_regime_figs.py`            |
-| 6.2    | `three_regime_full_comparison.png`             | as above                                |
-| 6.3    | `irf_eps_i.png`                                | `regen_section5_irfs.py`                |
-| 6.4    | `irf_eps_q_us.png`                             | as above                                |
-| 6.5    | `irf_eps_g.png`                                | as above                                |
-| 6.6    | `irf_eps_pcom.png`                             | as above                                |
-| 6.7    | `irf_eps_pQ.png`                               | as above                                |
-| 6.8    | `irf_eps_tfp.png`                              | as above                                |
-| 6.9    | `irf_eps_tp.png`                               | as above                                |
-| 6.13   | `forward_guidance_puzzle.png`                  | `forward_guidance.m`                    |
-| 6.14   | `app_experiment_200bp.png`                     | `regen_app_experiment.py`               |
+| Figure | File                              | Script                                            |
+|--------|-----------------------------------|---------------------------------------------------|
+| 4.3.1  | `dynare/contrib_piQ.png`           | `dynare/regen/regen_pac_contrib_figs.py`          |
+| 4.4.1  | `dynare/contrib_n.png`             | as above                                          |
+| 4.5.1  | `dynare/contrib_c.png`             | as above                                          |
+| 4.6.1  | `dynare/contrib_ib.png`            | as above                                          |
+| 4.7.1  | `dynare/contrib_ih.png`            | as above                                          |
+| 6.0    | `dynare/long_run_convergence_proxy.png` | `dynare/regen/regen_long_run_convergence.py` |
+| 6.1    | `dynare/three_regime_monetary_irf.png`  | `dynare/regen/regen_three_regime_figs.py`    |
+| 6.2    | `dynare/three_regime_full_comparison.png` | as above                                   |
+| 6.3    | `dynare/irf_eps_i.png`             | `dynare/regen/regen_section5_irfs.py`             |
+| 6.4    | `dynare/irf_eps_q_us.png`          | as above                                          |
+| 6.5    | `dynare/irf_eps_g.png`             | as above                                          |
+| 6.6    | `dynare/irf_eps_pcom.png`          | as above                                          |
+| 6.7    | `dynare/irf_eps_pQ.png`            | as above                                          |
+| 6.8    | `dynare/irf_eps_tfp.png`           | as above                                          |
+| 6.9    | `dynare/irf_eps_tp.png`            | as above                                          |
+| 6.13   | `dynare/forward_guidance_puzzle.png` | `dynare/scripts/analysis/forward_guidance.m`    |
+| 6.14   | `dynare/app_experiment_200bp.png`  | `dynare/regen/regen_app_experiment.py`            |
 
 ---
 
@@ -152,7 +194,8 @@ auspac/
 | US series     | FRED — output gap, CPI, federal funds rate, US 10Y                         |
 
 Aggregation conventions and transformations are documented in
-[`dynare/au_pac_model_data_README.md`](dynare/au_pac_model_data_README.md).
+[`dynare/au_pac_model_data_README.md`](dynare/au_pac_model_data_README.md)
+and [`dynare/prepare_pac_dseries_README.md`](dynare/prepare_pac_dseries_README.md).
 
 ---
 
