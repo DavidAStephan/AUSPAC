@@ -70,7 +70,7 @@ AU-PAC modifies the FR-BDF framework along four substantive dimensions to reflec
 
 ### Software and implementation
 
-The model is implemented in Dynare 6.5. The production simulation model `au_pac_v2.mod` is composed by Dynare's `aggregate()` function from five per-PAC-block auxiliary files (one each for the VA-price, consumption, business-investment, household-investment, and employment PAC equations) plus a normalized identity layer; each auxiliary file emits its closed-form policy-function PAC expectation formula via `pac.print()` and the per-block equations are stitched into the production model by `cherrypick()` (§4.4.0). Legacy companion `.mod` files (`au_pac.mod`, `au_pac_var.mod`, `au_pac_mce.mod`) for the alternative expectation regimes of §2.2 are also provided. Source code is available at https://github.com/DavidAStephan/AUSPAC. Bayesian full-system estimation uses Dynare's `estimation()` command with `diffuse_filter` (required for the model's unit-root level accumulators), a csminwel mode search followed by Metropolis-Hastings MCMC with 20,000 draws across two chains.
+The model is implemented in Dynare 6.5. The production simulation model `au_pac.mod` is composed by Dynare's `aggregate()` function from five per-PAC-block auxiliary files (one each for the VA-price, consumption, business-investment, household-investment, and employment PAC equations) plus a normalized identity layer; each auxiliary file emits its closed-form policy-function PAC expectation formula via `pac.print()` and the per-block equations are stitched into the production model by `cherrypick()` (§4.4.0). Legacy companion `.mod` files (`au_pac.mod`, `au_pac_var.mod`, `au_pac_mce.mod`) for the alternative expectation regimes of §2.2 are also provided. Source code is available at https://github.com/DavidAStephan/AUSPAC. Bayesian full-system estimation uses Dynare's `estimation()` command with `diffuse_filter` (required for the model's unit-root level accumulators), a csminwel mode search followed by Metropolis-Hastings MCMC with 20,000 draws across two chains.
 
 ### Paper outline
 
@@ -1410,7 +1410,7 @@ The model supports conditional forecasting via residual inversion (ECB-Base patt
 | dln_n | -0.000 | -0.018 | -0.073 | -0.094 | -0.049 |
 | i_10y | +0.026 | +0.103 | +0.103 | +0.021 | +0.001 |
 
-*Figure 6.11: Conditional forecast for an RBA tightening cycle. Housing investment is the most sensitive (-0.16% at Q8) and employment the most sluggish (peak at Q12); the 10Y rate moves approximately 40% of the policy rate (yield-curve flattening). The conditional-forecast scenario re-run under the current calibration is straightforward (see `conditional_forecast_driver.m`).*
+*Figure 6.11: Conditional forecast for an RBA tightening cycle. Housing investment is the most sensitive (-0.16% at Q8) and employment the most sluggish (peak at Q12); the 10Y rate moves approximately 40% of the policy rate (yield-curve flattening). The conditional-forecast driver was retired in the 2026-05-18 Phase S cleanup; the figure remains valid as a baked artefact and the scenario is reproducible under the Phase T architecture by a short residual-inversion script invoking `au_pac.mod`.*
 
 ### 6.5 Forward guidance experiment
 

@@ -2,202 +2,146 @@
 
 ## Prerequisites
 
-- **MATLAB** R2019a or newer
-- **Dynare 6.5** — auto-located by `dynare/setup_dynare_path.m`. Standard install paths are detected on Windows (`C:\dynare\6.5\matlab`, `C:\Program Files\Dynare\6.5\matlab`), macOS (`/Applications/Dynare/6.5-x86_64/matlab`, `/Applications/Dynare/6.5-arm64/matlab`), and Linux (`/usr/lib/dynare/matlab`). Override with `DYNARE_PATH` env var if installed elsewhere.
-- **Data files**: `dataset.csv` (root), `data/extended_dataset.csv`
+- **MATLAB** R2019a or newer (Apple Silicon hosts can run R2020a under Rosetta with `arch -x86_64`).
+- **Dynare 6.5** — auto-located by [dynare/setup_dynare_path.m](dynare/setup_dynare_path.m). Standard install paths are detected on Windows (`C:\dynare\6.5\matlab`, `C:\Program Files\Dynare\6.5\matlab`), macOS (`/Applications/Dynare/6.5-x86_64/matlab`, `/Applications/Dynare/6.5-arm64/matlab`), and Linux (`/usr/lib/dynare/matlab`). Override with `DYNARE_PATH` env var if installed elsewhere.
+- **Python 3** with `scipy`, `matplotlib`, `h5py` — only for the figure-regen scripts in [dynare/regen/](dynare/regen/).
 
-All commands below assume you start from MATLAB in the repo root. Scripts self-locate, so you don't need to `cd` manually unless noted.
-
----
-
-## Quick start: recommended pipeline
-
-```matlab
-estimate_pac_smooth_driver    % runs everything: Dynare + Kalman smoother + PAC estimation
-```
-
-This single script runs the full pipeline (takes ~3 min):
-1. Preprocesses `au_pac.mod` with `json=compute`
-2. Builds the 12x12 companion matrix and PAC h-vectors
-3. Runs `calib_smoother` to extract Kalman-smoothed state variables
-4. Builds hybrid dseries (smoothed targets + recursive corrections)
-5. Estimates all 5 PAC equations via iterative OLS (with COVID dummies)
-6. Runs NLS robustness checks
-7. Saves results to `pac_smooth_estimation_results.mat`
-8. Logs everything to `pac_smooth_estimation_log.txt`
+All commands below assume MATLAB started from the repo root. Scripts self-locate, so explicit `cd` is only noted where strictly required.
 
 ---
 
-## Step-by-step breakdown
-
-### Stage 1: Data preparation
+## Quick start: load the cached MCMC and print summary stats (~30 sec)
 
 ```matlab
-cd <repo>                 % repo root
-download_data             % downloads FRED/RBA series → fred_*.csv, rba_*.csv, dataset.csv
-```
-```matlab
-cd <repo>/data
-download_extended_data    % downloads employment, investment, wages, etc.
-prepare_estimation_data   % produces extended_dataset.csv (11 vars, 1993Q1-2023Q3)
+cd dynare; setup_dynare_path;
+addpath(genpath('/Applications/Dynare/6.5-x86_64/matlab/missing'));   % needed for rows()
+dynare au_pac_bayesian          % mode_compute=0 + load_mh_file reloads cached MCMC
+                                % reports Laplace LMD (-779.30) and MHM LMD (-780.47)
 ```
 
-You only need to re-run these if the data needs refreshing.
-
-### Stage 2: E-SAT core estimation (optional)
+## Quick start: regenerate IRFs from the current model (~30 sec)
 
 ```matlab
-cd <repo>
-estimate_esat           % equation-by-equation OLS for 16 E-SAT parameters
-bayesian_estimate       % full MCMC (RW-MH, 10k draws, 2 blocks)
+cd dynare; setup_dynare_path;
+addpath(genpath('/Applications/Dynare/6.5-x86_64/matlab/missing'));
+dynare au_pac                   % solves the model, runs stoch_simul, saves
+                                % oo_.irfs with 22 default output series
 ```
 
-### Stage 3: Model compilation and IRFs
+---
+
+## Full estimation pipeline (~55 min, only when you change the model)
 
 ```matlab
-cd <repo>/dynare
-setup_dynare_path             % auto-locates Dynare 6.5
-dynare au_pac json=compute    % compiles and solves the hybrid model (154 endo, 47 exo)
-dynare au_pac_var             % VAR-based variant
-dynare au_pac_mce             % full model-consistent expectations variant
+cd dynare; setup_dynare_path;
+addpath(genpath('/Applications/Dynare/6.5-x86_64/matlab/missing'));
+
+% Step 1: per-PAC-block aux-file estimation + cherrypick
+%         Re-runs Dynare on each aux/aux_X.mod and cherrypicks to
+%         simulation/estimation/<block>/. Required after editing any
+%         aux/aux_*.mod file or after calibration.inc changes.
+run('phaseW_recherrypick.m');
+
+% Step 2: aggregate the cherrypicked .inc bundles into au_pac.mod
+%         Required only when simulation/identities/*.inc or the cherrypicked
+%         bundles change structurally; pure parameter-value refreshes do not
+%         require re-aggregation.
+aggregate('au_pac.mod', {'stochastic,json=compute'}, pwd, ...
+    'simulation/estimation/pQ', 'simulation/estimation/consumption', ...
+    'simulation/estimation/business_inv', 'simulation/estimation/housing_inv', ...
+    'simulation/estimation/employment', 'simulation/identities');
+
+% Step 3: after Step 2, re-apply the runtime override blocks at the end of
+%         au_pac.mod (Phase U/V/W manual overrides, the shocks block,
+%         steady_state_model block, and stoch_simul block).
+
+% Step 4: fresh MCMC (~50 min on Apple Silicon under Rosetta)
+%         To estimate, set mode_compute=4 (csminwel) and mh_replic=20000 in
+%         the estimation() block of au_pac_bayesian.mod, then:
+dynare au_pac_bayesian
+%         Once converged, revert estimation() to mode_compute=0 + load_mh_file
+%         so subsequent invocations cheaply reload the chains.
 ```
 
-### Stage 4: PAC structural estimation
+---
 
-**Option A — Original recursive approach:**
-```matlab
-estimate_pac_driver           % recursive auxiliary construction
-```
-
-**Option B — Hybrid smoother approach (recommended):**
-```matlab
-estimate_pac_smooth_driver    % Kalman smoother + hybrid dseries
-```
-
-**Option C — 3-way comparison:**
-```matlab
-test_smoother_comparison      % runs recursive, hybrid, and pure smoother side-by-side
-```
-
-### Stage 5: Analysis and IRFs
-
-```matlab
-generate_wp_irfs              % ** recommended ** all shocks at policy-relevant sizes
-generate_three_regime_irfs    % 3-regime comparison at 100bp (detailed, FR-BDF Fig 6.2.2)
-irf_three_regimes             % 3-regime comparison at 100bp (simple version)
-irf_all_shocks                % all 7 shocks at policy-relevant sizes
-compare_irfs                  % compare IRFs across model variants
-forward_guidance              % forward guidance experiment
-```
-
-### Stage 5b: Bayesian estimation
+## Data preparation (only when raw series need refreshing)
 
 ```matlab
-cd <repo>/dynare
-run_bayesian_estimation       % Stage 1: posterior mode (~4 min)
-run_bayesian_mcmc             % Stage 2: MCMC from mode (20k draws, 2 chains, ~30-90 min)
+cd data
+download_abs_rba       % refreshes ABS National Accounts + RBA monetary series
+download_extended_data % refreshes employment / investment / wages / financial
+download_supply_data   % refreshes CES supply-side inputs
+download_rba           % RBA secondary series
+prepare_estimation_data % writes dynare/estimation_data.mat (9 observables)
+prepare_supply_data    % writes dynare/supply_data.mat
+estimate_ces_2026      % refreshes CES production-function calibration
+estimate_ces_stage23   % stage-2/3 CES re-estimation
 ```
 
-Note: Stage 2 requires Stage 1 mode file (`au_pac_bayesian/Output/au_pac_bayesian_mode.mat`).
-The `au_pac_bayesian.mod` must have `mode_compute=0`, `mode_file`, and `mh_replic=20000`.
-The `estimated_params_init(use_calibration)` block is incompatible with `mode_file` — it
-is commented out for Stage 2.
+These scripts produce the CSVs and `.mat` files in [data/](data/) and the `estimation_data.mat` and `supply_data.mat` files in [dynare/](dynare/). You only need to re-run them when the underlying ABS/RBA/FRED data has been updated.
 
-### Stage 5c: Conditional forecasting
+---
 
-```matlab
-cd <repo>/dynare
-conditional_forecast_driver              % default: RBA tightening scenario
-% Edit the script to select: 'tightening', 'easing', 'recession', 'stagflation'
+## Figure regeneration from saved artefacts (no MATLAB, no Dynare)
+
+```bash
+pip install scipy matplotlib h5py
+python3 dynare/regen/regen_three_regime_figs.py      # paper §6.2 three-regime comparison
+python3 dynare/regen/regen_pac_contrib_figs.py       # PAC channel-contribution figures
+python3 dynare/regen/regen_section5_irfs.py          # §5 IRF panel
+python3 dynare/regen/regen_long_run_convergence.py   # long-run convergence proxy
+python3 dynare/regen/regen_app_experiment.py         # appendix APP experiment
+python3 dynare/regen/regen_supplementary_figs.py     # supplementary figures
+python3 dynare/regen/regen_wp736_style_panel.py      # wp736-style benchmark panel
+python3 dynare/regen/regen_phase_r_benchmarks.py     # paper §6.3 phase-R benchmark table
 ```
 
-### Stage 6: Full system test
-
-```matlab
-cd <repo>
-test_full_system              % 62 tests across 10 stages
-```
+These read pre-baked `saved_irfs*.mat` and `oo_` artefacts. They never need Dynare.
 
 ---
 
 ## File reference
 
-### Model files (dynare/)
-| File | Description |
-|------|-------------|
-| `au_pac.mod` | Hybrid PAC model — primary (153 endo, 47 exo) |
-| `au_pac_bayesian.mod` | Auto-generated for Bayesian estimation (Stage 1/2) |
-| `au_pac_var.mod` | VAR-based expectations variant |
-| `au_pac_mce.mod` | Full model-consistent expectations variant |
-| `au_pac_smooth.mod` | Auto-generated by `generate_smoother_mod.m` for Kalman smoother |
+### Model files in [dynare/](dynare/)
 
-### Estimation scripts (dynare/)
 | File | Description |
 |------|-------------|
-| `estimate_pac_smooth_driver.m` | **Recommended**: full pipeline with Kalman smoother |
-| `estimate_pac_driver.m` | Original pipeline (recursive auxiliaries) |
-| `estimate_pac.m` | Core iterative OLS + NLS estimation logic |
-| `test_smoother_comparison.m` | 3-way approach comparison |
-| `run_bayesian_estimation.m` | Stage 1: posterior mode via csminwel (~4 min) |
-| `run_bayesian_mcmc.m` | Stage 2: MCMC from mode (20k draws, 2 chains) |
-| `generate_bayesian_mod.m` | Generates `au_pac_bayesian.mod` from `au_pac.mod` |
-| `prepare_bayesian_data.m` | Prepares non-demeaned estimation_data.mat |
+| `au_pac.mod` | Production semi-structural model (164 endogenous variables, 33 exogenous shocks). |
+| `au_pac_bayesian.mod` | Bayesian-estimation variant with `varobs`, `estimated_params`, and an `estimation()` block. |
+| `aux/aux_pQ.mod`, `aux/aux_consumption.mod`, `aux/aux_business_inv.mod`, `aux/aux_housing_inv.mod`, `aux/aux_employment.mod` | Per-PAC-block aux files. Each is fed to Dynare's `pac.print()` + `cherrypick()` to extract the policy-function expectation formula. |
+| `simulation/identities/*.inc` | Source-of-truth `.inc` files (endogenous, parameters, model equations, parameter values, steady state, shocks). The `aggregate()` workflow inlines these into `au_pac.mod`. |
+| `simulation/estimation/<block>/*.inc` | Cherrypick outputs for each PAC block — fed to `aggregate()`. |
+| `nk_simple.mod`, `nk_discounted.mod` | Standard NK reference models for the forward-guidance puzzle test (paper §6.5). |
 
-### dseries construction (dynare/)
+### Scripts in [dynare/](dynare/)
+
 | File | Description |
 |------|-------------|
-| `prepare_pac_dseries_hybrid.m` | **Recommended**: smoothed targets + recursive corrections |
-| `prepare_pac_dseries.m` | Original: recursive auxiliary construction |
-| `prepare_pac_dseries_smooth.m` | Pure Kalman-smoothed variables |
-| `prepare_smoother_data.m` | Prepares 9 observables for `calib_smoother` |
-| `generate_smoother_mod.m` | Generates `au_pac_smooth.mod` from `au_pac.mod` |
+| `setup_dynare_path.m` | Locates and adds the Dynare installation to MATLAB path. |
+| `phaseW_recherrypick.m` | One-shot driver that runs Dynare + `cherrypick()` on all 5 aux files. Use after editing any `aux/aux_*.mod` or `simulation/identities/calibration.inc`. |
 
 ### Data files
+
 | File | Description |
 |------|-------------|
-| `dataset.csv` | Core observables: output gap, inflation, rates (1993Q1-2024Q4) |
-| `data/extended_dataset.csv` | Employment, investment, wages, 10Y rate (1993Q1-2023Q3) |
+| `dataset.csv` | Core E-SAT observables (output gap, inflation, rates), 1993Q1–2024Q4. |
+| `data/extended_dataset.csv` | Employment, investment, wages, 10Y rate. |
+| `dynare/estimation_data.mat` | Demeaned MAT-format input to `au_pac_bayesian.mod`'s `estimation()` block. Produced by [data/prepare_estimation_data.m](data/prepare_estimation_data.m). |
+| `dynare/supply_data.mat` | CES supply-side dataset used by `data/estimate_ces_*.m`. |
 
----
+### Saved IRF artefacts (already baked, used by the Python regen scripts)
 
-## COVID dummy variables
-
-Two pulse dummies are included in all PAC equations to absorb the extreme COVID outliers:
-- `d_covid_crash` = 1 in 2020Q2 (lockdown collapse)
-- `d_covid_bounce` = 1 in 2020Q3 (mechanical rebound)
-
-Each PAC equation has its own pair of COVID coefficients (e.g., `b_covid_crash_c`, `b_covid_bounce_c` for consumption). These are estimated alongside the structural PAC parameters. At steady state, the dummies are zero so they don't affect IRFs.
-
----
-
-## IRF regeneration (DONE — 2026-04-14)
-
-All IRF scripts now use **linear scaling** at order=1 to produce policy-relevant shock sizes.
-No .mod file changes needed — scaling is applied after `stoch_simul` extraction.
-
-### To regenerate all IRF plots and tables:
-
-```matlab
-cd <repo>/dynare
-generate_wp_irfs              % all 7 shocks at policy-relevant sizes → irf_eps_*.png
-generate_three_regime_irfs    % 3-regime comparison → three_regime_*.png + log file
-```
-
-### Scripts and outputs
-
-| Script | Output |
-|--------|--------|
-| `generate_wp_irfs.m` | `irf_eps_*.png`, `irf_overview_output.png`, `log_wp_irfs.txt` |
-| `generate_three_regime_irfs.m` | `three_regime_monetary_irf.png`, `three_regime_full_comparison.png`, `log_three_regime_tables.txt` |
-| `irf_three_regimes.m` | `irf_three_regimes.png` (simple 3x3 version) |
-| `irf_all_shocks.m` | Same as `generate_wp_irfs.m` (legacy script, updated) |
+| File | Used by |
+|------|---------|
+| `dynare/saved_irfs.mat` | Current production IRFs. |
+| `dynare/saved_irfs_var.mat`, `dynare/saved_irfs_hybrid.mat`, `dynare/saved_irfs_mce.mat` | Paper §6.2 three-regime comparison figures. |
 
 ---
 
 ## Troubleshooting
 
 - **`oo_.var` is a double, not struct**: After `stoch_simul`, run `oo_.var = struct(); get_companion_matrix('esat_enriched', 'var');`
-- **`diary` doesn't capture Dynare output**: Use file-based logging (`fopen`/`fprintf`/`fclose`)
-- **`calib_smoother` datafile error**: Ensure only `.mat` (not both `.m` and `.mat`) exists for `smoother_data`
-- **Employment PAC fails "missing variables"**: dseries must start at 1993Q1 (5+ quarters before est start) for 4th-order diffs
-- **`legend('center')` error**: R2019a doesn't support `'center'`; use `'best'`
+- **`diary` doesn't capture Dynare output**: Use file-based logging (`fopen`/`fprintf`/`fclose`).
+- **Apple Silicon: MATLAB R2020a fails with "could not determine the machine architecture"**: Prefix with `arch -x86_64` to force Rosetta.
+- **Mode search needed (parameter set changed)**: Temporarily set `mode_compute=4` and `mh_replic=0` in the `estimation()` block of `au_pac_bayesian.mod`, run, capture the Laplace LMD, then revert to `mode_compute=0` + `load_mh_file`.

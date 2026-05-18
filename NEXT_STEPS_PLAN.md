@@ -31,7 +31,7 @@ Five small additions that together likely add 1–3 nats Laplace LMD (rough orde
 1. Add new variable declarations to `simulation/identities/endogenous.inc`
 2. Add the weighted-average identities to `simulation/identities/model.inc`
 3. Calibrate weights from ABS Cat. 6401 (CPI by sub-component) and RBA inflation expectations data
-4. Add new variables to `stoch_simul` output list in `au_pac_v2.mod`
+4. Add new variables to `stoch_simul` output list in `au_pac.mod`
 5. Add a §4.9.x subsection to the working paper documenting the reporting layer
 
 **Verification**: model preprocesses (smoke test), IRFs include the new components, BK rank unchanged.
@@ -56,7 +56,7 @@ In FR-BDF wp1044 this β_HtM = 0.32 (s.e. 0.10), and replaces the previous outpu
 1. Construct the wage+transfer aggregate `wt_H_real = log(W_H + TG_H) − p_C` in `model.inc` (ABS Cat. 5206 Table 3 has wages received by households; ABS Cat. 5512 has government transfers)
 2. Add the `b_HtM · Δ[wt_H_real − ỹ]` term to `eq_dln_c_pac` in the aux file `aux/aux_consumption.mod`
 3. Re-run dynare + cherrypick for the consumption block via `phaseW_recherrypick.m`
-4. Patch the new `b_HtM` parameter into `au_pac_v2.mod` and `au_pac_v2_bayesian.mod` (declare + assign; possibly add to `estimated_params` with Normal(0.30, 0.10) prior centred on wp1044 posterior)
+4. Patch the new `b_HtM` parameter into `au_pac.mod` and `au_pac_bayesian.mod` (declare + assign; possibly add to `estimated_params` with Normal(0.30, 0.10) prior centred on wp1044 posterior)
 5. Run mode search to verify Laplace LMD improves
 6. Optionally run fresh 20k MCMC (~50 min)
 

@@ -3,8 +3,8 @@
 % h_pac_* policy-function coefficients written into
 % simulation/estimation/<block>/parameter-values.inc.
 %
-% After this script: patch h_pac_* lines in au_pac_v2.mod and
-% au_pac_v2_bayesian.mod from the regenerated parameter-values.inc files.
+% After this script: patch h_pac_* lines in au_pac.mod and
+% au_pac_bayesian.mod from the regenerated parameter-values.inc files.
 
 setup_dynare_path;
 addpath(genpath('/Applications/Dynare/6.5-x86_64/matlab/missing'));

@@ -5,10 +5,10 @@
 // PURPOSE (estimation only, never simulated directly): use Dynare's
 // var_model + pac_model infrastructure to compute the closed-form
 // expectation formula for pac_expectation(pac_pQ). The formula is then
-// cherrypicked and pasted into the simulation au_pac_v2.mod by the
+// cherrypicked and pasted into the simulation au_pac.mod by the
 // aggregator.
 //
-// KEY DIFFERENCE FROM PHASE S au_pac.mod:
+// KEY DIFFERENCE FROM (now-retired) PHASE S au_pac.mod:
 // - The var_model variables are now the STRUCTURAL E-SAT core variables
 //   (yhat_au, i_gap, pi_au_gap, ...), not shadow copies (y_gap_var, ...).
 // - Each var_model eqtag's equation is in pure-VAR form (lagged-only RHS).
@@ -99,7 +99,7 @@ a_pQ_u          = -0.021;       // posterior 90% CI [-0.069, 0.027] (CI crosses 
 // the coefficient to LAGGED pi_w_gap = π_W - π̄ (var_model requires pure-VAR
 // form; pi_w_gap subtracts the inflation anchor rather than the efficiency
 // trend). Phase U AU re-estimation found 0.4367 on the AU sample; that's the
-// production runtime value (au_pac_v2.mod Phase U+V override block).
+// production runtime value (au_pac.mod Phase U+V override block).
 a_pQ_w          = 0.4367;
 
 // Phase X (2026-05-17): rho_pm renamed from rho_pi_m and value unified
