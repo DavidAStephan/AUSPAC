@@ -54,14 +54,10 @@ Each script reads from and writes back to `dynare/` (where the
 AUSPAC/
 ├── README.md                          (you are here)
 ├── RUNNING.md                         step-by-step MATLAB run instructions
-├── STATUS.md                          v3.0 status + phase trajectory + open items
-├── make_paper_results.m               top-level reproduction driver
-├── run_all.m                          legacy E-SAT pipeline driver
-├── test_full_system.m                 end-to-end regression test
-├── download_data.m / estimate_esat.m / esat_model.m / bayesian_estimate.m
-│                                      legacy E-SAT chain (root for compat)
-├── dataset.csv / data.mat / params.mat
-│                                      E-SAT outputs (gitignored)
+├── STATUS.md                          current status + phase trajectory + open items
+├── NEXT_STEPS_PLAN.md                 v3.2 roadmap
+├── ARCHITECTURE.md                    developer code map
+├── dataset.csv / data.mat / params.mat   data artefacts (gitignored)
 │
 ├── references/                        source PDFs
 │   ├── wp736.pdf                      FR-BDF source paper (Lemoine et al. 2019)
@@ -75,65 +71,39 @@ AUSPAC/
 │   ├── io_tables_australia.xlsx       2019 input-output tables
 │   ├── download_*.m                   data fetch scripts
 │   ├── prepare_*.m                    data prep scripts
-│   └── estimate_ces_*.m / estimate_sigma_stage1.m  (CES calibration drivers)
+│   └── estimate_ces_*.m               CES production calibration drivers
 │
 └── dynare/                            ▼ models, source, outputs ▼
-    ├── au_pac_v2.mod                  ★ v3.0 production model (Phase T policy-function)
-    ├── au_pac_v2_bayesian.mod         ★ v3.0 Bayesian estimation model
-    ├── aux/                           ★ 5 PAC aux files (estimation inputs)
-    ├── simulation/identities/         ★ normalized .inc files + Python normalizers
-    ├── simulation/estimation/         ★ cherrypicked .inc bundles (5 subdirs)
+    ├── au_pac.mod                     ★ production model (164 endo, 33 exo shocks)
+    ├── au_pac_bayesian.mod            ★ Bayesian-estimation variant
+    ├── aux/                              5 PAC aux files (estimation inputs)
+    ├── simulation/identities/            source-of-truth .inc files
+    ├── simulation/estimation/            cherrypicked .inc bundles (5 subdirs)
     │
-    ├── au_pac.mod                     Phase S Hybrid model (preserved for paper §6.2)
-    ├── au_pac_var.mod                 Phase S VAR variant (preserved)
-    ├── au_pac_mce.mod                 Phase S MCE variant (preserved)
-    ├── au_pac_bayesian.mod            Phase S Bayesian estimation .mod
-    ├── au_pac_smooth.mod              Kalman smoother .mod
-    ├── au_pac_condforecast.mod        Conditional forecast .mod
-    ├── au_pac_identification.mod      Identification analysis .mod
-    ├── au_pac_recursive.mod           Recursive forecast .mod
-    ├── au_esat.mod / au_esat_est.mod  Auxiliary E-SAT VAR
-    ├── nk_simple.mod / nk_discounted.mod
-    │                                  NK benchmarks for forward-guidance test
+    ├── nk_simple.mod / nk_discounted.mod    NK reference models for FG puzzle test
     │
-    ├── setup_dynare_path.m            path bootstrap (addpath scripts/* + Dynare)
+    ├── phaseW_recherrypick.m             driver: re-run dynare + cherrypick on all 5 aux files
+    ├── setup_dynare_path.m               locates Dynare 6.5
     │
-    ├── AUSPAC_WORKING_PAPER.md        the working paper (live, beside its PNGs)
-    ├── mcmc_posterior_table_phase_t.md ★ v3.0 posteriors (Table 5.6 source)
-    ├── phase_r_benchmark_table.md     Phase R IRF benchmark vs FR-BDF
-    ├── forecast_eval_table.md         Section 5.5 recursive forecast RMSEs
-    ├── *_README.md                    data + dseries READMEs
+    ├── AUSPAC_WORKING_PAPER.md           the working paper (live, beside its PNGs)
+    ├── mcmc_posterior_table.md           Bayesian posterior table (paper Table 5.6 source)
+    ├── phase_r_benchmark_table.md        Phase R IRF benchmark vs FR-BDF
+    ├── forecast_eval_table.md            §5.5 recursive forecast RMSEs
+    ├── *_README.md                       data + dseries READMEs
     │
-    ├── scripts/
-    │   ├── estimation/                Bayesian + PAC + Phase B/C/D estimators,
-    │   │                              run_bayesian_*.m, run_2026_*.m, run_phase_q_*.m
-    │   ├── figures/                   IRF generators (generate_*_irfs.m, irf_*.m,
-    │   │                              compare_irfs.m, quick_uip_irfs.m)
-    │   ├── analysis/                  forward_guidance, forecast_eval,
-    │   │                              conditional_forecast, identification,
-    │   │                              long_run_convergence, sectoral_validation
-    │   ├── data_prep/                 prepare_pac_dseries*.m, prepare_*_data.m
-    │   └── tests/                     test_smoother_comparison.m
+    ├── regen/                            Python figure-regen helpers
+    │   └── regen_*.py                    read .mat from dynare/, write PNG to dynare/
     │
-    ├── regen/                         Python figure-regen helpers (Phase H)
-    │   └── regen_*.py                 reads .mat from dynare/, writes PNG to dynare/
+    ├── tools/                            Python data tools (build, splice, sanity checks, writeback)
     │
-    ├── tools/                         Python data tools + appliers
-    │   ├── build_*.py / splice_*.py / trend_*.py / channel_*.py
-    │   ├── sanity_check_*.py / imports_*.py
-    │   ├── extract_2026_results.py
-    │   └── apply_mcmc_writeback.py / apply_trade_ecm_fix.py
+    ├── saved_irfs.mat                    current production IRFs
+    ├── saved_irfs_{var,hybrid,mce}.mat   already-baked Phase S three-regime IRFs (paper §6.2)
+    ├── estimation_data.mat               estimation dataset input to au_pac_bayesian.mod
     │
-    ├── bayesian_mcmc_results.mat      Phase G MCMC posterior (gitignored)
-    ├── saved_irfs_{var,hybrid,mce}.mat IRFs for all 45 shocks × 24 vars × 40Q (gitignored)
-    ├── estimation_data.mat            122-quarter estimation dataset (gitignored)
-    │
-    └── (figures: *.png — auto-generated, gitignored)
+    └── (figures: *.png — auto-generated)
 ```
 
-`dynare/setup_dynare_path.m` is the bootstrap entry point: it adds every
-`dynare/scripts/*` subfolder to the MATLAB path and then locates Dynare 6.5.
-Drivers cd into `dynare/` and call `setup_dynare_path()` once at the top.
+`dynare/setup_dynare_path.m` is the bootstrap entry point: it locates Dynare 6.5.
 
 ---
 
@@ -143,37 +113,28 @@ All paths below are relative to the repo root.
 
 ### Tables in the paper
 
-| Table | Source                                  | Script                                                              |
-|-------|-----------------------------------------|---------------------------------------------------------------------|
-| 5.6   | `dynare/bayesian_mcmc_log.txt`           | `dynare/scripts/estimation/run_bayesian_mcmc.m` → `extract_mcmc_results.m` |
-| 5.7   | `dynare/phase_c_results.txt`             | `dynare/scripts/estimation/estimate_phase_c_lpiv.m`                 |
-| 6.1   | Hard-coded from steady-state computation | manual                                                              |
-| 6.2   | `dynare/saved_irfs_*.mat`                | `dynare/regen/regen_three_regime_figs.py` (verify table values)     |
-| 6.3   | `dynare/saved_irfs_*.mat`                | as above                                                            |
-| 6.5   | `dynare/scripts/analysis/conditional_forecast_driver.m` | `conditional_forecast_driver.m`                      |
-| 6.6   | `dynare/scripts/analysis/forward_guidance.m`            | `forward_guidance.m`                                 |
+| Table | Source                                  | Notes                                                              |
+|-------|-----------------------------------------|--------------------------------------------------------------------|
+| 5.6   | `dynare/mcmc_posterior_table.md`         | Reload cached MCMC via `dynare au_pac_bayesian` to recompute       |
+| 5.7   | `dynare/forecast_eval_table.md`          | Static table baked from Phase S forecast-eval; regenerate with Phase T driver if revisited |
+| 6.1   | Hard-coded from steady-state computation | manual                                                             |
+| 6.2   | `dynare/saved_irfs_{var,hybrid,mce}.mat` | `dynare/regen/regen_three_regime_figs.py` (verify table values)    |
+| 6.3   | `dynare/saved_irfs_{var,hybrid,mce}.mat` | as above                                                           |
+| 6.5   | (Phase S conditional-forecast driver)    | Driver retired in 2026-05-18 cleanup; rebuild against Phase T if needed |
+| 6.6   | (Phase S forward-guidance test)          | Driver retired; reproduce with a fresh script invoking `nk_simple.mod` + `nk_discounted.mod` + `au_pac.mod` |
 
 ### Figures in the paper
 
-| Figure | File                              | Script                                            |
-|--------|-----------------------------------|---------------------------------------------------|
-| 4.3.1  | `dynare/contrib_piQ.png`           | `dynare/regen/regen_pac_contrib_figs.py`          |
-| 4.4.1  | `dynare/contrib_n.png`             | as above                                          |
-| 4.5.1  | `dynare/contrib_c.png`             | as above                                          |
-| 4.6.1  | `dynare/contrib_ib.png`            | as above                                          |
-| 4.7.1  | `dynare/contrib_ih.png`            | as above                                          |
-| 6.0    | `dynare/long_run_convergence_proxy.png` | `dynare/regen/regen_long_run_convergence.py` |
-| 6.1    | `dynare/three_regime_monetary_irf.png`  | `dynare/regen/regen_three_regime_figs.py`    |
-| 6.2    | `dynare/three_regime_full_comparison.png` | as above                                   |
-| 6.3    | `dynare/irf_eps_i.png`             | `dynare/regen/regen_section5_irfs.py`             |
-| 6.4    | `dynare/irf_eps_q_us.png`          | as above                                          |
-| 6.5    | `dynare/irf_eps_g.png`             | as above                                          |
-| 6.6    | `dynare/irf_eps_pcom.png`          | as above                                          |
-| 6.7    | `dynare/irf_eps_pQ.png`            | as above                                          |
-| 6.8    | `dynare/irf_eps_tfp.png`           | as above                                          |
-| 6.9    | `dynare/irf_eps_tp.png`            | as above                                          |
-| 6.13   | `dynare/forward_guidance_puzzle.png` | `dynare/scripts/analysis/forward_guidance.m`    |
-| 6.14   | `dynare/app_experiment_200bp.png`  | `dynare/regen/regen_app_experiment.py`            |
+All paper figures regenerate from pre-baked `.mat` artefacts via the [dynare/regen/](dynare/regen/) Python scripts (no Dynare needed):
+
+| Figure | File                                          | Script                                          |
+|--------|-----------------------------------------------|-------------------------------------------------|
+| 4.3.1–4.7.1 | `dynare/contrib_*.png`                   | `dynare/regen/regen_pac_contrib_figs.py`        |
+| 6.0    | `dynare/long_run_convergence_proxy.png`       | `dynare/regen/regen_long_run_convergence.py`   |
+| 6.1–6.2 | `dynare/three_regime_*.png`                  | `dynare/regen/regen_three_regime_figs.py`      |
+| 6.3–6.9 | `dynare/irf_eps_*.png`                       | `dynare/regen/regen_section5_irfs.py`          |
+| 6.13   | `dynare/forward_guidance_puzzle.png`          | already-baked; regenerate via a fresh Phase T FG driver if revisited |
+| 6.14   | `dynare/app_experiment_200bp.png`             | `dynare/regen/regen_app_experiment.py`         |
 
 ---
 

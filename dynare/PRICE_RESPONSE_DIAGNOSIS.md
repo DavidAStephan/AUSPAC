@@ -1,7 +1,7 @@
 # Diagnosing the weak price response of AU-PAC IRFs
 
 **Date:** 2026-05-17
-**Model version:** v3.0 Phase T (`au_pac_v2.mod`, MHM LMD −781.39)
+**Model version:** v3.0 Phase T (`au_pac.mod`, MHM LMD −781.39)
 **Shock studied:** 100 bp annualised monetary tightening (ε_i = 0.25 qpp)
 **Scripts:** `dynare/diagnosis/run_perturbations.m`, output in `dynare/diagnosis/perturb_results/`
 **Raw artefacts:** `dynare/diagnosis/{cpi_channel_decomp_full,perturb_summary,posterior_identification}.json`
@@ -16,7 +16,7 @@ The CPI response to a 100 bp tightening is dominated by the exchange-rate / impo
 - **Only 1.8% of the CPI peak comes from domestic VA-price push (`α_pc·piQ`).** Forcing α_pc up to the FR-BDF value of 0.71 (a 4× change) lifts the CPI peak by just 8%, because piQ itself barely moves (peak −0.0026 qpp).
 - **Wage Phillips changes (κ_w → −0.30) and ULC pass-through changes (γ_ulc → 0.50) have literally zero effect on the CPI IRF.** The wage-price spiral is architecturally broken: there is no dynamic channel from `pi_w` or ULC into `piQ` — `piQ_hat` (the long-run VA-price target) is projected onto the E-SAT state which does not include wages or unit labour costs.
 - **The "flat AU Phillips curve" empirical finding (§4.13.1) is largely artifactual.** Of the four cited slope parameters (b2_pQ, b3_c, b5_n, κ_w), the posterior HPDs are 0.97×, 0.90×, 0.97×, 0.97× of the prior HPDs respectively. The data does not identify them; the posterior is essentially the prior.
-- **κ_π, α_pc, λ_π, β_pc_m, γ_oil, γ_ulc, ρ_pc are all calibrated, not estimated.** None appear in the `estimated_params` block of `au_pac_v2_bayesian.mod`.
+- **κ_π, α_pc, λ_π, β_pc_m, γ_oil, γ_ulc, ρ_pc are all calibrated, not estimated.** None appear in the `estimated_params` block of `au_pac_bayesian.mod`.
 
 The AU-PAC peak inflation response is small because **(a) calibrated Phillips slopes are about half FR-BDF's**, **(b) the wage→price linkage is structurally absent**, and **(c) the model relies on AUD appreciation to deliver inflation reduction**, with that AUD channel doing 71% of the work — above the 33–67% range Mulqueeney et al. (2025) attribute to FX in MARTIN/DINGO.
 
@@ -72,7 +72,7 @@ For comparison the FR-BDF wp736 reports α_pc = 0.71 (vs AU's 0.17). Even at the
 
 ## Step 3 — One-at-a-time parameter perturbation
 
-Each perturbation re-runs `au_pac_v2.mod` with a single parameter changed (others at posterior). 100 bp annualised eps_i shock. CPI y/y peak reported, plus ratio versus baseline.
+Each perturbation re-runs `au_pac.mod` with a single parameter changed (others at posterior). 100 bp annualised eps_i shock. CPI y/y peak reported, plus ratio versus baseline.
 
 | Perturbation | CPI y/y peak (pp) | × baseline | piQ qpp peak | pi_w qpp peak | AUD % peak | GDP % peak |
 |---|---|---|---|---|---|---|
@@ -100,7 +100,7 @@ Each perturbation re-runs `au_pac_v2.mod` with a single parameter changed (other
 
 ## Step 4 — Posterior vs prior identification
 
-Of the 19 estimated structural parameters in `au_pac_v2_bayesian.mod`, only `gamma_w` is sharply identified by AU data. The cited "flat Phillips" slope coefficients are essentially returning their priors.
+Of the 19 estimated structural parameters in `au_pac_bayesian.mod`, only `gamma_w` is sharply identified by AU data. The cited "flat Phillips" slope coefficients are essentially returning their priors.
 
 Posterior HPD width / prior HPD width (90%), and shift from prior mean in prior-σ units:
 
@@ -180,7 +180,7 @@ Following FR-BDF wp736 eq (45), `pi*_Q = β·(π_W − Δē) + (1−β)·π̄*_Q
 1. **New state variable** `pi_w_gap = pi_w − pibar_au` declared in `simulation/identities/endogenous.inc` and tied through a definitional identity in `model.inc`.
 2. **`var_pi_w_gap` reduced-form equation** added to `aux/aux_pQ.mod` so the var_model companion matrix maps wage shocks into PAC expectations: `pi_w_gap = ρ·pi_w_gap(−1) + a_w_pi·pi_au_gap(−1) + a_w_u·u_gap(−1)` with ρ = 0.21 (matching estimated `λ_w`), `a_w_pi = 0.35` (matching estimated `γ_w`), `a_w_u = −0.05`.
 3. **`var_piQ_hat` regression augmented** with `+ a_pQ_w · pi_w_gap(−1)` where `a_pQ_w = 0.59` matches the FR-BDF eq (45) structural coefficient (the Table 4.4.4 value 0.012 is the implied *policy-function* coefficient and corresponds to the auto-derived `h_pac_pQ_var_pi_w_gap_lag_1`, not the regression-level `a_pQ_w`).
-4. **Cherrypick + production-model sync.** Re-ran `dynare aux/aux_pQ` and `cherrypick(...)` so the `pac_expectation_pac_pQ` formula picks up the new `+ h_pac_pQ_var_pi_w_gap_lag_1 · pi_w_gap(−1)` term and the 13 other h-coefficients update accordingly. Equivalent surgical edits applied to `au_pac_v2.mod` and `au_pac_v2_bayesian.mod`.
+4. **Cherrypick + production-model sync.** Re-ran `dynare aux/aux_pQ` and `cherrypick(...)` so the `pac_expectation_pac_pQ` formula picks up the new `+ h_pac_pQ_var_pi_w_gap_lag_1 · pi_w_gap(−1)` term and the 13 other h-coefficients update accordingly. Equivalent surgical edits applied to `au_pac.mod` and `au_pac_bayesian.mod`.
 5. **`pv_piQ_aux` synced** in the simulation identities (the smoother-side analogue used for historical contribution decomp) so paper Fig 4.3.1 will rebuild correctly.
 
 ### Resulting IRFs (100 bp annualised monetary tightening)
@@ -198,11 +198,11 @@ Following FR-BDF wp736 eq (45), `pi*_Q = β·(π_W − Δē) + (1−β)·π̄*_Q
 
 ### Bayesian re-estimation
 
-`au_pac_v2_bayesian.mod` mode search gives **Laplace LMD = −780.88** versus the Phase T baseline −781.05 — a **+0.17-nat improvement** even at the calibrated Phase U values. Phase U does not degrade fit; it improves it modestly. Full MCMC re-estimation (~51 min) was started but not completed in this session.
+`au_pac_bayesian.mod` mode search gives **Laplace LMD = −780.88** versus the Phase T baseline −781.05 — a **+0.17-nat improvement** even at the calibrated Phase U values. Phase U does not degrade fit; it improves it modestly. Full MCMC re-estimation (~51 min) was started but not completed in this session.
 
 ### Parameters promoted to `estimated_params`
 
-To address the calibrated-not-estimated finding from Step 4 (κ_π, α_pc, λ_π are hard-coded), the four Phillips parameters are now in `au_pac_v2_bayesian.mod`'s `estimated_params` block with shrinkage priors:
+To address the calibrated-not-estimated finding from Step 4 (κ_π, α_pc, λ_π are hard-coded), the four Phillips parameters are now in `au_pac_bayesian.mod`'s `estimated_params` block with shrinkage priors:
 
 | Parameter | Prior | Current calibration | FR-BDF wp736 |
 |---|---|---|---|
@@ -221,14 +221,14 @@ The next full MCMC run will let AU data update these jointly with the existing 1
 - `dynare/simulation/identities/parameter-values.inc` — added `a_pQ_w = 0.59`
 - `dynare/simulation/identities/model.inc` — added `def_pi_w_gap` identity, updated `eq_pv_piQ_aux`
 - `dynare/simulation/estimation/pQ/{model,parameter-values,endogenous}.inc` — auto-regenerated by cherrypick
-- `dynare/au_pac_v2.mod` — surgical Phase U patches (var list, params, h-values, model equations, steady_state)
-- `dynare/au_pac_v2_bayesian.mod` — same Phase U patches + 4 new `estimated_params`
+- `dynare/au_pac.mod` — surgical Phase U patches (var list, params, h-values, model equations, steady_state)
+- `dynare/au_pac_bayesian.mod` — same Phase U patches + 4 new `estimated_params`
 - `dynare/au_pac.mod` — legacy parameter list + value + pv_piQ_aux equation kept in sync
 
 ### Pre-Phase-U backups
 
-- `dynare/au_pac_v2.mod.preU.bak`
-- `dynare/au_pac_v2_bayesian.mod.preU.bak`
+- `dynare/au_pac.mod.preU.bak`
+- `dynare/au_pac_bayesian.mod.preU.bak`
 
 ### Remaining work (recommended order)
 
@@ -287,9 +287,9 @@ Calibration (also added to `estimated_params` for joint posterior identification
 - `dynare/simulation/identities/parameter-values.inc` — added FR-BDF-calibrated values
 - `dynare/simulation/identities/model.inc` — augmented `eq_au_phillips`; added `def_p_C_level`, `def_p_M_level`, `def_p_C_star_level`
 - `dynare/simulation/identities/steady.inc` — initialised three new level vars at 0
-- `dynare/au_pac_v2.mod` — surgical sync of all above
-- `dynare/au_pac_v2_bayesian.mod` — Phase V edits + `alpha_pc_lag`, `b_ECM_pc` in `estimated_params`
-- Backup: `dynare/au_pac_v2_bayesian.mod.preV.bak`
+- `dynare/au_pac.mod` — surgical sync of all above
+- `dynare/au_pac_bayesian.mod` — Phase V edits + `alpha_pc_lag`, `b_ECM_pc` in `estimated_params`
+- Backup: `dynare/au_pac_bayesian.mod.preV.bak`
 
 ### Phase V Bayesian MCMC results
 
@@ -317,7 +317,7 @@ Full-system 2-chain × 20k-draw RW-MH MCMC, csminwel mode + diffuse Kalman filte
 
 #### Phase V production IRF at MCMC posterior means
 
-`au_pac_v2.mod` re-calibrated to the posterior means (`b_*`, `lambda_*`, `kappa_*`, `gamma_*`, `alpha_pc`, `a_pQ_w`, `alpha_pc_lag`, `b_ECM_pc`, 9 shock stds), 100 bp annualised eps_i:
+`au_pac.mod` re-calibrated to the posterior means (`b_*`, `lambda_*`, `kappa_*`, `gamma_*`, `alpha_pc`, `a_pQ_w`, `alpha_pc_lag`, `b_ECM_pc`, 9 shock stds), 100 bp annualised eps_i:
 
 | Variable | Phase T baseline | Phase U cal. | Phase V cal. (FR-BDF) | Phase V posterior |
 |---|---|---|---|---|
@@ -347,9 +347,9 @@ Full-system 2-chain × 20k-draw RW-MH MCMC, csminwel mode + diffuse Kalman filte
 
 ### Files modified in Phase V finalisation
 
-- `dynare/au_pac_v2.mod` — posterior writeback block replaced with Phase V 25-parameter posterior means; production model now reproduces the Phase V IRFs at posterior values
-- `dynare/au_pac_v2_bayesian.mod` — `estimation()` block patched to `mode_compute=0, mode_file=..., mh_replic=0, load_mh_file` so subsequent re-analyses load the saved chains rather than re-sampling
-- `dynare/au_pac_v2_bayesian.mod.fullMCMC.bak` — backup of the bayesian variant with the 20k-draw MCMC settings, for future re-runs
+- `dynare/au_pac.mod` — posterior writeback block replaced with Phase V 25-parameter posterior means; production model now reproduces the Phase V IRFs at posterior values
+- `dynare/au_pac_bayesian.mod` — `estimation()` block patched to `mode_compute=0, mode_file=..., mh_replic=0, load_mh_file` so subsequent re-analyses load the saved chains rather than re-sampling
+- `dynare/au_pac_bayesian.mod.fullMCMC.bak` — backup of the bayesian variant with the 20k-draw MCMC settings, for future re-runs
 - `dynare/phase_V_mcmc.log`, `dynare/phase_V_mcmc_stdout.log`, `dynare/phase_V_post_stdout.log` — full MCMC console output
-- `dynare/au_pac_v2_bayesian/metropolis/` — saved MCMC chains (mh1_blck1.mat + mh1_blck2.mat, ~1.4 MB each)
+- `dynare/au_pac_bayesian/metropolis/` — saved MCMC chains (mh1_blck1.mat + mh1_blck2.mat, ~1.4 MB each)
 - `dynare/diagnosis/perturb_results/irf_phase_V_posterior.mat` — production IRFs at posterior means

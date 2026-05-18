@@ -1463,7 +1463,7 @@ b_ECM_pc     = 0.0601;   // ECM speed in eq_au_phillips (Phase V addition)
 //
 // Effect: these overrides change piQ_hat / c_hat / ib_hat / ih_hat /
 // n_hat / yh_ratio_hat / rKB_hat at runtime (see model equations
-// around au_pac_v2.mod:767-809), which feeds into PAC equations via
+// around au_pac.mod:767-809), which feeds into PAC equations via
 // (i) the b0_*·(*_hat(-1) - level(-1)) ECM term and (ii) the
 // h_pac_*_var_*_hat_lag_1 policy-function coefficient.
 //

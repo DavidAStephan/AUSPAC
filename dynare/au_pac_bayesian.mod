@@ -1598,13 +1598,18 @@ estimated_params;
     stderr eps_10y,     inv_gamma_pdf,  0.10,  inf;
 end;
 
+// 2026-05-18 cleanup: the cached MCMC chains (au_pac_v2_bayesian/metropolis/
+// + Output/au_pac_v2_bayesian_mode) were collateral damage of the Phase-S
+// retire — they were never tracked by git. Estimation block now defaults to
+// a fresh csminwel mode search (mode_compute=4 + mh_replic=0). To regenerate
+// the full MCMC, change mh_replic=0 → mh_replic=20000 (~50 min wall time);
+// to subsequently reload the chains cheaply, switch back to mode_compute=0
+// + mode_file='au_pac_bayesian/Output/au_pac_bayesian_mode' + load_mh_file.
 estimation(datafile='estimation_data.mat',
            first_obs=1,
-           mode_compute=0,
-           mode_file='au_pac_v2_bayesian/Output/au_pac_v2_bayesian_mode',
+           mode_compute=4,
            presample=4,
            mh_replic=0,
-           load_mh_file,
            mh_nblocks=2,
            mh_jscale=0.4,
            diffuse_filter,

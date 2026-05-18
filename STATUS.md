@@ -2,7 +2,7 @@
 
 **Version**: v3.1.1 (Round 1.1 added 2026-05-18, branch `fix/cross-platform-paths`)
 **Architecture**: Phase T policy-function PAC expectations (FR-BDF wp1044 §2.2 / Adjemian-Brayton-Zimic), with Phases W/X/Y architectural cleanup completed, plus Round 1.1 HICP-style reporting block.
-**Headline metric**: MHM log marginal density = **−780.47** (Laplace = **−779.30**). Cumulative Phase Q → Phase Y MHM improvement: **+21.80 nats**. Round 1.1 is a one-way reporting block — LMD unchanged by design.
+**Headline metric**: Laplace LMD = **−779.30** (preserved across Round 1.1 + 2026-05-18 cleanup; verified via fresh csminwel mode search). MHM = **−780.47** was the cached-MCMC value pre-cleanup; the MCMC chains were collateral damage of the Phase S retire (gitignored), so MHM requires a fresh ~50-min MCMC re-run to reproduce. Cumulative Phase Q → Phase Y MHM improvement: **+21.80 nats** (built into the model; not affected by the cleanup).
 
 ---
 
@@ -10,12 +10,12 @@
 
 AUSPAC is the Australian replication of FR-BDF (Banque de France WP #736 Lemoine et al., 2019; updated 2026 in WP #1044 Dubois et al.). It is a semi-structural macroeconomic model with Polynomial Adjustment Costs (PAC), explicit expectations from a structural-VAR satellite (E-SAT), and a CES supply block re-estimated on Australian data 1994Q1–2025Q4.
 
-**Production model**: [`dynare/au_pac_v2.mod`](dynare/au_pac_v2.mod) — built via Dynare's `cherrypick()` + `aggregate()` workflow from:
+**Production model**: [`dynare/au_pac.mod`](dynare/au_pac.mod) — built via Dynare's `cherrypick()` + `aggregate()` workflow from:
 - 5 aux .mod files in [`dynare/aux/`](dynare/aux/) (one per PAC block: pQ, consumption, business_inv, housing_inv, employment)
 - 7 normalized identity .inc files in [`dynare/simulation/identities/`](dynare/simulation/identities/)
 - 5 cherrypicked .inc bundles in [`dynare/simulation/estimation/<block>/`](dynare/simulation/estimation/)
 
-**Bayesian estimation**: [`dynare/au_pac_v2_bayesian.mod`](dynare/au_pac_v2_bayesian.mod), 28 estimated parameters, ~50 min wall time per 20k×2-chain MCMC, current Laplace LMD = **−779.30**, MHM = **−780.47**.
+**Bayesian estimation**: [`dynare/au_pac_bayesian.mod`](dynare/au_pac_bayesian.mod), 28 estimated parameters, ~50 min wall time per 20k×2-chain MCMC, current Laplace LMD = **−779.30**, MHM = **−780.47**.
 
 **Working paper**: [`dynare/AUSPAC_WORKING_PAPER.md`](dynare/AUSPAC_WORKING_PAPER.md) — §4.3 documents the post-Phase-Y single-target VA-price architecture, §4.4.0 the Phillips curve with Phase V structural channels, §4.9 the demand-deflator reduced-form simplification, §8 the explicit AU-vs-FR-BDF architectural deviations.
 
@@ -32,8 +32,9 @@ AUSPAC is the Australian replication of FR-BDF (Banque de France WP #736 Lemoine
 | **Phase W** | 2026-05-17 | **−780.47** | **+0.92** | Self-consistent activation of `calibration.inc` Bayesian-posterior aux-regression coefficients. Two-stage fix: runtime override block in the production .mod files for the 24 `rho_*_aux` / `a_*_y/i/pi/u/yh` parameters, then re-templated aux .mod files and re-cherrypicked all 5 PAC blocks to refresh the 73 `h_pac_*` policy-function coefficients. Verified by fresh 20k×2-chain MCMC. Laplace gain +1.75 nats. |
 | Phase X | 2026-05-17 | (Laplace −779.30) | +0.00 | Parameter-name unification: aux files' `rho_pi_m` renamed to `rho_pm` (value 0.28) to match `model.inc`. Eliminates the only aux-vs-identities parameter-name drift. Neutral LMD; kept for naming consistency. |
 | **Phase Y** | 2026-05-17 | (MHM −780.47) | +0.00 | Orphan-equation removal: `eq_piQ_star`, `eq_piQ_star_bar`, `eq_pQ_star_level`, `eq_pQ_gap` and parameters `rho_pQ_star`, `gamma_ulc`, `gamma_uck` deleted from `model.inc` and the production .mod files. They were verified-orphan diagnostic equations (never on the RHS of any other equation). Removal leaves `piQ_hat` as the canonical VA-price PAC target, matching FR-BDF wp736 Table 4.4.4 and ECB-BASE WAPRO single-target architecture. LMD unchanged. |
-| **Round 1.1** | 2026-05-18 | (MHM −780.4699, Laplace −779.3031) | +0.00 | HICP-style headline-decomposition reporting block: 6 new endogenous reporting variables (`pi_au_food`, `pi_au_energy`, `pi_au_core`, `pi_au_trad`, `pi_au_nontrad`, `pi_au_trim`) and 12 calibrated parameters (CPI weights from ABS Cat. 6401, tradeables share from RBA). Identity-preserving decomposition: pi_au ≡ Σ w_i·component_i to machine precision. Zero feedback into existing dynamics, so cached MCMC re-loads with bit-identical Laplace/MHM. |
+| **Round 1.1** | 2026-05-18 | (MHM −780.4699, Laplace −779.3031) | +0.00 | HICP-style headline-decomposition reporting block: 6 new endogenous reporting variables (`pi_au_food`, `pi_au_energy`, `pi_au_core`, `pi_au_trad`, `pi_au_nontrad`, `pi_au_trim`) and 12 calibrated parameters (CPI weights from ABS Cat. 6401, tradeables share from RBA). Identity-preserving decomposition: pi_au ≡ Σ w_i·component_i to machine precision. Zero feedback into existing dynamics, so cached MCMC re-loaded with bit-identical Laplace/MHM. |
 | Round 1.3 (REJECTED) | 2026-05-18 | (control −779.3032 vs candidate −781.1822) | **−1.88** | Cogley-Sbordone time-varying inflation attractor `+ delta_pibar·(pi_au(-1) − pibar_au(-1))` in eq_pibar_au, with `delta_pibar` estimated under Beta(0.07, 0.04) prior. Fresh 7.8-min csminwel mode search: posterior mode 0.024 (data pulls toward zero), Laplace LMD −781.18. Matched control with delta_pibar pinned at 0: Laplace LMD −779.30 (identical to cached baseline → confirms csminwel ≡ MCMC mode on this model). Result: data does not support time-varying anchor on the AU sample; parameter cost (1.88 nats) exceeds the tiny likelihood gain. Implied Bayes factor 0.15 in favor of the simpler model. Reverted. |
+| **Repo cleanup** | 2026-05-18 | (Laplace preserved via fresh mode search) | n/a | Full retire of the Phase S architecture: deleted 8 Phase S `.mod` files (`au_pac`, `au_pac_bayesian`, `au_pac_var`, `au_pac_mce`, `au_pac_smooth`, `au_pac_recursive`, `au_pac_condforecast`, `au_pac_identification`), the legacy E-SAT satellite (`au_esat.mod`, `au_esat_est.mod`), 10 perturbation experiment .mods, the entire `dynare/scripts/` Phase S support tree (~38 .m files), 5 legacy top-level scripts (`make_paper_results.m`, `run_all.m`, `test_full_system.m`, `bayesian_estimate.m`, `download_data.m`, `esat_model.m`, `estimate_esat.m`), and `data/estimate_sigma_stage1.m`. Renamed `au_pac_v2.mod → au_pac.mod`, `au_pac_v2_bayesian.mod → au_pac_bayesian.mod`, and dropped `_v2` / `_phase_t` suffixes from saved artefacts. Updated [STATUS.md](STATUS.md), [README.md](README.md), [RUNNING.md](RUNNING.md), [ARCHITECTURE.md](ARCHITECTURE.md), [working paper](dynare/AUSPAC_WORKING_PAPER.md), [PRICE_RESPONSE_DIAGNOSIS.md](dynare/PRICE_RESPONSE_DIAGNOSIS.md). **Cached MCMC chains lost** (they lived in `+au_pac_v2_bayesian/metropolis/`, gitignored, removed with the v2 output dirs) — the estimation block in `au_pac_bayesian.mod` now defaults to `mode_compute=4` + `mh_replic=0` (fresh csminwel mode search, ~8 min); change `mh_replic=0 → 20000` to regenerate the full posterior chains (~50 min) and recover MHM. |
 
 **Cumulative Phase Q → Phase Y MHM improvement: +21.80 nats** (unchanged by Round 1.1, which adds reporting only).
 
@@ -72,37 +73,33 @@ AUSPAC/
 ├── data/                              raw ABS + RBA + FRED + BIS series
 │
 └── dynare/                            models, scripts, outputs
-    ├── au_pac_v2.mod                  v3.1 production model
-    ├── au_pac_v2_bayesian.mod         v3.1 Bayesian estimation model
+    ├── au_pac.mod                     production model (164 endo, 33 exo shocks)
+    ├── au_pac_bayesian.mod            Bayesian-estimation variant of au_pac.mod
     ├── aux/                           5 aux files for PAC expectations (Phase W posteriors active)
     │   ├── _template_helpers.py
-    │   ├── aux_pQ.mod / aux_consumption.mod / aux_business_inv.mod / aux_housing_inv.mod / aux_employment.mod
+    │   └── aux_pQ.mod / aux_consumption.mod / aux_business_inv.mod / aux_housing_inv.mod / aux_employment.mod
     ├── simulation/
-    │   ├── identities/                normalized .inc files + 3 Python normalizers
-    │   └── estimation/                populated by cherrypick (5 subdirs)
+    │   ├── identities/                source-of-truth .inc files (endo, params, model, steady, shocks)
+    │   └── estimation/                cherrypick outputs per PAC block (5 subdirs)
     │
     ├── phaseW_recherrypick.m          ★ driver: re-runs dynare + cherrypick on all 5 aux files
     │                                  (use after aux file calibration changes)
+    ├── setup_dynare_path.m            locates Dynare 6.5 install
     │
-    ├── au_pac.mod / au_pac_var.mod / au_pac_mce.mod
-    │                                  Phase S three-regime variants (preserved for paper §§6.2.1–6.2.4)
-    ├── au_pac_bayesian.mod / au_pac_smooth.mod / au_pac_recursive.mod
-    ├── au_pac_condforecast.mod / au_pac_identification.mod
-    │                                  Phase S support models (preserved)
+    ├── nk_simple.mod / nk_discounted.mod   reference NK models for FG puzzle test (paper §6.5)
     │
     ├── AUSPAC_WORKING_PAPER.md         the working paper (~2000 lines, 9 sections + 6 appendices)
-    ├── mcmc_posterior_table_phase_t.md Phase T posteriors (Table 5.6 source; superseded by Phase W posteriors)
+    ├── mcmc_posterior_table.md         Bayesian posterior table (paper Table 5.6 source)
     ├── phase_r_benchmark_table.md      Phase R IRF benchmark vs FR-BDF (paper §6.3.5)
-    ├── forecast_eval_table.md          Section 5.5 recursive forecast RMSEs
+    ├── forecast_eval_table.md          §5.5 recursive forecast RMSEs
     ├── au_pac_model_data_README.md     dataset conventions
     ├── prepare_pac_dseries_README.md   dseries preparation conventions
     │
-    ├── saved_irfs_v2_phase_t.mat       Phase T/W IRFs (current production)
-    ├── saved_irfs_{var,hybrid,mce}.mat  Phase S IRFs (paper §§6.2/6.3 figures)
-    ├── forward_guidance_puzzle_v2.png  Phase T FG test figure
+    ├── saved_irfs.mat                  current production IRFs
+    ├── saved_irfs_{var,hybrid,mce}.mat already-baked Phase S three-regime IRFs (paper §§6.2/6.3 figures)
+    ├── forward_guidance_puzzle.png     FG puzzle test figure
     │
-    ├── scripts/                        estimation / figures / analysis / data_prep / tests
-    ├── regen/                          Python figure regen helpers
+    ├── regen/                          Python figure regen helpers (read pre-baked .mats; no Dynare needed)
     └── tools/                          Python data tools (build, splice, sanity checks, writeback)
 ```
 
@@ -125,27 +122,26 @@ run('phaseW_recherrypick.m');
 %         simulation/identities/ or the cherrypicked .inc files structurally;
 %         pure parameter-value refreshes via Phase W's `patch_h_pac.py` style
 %         don't require re-aggregation)
-aggregate('au_pac_v2.mod', {'stochastic,json=compute'}, pwd, ...
+aggregate('au_pac.mod', {'stochastic,json=compute'}, pwd, ...
     'simulation/estimation/pQ', 'simulation/estimation/consumption', ...
     'simulation/estimation/business_inv', 'simulation/estimation/housing_inv', ...
     'simulation/estimation/employment', 'simulation/identities');
 
 % Step 3: after re-aggregate, re-add the Phase U/V/W manual override blocks
-%         at the end of au_pac_v2.mod (see lines 1421–1500 area), the shocks
+%         at the end of au_pac.mod (see lines 1421–1500 area), the shocks
 %         block, the steady_state_model block, and the stoch_simul block.
 
 % Step 4: estimate
-dynare au_pac_v2_bayesian;          % ~50 min on Apple Silicon under Rosetta 2
+dynare au_pac_bayesian;          % ~50 min on Apple Silicon under Rosetta 2
 
-% Step 5: regen IRFs and figures
-dynare au_pac_v2;
-run('scripts/analysis/forward_guidance.m');   % FG puzzle test
+% Step 5: regen IRFs
+dynare au_pac;
 ```
 
 ### Quick load-cached MCMC (~30 sec)
 
 ```matlab
-dynare au_pac_v2_bayesian   % uses mode_compute=0 + load_mh_file
+dynare au_pac_bayesian   % uses mode_compute=0 + load_mh_file
                             % loads cached MCMC, recomputes summary statistics
 ```
 
@@ -191,9 +187,8 @@ Energy index (oil + gas split, wp1044 Appx E); **credit/financial-asset block** 
 WAPRO-style MCE wage-price subsystem (ECB-BASE §3.2.3) for forward-guidance / unconventional-policy research.
 
 ### v3.x finishing tasks (small, when convenient)
-- Rewrite working paper §§6.2.1–6.2.4 channel walkthrough under Phase T single-regime architecture (currently retained as Phase S Hybrid historical reference per §6.2 intro note)
-- Optionally build `au_pac_v2_var.mod` / `au_pac_v2_mce.mod` if separate regime comparisons are needed under Phase T
-- Optionally retire legacy `au_pac.mod` + 7 Phase S variants if the project commits to Phase T as the sole architecture
+- Rewrite working paper §§6.2.1–6.2.4 channel walkthrough under the Phase T single-regime architecture (currently retained as Phase S Hybrid historical reference per §6.2 intro note)
+- Optionally rebuild `au_pac_var.mod` / `au_pac_mce.mod` under the Phase T architecture if separate regime comparisons are needed (the Phase S variants and their support scripts were retired in the 2026-05-18 cleanup; the paper's §6.2 figures still regenerate from the saved `saved_irfs_{var,hybrid,mce}.mat` artefacts via `dynare/regen/regen_three_regime_figs.py`)
 
 ---
 
