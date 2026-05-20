@@ -183,3 +183,31 @@ delta_trad_pcom   = 0.15;    // Tradeables ← commodity passthrough
 delta_trad_s      = -0.10;   // Tradeables ← FX (AUD appreciation lowers prices)
 rho_trim          = 0.85;    // Trimmed-mean persistence
 delta_trim_piQ    = 0.70;    // Trimmed mean ← underlying VA-price trend
+// =====================================================================
+// Round 4-8 (2026-05-20): foreign monetary policy, demographic trend,
+// tax decomposition, branch (market/non-market) decomposition, BLR/MAPI/MAPU
+// auxiliary forecasters. All parameters calibrated to AU-relevant central
+// values; can be promoted to estimated_params if needed.
+// =====================================================================
+// Round 5 — demographic trends (audit #43): AU pop growth ~1.5%/yr trend
+rho_pop           = 0.95;    // Pop-growth gap persistence
+// Round 4 — foreign monetary policy (audit #8, #42)
+lambda_ibar_us    = 0.985;   // US LR anchor persistence (mirror AU)
+i_ss_us           = 0.625;   // US neutral rate ~2.5% annualised
+alpha_i_us        = 0.5;     // US Taylor: pi response
+beta_i_us         = 0.5;     // US Taylor: yhat response
+// Round 6 — tax structure decomposition (audit #46)
+rho_tau_GST       = 0.90;    // GST effective-rate persistence
+rho_tau_PAYG      = 0.92;    // PAYG effective-rate persistence
+rho_tau_CIT       = 0.94;    // CIT effective-rate persistence
+alpha_GST         = 0.05;    // GST → CPI passthrough
+alpha_PAYG        = 0.10;    // PAYG → consumption growth drag
+alpha_CIT         = 0.02;    // CIT → user-cost-of-capital bump
+// Round 7 — branch decomposition (audit #45): AU market vs non-market VA
+w_market          = 0.85;    // Market share of GDP (ABS Cat 5206)
+rho_nonmarket     = 0.90;    // Non-market sector persistence
+gamma_nonmarket   = 0.30;    // Non-market cyclical sensitivity to aggregate
+// Round 8 — BLR/MAPI/MAPU auxiliary forecasters (audit #48)
+rho_BLR           = 0.90;    // Bank lending rate nowcast persistence
+rho_MAPI          = 0.85;    // Housing price indicator persistence
+rho_MAPU          = 0.80;    // Housing investment underwriting persistence

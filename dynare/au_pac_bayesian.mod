@@ -98,6 +98,17 @@ var
 	pi_au_trad
 	pi_au_nontrad
 	pi_au_trim
+	dln_pop_bar
+	i_us
+	ibar_us
+	tau_GST_gap
+	tau_PAYG_gap
+	tau_CIT_gap
+	yhat_market
+	yhat_nonmarket
+	BLR_hat
+	MAPI_hat
+	MAPU_hat
 	pi_c
 	pi_g
 	pi_ib
@@ -437,6 +448,23 @@ parameters
 	delta_trad_s
 	rho_trim
 	delta_trim_piQ
+	rho_pop
+	lambda_ibar_us
+	i_ss_us
+	alpha_i_us
+	beta_i_us
+	rho_tau_GST
+	rho_tau_PAYG
+	rho_tau_CIT
+	alpha_GST
+	alpha_PAYG
+	alpha_CIT
+	w_market
+	rho_nonmarket
+	gamma_nonmarket
+	rho_BLR
+	rho_MAPI
+	rho_MAPU
 ;
 
 a_pQ_i = 0;
@@ -806,6 +834,25 @@ delta_trad_s      = -0.10;
 rho_trim          = 0.85;
 delta_trim_piQ    = 0.70;
 
+// Round 4-8 (2026-05-20):
+rho_pop           = 0.95;
+lambda_ibar_us    = 0.985;
+i_ss_us           = 0.625;
+alpha_i_us        = 0.5;
+beta_i_us         = 0.5;
+rho_tau_GST       = 0.90;
+rho_tau_PAYG      = 0.92;
+rho_tau_CIT       = 0.94;
+alpha_GST         = 0.05;
+alpha_PAYG        = 0.10;
+alpha_CIT         = 0.02;
+w_market          = 0.85;
+rho_nonmarket     = 0.90;
+gamma_nonmarket   = 0.30;
+rho_BLR           = 0.90;
+rho_MAPI          = 0.85;
+rho_MAPU          = 0.80;
+
 
 varexo
 	eps_10y
@@ -848,6 +895,15 @@ varexo
 	eps_var_yh
 	eps_w
 	eps_x
+	eps_pop_bar
+	eps_ibar_us
+	eps_i_us
+	eps_tau_GST
+	eps_tau_PAYG
+	eps_tau_CIT
+	eps_BLR
+	eps_MAPI
+	eps_MAPU
 ;
 
 @#ifdef InvertModel
@@ -1064,7 +1120,8 @@ model;
 	dln_n_star =  rho_n_star * dln_n_star(-1) + (1 - rho_n_star) * dln_n_star_bar;
 
 	[blockname='',name='dln_n_star_bar']
-	dln_n_star_bar =  (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap;
+	// Round 5 (2026-05-20): + dln_pop_bar — demographic trend shifter.
+	dln_n_star_bar =  (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap + dln_pop_bar;
 
 	[blockname='',name='n_gap']
 	n_gap =  n_gap(-1) + dln_n_star - dln_n;
@@ -1088,7 +1145,8 @@ model;
 	pv_r_lh_gap =  (1 - beta_c) * (i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) + beta_c * pv_r_lh_gap(+1);
 
 	[blockname='',name='dln_c_star_bar']
-	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au)));
+	// Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — income-tax drag.
+	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
 
 	[blockname='',name='c_gap']
 	c_gap =  c_gap(-1) + dln_c_star - dln_c;
@@ -1097,7 +1155,8 @@ model;
 	dln_ib_star =  rho_ib_star * dln_ib_star(-1) + (1 - rho_ib_star) * dln_ib_star_bar;
 
 	[blockname='',name='uc_k']
-	uc_k =  wacc + delta_k - (pi_ib - piQ);
+	// Round 6 (2026-05-20): + alpha_CIT · tau_CIT_gap — corporate income tax bump.
+	uc_k =  wacc + delta_k - (pi_ib - piQ) + alpha_CIT * tau_CIT_gap;
 
 	[blockname='',name='dln_uc_k']
 	dln_uc_k =  uc_k - uc_k(-1);
@@ -1187,7 +1246,8 @@ model;
 	dln_m =  b0_m * m_gap(-1) + b1_m * dln_m(-1) + b2_m * iad + b3_m * s_gap + eps_m;
 
 	[blockname='',name='pi_c']
-	pi_c =  rho_pc * pi_c(-1) + alpha_pc * piQ + beta_pc_m * pi_m + gamma_oil * dln_pcom + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au + eps_pc;
+	// Round 6 (2026-05-20): + alpha_GST · tau_GST_gap — GST passthrough.
+	pi_c =  rho_pc * pi_c(-1) + alpha_pc * piQ + beta_pc_m * pi_m + gamma_oil * dln_pcom + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au + alpha_GST * tau_GST_gap + eps_pc;
 
 	[blockname='',name='pi_ib']
 	pi_ib =  rho_pib * pi_ib(-1) + alpha_pib * piQ + beta_pib_m * pi_m + (1 - rho_pib - alpha_pib - beta_pib_m) * pibar_au + eps_pib;
@@ -1310,6 +1370,43 @@ model;
 
 	[blockname='',name='pi_au_trim']
 	pi_au_trim = rho_trim * pi_au_trim(-1) + (1 - rho_trim) * (delta_trim_piQ * piQ + (1 - delta_trim_piQ) * pibar_au);
+
+	// =====================================================================
+	// Round 4-8 (2026-05-20) — new model blocks
+	// =====================================================================
+
+	[blockname='',name='dln_pop_bar']
+	dln_pop_bar = rho_pop * dln_pop_bar(-1) + eps_pop_bar;
+
+	[blockname='',name='ibar_us']
+	ibar_us = lambda_ibar_us * ibar_us(-1) + (1 - lambda_ibar_us) * i_ss_us + eps_ibar_us;
+
+	[blockname='',name='i_us']
+	i_us = ibar_us + alpha_i_us * pi_us_gap(-1) + beta_i_us * yhat_us(-1) + eps_i_us;
+
+	[blockname='',name='tau_GST_gap']
+	tau_GST_gap = rho_tau_GST * tau_GST_gap(-1) + eps_tau_GST;
+
+	[blockname='',name='tau_PAYG_gap']
+	tau_PAYG_gap = rho_tau_PAYG * tau_PAYG_gap(-1) + eps_tau_PAYG;
+
+	[blockname='',name='tau_CIT_gap']
+	tau_CIT_gap = rho_tau_CIT * tau_CIT_gap(-1) + eps_tau_CIT;
+
+	[blockname='',name='yhat_nonmarket']
+	yhat_nonmarket = rho_nonmarket * yhat_nonmarket(-1) + (1 - rho_nonmarket) * gamma_nonmarket * yhat_au;
+
+	[blockname='',name='yhat_market']
+	yhat_market = (yhat_au - (1 - w_market) * yhat_nonmarket) / w_market;
+
+	[blockname='',name='BLR_hat']
+	BLR_hat = rho_BLR * BLR_hat(-1) + (1 - rho_BLR) * (i_lh - i_ss - tp_ss - spread_lh) + eps_BLR;
+
+	[blockname='',name='MAPI_hat']
+	MAPI_hat = rho_MAPI * MAPI_hat(-1) + (1 - rho_MAPI) * ph_gap + eps_MAPI;
+
+	[blockname='',name='MAPU_hat']
+	MAPU_hat = rho_MAPU * MAPU_hat(-1) + (1 - rho_MAPU) * dln_ih + eps_MAPU;
 
 end;
 
@@ -1510,6 +1607,27 @@ steady_state_model;
     pi_au_trad     = pi_ss_au;
     pi_au_nontrad  = pi_ss_au;
     pi_au_trim     = pi_ss_au;
+
+    // Round 5 (demographic trend gap, zero at SS)
+    dln_pop_bar    = 0;
+
+    // Round 4 (US monetary policy block)
+    ibar_us        = i_ss_us;
+    i_us           = i_ss_us;
+
+    // Round 6 (tax gaps, zero at SS)
+    tau_GST_gap    = 0;
+    tau_PAYG_gap   = 0;
+    tau_CIT_gap    = 0;
+
+    // Round 7 (branch decomposition, both = 0 at SS)
+    yhat_market    = 0;
+    yhat_nonmarket = 0;
+
+    // Round 8 (auxiliary forecasters, zero at SS)
+    BLR_hat        = 0;
+    MAPI_hat       = 0;
+    MAPU_hat       = 0;
 end;
 
 shocks;
@@ -1546,6 +1664,16 @@ shocks;
     var eps_pcom;       stderr 3.0;
     var eps_lh;         stderr 0.1;
     var eps_ph;         stderr 0.5;
+    // Round 4-8 (2026-05-20):
+    var eps_pop_bar;    stderr 0.05;
+    var eps_ibar_us;    stderr 0.01;
+    var eps_i_us;       stderr 0.15;
+    var eps_tau_GST;    stderr 0.10;
+    var eps_tau_PAYG;   stderr 0.20;
+    var eps_tau_CIT;    stderr 0.30;
+    var eps_BLR;        stderr 0.05;
+    var eps_MAPI;       stderr 0.50;
+    var eps_MAPU;       stderr 0.30;
 end;
 
 
@@ -1598,18 +1726,20 @@ estimated_params;
     stderr eps_10y,     inv_gamma_pdf,  0.10,  inf;
 end;
 
-// 2026-05-18 cleanup: the cached MCMC chains (au_pac_v2_bayesian/metropolis/
-// + Output/au_pac_v2_bayesian_mode) were collateral damage of the Phase-S
-// retire — they were never tracked by git. Estimation block now defaults to
-// a fresh csminwel mode search (mode_compute=4 + mh_replic=0). To regenerate
-// the full MCMC, change mh_replic=0 → mh_replic=20000 (~50 min wall time);
-// to subsequently reload the chains cheaply, switch back to mode_compute=0
-// + mode_file='au_pac_bayesian/Output/au_pac_bayesian_mode' + load_mh_file.
+// 2026-05-20: 20k×2-chain MCMC cached in au_pac_bayesian/metropolis/ +
+// Output/au_pac_bayesian_mode (Laplace -779.3032, MHM -780.3624). Default
+// behaviour is cheap reload via mode_compute=0 + load_mh_file. To re-run
+// MCMC after a structural change to the model or estimated_params:
+//   - set mode_compute=4, mh_replic=20000, remove load_mh_file + mode_file
+//   - run dynare au_pac_bayesian (≈ 50 min wall time on Apple Silicon)
+//   - revert to mode_compute=0 + load_mh_file once converged.
 estimation(datafile='estimation_data.mat',
            first_obs=1,
-           mode_compute=4,
+           mode_compute=0,
+           mode_file='au_pac_bayesian/Output/au_pac_bayesian_mode',
            presample=4,
            mh_replic=0,
+           load_mh_file,
            mh_nblocks=2,
            mh_jscale=0.4,
            diffuse_filter,

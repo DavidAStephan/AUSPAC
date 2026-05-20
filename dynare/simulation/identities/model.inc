@@ -170,7 +170,10 @@ pi_w = lambda_w * pi_w(-1) + gamma_w * pi_c - kappa_w * pv_u_gap + (1 - lambda_w
 dln_n_star = rho_n_star * dln_n_star(-1) + (1 - rho_n_star) * dln_n_star_bar;
 
 [name='eq_dln_n_star_bar']
-dln_n_star_bar = (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap;
+// Round 5 (2026-05-20): + dln_pop_bar shifter — population trend gap feeds
+// long-run employment growth one-for-one (constant employment-to-population
+// ratio at trend).
+dln_n_star_bar = (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap + dln_pop_bar;
 
 [name='eq_n_gap']
 n_gap = n_gap(-1) + dln_n_star - dln_n;
@@ -194,7 +197,8 @@ pv_yh = (1 - beta_c) * yhat_au + beta_c * pv_yh(+1);
 pv_r_lh_gap = (1 - beta_c) * (i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) + beta_c * pv_r_lh_gap(+1);
 
 [name='eq_dln_c_star_bar']
-dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au)));
+// Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — personal income tax change drags consumption growth.
+dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
 
 [name='eq_c_gap']
 c_gap = c_gap(-1) + dln_c_star - dln_c;
@@ -203,7 +207,8 @@ c_gap = c_gap(-1) + dln_c_star - dln_c;
 dln_ib_star = rho_ib_star * dln_ib_star(-1) + (1 - rho_ib_star) * dln_ib_star_bar;
 
 [name='eq_uc_k']
-uc_k = wacc + delta_k - (pi_ib - piQ);
+// Round 6 (2026-05-20): + alpha_CIT · tau_CIT_gap — corporate income tax shifts user cost of capital.
+uc_k = wacc + delta_k - (pi_ib - piQ) + alpha_CIT * tau_CIT_gap;
 
 [name='eq_dln_uc_k']
 dln_uc_k = uc_k - uc_k(-1);
@@ -293,7 +298,8 @@ m_gap = ln_m_eq - ln_m_level;
 dln_m = b0_m * m_gap(-1) + b1_m * dln_m(-1) + b2_m * iad + b3_m * s_gap + eps_m;
 
 [name='eq_pi_c']
-pi_c = rho_pc * pi_c(-1) + alpha_pc * piQ + beta_pc_m * pi_m + gamma_oil * dln_pcom + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au + eps_pc;
+// Round 6 (2026-05-20): + alpha_GST · tau_GST_gap — GST rate-change pass-through to CPI.
+pi_c = rho_pc * pi_c(-1) + alpha_pc * piQ + beta_pc_m * pi_m + gamma_oil * dln_pcom + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au + alpha_GST * tau_GST_gap + eps_pc;
 
 [name='eq_pi_ib']
 pi_ib = rho_pib * pi_ib(-1) + alpha_pib * piQ + beta_pib_m * pi_m + (1 - rho_pib - alpha_pib - beta_pib_m) * pibar_au + eps_pib;
@@ -418,4 +424,84 @@ pi_au_nontrad = (pi_au - w_cpi_trad * pi_au_trad) / (1 - w_cpi_trad);
 
 [name='eq_pi_au_trim']
 pi_au_trim = rho_trim * pi_au_trim(-1) + (1 - rho_trim) * (delta_trim_piQ * piQ + (1 - delta_trim_piQ) * pibar_au);
+
+// =====================================================================
+// Round 5 (2026-05-20) — Demographic trends (audit #43)
+// AR(1) gap variable representing deviations of AU population growth from
+// steady-state trend (g_pop_ss ≈ 0.375 qpp = 1.5% annualised; ABS Cat
+// 6202.0 average 2015-2024). Enters eq_dln_n_star_bar below as an additive
+// shifter so long-run employment tracks population trend.
+// =====================================================================
+
+[name='eq_dln_pop_bar']
+dln_pop_bar = rho_pop * dln_pop_bar(-1) + eps_pop_bar;
+
+// =====================================================================
+// Round 4 (2026-05-20) — Foreign monetary policy (audit #8, #42)
+// Add a Fed funds rate `i_us` and a US long-run anchor `ibar_us` to the
+// E-SAT layer. The existing model only carries yhat_us, pi_us, pi_us_gap,
+// pibar_us; this adds the policy-rate side so foreign monetary shocks
+// can transmit through the UIP block (eq_pv_i_uip uses ibar implicitly
+// for AU; symmetric US-side process for completeness).
+// =====================================================================
+
+[name='eq_ibar_us']
+ibar_us = lambda_ibar_us * ibar_us(-1) + (1 - lambda_ibar_us) * i_ss_us + eps_ibar_us;
+
+[name='eq_i_us']
+i_us = ibar_us + alpha_i_us * pi_us_gap(-1) + beta_i_us * yhat_us(-1) + eps_i_us;
+
+// =====================================================================
+// Round 6 (2026-05-20) — Tax structure decomposition (audit #46)
+// AR(1) effective-rate gaps for GST, PAYG (personal income tax), and CIT
+// (corporate income tax). Each feeds into one structural channel:
+//   tau_GST_gap  →  pi_c       (cost-push to CPI)
+//   tau_PAYG_gap →  dln_c_star_bar (consumption income drag)
+//   tau_CIT_gap  →  uc_k       (user-cost-of-capital bump)
+// AU steady-state effective rates: GST ~7-8% on CPI basket, PAYG ~22%
+// average personal-income effective, CIT ~22-25% post-deductions.
+// =====================================================================
+
+[name='eq_tau_GST_gap']
+tau_GST_gap = rho_tau_GST * tau_GST_gap(-1) + eps_tau_GST;
+
+[name='eq_tau_PAYG_gap']
+tau_PAYG_gap = rho_tau_PAYG * tau_PAYG_gap(-1) + eps_tau_PAYG;
+
+[name='eq_tau_CIT_gap']
+tau_CIT_gap = rho_tau_CIT * tau_CIT_gap(-1) + eps_tau_CIT;
+
+// =====================================================================
+// Round 7 (2026-05-20) — Market vs non-market VA decomposition (audit #45)
+// Decompose aggregate output gap into market sector (manufacturing, finance,
+// retail, mining, construction; ~85% of AU GDP per ABS Cat 5206) and
+// non-market sector (public admin, education, health; ~15%). Non-market
+// is smoother; market is more cyclical.
+// Identity-preserving: yhat_au ≡ w_market·yhat_market + (1-w_market)·yhat_nonmarket.
+// =====================================================================
+
+[name='eq_yhat_nonmarket']
+yhat_nonmarket = rho_nonmarket * yhat_nonmarket(-1) + (1 - rho_nonmarket) * gamma_nonmarket * yhat_au;
+
+[name='eq_yhat_market']
+yhat_market = (yhat_au - (1 - w_market) * yhat_nonmarket) / w_market;
+
+// =====================================================================
+// Round 8 (2026-05-20) — BLR / MAPI / MAPU auxiliary forecasters (audit #48)
+// RBA-style nowcasting projections of the key financial outcomes:
+//   BLR_hat  — Bank Lending Rate (nowcast of i_lh gap)
+//   MAPI_hat — Mortgage Asset Price Indicator (nowcast of ph_gap)
+//   MAPU_hat — Mortgage Asset Price Underwriting (nowcast of dln_ih)
+// One-way projections; each adds an exogenous nowcast shock that can be
+// fed with high-frequency / monthly data outside the quarterly cycle.
+// =====================================================================
+
+[name='eq_BLR_hat']
+BLR_hat = rho_BLR * BLR_hat(-1) + (1 - rho_BLR) * (i_lh - i_ss - tp_ss - spread_lh) + eps_BLR;
+
+[name='eq_MAPI_hat']
+MAPI_hat = rho_MAPI * MAPI_hat(-1) + (1 - rho_MAPI) * ph_gap + eps_MAPI;
+
+[name='eq_MAPU_hat']
+MAPU_hat = rho_MAPU * MAPU_hat(-1) + (1 - rho_MAPU) * dln_ih + eps_MAPU;
 

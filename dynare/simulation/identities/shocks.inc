@@ -52,3 +52,13 @@
     var eps_var_c;    stderr 0.50;   // consumption auxiliary gap
     var eps_var_ib;   stderr 0.50;   // business investment auxiliary gap
     var eps_var_ih;   stderr 0.50;   // housing investment auxiliary gap
+    // Round 4-8 (2026-05-20): new exogenous shock processes
+    var eps_pop_bar;  stderr 0.05;   // Round 5: demographic-trend gap shock
+    var eps_ibar_us;  stderr 0.01;   // Round 4: US LR anchor shock
+    var eps_i_us;     stderr 0.15;   // Round 4: US policy rate shock
+    var eps_tau_GST;  stderr 0.10;   // Round 6: GST effective-rate shock
+    var eps_tau_PAYG; stderr 0.20;   // Round 6: PAYG effective-rate shock
+    var eps_tau_CIT;  stderr 0.30;   // Round 6: CIT effective-rate shock
+    var eps_BLR;      stderr 0.05;   // Round 8: BLR nowcast shock
+    var eps_MAPI;     stderr 0.50;   // Round 8: MAPI nowcast shock
+    var eps_MAPU;     stderr 0.30;   // Round 8: MAPU nowcast shock

@@ -199,3 +199,24 @@
     pi_au_trad     = pi_ss_au;
     pi_au_nontrad  = pi_ss_au;
     pi_au_trim     = pi_ss_au;
+
+    // Round 5 (demographic trend gap, zero at SS)
+    dln_pop_bar    = 0;
+
+    // Round 4 (US monetary policy block)
+    ibar_us        = i_ss_us;
+    i_us           = i_ss_us;     // at SS pi_us_gap = 0, yhat_us = 0
+
+    // Round 6 (tax gaps, zero at SS)
+    tau_GST_gap    = 0;
+    tau_PAYG_gap   = 0;
+    tau_CIT_gap    = 0;
+
+    // Round 7 (branch decomposition, both = 0 at SS since yhat_au = 0)
+    yhat_market    = 0;
+    yhat_nonmarket = 0;
+
+    // Round 8 (auxiliary forecasters, zero at SS)
+    BLR_hat        = 0;
+    MAPI_hat       = 0;
+    MAPU_hat       = 0;

@@ -135,4 +135,15 @@ var
 	pi_au_core
 	pi_au_trad
 	pi_au_nontrad
-	pi_au_trim;
+	pi_au_trim
+	dln_pop_bar
+	i_us
+	ibar_us
+	tau_GST_gap
+	tau_PAYG_gap
+	tau_CIT_gap
+	yhat_market
+	yhat_nonmarket
+	BLR_hat
+	MAPI_hat
+	MAPU_hat;

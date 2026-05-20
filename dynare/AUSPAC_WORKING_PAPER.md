@@ -277,13 +277,9 @@ Under VAR-based expectations, the infinite sum collapses to $k_0 Z_{t-1}$ where 
 
 The 1.4–1.9× amplification across the consumption, business-investment, household-investment, and employment equations is consistent with the wp736 Section 6 finding that forward expectations amplify monetary transmission.
 
-### 3.4 Three expectation regimes
+### 3.4 Expectation architecture (Phase T policy-function workflow)
 
-Under **VAR-based** expectations, `pac_expectation()` evaluates to $k_0 Z_{t-1}$, a linear function of the lagged var_model state vector. All dynamics are backward-looking.
-
-Under the **Hybrid** regime, PAC equations remain backward-looking but three financial/labor variables use forward-looking recursive forms: the term structure ($pv_i$), the present value of unemployment gaps ($pv_{u,gap}$), and permanent income ($pv_{yh}$).
-
-Under **full MCE**, `pac_expectation()` expands into forward-looking recursive leads of the target variable (wp736 eqs 138–142). The MCE version has 30 forward-looking variables compared to 3 under the hybrid regime.
+The current production model uses a **single-regime, closed-form policy-function** workflow following FR-BDF wp1044 §3.2.3 (Dubois et al. 2026) and the Adjemian/Brayton/Zimic semi-structural-Dynare pattern. For each PAC block, Dynare's `pac.print()` is run on a per-block aux file to obtain a closed-form expansion of `pac_expectation()` as a linear combination of the model state variables (the `h_pac_*` coefficient set). `cherrypick()` extracts simulation-ready equations and `aggregate()` composes them with the structural identities into the production `au_pac.mod`. Forward-looking objects $pv_i$, $pv_{u,gap}$, $pv_{yh}$, $pv_{r,lh,gap}$, $pv_{i,uip}$ enter as recursive constraints in the structural identity layer rather than as part of the PAC expansion. This replaces a previous three-regime workflow (VAR / Hybrid / MCE) that ran the same model under alternative `pac_expectation()` settings; the historical comparison artefacts retained for paper §6.2 figures (`saved_irfs_{var,hybrid,mce}.mat`) come from that earlier workflow and are kept as a documentation of the architectural evolution.
 
 ---
 
@@ -955,6 +951,29 @@ $$\hat{y}^{dom}_t = 0.55 \Delta \ln C + 0.13 \Delta \ln I^B + 0.06 \Delta \ln I^
 
 The demand-side aggregate feeds back into the IS curve: $\hat{y}_t = ... + \lambda_{dom} \hat{y}^{dom}_t + \varepsilon^q_t$ with $\lambda_{dom} = 0.399$ (Bayesian posterior), closing the Keynesian multiplier loop.
 
+### 4.11.1 Rounds 4–8 model extensions (2026-05-20)
+
+Six concurrent extensions added to the production model, calibrated to AU-relevant central values, none of them entering the 9-observable likelihood directly (so the Bayesian estimation surface is unchanged):
+
+- **Round 4 — Foreign monetary policy.** Adds an explicit US policy-rate process to the previously-only-output/inflation US block. $\bar{i}^{us}_t$ follows an AR(1) toward a steady-state neutral rate $i^{us}_{ss} = 0.625$ qpp; $i^{us}_t$ closes a simple Taylor rule on US output and inflation gaps: $i^{us}_t = \bar{i}^{us}_t + \alpha_i^{us} \pi^{us,gap}_{t-1} + \beta_i^{us} \hat{y}^{us}_{t-1} + \varepsilon^{i,us}_t$ with $\alpha_i^{us} = \beta_i^{us} = 0.5$. The variable can be used as a UIP-side conditioning observable in future identification work.
+
+- **Round 5 — Demographic trend.** Adds a slowly-varying gap variable $\Delta \ln \overline{POP}_t$ (AR(1) persistence 0.95) that shifts long-run employment growth one-for-one through $\overline{\Delta \ln N^*}_t = \dots + \Delta \ln \overline{POP}_t$. Steady-state population growth is implicit in the gap-formulation demeaning (≈ 0.375 qpp from ABS Cat 6202.0); deviations are absorbed by the new shock $\varepsilon^{pop,bar}_t$.
+
+- **Round 6 — Tax structure decomposition.** Three AR(1) effective-rate gap variables — $\tau^{GST,gap}_t$, $\tau^{PAYG,gap}_t$, $\tau^{CIT,gap}_t$ — each feeding one structural channel:
+  - GST pass-through to the consumer-price deflator: $\pi^c_t = \dots + \alpha_{GST} \tau^{GST,gap}_t$ with $\alpha_{GST} = 0.05$.
+  - PAYG drag on consumption growth via the income-tax change: $\overline{\Delta \ln C^*}_t = \dots - \alpha_{PAYG} \Delta \tau^{PAYG,gap}_t$ with $\alpha_{PAYG} = 0.10$.
+  - CIT bump to the user cost of capital: $UC^K_t = WACC_t + \delta_K - (\pi^{IB}_t - \pi^Q_t) + \alpha_{CIT} \tau^{CIT,gap}_t$ with $\alpha_{CIT} = 0.02$.
+
+- **Round 7 — Market vs non-market VA decomposition.** Identity-preserving split of the output gap into market and non-market sectors (ABS Cat 5206 weight $w_{market} = 0.85$ for market: manufacturing, finance, retail, mining, construction; $1-w_{market} = 0.15$ for non-market: public administration, education, health). Non-market output is smoother and lagged: $\hat{y}^{nm}_t = \rho_{nm} \hat{y}^{nm}_{t-1} + (1-\rho_{nm}) \gamma_{nm} \hat{y}_t$ with $\rho_{nm} = 0.90$, $\gamma_{nm} = 0.30$. Market output is the residual.
+
+- **Round 8 — RBA-style auxiliary forecasters.** Three one-way nowcast projections that can be matched against monthly / high-frequency data outside the quarterly cycle:
+  - $BLR_t$ (Bank Lending Rate nowcast): AR(1) projection of the realised lending-rate gap $i^{LH}_t - i_{ss} - \tau p_{ss} - spread_{LH}$.
+  - $MAPI_t$ (Mortgage Asset Price Indicator): AR(1) projection of $ph^{gap}_t$.
+  - $MAPU_t$ (Mortgage Asset Price Underwriting): AR(1) projection of $\Delta \ln I^H_t$.
+  Each carries an exogenous shock for direct nowcast injection ($\varepsilon^{BLR}, \varepsilon^{MAPI}, \varepsilon^{MAPU}$).
+
+**Variable / shock counts.** The extensions add 11 endogenous variables, 18 calibrated parameters, and 9 exogenous shocks; production model goes from 164 to 175 endogenous variables and from 33 to 49 shocks. Smoke-tested 2026-05-20 — model preprocesses, solves under Blanchard-Kahn, and IRFs propagate through all the new channels. None of the new variables is in `varobs`, so the Bayesian likelihood and posterior are unchanged from the v3.1.1 baseline.
+
 ### 4.12 AU-PAC modelling choices and simplifications
 
 This subsection documents the modelling choices that shape AU-PAC. The headline monetary-transmission channels — cost of capital, exchange rate, mortgage rate, expectations, and the wage–price spiral — are all implemented and estimated on AU data. Several wp736 features are simplified or omitted; each is flagged below.
@@ -1256,11 +1275,13 @@ To verify that the model is well-behaved under no shocks — i.e., that the gap 
 
 Following the wp736 Section 6.2 protocol, we assess the impact of a 100 basis point annualised monetary policy tightening (= 0.25 quarterly percentage points). At order = 1, IRFs scale linearly: we compute them from Dynare's 1 s.d. responses multiplied by $0.25 / \sigma_{\varepsilon^i}$, where $\sigma_{\varepsilon^i} = 0.111$ is the posterior mean of the monetary-policy shock standard deviation.
 
+The walkthrough below describes the **Phase T single-regime architecture** documented in §3.4 — the current production model in `au_pac.mod`. Figures 6.1–6.2 below visualise three IRF traces (VAR / Hybrid / MCE) from the earlier three-regime workflow; they are kept as documentation of the architectural evolution. The numerical values in Table 6.3 below and the channel-by-channel walkthrough in §6.2.2 reflect the Phase T (formerly "Hybrid") trace — the regime that is closest to the current single-regime policy-function expectations.
+
 #### 6.2.1 Impulse responses
 
 ![Monetary policy IRFs](three_regime_monetary_irf.png)
 
-*Figure 6.1: AU-PAC responses to a 100bp annualized monetary policy tightening, all key variables. Shock = 0.25 qpp impact on the cash-rate residual ε_i.*
+*Figure 6.1: AU-PAC responses to a 100bp annualized monetary policy tightening, all key variables. Shock = 0.25 qpp impact on the cash-rate residual ε_i. Three traces visualised — VAR (backward-looking-only expectations), Hybrid (3 forward-looking recursive objects + backward PAC), MCE (model-consistent expectations across all PAC equations) — from the earlier three-regime workflow; the Phase T production regime is closest to the Hybrid trace.*
 
 ### Table 6.3: Peak IRF (100bp annualized monetary tightening)
 
@@ -1312,7 +1333,7 @@ Peak GDP / output-gap and inflation responses across models. Mulqueeney et al. (
 | MARTIN (semi-structural) | -0.45 to -0.50% | Q4 | -0.10 to -0.15 |
 | DINGO (DSGE) | -0.60 to -0.75% | Q5-7 | -0.20 |
 | Murphy (external) | -0.30% | Q4 | -0.40 to -0.50 |
-| **AU-PAC (hybrid, this paper)** | **−0.28%** | **Q7** | **−0.037** |
+| **AU-PAC (Phase T, this paper)** | **−0.28%** | **Q7** | **−0.037** |
 
 There are three plausible reasons AU-PAC's peak magnitude sits at the bottom of the RBA suite, the first reinforced by the FR-BDF 2026 calibration adopted here:
 
