@@ -11,7 +11,7 @@ output:
 
 ## Abstract
 
-This paper presents AU-PAC, a semi-structural macroeconomic model for Australia adapting the FR-BDF framework of Lemoine et al. (2019, BdF WP #736), with supply-block calibration following the Dubois et al. (2026, BdF WP #1044) update. Following the FRB/US modelling tradition, the model combines Polynomial Adjustment Costs (PAC) with explicit expectations and a supply block based on CES technology, with substitution elasticity σ = 0.54 estimated from the labour FOC under a two-break trend-efficiency specification. AU-PAC contains 158 endogenous variables, 40 exogenous shocks, and 270 parameters, with five PAC behavioural equations governing value-added prices, consumption, business investment, household investment, and employment, and a FR-BDF error-correction trade block with long-run income and real-exchange-rate elasticities. Expectations are formed as closed-form policy functions obtained from inversion of the estimated core Expectation Satellite VAR (E-SAT), supplemented by per-block auxiliary regressions following wp1044 §3.2.3. The model is estimated on Australian quarterly data from 1994Q1 to 2024Q4. The authoritative calibration comes from full-system Bayesian Metropolis-Hastings estimation of 28 joint parameters under an 11-observable specification; log marginal density Laplace = −781.05, Modified Harmonic Mean = **−781.39**. The wage Phillips curve has standard New Keynesian structure under genuine ABS Wage Price Index data: λ_w = 0.21 own-lag persistence, γ_w = 0.35 CPI passthrough, and a significant negative unemployment-PV coefficient κ_w = −0.10 corresponding to a positive structural Phillips slope. The response to a 100 bp annualized cash-rate tightening produces a peak real GDP fall of −0.22% at Q7, an output-gap peak of −0.14% at Q7, CPI inflation falling 0.10 pp year-on-year, the AUD appreciating 0.97% at Q8 via a forward-looking UIP NPV channel, and the 10-year yield rising 0.41 pp on impact. Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN, DINGO, Murphy — Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC at the conservative end of the AU range, with magnitudes that reflect the greater capital–labour substitutability of the CES specification (σ = 0.54) and the small estimated PAC adjustment-cost coefficients. The forward-guidance puzzle is absent: AU-PAC tracks the linear reference response to within 16% even at N = 12 successive rate-cut announcements, while standard New Keynesian models saturate near 1.8×. Australia-specific features include an endogenous Taylor rule for the RBA, variable-rate mortgage transmission, commodity-price channels, the US as the foreign bloc, and a trade ECM calibrated to Australia's secular openness rise. The model is implemented in Dynare 6.5.
+This paper presents AU-PAC, a semi-structural macroeconomic model for Australia adapting the FR-BDF framework of Lemoine et al. (2019, BdF WP #736), with supply-block calibration following the Dubois et al. (2026, BdF WP #1044) update. Following the FRB/US modelling tradition, the model combines Polynomial Adjustment Costs (PAC) with explicit expectations and a supply block based on CES technology, with substitution elasticity σ = 0.54 estimated from the labour FOC under a two-break trend-efficiency specification. AU-PAC contains 175 endogenous variables, 49 exogenous shocks, and approximately 288 parameters, with five PAC behavioural equations governing value-added prices, consumption, business investment, household investment, and employment, and a FR-BDF error-correction trade block with long-run income and real-exchange-rate elasticities. Expectations are formed as closed-form policy functions obtained from inversion of the estimated core Expectation Satellite VAR (E-SAT), supplemented by per-block auxiliary regressions following wp1044 §3.2.3. The model is estimated on Australian quarterly data from 1994Q1 to 2024Q4. The authoritative calibration comes from full-system Bayesian Metropolis-Hastings estimation of 28 joint parameters under a 9-observable specification; log marginal density Laplace = **−779.30**, Modified Harmonic Mean = **−780.36** (20k×2-chain MCMC, posterior cached in `dynare/au_pac_bayesian/`; cumulative Phase Q → Phase Y MHM improvement of +21.80 nats). The wage Phillips curve has standard New Keynesian structure under genuine ABS Wage Price Index data: λ_w = 0.21 own-lag persistence, γ_w = 0.35 CPI passthrough, and a significant negative unemployment-PV coefficient κ_w = −0.10 corresponding to a positive structural Phillips slope. The response to a 100 bp annualized cash-rate tightening produces a peak real GDP fall of −0.22% at Q7, an output-gap peak of −0.14% at Q7, CPI inflation falling 0.10 pp year-on-year, the AUD appreciating 0.97% at Q8 via a forward-looking UIP NPV channel, and the 10-year yield rising 0.41 pp on impact. Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN, DINGO, Murphy — Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC at the conservative end of the AU range, with magnitudes that reflect the greater capital–labour substitutability of the CES specification (σ = 0.54) and the small estimated PAC adjustment-cost coefficients. The forward-guidance puzzle is absent: AU-PAC tracks the linear reference response to within 16% even at N = 12 successive rate-cut announcements, while standard New Keynesian models saturate near 1.8×. Australia-specific features include an endogenous Taylor rule for the RBA, variable-rate mortgage transmission, commodity-price channels, the US as the foreign bloc, and a trade ECM calibrated to Australia's secular openness rise. The model is implemented in Dynare 6.5.
 
 **Keywords**: Semi-structural model, polynomial adjustment costs, expectations, monetary policy transmission, Australian economy
 
@@ -57,16 +57,17 @@ AU-PAC modifies the FR-BDF framework along four substantive dimensions to reflec
 
 | Dimension | AU-PAC |
 |-----------|--------|
-| Endogenous variables | 160 |
-| Exogenous shocks | 47 (incl. 2 COVID dummies) |
-| Parameters | 263 |
+| Endogenous variables | 175 |
+| Exogenous shocks | 49 (incl. 2 COVID dummies) |
+| Parameters | ~288 |
 | PAC equations | 5 |
 | Trade ECM equations | 2 (exports, imports — proper LR + SR specification) |
 | var_model equations | 12 |
-| Forward-looking variables (hybrid) | 4 (pv_i, pv_i_uip, pv_u_gap, pv_yh) |
-| Forward-looking variables (MCE) | 31 |
+| Forward-looking objects (Phase T) | 5 (pv_i, pv_i_uip, pv_u_gap, pv_yh, pv_r_lh_gap) |
+| HICP reporting components (Round 1.1) | 6 (food, energy, core, tradeables, non-tradeables, trimmed mean) |
+| Round 4-8 extensions (2026-05-20) | 11 new endogenous vars (i_us, ibar_us, dln_pop_bar, 3 tax gaps, 2 branch decomp, 3 nowcasters) |
 | Estimation sample (Bayesian) | 1994Q3–2024Q4 (122 quarters) |
-| Bayesian observables | 11 |
+| Bayesian observables | 9 (yhat_au, pi_au, i_au, yhat_us, pi_us, pi_w, dln_c, dln_ib, i_10y) |
 
 ### Software and implementation
 
@@ -1685,6 +1686,20 @@ These deviations are intentional and were preserved through Phase Q–X estimati
 ### B.4 Other shocks (8 deflator/trade + 12 var_model + 2 COVID dummies)
 
 Exchange rate (eps_s, 0.50), deflators (eps_pc, eps_pib, eps_pih, eps_px, eps_pm, eps_pg), housing price (eps_ph), plus 12 var_model shadow shocks and 2 COVID pulse dummies.
+
+### B.5 Rounds 4–8 extension shocks (9, added 2026-05-20)
+
+| Shock | σ | Channel |
+|---|---|---|
+| eps_pop_bar  | 0.05 | Round 5: demographic-trend gap (→ eq_dln_n_star_bar shifter) |
+| eps_ibar_us  | 0.01 | Round 4: US LR rate anchor (mirror lambda_ibar) |
+| eps_i_us     | 0.15 | Round 4: US policy-rate Taylor residual |
+| eps_tau_GST  | 0.10 | Round 6: GST effective-rate gap (→ eq_pi_c) |
+| eps_tau_PAYG | 0.20 | Round 6: PAYG effective-rate gap (→ eq_dln_c_star_bar Δ form) |
+| eps_tau_CIT  | 0.30 | Round 6: CIT effective-rate gap (→ eq_uc_k) |
+| eps_BLR      | 0.05 | Round 8: Bank-Lending-Rate nowcast injection |
+| eps_MAPI     | 0.50 | Round 8: Mortgage Asset-Price Indicator nowcast |
+| eps_MAPU     | 0.30 | Round 8: Mortgage Asset-Price Underwriting nowcast |
 
 ---
 

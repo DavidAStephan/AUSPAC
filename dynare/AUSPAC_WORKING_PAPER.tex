@@ -4,7 +4,6 @@
 \documentclass[
 ]{article}
 \usepackage{xcolor}
-\usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{iftex}
@@ -74,7 +73,7 @@
   pdfcreator={LaTeX via pandoc}}
 
 \author{}
-\date{\vspace{-2.5em}}
+\date{}
 
 \begin{document}
 
@@ -94,40 +93,42 @@ BdF WP \#1044) update. Following the FRB/US modelling tradition, the
 model combines Polynomial Adjustment Costs (PAC) with explicit
 expectations and a supply block based on CES technology, with
 substitution elasticity σ = 0.54 estimated from the labour FOC under a
-two-break trend-efficiency specification. AU-PAC contains 158 endogenous
-variables, 40 exogenous shocks, and 270 parameters, with five PAC
-behavioural equations governing value-added prices, consumption,
-business investment, household investment, and employment, and a FR-BDF
-error-correction trade block with long-run income and real-exchange-rate
-elasticities. Expectations are formed as closed-form policy functions
-obtained from inversion of the estimated core Expectation Satellite VAR
-(E-SAT), supplemented by per-block auxiliary regressions following
-wp1044 §3.2.3. The model is estimated on Australian quarterly data from
-1994Q1 to 2024Q4. The authoritative calibration comes from full-system
-Bayesian Metropolis-Hastings estimation of 28 joint parameters under an
-11-observable specification; log marginal density Laplace = −781.05,
-Modified Harmonic Mean = \textbf{−781.39}. The wage Phillips curve has
-standard New Keynesian structure under genuine ABS Wage Price Index
-data: λ\_w = 0.21 own-lag persistence, γ\_w = 0.35 CPI passthrough, and
-a significant negative unemployment-PV coefficient κ\_w = −0.10
-corresponding to a positive structural Phillips slope. The response to a
-100 bp annualized cash-rate tightening produces a peak real GDP fall of
-−0.22\% at Q7, an output-gap peak of −0.14\% at Q7, CPI inflation
-falling 0.10 pp year-on-year, the AUD appreciating 0.97\% at Q8 via a
-forward-looking UIP NPV channel, and the 10-year yield rising 0.41 pp on
-impact. Benchmarking against the RBA's model suite (Beckers 2020 VAR,
-MARTIN, DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025) places
-AU-PAC at the conservative end of the AU range, with magnitudes that
-reflect the greater capital--labour substitutability of the CES
-specification (σ = 0.54) and the small estimated PAC adjustment-cost
-coefficients. The forward-guidance puzzle is absent: AU-PAC tracks the
-linear reference response to within 16\% even at N = 12 successive
-rate-cut announcements, while standard New Keynesian models saturate
-near 1.8×. Australia-specific features include an endogenous Taylor rule
-for the RBA, variable-rate mortgage transmission, commodity-price
-channels, the US as the foreign bloc, and a trade ECM calibrated to
-Australia's secular openness rise. The model is implemented in Dynare
-6.5.
+two-break trend-efficiency specification. AU-PAC contains 175 endogenous
+variables, 49 exogenous shocks, and approximately 288 parameters, with
+five PAC behavioural equations governing value-added prices,
+consumption, business investment, household investment, and employment,
+and a FR-BDF error-correction trade block with long-run income and
+real-exchange-rate elasticities. Expectations are formed as closed-form
+policy functions obtained from inversion of the estimated core
+Expectation Satellite VAR (E-SAT), supplemented by per-block auxiliary
+regressions following wp1044 §3.2.3. The model is estimated on
+Australian quarterly data from 1994Q1 to 2024Q4. The authoritative
+calibration comes from full-system Bayesian Metropolis-Hastings
+estimation of 28 joint parameters under a 9-observable specification;
+log marginal density Laplace = \textbf{−779.30}, Modified Harmonic Mean
+= \textbf{−780.36} (20k×2-chain MCMC, posterior cached in
+\texttt{dynare/au\_pac\_bayesian/}; cumulative Phase Q → Phase Y MHM
+improvement of +21.80 nats). The wage Phillips curve has standard New
+Keynesian structure under genuine ABS Wage Price Index data: λ\_w = 0.21
+own-lag persistence, γ\_w = 0.35 CPI passthrough, and a significant
+negative unemployment-PV coefficient κ\_w = −0.10 corresponding to a
+positive structural Phillips slope. The response to a 100 bp annualized
+cash-rate tightening produces a peak real GDP fall of −0.22\% at Q7, an
+output-gap peak of −0.14\% at Q7, CPI inflation falling 0.10 pp
+year-on-year, the AUD appreciating 0.97\% at Q8 via a forward-looking
+UIP NPV channel, and the 10-year yield rising 0.41 pp on impact.
+Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN,
+DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC
+at the conservative end of the AU range, with magnitudes that reflect
+the greater capital--labour substitutability of the CES specification (σ
+= 0.54) and the small estimated PAC adjustment-cost coefficients. The
+forward-guidance puzzle is absent: AU-PAC tracks the linear reference
+response to within 16\% even at N = 12 successive rate-cut
+announcements, while standard New Keynesian models saturate near 1.8×.
+Australia-specific features include an endogenous Taylor rule for the
+RBA, variable-rate mortgage transmission, commodity-price channels, the
+US as the foreign bloc, and a trade ECM calibrated to Australia's
+secular openness rise. The model is implemented in Dynare 6.5.
 
 \textbf{Keywords}: Semi-structural model, polynomial adjustment costs,
 expectations, monetary policy transmission, Australian economy
@@ -246,18 +247,22 @@ AU-PAC
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Endogenous variables & 160 \\
-Exogenous shocks & 47 (incl.~2 COVID dummies) \\
-Parameters & 263 \\
+Endogenous variables & 175 \\
+Exogenous shocks & 49 (incl.~2 COVID dummies) \\
+Parameters & \textasciitilde288 \\
 PAC equations & 5 \\
 Trade ECM equations & 2 (exports, imports --- proper LR + SR
 specification) \\
 var\_model equations & 12 \\
-Forward-looking variables (hybrid) & 4 (pv\_i, pv\_i\_uip, pv\_u\_gap,
-pv\_yh) \\
-Forward-looking variables (MCE) & 31 \\
+Forward-looking objects (Phase T) & 5 (pv\_i, pv\_i\_uip, pv\_u\_gap,
+pv\_yh, pv\_r\_lh\_gap) \\
+HICP reporting components (Round 1.1) & 6 (food, energy, core,
+tradeables, non-tradeables, trimmed mean) \\
+Round 4-8 extensions (2026-05-20) & 11 new endogenous vars (i\_us,
+ibar\_us, dln\_pop\_bar, 3 tax gaps, 2 branch decomp, 3 nowcasters) \\
 Estimation sample (Bayesian) & 1994Q3--2024Q4 (122 quarters) \\
-Bayesian observables & 11 \\
+Bayesian observables & 9 (yhat\_au, pi\_au, i\_au, yhat\_us, pi\_us,
+pi\_w, dln\_c, dln\_ib, i\_10y) \\
 \end{longtable}
 }
 
@@ -265,7 +270,7 @@ Bayesian observables & 11 \\
 implementation}\label{software-and-implementation}
 
 The model is implemented in Dynare 6.5. The production simulation model
-\texttt{au\_pac\_v2.mod} is composed by Dynare's \texttt{aggregate()}
+\texttt{au\_pac.mod} is composed by Dynare's \texttt{aggregate()}
 function from five per-PAC-block auxiliary files (one each for the
 VA-price, consumption, business-investment, household-investment, and
 employment PAC equations) plus a normalized identity layer; each
@@ -275,7 +280,7 @@ stitched into the production model by \texttt{cherrypick()} (§4.4.0).
 Legacy companion \texttt{.mod} files (\texttt{au\_pac.mod},
 \texttt{au\_pac\_var.mod}, \texttt{au\_pac\_mce.mod}) for the
 alternative expectation regimes of §2.2 are also provided. Source code
-is available at \url{https://github.com/DavidAStephan/AUSPAC}. Bayesian
+is available at https://github.com/DavidAStephan/AUSPAC. Bayesian
 full-system estimation uses Dynare's \texttt{estimation()} command with
 \texttt{diffuse\_filter} (required for the model's unit-root level
 accumulators), a csminwel mode search followed by Metropolis-Hastings
@@ -449,6 +454,23 @@ counterparts:
 
 \[\hat{y}_t = \lambda_q \hat{y}_{t-1} + \delta \hat{y}^{US}_t - \sigma_q (i_{t-1} - \bar{i}_{t-1} - \pi^{gap}_{t-1}) + \lambda_{dom} \hat{y}^{dom}_t + \varepsilon^q_t\]
 
+\textbf{Deviation from FR-BDF wp736}: the final term
+\(\lambda_{dom} \hat{y}^{dom}_t\) is AU-PAC-specific and has no
+counterpart in FR-BDF's IS curve, which uses only \(\hat{y}^{US}\) (the
+foreign-output spillover) and the lagged real interest gap. We include
+\(\hat{y}^{dom}\) --- an expenditure-share-weighted aggregate of
+contemporaneous domestic-demand growth
+(\(w_c \dot{c} + w_{ib} \dot{i_b} + w_{ih} \dot{i_h} + w_g \dot{g} + w_x \dot{x} - w_m \dot{m}\),
+see §4.10 below) --- to close the Keynesian multiplier loop. Without
+this term the structural feedback from consumption/investment shocks
+back to the output gap, and hence into the Taylor rule, runs only
+through the foreign-output channel, which empirically understates
+aggregate-demand transmission in an open small commodity economy where
+domestic absorption is the dominant gap-mover. The Bayesian posterior
+mean for \(\lambda_{dom}\) is 0.40, four times the prior centre of 0.10,
+indicating the data strongly supports a substantial domestic-demand
+feedback (§5).
+
 \textbf{Australian Phillips curve} (eq. 2):
 
 \[\pi^{gap}_t = \lambda_\pi \pi^{gap}_{t-1} + \kappa_\pi \hat{y}_{t-1} + \varepsilon^\pi_t\]
@@ -581,6 +603,10 @@ coefficients}\label{table-3.4-auxiliary-equation-coefficients}
 Each auxiliary equation takes the form:
 \(\hat{X}_t = \rho_X \hat{X}_{t-1} + a_{X,y} \hat{y}_{t-1} + a_{X,i} \tilde{i}_{t-1} + a_{X,\pi} \tilde{\pi}_{t-1} + a_{X,u} \tilde{u}_{t-1} + ...\)
 
+Values shown are the Phase W Bayesian posterior means from
+\href{simulation/identities/calibration.inc}{\texttt{simulation/identities/calibration.inc}}
+(Phase B re-estimation 2026-05-09; activated 2026-05-17).
+
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1507}}
@@ -607,20 +633,21 @@ u\_gap
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Other
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-wp736 ref
+wp736 ref (France)
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-piQ\_hat & 0.70 & 0.03 & -0.02 & 0.01 & -0.05 & --- & Table 4.4.4 \\
-n\_hat & 0.67 & 0.12 & -0.03 & 0.05 & -0.04 & --- & Table 4.5.7 \\
-yh\_ratio\_hat & 0.92 & 0.32 & --- & --- & -0.08 & --- & Table 4.6.3 \\
-c\_hat & 0.60 & 0.06 & -0.04 & 0.01 & -0.03 & a\_c\_yh=0.39 & Table
+piQ\_hat & 0.334 & 0.043 & -0.021 & 0.007 & -0.021 & a\_pQ\_w=0.437
+(Phase U) & Table 4.4.4 (FR rho=0.70) \\
+n\_hat & 0.743 & 0.094 & -0.031 & 0.057 & -0.029 & --- & Table 4.5.7 \\
+yh\_ratio\_hat & 0.93 & 0.12 & --- & --- & -0.07 & --- & Table 4.6.3 \\
+c\_hat & 0.581 & 0.058 & -0.043 & 0.010 & -0.036 & a\_c\_yh=0.10 & Table
 4.6.4 \\
-ib\_hat & 0.59 & 0.15 & --- & 0.04 & -0.02 & --- & Table 4.6.11 \\
-rKB\_hat & 0.55 & --- & 0.24 & --- & --- & --- & Table 4.6.12 \\
-ih\_hat & 0.71 & 0.08 & -0.08 & 0.05 & -0.03 & --- & Table 4.6.16 \\
+ib\_hat & 0.694 & 0.050 & --- & 0.023 & 0.004 & --- & Table 4.6.11 \\
+rKB\_hat & 0.162 & --- & 0.242 & --- & --- & --- & Table 4.6.12 \\
+ih\_hat & 0.699 & 0.097 & -0.152 & 0.042 & 0.004 & --- & Table 4.6.16 \\
 \end{longtable}
 }
 
@@ -695,22 +722,27 @@ household-investment, and employment equations is consistent with the
 wp736 Section 6 finding that forward expectations amplify monetary
 transmission.
 
-\subsubsection{3.4 Three expectation
-regimes}\label{three-expectation-regimes}
+\subsubsection{3.4 Expectation architecture (Phase T policy-function
+workflow)}\label{expectation-architecture-phase-t-policy-function-workflow}
 
-Under \textbf{VAR-based} expectations, \texttt{pac\_expectation()}
-evaluates to \(k_0 Z_{t-1}\), a linear function of the lagged var\_model
-state vector. All dynamics are backward-looking.
-
-Under the \textbf{Hybrid} regime, PAC equations remain backward-looking
-but three financial/labor variables use forward-looking recursive forms:
-the term structure (\(pv_i\)), the present value of unemployment gaps
-(\(pv_{u,gap}\)), and permanent income (\(pv_{yh}\)).
-
-Under \textbf{full MCE}, \texttt{pac\_expectation()} expands into
-forward-looking recursive leads of the target variable (wp736 eqs
-138--142). The MCE version has 30 forward-looking variables compared to
-3 under the hybrid regime.
+The current production model uses a \textbf{single-regime, closed-form
+policy-function} workflow following FR-BDF wp1044 §3.2.3 (Dubois et
+al.~2026) and the Adjemian/Brayton/Zimic semi-structural-Dynare pattern.
+For each PAC block, Dynare's \texttt{pac.print()} is run on a per-block
+aux file to obtain a closed-form expansion of
+\texttt{pac\_expectation()} as a linear combination of the model state
+variables (the \texttt{h\_pac\_*} coefficient set).
+\texttt{cherrypick()} extracts simulation-ready equations and
+\texttt{aggregate()} composes them with the structural identities into
+the production \texttt{au\_pac.mod}. Forward-looking objects \(pv_i\),
+\(pv_{u,gap}\), \(pv_{yh}\), \(pv_{r,lh,gap}\), \(pv_{i,uip}\) enter as
+recursive constraints in the structural identity layer rather than as
+part of the PAC expansion. This replaces a previous three-regime
+workflow (VAR / Hybrid / MCE) that ran the same model under alternative
+\texttt{pac\_expectation()} settings; the historical comparison
+artefacts retained for paper §6.2 figures
+(\texttt{saved\_irfs\_\{var,hybrid,mce\}.mat}) come from that earlier
+workflow and are kept as a documentation of the architectural evolution.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -971,49 +1003,36 @@ economy-wide.
 \paragraph{4.3.1 Target equation (Factor price frontier, FR-BDF eq
 38)}\label{target-equation-factor-price-frontier-fr-bdf-eq-38}
 
-The long run of the VA price is derived from the CES dual cost function
-(eq. 13):
+\textbf{Theoretical motivation} (FR-BDF wp736 §4.4.1 / Dubois et
+al.~2026 §3.5.15). The long-run VA price is anchored to the CES dual
+cost function: in log-deviation form, the implied target inflation can
+be written as
 
-\[\pi^{Q*}_t = \rho^*_{pQ} \pi^{Q*}_{t-1} + \gamma_{ULC} \Delta \ln ULC_t + \gamma_{UCK} \Delta \ln UC^K_t + (1 - \rho^*_{pQ} - \gamma_{ULC}) \bar{\pi}_t\]
+\[\pi^{Q*}_t \approx \rho^*_{pQ} \pi^{Q*}_{t-1} + \gamma_{ULC} \Delta \ln ULC_t + \gamma_{UCK} \Delta \ln UC^K_t + (1 - \rho^*_{pQ} - \gamma_{ULC}) \bar{\pi}_t\]
 
-where \(\Delta \ln ULC = \pi_w - \Delta \ln Prod\) and
-\(\Delta \ln UC^K = UC^K_t - UC^K_{t-1}\).
+with \(\gamma_{ULC} = (1-\alpha)\sigma\) and
+\(\gamma_{UCK} = \alpha\sigma\) from the FR-BDF 2026 CES dual (§4.2). At
+AU calibration \(\sigma=0.5366\), \(\alpha=0.45\):
+\(\gamma_{ULC} \approx 0.295\) and \(\gamma_{UCK} \approx 0.241\).
 
-\subsubsection{Table 4.3.1: VA price target
-coefficients}\label{table-4.3.1-va-price-target-coefficients}
-
-{\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2821}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2051}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1795}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Parameter
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Symbol
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Value
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Description
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Target persistence & rho\_pQ\_star & 0.95 & Calibrated \\
-ULC pass-through & gamma\_ulc & \textbf{0.2951} &
-\((1-\alpha)\sigma = 0.55 \times 0.5366\) (FR-BDF 2026 CES dual) \\
-User cost pass-through & gamma\_uck & \textbf{0.2415} &
-\(\alpha\sigma = 0.45 \times 0.5366\) (FR-BDF 2026 CES dual) \\
-Inflation anchor & 1-rho-gamma & derived & Growth neutrality \\
-\end{longtable}
-}
-
-\textbf{Growth neutrality}: At SS,
-\(\pi^{Q*} = (\rho + \gamma_{ULC} + (1-\rho-\gamma_{ULC})) \times \pi_{SS} = \pi_{SS}\).
-Verified.
+\textbf{AU-PAC implementation note (Phase Y, 2026-05-17)}: AU-PAC does
+NOT carry the analytical \(\pi^{Q*}\) equation as a separately-coded
+structural equation. Following FR-BDF wp736 Table 4.4.4 and ECB-BASE
+WAPRO conventions --- both of which operationalise the PAC target as a
+single aux regression onto the satellite VAR state, not as two parallel
+objects --- the canonical AU-PAC target is the var\_model state
+\(\widehat{\pi Q}_t\) (\texttt{piQ\_hat}) described in §4.3.3 below. The
+CES factor-price frontier above is the theoretical reference for the
+long-run anchor; in the simulation, that anchor is enforced through (i)
+the BGP-consistent E-SAT state vector that \(\widehat{\pi Q}_t\)
+projects onto and (ii) the inflation-anchor coefficient
+\((1-\rho_{pQ,aux})\) in the regression. Earlier versions (Phase Q--X)
+carried \texttt{eq\_piQ\_star}, \texttt{eq\_pQ\_star\_level},
+\texttt{eq\_pQ\_gap} as orphan diagnostic equations; these were removed
+in Phase Y to eliminate the dual-target ambiguity. They were verified to
+have zero effect on simulation dynamics (no other equation referenced
+them on the RHS); their removal left the Laplace LMD and MHM LMD
+numerically identical.
 
 \paragraph{4.3.2 Short-run PAC equation (FR-BDF eq
 44)}\label{short-run-pac-equation-fr-bdf-eq-44}
@@ -1021,7 +1040,16 @@ Verified.
 The short-run dynamics use the PAC framework with Dynare's
 \texttt{pac\_expectation()} (eq. 14):
 
-\[\Delta pQ^{level}_t = b^{pQ}_0 (\pi^{Q*,level}_{t-1} - pQ^{level}_{t-1}) + b^{pQ}_1 \Delta pQ^{level}_{t-1} + pac\_exp(pac\_pQ) + b^{pQ}_2 \hat{y}_t + \varepsilon^{pQ}_t\]
+\[\Delta pQ^{level}_t = b^{pQ}_0 (\widehat{\pi Q}_{t-1} - pQ^{level}_{t-1}) + b^{pQ}_1 \Delta pQ^{level}_{t-1} + pac\_exp(pac\_pQ) + b^{pQ}_2 \hat{y}_t + \varepsilon^{pQ}_t\]
+
+where the ECM term pulls \(pQ^{level}\) toward \(\widehat{\pi Q}_{t-1}\)
+--- the var\_model aux regression of the VA-price target onto the
+augmented E-SAT state (§4.3.3) --- and \(pac\_exp(pac\_pQ)\) projects
+the discounted-sum future of \(\widehat{\pi Q}\) via the policy-function
+coefficients computed by \texttt{pac.print()}. Both the ECM target and
+the PAC-expectation projection reference the SAME object
+(\(\widehat{\pi Q}\)), matching FR-BDF wp736 Table 4.4.4 and ECB-BASE
+WAPRO architecture.
 
 \subsubsection{Table 4.3.2: VA price short-run
 coefficients}\label{table-4.3.2-va-price-short-run-coefficients}
@@ -1069,12 +1097,26 @@ the target equation (ULC and user-cost pass-through with
 short-run ad hoc term. Growth neutrality is verified:
 \(1 - 0.293 - 0.452 \approx 0.26\).
 
-\paragraph{4.3.3 E-SAT auxiliary (FR-BDF Table
-4.4.4)}\label{e-sat-auxiliary-fr-bdf-table-4.4.4}
+\paragraph{4.3.3 E-SAT auxiliary regression (FR-BDF Table
+4.4.4)}\label{e-sat-auxiliary-regression-fr-bdf-table-4.4.4}
 
-The VA price auxiliary equation in the var\_model (eq. 15):
+The VA-price auxiliary equation in the var\_model --- the canonical PAC
+target after Phase Y --- projects \(\widehat{\pi Q}\) onto the augmented
+E-SAT state vector with Bayesian posterior coefficients from
+\href{simulation/identities/calibration.inc}{\texttt{simulation/identities/calibration.inc}}:
 
-\[\widehat{\pi Q}_t = 0.70 \widehat{\pi Q}_{t-1} + 0.03 \hat{y}_{t-1} - 0.02 \tilde{i}_{t-1} + 0.01 \tilde{\pi}_{t-1} - 0.05 \tilde{u}_{t-1}\]
+\[\widehat{\pi Q}_t = 0.334\, \widehat{\pi Q}_{t-1} + 0.043\, \hat{y}_{t-1} - 0.021\, \tilde{i}_{t-1} + 0.007\, \tilde{\pi}_{t-1} - 0.021\, \tilde{u}_{t-1} + 0.437\, \tilde{\pi}^w_{t-1} + \varepsilon^{aux,pQ}_t\]
+
+(Phase W posteriors; Phase U wage-channel re-estimate for
+\(a_{pQ,w} = 0.437\).) Compare FR-BDF wp736 Table 4.4.4 which reports
+\(\rho_{pQ,aux} = 0.70\) (more persistent than the AU posterior 0.334)
+and a contemporaneous wage coefficient of 0.59 on
+\(\tilde{\pi}^w = \pi^w - \Delta\bar{e}\) in the analytical eq (45).
+AU-PAC applies the coefficient to LAGGED
+\(\tilde{\pi}^w_{gap} = \pi^w - \bar{\pi}^{au}\) (var\_model requires
+pure-VAR form; the gap subtracts the inflation anchor rather than the
+efficiency trend). The Phase U AU re-estimation found 0.437 on the AU
+sample --- the production runtime value.
 
 \paragraph{4.3.4 Dynamic contributions}\label{dynamic-contributions}
 
@@ -1105,22 +1147,46 @@ formation}\label{e-sat-inflation-equation-and-expectation-formation}
 
 The model's CPI inflation gap \(\tilde{\pi}^{au}_t\) evolves according
 to a reduced-form Phillips equation augmented with the FR-BDF structural
-deflator channels (wp736 §3.1.1):
+deflator channels (wp736 §3.1.1) plus two AU-specific Phase V additions:
 
-\[\tilde{\pi}^{au}_t = \lambda_\pi \, \tilde{\pi}^{au}_{t-1} + \kappa_\pi \, \hat{y}_{t-1} + \alpha_{pc} (\pi^Q_t - \bar{\pi}^{au}_t) + \beta_{pc,m} (\pi^m_t - \bar{\pi}^{au}_t) + \gamma_{oil} \Delta\ln pcom_t + \varepsilon^\pi_t\]
+\[\tilde{\pi}^{au}_t = \lambda_\pi \, \tilde{\pi}^{au}_{t-1} + \kappa_\pi \, \hat{y}_{t-1} + \alpha_{pc} (\pi^Q_t - \bar{\pi}^{au}_t) + \alpha_{pc,lag} (\pi^Q_{t-1} - \bar{\pi}^{au}_{t-1}) + \beta_{pc,m} (\pi^m_t - \bar{\pi}^{au}_t) + \gamma_{oil} \Delta\ln pcom_t + b_{ECM,pc} (p^{C,\ast}_{t-1} - p^C_{t-1}) + \varepsilon^\pi_t\]
 
-with \(\alpha_{pc} = 0.17\), \(\beta_{pc,m} = 0.10\),
-\(\gamma_{oil} = 0.03\) (estimated single-equation OLS on AU data,
-matching the \texttt{eq\_pi\_c} calibration). The reduced-form
-persistence \(\lambda_\pi\) and Phillips slope \(\kappa_\pi\) are
-jointly Bayesian-estimated with the rest of the model. This makes
-\(\pi^{au}\) structurally a function of value-added price (\(\pi^Q\)),
-import price (\(\pi^m\)), and commodity inflation (\(\Delta\ln pcom\)),
-mirroring the role of \(\pi^C\) in the FR-BDF deflator block (wp736 eqs
-79--80). Growth neutrality holds at the steady state:
-\(\tilde{\pi}^{au}_t = 0\), \(\pi^Q = \bar{\pi}^{au}\),
-\(\pi^m = \bar{\pi}^{au}\), \(\Delta\ln pcom = 0\) ⇒ all RHS terms
-vanish.
+with \(\alpha_{pc} = 0.20\), \(\alpha_{pc,lag} = 0.11\),
+\(\beta_{pc,m} = 0.10\), \(\gamma_{oil} = 0.03\), \(b_{ECM,pc} = 0.06\)
+(Bayesian posterior modes for \(\alpha_{pc}\), \(\alpha_{pc,lag}\),
+\(b_{ECM,pc}\); calibrated for the others). The reduced-form persistence
+\(\lambda_\pi\) and Phillips slope \(\kappa_\pi\) are jointly
+Bayesian-estimated with the rest of the model. The cumulative CPI target
+\(p^{C,\ast}_t\) is constructed as
+\(p^{C,\ast}_t = (1-\omega_{pc}) p^Q_t + \omega_{pc} p^M_t\) with the
+IAD-weighted import share \(\omega_{pc} = 0.23\) (matching the long-run
+CPI target eq 79 of wp736).
+
+\textbf{Deviations from FR-BDF wp736}: two terms in the equation above
+are AU-PAC-specific and have no counterpart in the FR-BDF Phillips curve
+(wp736 eq 28). - \emph{Lagged VA-price passthrough}
+\(\alpha_{pc,lag}(\pi^Q_{t-1} - \bar{\pi}^{au}_{t-1})\): wp736 has only
+the contemporaneous \(\alpha_{pc}\) term. We add the one-quarter lag to
+capture the empirical AU pattern that import-content-heavy components of
+the consumer basket reprice with a lag of about a quarter; the joint
+\(\alpha_{pc} + \alpha_{pc,lag}\) total passthrough
+(\textasciitilde0.31) better matches the AU long-run elasticity of CPI
+to VA prices than \(\alpha_{pc}\) alone. - \emph{ECM correction}
+\(b_{ECM,pc}(p^{C,\ast}_{t-1} - p^C_{t-1})\): in FR-BDF, the long-run
+anchoring of CPI runs through the consumption deflator's own
+two-equation target-plus-ECM structure (wp736 eqs 79-80). Because AUSPAC
+collapses that two-equation structure into the single \texttt{eq\_pi\_c}
+reduced form (see §4.9), the long-run anchor would otherwise be lost; we
+re-introduce it via this ECM term directly inside the Phillips curve.
+This is a pragmatic AU innovation, not a theoretical refinement --- its
+function is to keep the cumulative CPI trajectory pinned to the weighted
+VA+import target rather than drifting freely under reduced-form
+cost-push shocks.
+
+Growth neutrality holds at the steady state: \(\tilde{\pi}^{au}_t = 0\),
+\(\pi^Q = \bar{\pi}^{au}\), \(\pi^m = \bar{\pi}^{au}\),
+\(\Delta\ln pcom = 0\), and at the BGP \(p^{C,\ast} = p^C\) so the ECM
+term vanishes. All RHS terms vanish at the SS.
 
 \textbf{PAC expectation formation: policy-function approach.} Following
 FR-BDF wp1044 §2.2 + §3.2.3 (``expectations are computed as policy
@@ -1867,14 +1933,59 @@ long-run elasticities their own data identification --- previously the
 trade block was econometrically inert because no observable mapped to
 it.
 
-\subsubsection{4.9 Demand deflators (FR-BDF Section
-4.7)}\label{demand-deflators-fr-bdf-section-4.7}
+\subsubsection{4.9 Demand deflators (FR-BDF Section 4.7) --- AU
+reduced-form
+simplification}\label{demand-deflators-fr-bdf-section-4.7-au-reduced-form-simplification}
 
-All demand deflators follow ECM equations tracking the VA price with
-partial pass-through, anchored to the long-run inflation target. General
-form (eq. 36):
+AUSPAC's six demand deflators (consumption, business investment,
+household investment, exports, imports, and government consumption) are
+modelled as \textbf{single-equation reduced forms} combining own-lag
+persistence with contemporaneous cost-push regressors and a
+growth-neutrality anchor on \(\bar{\pi}\). General form (eq. 36):
 
 \[\pi^j_t = \rho_j \pi^j_{t-1} + \alpha_j \pi^Q_t + \beta_{j,m} \pi^M_t + ... + (1 - \rho_j - \alpha_j - \beta_{j,m} - ...) \bar{\pi}_t + \varepsilon^j_t\]
+
+\textbf{Deviation from FR-BDF wp736 / wp1044}: FR-BDF specifies each
+deflator as a \textbf{two-equation error-correction model} --- an
+explicit long-run target \(p^{j,\ast}\) (an IAD-weighted combination of
+\(p^Q\), \(p^{MO}\) (non-energy import), \(p^{MNRJ}\) (energy import),
+plus block-specific trend or competitor terms) and a short-run equation
+that includes an error-correction term
+\(\beta_{j,EC} [p^j_{t-1} - p^{j,\ast}_{t-1}]\) pulling each deflator
+back toward its target. AUSPAC carries no \(p^{j,\ast}\) target
+variables and no ECM term in any of its six deflator equations; the
+long-run anchoring runs instead through the growth-neutrality constraint
+on \(\bar{\pi}\). The two main consequences:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{No energy / non-energy import split} in the deflator block ---
+  AUSPAC's \(\pi^M\) is a single aggregate import-price series and the
+  commodity channel enters separately as an exogenous AR(1)
+  \texttt{dln\_pcom} rather than as \(\pi^{MNRJ}\) inside the deflator
+  targets. The energy-import passthrough that FR-BDF wp1044 §3.6
+  emphasises (especially the post-2022 surge) is therefore captured
+  imperfectly through \texttt{dln\_pcom\ +\ gamma\_oil} rather than
+  through a dedicated \(p^{MNRJ}\) regressor.
+\item
+  \textbf{CPI long-run anchoring is recovered inside the Phillips curve}
+  (§4.4.0 above) via the \(b_{ECM,pc}(p^{C,\ast}_{t-1} - p^C_{t-1})\)
+  ECM term rather than inside \texttt{eq\_pi\_c}. This keeps the
+  cumulative CPI trajectory pinned to a weighted VA+import target
+  without re-introducing the full FR-BDF target/ECM structure across all
+  six deflators.
+\end{itemize}
+
+The reduced-form simplification was a deliberate choice for AU
+estimation tractability --- six additional latent target processes would
+have increased the estimation surface substantially with limited
+identification gain on the AU sample (1993Q1--2024Q4, 128 quarters). The
+FR-BDF wp1044 §3.6 architecture is preserved as a reference for future
+restoration if AU data quality or sample length permits joint
+identification of all 12 deflator equations + targets.
+
+The full set of AU-estimated reduced-form coefficients:
 
 \subsubsection{Table 4.9.1: Consumption deflator (FR-BDF eqs
 79-80)}\label{table-4.9.1-consumption-deflator-fr-bdf-eqs-79-80}
@@ -1990,6 +2101,102 @@ Anchor (1-sum) & 0.20 & Growth neutrality \\
 \(\pi^j = \pi^Q = \bar{\pi} = \pi_{SS}\) for all deflators. The sum of
 all coefficients on inflation-type terms equals 1 for each. Verified for
 all 6 deflators.
+
+\subsubsection{4.9.7 HICP-style headline-decomposition reporting block
+(Round 1.1,
+2026-05-18)}\label{hicp-style-headline-decomposition-reporting-block-round-1.1-2026-05-18}
+
+Following ECB-BASE §3.2.3 and FR-BDF wp1044 §3.6.4, AUSPAC v3.1.1 adds a
+six-variable headline-CPI decomposition reporting layer. The
+decomposition is purely \emph{one-way}: each new variable is a
+deterministic function of existing model objects, with \textbf{zero
+feedback} into the structural dynamics, the wage Phillips curve, or the
+Taylor rule. Adding the block leaves both the cached Bayesian posterior
+and the IRFs of all existing variables bit-identical (Laplace LMD =
+\(-779.30\) before and after; MHM LMD = \(-780.47\) before and after).
+
+\textbf{Components and equations.} Three new core/food/energy split
+variables and three new tradeables/non-tradeables/trimmed-mean
+variables:
+
+\[\pi^{food}_t = \delta_{food,Q}\,\pi^Q_t + (1-\delta_{food,Q})\,\bar{\pi}_t + \delta_{food,com}\,\Delta\ln p^{com}_t\]
+\[\pi^{energy}_t = \delta_{energy,M}\,\pi^M_t + (1-\delta_{energy,M})\,\bar{\pi}_t + \delta_{energy,com}\,\Delta\ln p^{com}_t\]
+\[\pi^{core}_t = \frac{\pi^{au}_t - w^{food}\,\pi^{food}_t - w^{energy}\,\pi^{energy}_t}{1 - w^{food} - w^{energy}}\]
+\[\pi^{trad}_t = \delta_{trad,M}\,\pi^M_t + (1-\delta_{trad,M})\,\bar{\pi}_t + \delta_{trad,com}\,\Delta\ln p^{com}_t + \delta_{trad,s}\,s^{gap}_t\]
+\[\pi^{nontrad}_t = \frac{\pi^{au}_t - w^{trad}\,\pi^{trad}_t}{1 - w^{trad}}\]
+\[\pi^{trim}_t = \rho_{trim}\,\pi^{trim}_{t-1} + (1-\rho_{trim})\bigl[\delta_{trim,Q}\,\pi^Q_t + (1-\delta_{trim,Q})\,\bar{\pi}_t\bigr]\]
+
+The core and non-tradeables components are residual identities that
+close the decompositions
+\(\pi^{au} \equiv w^{food}\pi^{food} + w^{energy}\pi^{energy} + (1{-}w^{food}{-}w^{energy})\pi^{core}\)
+and
+\(\pi^{au} \equiv w^{trad}\pi^{trad} + (1{-}w^{trad})\pi^{nontrad}\).
+Adding-up is exact to machine precision (verified at
+\(-1.7 \times 10^{-16}\)).
+
+\textbf{Calibration.} Weights from ABS Cat. 6401.0 (CPI 2025 reweight)
+and RBA Bulletin tradeables share. Projection coefficients (\(\delta\))
+calibrated to typical AU passthrough magnitudes.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4231}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2692}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3077}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Parameter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Value
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Source
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\(w^{food}\) & 0.17 & ABS 6401 food + non-alcoholic beverages \\
+\(w^{energy}\) & 0.07 & ABS 6401 automotive fuel + electricity + gas \\
+\(w^{trad}\) & 0.35 & RBA Bulletin tradeables share \\
+\(\delta_{food,Q}\) & 0.65 & Domestic VA dominance in food (meat, dairy,
+fresh produce) \\
+\(\delta_{food,com}\) & 0.20 & Global agricultural commodity
+passthrough \\
+\(\delta_{energy,M}\) & 0.50 & Imported-fuel share \\
+\(\delta_{energy,com}\) & 0.60 & Oil/gas global passthrough \\
+\(\delta_{trad,M}\) & 0.85 & Tradeables dominated by imports \\
+\(\delta_{trad,com}\) & 0.15 & Commodity passthrough \\
+\(\delta_{trad,s}\) & \(-0.10\) & FX passthrough (AUD↑ → tradeables↓) \\
+\(\rho_{trim}\) & 0.85 & Trimmed-mean persistence \\
+\(\delta_{trim,Q}\) & 0.70 & Trimmed mean tracks underlying VA-price
+trend \\
+\end{longtable}
+}
+
+\textbf{IRF validation.} Shock responses on impact (post-Round-1.1 IRFs,
+\(t=1\)):
+
+\begin{itemize}
+\tightlist
+\item
+  \(\pi^{food}\,/\,\varepsilon^{pcom}\): \(+0.600\) --- matches
+  \(\delta_{food,com}\,\sigma_{pcom} = 0.20 \times 3.0\).
+\item
+  \(\pi^{energy}\,/\,\varepsilon^{pcom}\): \(+2.431\) --- matches
+  \(\delta_{energy,com}\,\sigma_{pcom} + \delta_{energy,M}\,(\beta_{pm,com}\,\sigma_{pcom}) = 1.80 + 0.50 \times 1.26\).
+\item
+  \(\pi^{core}\,/\,\varepsilon^{pi}\): \(+0.641\) --- matches the
+  residual identity
+  \(\pi^{au}_{\varepsilon_{pi}}\,/\,(1-w^{food}-w^{energy}) = 0.487 / 0.76\).
+\end{itemize}
+
+\textbf{Use cases.} The decomposition enables direct comparison with RBA
+inflation reporting (trimmed-mean, weighted-median,
+tradeables/non-tradeables), richer post-2022 inflation-surge
+attribution, and a foundation for the energy-block routing in Round 2.1
+(oil + gas split, FR-BDF wp1044 Appx E), which will replace the
+calibrated \(\delta_{energy,com}\) passthrough with a structural
+synthetic energy price index.
 
 \subsubsection{4.10 Financial variables (FR-BDF Section
 4.8)}\label{financial-variables-fr-bdf-section-4.8}
@@ -2143,6 +2350,92 @@ The demand-side aggregate feeds back into the IS curve:
 \(\hat{y}_t = ... + \lambda_{dom} \hat{y}^{dom}_t + \varepsilon^q_t\)
 with \(\lambda_{dom} = 0.399\) (Bayesian posterior), closing the
 Keynesian multiplier loop.
+
+\subsubsection{4.11.1 Rounds 4--8 model extensions
+(2026-05-20)}\label{rounds-48-model-extensions-2026-05-20}
+
+Six concurrent extensions added to the production model, calibrated to
+AU-relevant central values, none of them entering the 9-observable
+likelihood directly (so the Bayesian estimation surface is unchanged):
+
+\begin{itemize}
+\item
+  \textbf{Round 4 --- Foreign monetary policy.} Adds an explicit US
+  policy-rate process to the previously-only-output/inflation US block.
+  \(\bar{i}^{us}_t\) follows an AR(1) toward a steady-state neutral rate
+  \(i^{us}_{ss} = 0.625\) qpp; \(i^{us}_t\) closes a simple Taylor rule
+  on US output and inflation gaps:
+  \(i^{us}_t = \bar{i}^{us}_t + \alpha_i^{us} \pi^{us,gap}_{t-1} + \beta_i^{us} \hat{y}^{us}_{t-1} + \varepsilon^{i,us}_t\)
+  with \(\alpha_i^{us} = \beta_i^{us} = 0.5\). The variable can be used
+  as a UIP-side conditioning observable in future identification work.
+\item
+  \textbf{Round 5 --- Demographic trend.} Adds a slowly-varying gap
+  variable \(\Delta \ln \overline{POP}_t\) (AR(1) persistence 0.95) that
+  shifts long-run employment growth one-for-one through
+  \(\overline{\Delta \ln N^*}_t = \dots + \Delta \ln \overline{POP}_t\).
+  Steady-state population growth is implicit in the gap-formulation
+  demeaning (≈ 0.375 qpp from ABS Cat 6202.0); deviations are absorbed
+  by the new shock \(\varepsilon^{pop,bar}_t\).
+\item
+  \textbf{Round 6 --- Tax structure decomposition.} Three AR(1)
+  effective-rate gap variables --- \(\tau^{GST,gap}_t\),
+  \(\tau^{PAYG,gap}_t\), \(\tau^{CIT,gap}_t\) --- each feeding one
+  structural channel:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    GST pass-through to the consumer-price deflator:
+    \(\pi^c_t = \dots + \alpha_{GST} \tau^{GST,gap}_t\) with
+    \(\alpha_{GST} = 0.05\).
+  \item
+    PAYG drag on consumption growth via the income-tax change:
+    \(\overline{\Delta \ln C^*}_t = \dots - \alpha_{PAYG} \Delta \tau^{PAYG,gap}_t\)
+    with \(\alpha_{PAYG} = 0.10\).
+  \item
+    CIT bump to the user cost of capital:
+    \(UC^K_t = WACC_t + \delta_K - (\pi^{IB}_t - \pi^Q_t) + \alpha_{CIT} \tau^{CIT,gap}_t\)
+    with \(\alpha_{CIT} = 0.02\).
+  \end{itemize}
+\item
+  \textbf{Round 7 --- Market vs non-market VA decomposition.}
+  Identity-preserving split of the output gap into market and non-market
+  sectors (ABS Cat 5206 weight \(w_{market} = 0.85\) for market:
+  manufacturing, finance, retail, mining, construction;
+  \(1-w_{market} = 0.15\) for non-market: public administration,
+  education, health). Non-market output is smoother and lagged:
+  \(\hat{y}^{nm}_t = \rho_{nm} \hat{y}^{nm}_{t-1} + (1-\rho_{nm}) \gamma_{nm} \hat{y}_t\)
+  with \(\rho_{nm} = 0.90\), \(\gamma_{nm} = 0.30\). Market output is
+  the residual.
+\item
+  \textbf{Round 8 --- RBA-style auxiliary forecasters.} Three one-way
+  nowcast projections that can be matched against monthly /
+  high-frequency data outside the quarterly cycle:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \(BLR_t\) (Bank Lending Rate nowcast): AR(1) projection of the
+    realised lending-rate gap
+    \(i^{LH}_t - i_{ss} - \tau p_{ss} - spread_{LH}\).
+  \item
+    \(MAPI_t\) (Mortgage Asset Price Indicator): AR(1) projection of
+    \(ph^{gap}_t\).
+  \item
+    \(MAPU_t\) (Mortgage Asset Price Underwriting): AR(1) projection of
+    \(\Delta \ln I^H_t\). Each carries an exogenous shock for direct
+    nowcast injection
+    (\(\varepsilon^{BLR}, \varepsilon^{MAPI}, \varepsilon^{MAPU}\)).
+  \end{itemize}
+\end{itemize}
+
+\textbf{Variable / shock counts.} The extensions add 11 endogenous
+variables, 18 calibrated parameters, and 9 exogenous shocks; production
+model goes from 164 to 175 endogenous variables and from 33 to 49
+shocks. Smoke-tested 2026-05-20 --- model preprocesses, solves under
+Blanchard-Kahn, and IRFs propagate through all the new channels. None of
+the new variables is in \texttt{varobs}, so the Bayesian likelihood and
+posterior are unchanged from the v3.1.1 baseline.
 
 \subsubsection{4.12 AU-PAC modelling choices and
 simplifications}\label{au-pac-modelling-choices-and-simplifications}
@@ -3037,6 +3330,16 @@ from Dynare's 1 s.d. responses multiplied by
 \(\sigma_{\varepsilon^i} = 0.111\) is the posterior mean of the
 monetary-policy shock standard deviation.
 
+The walkthrough below describes the \textbf{Phase T single-regime
+architecture} documented in §3.4 --- the current production model in
+\texttt{au\_pac.mod}. Figures 6.1--6.2 below visualise three IRF traces
+(VAR / Hybrid / MCE) from the earlier three-regime workflow; they are
+kept as documentation of the architectural evolution. The numerical
+values in Table 6.3 below and the channel-by-channel walkthrough in
+§6.2.2 reflect the Phase T (formerly ``Hybrid'') trace --- the regime
+that is closest to the current single-regime policy-function
+expectations.
+
 \paragraph{6.2.1 Impulse responses}\label{impulse-responses}
 
 \begin{figure}
@@ -3047,7 +3350,11 @@ monetary-policy shock standard deviation.
 
 \emph{Figure 6.1: AU-PAC responses to a 100bp annualized monetary policy
 tightening, all key variables. Shock = 0.25 qpp impact on the cash-rate
-residual ε\_i.}
+residual ε\_i. Three traces visualised --- VAR (backward-looking-only
+expectations), Hybrid (3 forward-looking recursive objects + backward
+PAC), MCE (model-consistent expectations across all PAC equations) ---
+from the earlier three-regime workflow; the Phase T production regime is
+closest to the Hybrid trace.}
 
 \subsubsection{Table 6.3: Peak IRF (100bp annualized monetary
 tightening)}\label{table-6.3-peak-irf-100bp-annualized-monetary-tightening}
@@ -3211,7 +3518,7 @@ Beckers (2020) VAR & -1.5\% & \textasciitilde Q4 & -0.40 to -0.50 \\
 MARTIN (semi-structural) & -0.45 to -0.50\% & Q4 & -0.10 to -0.15 \\
 DINGO (DSGE) & -0.60 to -0.75\% & Q5-7 & -0.20 \\
 Murphy (external) & -0.30\% & Q4 & -0.40 to -0.50 \\
-\textbf{AU-PAC (hybrid, this paper)} & \textbf{−0.28\%} & \textbf{Q7} &
+\textbf{AU-PAC (Phase T, this paper)} & \textbf{−0.28\%} & \textbf{Q7} &
 \textbf{−0.037} \\
 \end{longtable}
 }
@@ -3541,8 +3848,10 @@ i\_10y & +0.026 & +0.103 & +0.103 & +0.021 & +0.001 \\
 Housing investment is the most sensitive (-0.16\% at Q8) and employment
 the most sluggish (peak at Q12); the 10Y rate moves approximately 40\%
 of the policy rate (yield-curve flattening). The conditional-forecast
-scenario re-run under the current calibration is straightforward (see
-\texttt{conditional\_forecast\_driver.m}).}
+driver was retired in the 2026-05-18 Phase S cleanup; the figure remains
+valid as a baked artefact and the scenario is reproducible under the
+Phase T architecture by a short residual-inversion script invoking
+\texttt{au\_pac.mod}.}
 
 \subsubsection{6.5 Forward guidance
 experiment}\label{forward-guidance-experiment}
@@ -3795,6 +4104,71 @@ The US enters as the foreign bloc in E-SAT. The AU--US demand spillover
 conditions to Australia, while the US inflation process influences
 Australian import prices and exchange-rate dynamics.
 
+\subsubsection{Architectural deviations from
+FR-BDF}\label{architectural-deviations-from-fr-bdf}
+
+AU-PAC diverges from FR-BDF wp736 / wp1044 along three architectural
+dimensions that are not market-structure-driven (the four subsections
+above) but model-design simplifications adopted for AU estimation
+tractability. They are documented at their primary locations in §3.1 (IS
+curve), §4.4.0 (Phillips curve), and §4.9 (demand deflators); this
+subsection collects them for a reader specifically interested in the
+AU-vs-FR-BDF map.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+AU innovation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Where
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+FR-BDF analogue
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Rationale
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Domestic-demand feedback term \(\lambda_{dom}\hat{y}^{dom}_t\) in the IS
+curve & \hyperref[31-the-e-sat-expectation-satellite-model]{§3.1}, eq
+(1) & No analogue --- wp736 IS curve has only \(\hat{y}^{US}\) +
+interest gap & Closes the Keynesian multiplier loop; data strongly
+supports a 4× larger feedback than the prior centre. \\
+Two Phase V additions in the Phillips curve: lagged VA-price passthrough
+\(\alpha_{pc,lag}(\pi^Q_{t-1} - \bar{\pi}^{au}_{t-1})\) and an ECM
+correction \(b_{ECM,pc}(p^{C,\ast}_{t-1} - p^C_{t-1})\) &
+\hyperref[440-e-sat-inflation-equation-and-expectation-formation]{§4.4.0}
+& \(\alpha_{pc,lag}\): no analogue. \(b_{ECM,pc}\): replaces the
+long-run-target ECM that lives inside \texttt{eq\_pi\_c} in wp736 eq 80.
+& \(\alpha_{pc,lag}\): captures empirical AU lagged import-component
+repricing. \(b_{ECM,pc}\): pragmatic device to restore CPI long-run
+anchoring after collapsing the deflator ECM structure (next row). \\
+Demand-deflator reduced-form collapse: 6 single-equation AR(1)+cost-push
+deflators (\texttt{eq\_pi\_c}, \texttt{eq\_pi\_ib}, \texttt{eq\_pi\_ih},
+\texttt{eq\_pi\_x}, \texttt{eq\_pi\_m}, \texttt{eq\_pi\_g}) instead of
+12 paired target+ECM equations &
+\hyperref[49-demand-deflators-fr-bdf-section-47--au-reduced-form-simplification]{§4.9}
+& wp736 eqs 79-88 / wp1044 eqs 51-55, 112-114: each deflator carries an
+explicit IAD-weighted long-run target \(p^{j,\ast}\) and a short-run
+equation with an ECM term & Six additional latent target processes would
+substantially enlarge the estimation surface with limited identification
+on 128 quarters of AU data. Long-run anchoring is recovered via the
+Phillips-curve ECM term (\(b_{ECM,pc}\) above). \\
+\end{longtable}
+}
+
+These deviations are intentional and were preserved through Phase Q--X
+estimation cycles. They are flagged explicitly here (rather than buried
+in the equation specifications) so that a researcher porting AU-PAC to
+another country or extending it back toward the full FR-BDF target/ECM
+structure can identify the exact code-level entry points.
+
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \subsection{Appendix A: Complete Variable
@@ -3825,8 +4199,8 @@ pi\_us\_gap & US inflation gap & 0 \\
 \end{longtable}
 }
 
-\subsubsection{A.2 VA Price Block (5
-variables)}\label{a.2-va-price-block-5-variables}
+\subsubsection{A.2 VA Price Block (2
+variables)}\label{a.2-va-price-block-2-variables}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lll@{}}
@@ -3837,12 +4211,13 @@ Variable & Description & SS value \\
 \bottomrule\noalign{}
 \endlastfoot
 piQ & VA price inflation (quarterly \%) & 0.625 \\
-piQ\_star & VA price target inflation & 0.625 \\
-piQ\_star\_bar & VA price trend inflation & 0.625 \\
-pQ\_gap & VA price gap & 0 \\
 pQ\_level & VA price log-level accumulator & 0 \\
 \end{longtable}
 }
+
+(Pre-Phase-Y also carried \texttt{piQ\_star}, \texttt{piQ\_star\_bar},
+\texttt{pQ\_gap}, \texttt{pQ\_star\_level} as diagnostic-only orphan
+variables. These were removed 2026-05-17 --- see §4.3.1.)
 
 \subsubsection{A.3 Supply Block (5
 variables)}\label{a.3-supply-block-5-variables}
@@ -3990,7 +4365,7 @@ variables)}\label{a.8-var_model-shadow-pac-levels-27-variables}
 12 var\_model shadow variables (y\_gap\_var, i\_gap\_var, etc.) plus 7
 auxiliary targets (piQ\_hat, n\_hat, c\_hat, etc.) plus 6 pv\_aux
 correction terms plus log-level accumulators (ln\_c\_level,
-ln\_ib\_level, ln\_ih\_level, ln\_n\_level, pQ\_star\_level).
+ln\_ib\_level, ln\_ih\_level, ln\_n\_level, pQ\_level).
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -4069,6 +4444,41 @@ dummies)}\label{b.4-other-shocks-8-deflatortrade-12-var_model-2-covid-dummies}
 Exchange rate (eps\_s, 0.50), deflators (eps\_pc, eps\_pib, eps\_pih,
 eps\_px, eps\_pm, eps\_pg), housing price (eps\_ph), plus 12 var\_model
 shadow shocks and 2 COVID pulse dummies.
+
+\subsubsection{B.5 Rounds 4--8 extension shocks (9, added
+2026-05-20)}\label{b.5-rounds-48-extension-shocks-9-added-2026-05-20}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Shock
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+σ
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Channel
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+eps\_pop\_bar & 0.05 & Round 5: demographic-trend gap (→
+eq\_dln\_n\_star\_bar shifter) \\
+eps\_ibar\_us & 0.01 & Round 4: US LR rate anchor (mirror
+lambda\_ibar) \\
+eps\_i\_us & 0.15 & Round 4: US policy-rate Taylor residual \\
+eps\_tau\_GST & 0.10 & Round 6: GST effective-rate gap (→ eq\_pi\_c) \\
+eps\_tau\_PAYG & 0.20 & Round 6: PAYG effective-rate gap (→
+eq\_dln\_c\_star\_bar Δ form) \\
+eps\_tau\_CIT & 0.30 & Round 6: CIT effective-rate gap (→ eq\_uc\_k) \\
+eps\_BLR & 0.05 & Round 8: Bank-Lending-Rate nowcast injection \\
+eps\_MAPI & 0.50 & Round 8: Mortgage Asset-Price Indicator nowcast \\
+eps\_MAPU & 0.30 & Round 8: Mortgage Asset-Price Underwriting nowcast \\
+\end{longtable}
+}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -4181,7 +4591,7 @@ List}\label{appendix-e-complete-parameter-list}
 See the comprehensive parameter tables throughout Section 4. A
 machine-readable list of all 262 parameters with their values is
 available alongside the model code at
-\url{https://github.com/DavidAStephan/AUSPAC}.
+https://github.com/DavidAStephan/AUSPAC.
 
 The four trade long-run elasticities introduced in the Section 4.8 ECM
 rewrite are summarised here for convenience:
@@ -4413,7 +4823,7 @@ System.
 Zimic, S. (2023). ``SemiStructDynareBasics: A reference implementation
 of FRB/US-style PAC models in Dynare.'' ECB internal documentation and
 public GitLab repository.
-\url{https://gitlab.com/srecko/SemiStructDynareBasics}
+https://gitlab.com/srecko/SemiStructDynareBasics
 
 Galí, J., Smets, F., and Wouters, R. (2011). ``Unemployment in an
 Estimated New Keynesian Model.'' \emph{NBER Macroeconomics Annual},
