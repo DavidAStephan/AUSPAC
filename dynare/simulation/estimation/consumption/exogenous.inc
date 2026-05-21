@@ -14,6 +14,7 @@ varexo
 	pibar_us
 	tau_PAYG_gap
 	u_gap
+	wt_H_real_gap
 	yh_ratio_hat
 	yhat_au
 	yhat_us;

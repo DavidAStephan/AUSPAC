@@ -212,6 +212,9 @@
     tau_PAYG_gap   = 0;
     tau_CIT_gap    = 0;
 
+    // Round 1.2 (household wage+transfer income gap, zero at SS by construction)
+    wt_H_real_gap  = 0;
+
     // Round 7 (branch decomposition, both = 0 at SS since yhat_au = 0)
     yhat_market    = 0;
     yhat_nonmarket = 0;

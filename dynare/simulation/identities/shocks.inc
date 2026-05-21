@@ -62,3 +62,5 @@
     var eps_BLR;      stderr 0.05;   // Round 8: BLR nowcast shock
     var eps_MAPI;     stderr 0.50;   // Round 8: MAPI nowcast shock
     var eps_MAPU;     stderr 0.30;   // Round 8: MAPU nowcast shock
+    var eps_wtH;      stderr 0.012;  // Round 1.2: household wage+transfer-income shock
+                                     //   (sd from HP-gap of ABS 5206 Table 20, 1993-2024)

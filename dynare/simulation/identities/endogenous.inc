@@ -142,6 +142,7 @@ var
 	tau_GST_gap
 	tau_PAYG_gap
 	tau_CIT_gap
+	wt_H_real_gap
 	yhat_market
 	yhat_nonmarket
 	BLR_hat
