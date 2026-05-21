@@ -165,10 +165,12 @@ var
 
 parameters
 	a_c_i
+	a_c_PAYG
 	a_c_pi
 	a_c_u
 	a_c_y
 	a_c_yh
+	a_ib_CIT
 	a_ib_pi
 	a_ib_u
 	a_ib_y
@@ -178,13 +180,16 @@ parameters
 	a_ih_y
 	a_n_i
 	a_n_pi
+	a_n_pop
 	a_n_u
 	a_n_y
+	a_pQ_GST
 	a_pQ_i
 	a_pQ_pi
 	a_pQ_u
 	a_pQ_w
 	a_pQ_y
+	a_rKB_CIT
 	a_rKB_i
 	a_yh_u
 	a_yh_y
@@ -279,6 +284,7 @@ parameters
 	h_pac_c_var_pi_us_gap_lag_1
 	h_pac_c_var_pibar_au_lag_1
 	h_pac_c_var_pibar_us_lag_1
+	h_pac_c_var_tau_PAYG_gap_lag_1
 	h_pac_c_var_u_gap_lag_1
 	h_pac_c_var_yh_ratio_hat_lag_1
 	h_pac_c_var_yhat_au_lag_1
@@ -295,6 +301,7 @@ parameters
 	h_pac_ib_var_pibar_au_lag_1
 	h_pac_ib_var_pibar_us_lag_1
 	h_pac_ib_var_rKB_hat_lag_1
+	h_pac_ib_var_tau_CIT_gap_lag_1
 	h_pac_ib_var_u_gap_lag_1
 	h_pac_ib_var_yhat_au_lag_1
 	h_pac_ib_var_yhat_us_lag_1
@@ -314,6 +321,7 @@ parameters
 	h_pac_ih_var_yhat_us_lag_1
 	h_pac_n_constant
 	h_pac_n_var_dln_pcom_lag_1
+	h_pac_n_var_dln_pop_bar_lag_1
 	h_pac_n_var_i_gap_lag_1
 	h_pac_n_var_ibar_lag_1
 	h_pac_n_var_n_hat_lag_1
@@ -338,6 +346,7 @@ parameters
 	h_pac_pQ_var_pi_w_gap_lag_1
 	h_pac_pQ_var_pibar_au_lag_1
 	h_pac_pQ_var_pibar_us_lag_1
+	h_pac_pQ_var_tau_GST_gap_lag_1
 	h_pac_pQ_var_u_gap_lag_1
 	h_pac_pQ_var_yhat_au_lag_1
 	h_pac_pQ_var_yhat_us_lag_1
@@ -467,6 +476,7 @@ parameters
 	rho_MAPU
 ;
 
+a_pQ_GST = 0.05;
 a_pQ_i = 0;
 a_pQ_pi = 0;
 a_pQ_u = 0;
@@ -487,10 +497,12 @@ h_pac_pQ_var_pi_us_gap_lag_1 = 0;
 h_pac_pQ_var_pi_w_gap_lag_1 = 0.001165346490302144;
 h_pac_pQ_var_pibar_au_lag_1 = -0.001543732469070786;
 h_pac_pQ_var_pibar_us_lag_1 = 0;
+h_pac_pQ_var_tau_GST_gap_lag_1 = 0.0008210038229253343;
 h_pac_pQ_var_u_gap_lag_1 = -0.001037504482199218;
 h_pac_pQ_var_yhat_au_lag_1 = 0.001309415581591862;
 h_pac_pQ_var_yhat_us_lag_1 = 0.001031305130438237;
 rho_pQ_aux = 0.85;
+a_c_PAYG = -0.1;
 a_c_i = -0.04;
 a_c_pi = 0.005;
 a_c_u = -0.03;
@@ -513,15 +525,18 @@ h_pac_c_var_pi_m_lag_1 = 0.000110380946501119;
 h_pac_c_var_pi_us_gap_lag_1 = 0;
 h_pac_c_var_pibar_au_lag_1 = -0.001220216363422831;
 h_pac_c_var_pibar_us_lag_1 = 0;
+h_pac_c_var_tau_PAYG_gap_lag_1 = -0.009564712502815697;
 h_pac_c_var_u_gap_lag_1 = -0.007309734434297452;
 h_pac_c_var_yh_ratio_hat_lag_1 = 0.01002197187779131;
 h_pac_c_var_yhat_au_lag_1 = 0.01090617676217883;
 h_pac_c_var_yhat_us_lag_1 = 0.006501609785602032;
 rho_c_aux = 0.6;
 rho_yh_aux = 0.6;
+a_ib_CIT = -0.011;
 a_ib_pi = 0.04;
 a_ib_u = -0.02;
 a_ib_y = 0.15;
+a_rKB_CIT = 0.02;
 a_rKB_i = 0.24;
 b0_ib = 0.018;
 b1_ib = 0.0818;
@@ -539,6 +554,7 @@ h_pac_ib_var_pi_us_gap_lag_1 = 0;
 h_pac_ib_var_pibar_au_lag_1 = -0.0002087557878420321;
 h_pac_ib_var_pibar_us_lag_1 = 0;
 h_pac_ib_var_rKB_hat_lag_1 = 0;
+h_pac_ib_var_tau_CIT_gap_lag_1 = -0.0002407865635043806;
 h_pac_ib_var_u_gap_lag_1 = 8.755875036522933e-05;
 h_pac_ib_var_yhat_au_lag_1 = 0.0002409149502218592;
 h_pac_ib_var_yhat_us_lag_1 = 0.0002065844286071973;
@@ -569,6 +585,7 @@ h_pac_ih_var_yhat_us_lag_1 = 0.0009368676540363051;
 rho_ih_aux = 0.71;
 a_n_i = -0.03;
 a_n_pi = 0.05;
+a_n_pop = 1;
 a_n_u = -0.04;
 a_n_y = 0.12;
 b0_n = 0.0578;
@@ -579,6 +596,7 @@ b4_n = 0;
 b5_n = -0.0007;
 h_pac_n_constant = 0.0008405020359839308;
 h_pac_n_var_dln_pcom_lag_1 = 8.270836000520397e-05;
+h_pac_n_var_dln_pop_bar_lag_1 = 0.1240186277865285;
 h_pac_n_var_i_gap_lag_1 = -0.007115738670505818;
 h_pac_n_var_ibar_lag_1 = 0;
 h_pac_n_var_n_hat_lag_1 = 0.01200933966843916;
@@ -803,16 +821,16 @@ varexo
 model;
 
 	[blockname='',name='pac_expectation_pac_pQ']
-	pac_expectation_pac_pQ =  h_pac_pQ_constant + h_pac_pQ_var_yhat_au_lag_1*yhat_au(-1) + h_pac_pQ_var_i_gap_lag_1*i_gap(-1) + h_pac_pQ_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_pQ_var_u_gap_lag_1*u_gap(-1) + h_pac_pQ_var_yhat_us_lag_1*yhat_us(-1) + h_pac_pQ_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_pQ_var_ibar_lag_1*ibar(-1) + h_pac_pQ_var_pibar_au_lag_1*pibar_au(-1) + h_pac_pQ_var_pibar_us_lag_1*pibar_us(-1) + h_pac_pQ_var_piQ_lag_1*piQ(-1) + h_pac_pQ_var_pi_m_lag_1*pi_m(-1) + h_pac_pQ_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_pQ_var_pi_w_gap_lag_1*pi_w_gap(-1) + h_pac_pQ_var_piQ_hat_lag_1*piQ_hat(-1);
+	pac_expectation_pac_pQ =  h_pac_pQ_constant + h_pac_pQ_var_yhat_au_lag_1*yhat_au(-1) + h_pac_pQ_var_i_gap_lag_1*i_gap(-1) + h_pac_pQ_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_pQ_var_u_gap_lag_1*u_gap(-1) + h_pac_pQ_var_yhat_us_lag_1*yhat_us(-1) + h_pac_pQ_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_pQ_var_ibar_lag_1*ibar(-1) + h_pac_pQ_var_pibar_au_lag_1*pibar_au(-1) + h_pac_pQ_var_pibar_us_lag_1*pibar_us(-1) + h_pac_pQ_var_piQ_lag_1*piQ(-1) + h_pac_pQ_var_pi_m_lag_1*pi_m(-1) + h_pac_pQ_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_pQ_var_pi_w_gap_lag_1*pi_w_gap(-1) + h_pac_pQ_var_tau_GST_gap_lag_1*tau_GST_gap(-1) + h_pac_pQ_var_piQ_hat_lag_1*piQ_hat(-1);
 
 	[blockname='',name='pQ_level']
 	diff(pQ_level) =  b0_pQ*(piQ_hat(-1)-pQ_level(-1))+b1_pQ*diff(pQ_level(-1))+pac_expectation_pac_pQ+yhat_au*b2_pQ+eps_pQ;
 
 	[blockname='',name='piQ_hat']
-	piQ_hat =  rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+pi_w_gap(-1)*a_pQ_w+eps_var_pQ;
+	piQ_hat =  rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+pi_w_gap(-1)*a_pQ_w+tau_GST_gap(-1)*a_pQ_GST+eps_var_pQ;
 
 	[blockname='',name='pac_expectation_pac_c']
-	pac_expectation_pac_c =  h_pac_c_constant + h_pac_c_var_yhat_au_lag_1*yhat_au(-1) + h_pac_c_var_i_gap_lag_1*i_gap(-1) + h_pac_c_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_c_var_u_gap_lag_1*u_gap(-1) + h_pac_c_var_yhat_us_lag_1*yhat_us(-1) + h_pac_c_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_c_var_ibar_lag_1*ibar(-1) + h_pac_c_var_pibar_au_lag_1*pibar_au(-1) + h_pac_c_var_pibar_us_lag_1*pibar_us(-1) + h_pac_c_var_piQ_lag_1*piQ(-1) + h_pac_c_var_pi_m_lag_1*pi_m(-1) + h_pac_c_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_c_var_yh_ratio_hat_lag_1*yh_ratio_hat(-1) + h_pac_c_var_c_hat_lag_1*c_hat(-1);
+	pac_expectation_pac_c =  h_pac_c_constant + h_pac_c_var_yhat_au_lag_1*yhat_au(-1) + h_pac_c_var_i_gap_lag_1*i_gap(-1) + h_pac_c_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_c_var_u_gap_lag_1*u_gap(-1) + h_pac_c_var_yhat_us_lag_1*yhat_us(-1) + h_pac_c_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_c_var_ibar_lag_1*ibar(-1) + h_pac_c_var_pibar_au_lag_1*pibar_au(-1) + h_pac_c_var_pibar_us_lag_1*pibar_us(-1) + h_pac_c_var_piQ_lag_1*piQ(-1) + h_pac_c_var_pi_m_lag_1*pi_m(-1) + h_pac_c_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_c_var_tau_PAYG_gap_lag_1*tau_PAYG_gap(-1) + h_pac_c_var_yh_ratio_hat_lag_1*yh_ratio_hat(-1) + h_pac_c_var_c_hat_lag_1*c_hat(-1);
 
 	[blockname='',name='ln_c_level']
 	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+eps_c;
@@ -821,19 +839,19 @@ model;
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
 
 	[blockname='',name='c_hat']
-	c_hat =  rho_c_aux*c_hat(-1)+yhat_au(-1)*a_c_y+i_gap(-1)*a_c_i+pi_au_gap(-1)*a_c_pi+u_gap(-1)*a_c_u+yh_ratio_hat(-1)*a_c_yh+eps_var_c;
+	c_hat =  rho_c_aux*c_hat(-1)+yhat_au(-1)*a_c_y+i_gap(-1)*a_c_i+pi_au_gap(-1)*a_c_pi+u_gap(-1)*a_c_u+yh_ratio_hat(-1)*a_c_yh+tau_PAYG_gap(-1)*a_c_PAYG+eps_var_c;
 
 	[blockname='',name='pac_expectation_pac_ib']
-	pac_expectation_pac_ib =  h_pac_ib_constant + h_pac_ib_var_yhat_au_lag_1*yhat_au(-1) + h_pac_ib_var_i_gap_lag_1*i_gap(-1) + h_pac_ib_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_ib_var_u_gap_lag_1*u_gap(-1) + h_pac_ib_var_yhat_us_lag_1*yhat_us(-1) + h_pac_ib_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_ib_var_ibar_lag_1*ibar(-1) + h_pac_ib_var_pibar_au_lag_1*pibar_au(-1) + h_pac_ib_var_pibar_us_lag_1*pibar_us(-1) + h_pac_ib_var_piQ_lag_1*piQ(-1) + h_pac_ib_var_pi_m_lag_1*pi_m(-1) + h_pac_ib_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_ib_var_ib_hat_lag_1*ib_hat(-1) + h_pac_ib_var_rKB_hat_lag_1*rKB_hat(-1);
+	pac_expectation_pac_ib =  h_pac_ib_constant + h_pac_ib_var_yhat_au_lag_1*yhat_au(-1) + h_pac_ib_var_i_gap_lag_1*i_gap(-1) + h_pac_ib_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_ib_var_u_gap_lag_1*u_gap(-1) + h_pac_ib_var_yhat_us_lag_1*yhat_us(-1) + h_pac_ib_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_ib_var_ibar_lag_1*ibar(-1) + h_pac_ib_var_pibar_au_lag_1*pibar_au(-1) + h_pac_ib_var_pibar_us_lag_1*pibar_us(-1) + h_pac_ib_var_piQ_lag_1*piQ(-1) + h_pac_ib_var_pi_m_lag_1*pi_m(-1) + h_pac_ib_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_ib_var_tau_CIT_gap_lag_1*tau_CIT_gap(-1) + h_pac_ib_var_ib_hat_lag_1*ib_hat(-1) + h_pac_ib_var_rKB_hat_lag_1*rKB_hat(-1);
 
 	[blockname='',name='ln_ib_level']
 	diff(ln_ib_level) =  b0_ib*(ib_hat(-1)-ln_ib_level(-1))+b1_ib*diff(ln_ib_level(-1))+b2_ib*diff(ln_ib_level(-2))+pac_expectation_pac_ib+yhat_au*b3_ib+eps_ib;
 
 	[blockname='',name='ib_hat']
-	ib_hat =  rho_ib_aux*ib_hat(-1)+yhat_au(-1)*a_ib_y+pi_au_gap(-1)*a_ib_pi+u_gap(-1)*a_ib_u+eps_var_ib;
+	ib_hat =  rho_ib_aux*ib_hat(-1)+yhat_au(-1)*a_ib_y+pi_au_gap(-1)*a_ib_pi+u_gap(-1)*a_ib_u+tau_CIT_gap(-1)*a_ib_CIT+eps_var_ib;
 
 	[blockname='',name='rKB_hat']
-	rKB_hat =  rho_rKB_aux*rKB_hat(-1)+i_gap(-1)*a_rKB_i+eps_var_rKB;
+	rKB_hat =  rho_rKB_aux*rKB_hat(-1)+i_gap(-1)*a_rKB_i+tau_CIT_gap(-1)*a_rKB_CIT+eps_var_rKB;
 
 	[blockname='',name='pac_expectation_pac_ih']
 	pac_expectation_pac_ih =  h_pac_ih_constant + h_pac_ih_var_yhat_au_lag_1*yhat_au(-1) + h_pac_ih_var_i_gap_lag_1*i_gap(-1) + h_pac_ih_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_ih_var_u_gap_lag_1*u_gap(-1) + h_pac_ih_var_yhat_us_lag_1*yhat_us(-1) + h_pac_ih_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_ih_var_ibar_lag_1*ibar(-1) + h_pac_ih_var_pibar_au_lag_1*pibar_au(-1) + h_pac_ih_var_pibar_us_lag_1*pibar_us(-1) + h_pac_ih_var_piQ_lag_1*piQ(-1) + h_pac_ih_var_pi_m_lag_1*pi_m(-1) + h_pac_ih_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_ih_var_ih_hat_lag_1*ih_hat(-1);
@@ -845,13 +863,13 @@ model;
 	ih_hat =  rho_ih_aux*ih_hat(-1)+yhat_au(-1)*a_ih_y+i_gap(-1)*a_ih_i+pi_au_gap(-1)*a_ih_pi+u_gap(-1)*a_ih_u+eps_var_ih;
 
 	[blockname='',name='pac_expectation_pac_n']
-	pac_expectation_pac_n =  h_pac_n_constant + h_pac_n_var_yhat_au_lag_1*yhat_au(-1) + h_pac_n_var_i_gap_lag_1*i_gap(-1) + h_pac_n_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_n_var_u_gap_lag_1*u_gap(-1) + h_pac_n_var_yhat_us_lag_1*yhat_us(-1) + h_pac_n_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_n_var_ibar_lag_1*ibar(-1) + h_pac_n_var_pibar_au_lag_1*pibar_au(-1) + h_pac_n_var_pibar_us_lag_1*pibar_us(-1) + h_pac_n_var_piQ_lag_1*piQ(-1) + h_pac_n_var_pi_m_lag_1*pi_m(-1) + h_pac_n_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_n_var_n_hat_lag_1*n_hat(-1);
+	pac_expectation_pac_n =  h_pac_n_constant + h_pac_n_var_yhat_au_lag_1*yhat_au(-1) + h_pac_n_var_i_gap_lag_1*i_gap(-1) + h_pac_n_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_n_var_u_gap_lag_1*u_gap(-1) + h_pac_n_var_yhat_us_lag_1*yhat_us(-1) + h_pac_n_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_n_var_ibar_lag_1*ibar(-1) + h_pac_n_var_pibar_au_lag_1*pibar_au(-1) + h_pac_n_var_pibar_us_lag_1*pibar_us(-1) + h_pac_n_var_piQ_lag_1*piQ(-1) + h_pac_n_var_pi_m_lag_1*pi_m(-1) + h_pac_n_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_n_var_dln_pop_bar_lag_1*dln_pop_bar(-1) + h_pac_n_var_n_hat_lag_1*n_hat(-1);
 
 	[blockname='',name='ln_n_level']
 	diff(ln_n_level) =  b0_n*(n_hat(-1)-ln_n_level(-1))+b1_n*diff(ln_n_level(-1))+b2_n*diff(ln_n_level(-2))+b3_n*diff(ln_n_level(-3))+b4_n*diff(ln_n_level(-4))+pac_expectation_pac_n+yhat_au*b5_n+eps_n;
 
 	[blockname='',name='n_hat']
-	n_hat =  rho_n_aux*n_hat(-1)+yhat_au(-1)*a_n_y+i_gap(-1)*a_n_i+pi_au_gap(-1)*a_n_pi+u_gap(-1)*a_n_u+eps_var_n;
+	n_hat =  rho_n_aux*n_hat(-1)+yhat_au(-1)*a_n_y+i_gap(-1)*a_n_i+pi_au_gap(-1)*a_n_pi+u_gap(-1)*a_n_u+dln_pop_bar(-1)*a_n_pop+eps_var_n;
 
 	[blockname='',name='i_au']
 	i_au =  i_gap + ibar;

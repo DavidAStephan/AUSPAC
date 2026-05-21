@@ -1,3 +1,4 @@
+a_c_PAYG = -0.1;
 a_c_i = -0.043;
 a_c_pi = 0.01;
 a_c_u = -0.036;
@@ -20,9 +21,10 @@ h_pac_c_var_pi_m_lag_1 = 0.000110380946501119;
 h_pac_c_var_pi_us_gap_lag_1 = 0;
 h_pac_c_var_pibar_au_lag_1 = -0.001220216363422831;
 h_pac_c_var_pibar_us_lag_1 = 0;
+h_pac_c_var_tau_PAYG_gap_lag_1 = -0.009564712502815697;
 h_pac_c_var_u_gap_lag_1 = -0.007309734434297452;
 h_pac_c_var_yh_ratio_hat_lag_1 = 0.01002197187779131;
-h_pac_c_var_yhat_au_lag_1 = 0.01090617676217883;
+h_pac_c_var_yhat_au_lag_1 = 0.01090617676217882;
 h_pac_c_var_yhat_us_lag_1 = 0.006501609785602032;
 rho_c_aux = 0.581;
 rho_yh_aux = 0.93;

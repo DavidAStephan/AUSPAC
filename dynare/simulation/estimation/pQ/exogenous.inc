@@ -11,6 +11,7 @@ varexo
 	pi_w_gap
 	pibar_au
 	pibar_us
+	tau_GST_gap
 	u_gap
 	yhat_au
 	yhat_us;

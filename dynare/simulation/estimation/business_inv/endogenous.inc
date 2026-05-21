@@ -5,5 +5,6 @@ var
 	pac_expectation_pac_ib
 	pi_au_gap
 	rKB_hat
+	tau_CIT_gap
 	u_gap
 	yhat_au;

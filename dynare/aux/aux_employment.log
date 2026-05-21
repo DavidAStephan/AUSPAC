@@ -2,13 +2,13 @@ Starting Dynare (version 6.5).
 Calling Dynare with arguments: noclearall
 Starting preprocessing of the model file ...
 Substitution of Diff operator: added 5 auxiliary variables and equations.
-Found 20 equation(s).
+Found 21 equation(s).
 Evaluating expressions...
 Computing static model derivatives (order 1).
 Normalizing the static model...
 Finding the optimal block decomposition of the static model...
-14 block(s) found:
-  13 recursive block(s) and 1 simultaneous block(s).
+15 block(s) found:
+  14 recursive block(s) and 1 simultaneous block(s).
   the largest simultaneous block has 3 equation(s)
                                  and 3 feedback variable(s).
 Computing dynamic model derivatives (order 2).
@@ -26,4 +26,4 @@ Parameters declarations and calibrations are saved in aux_employment/model/pac-e
 Expectation unrolled expression is saved in aux_employment/model/pac-expectations/pac_n-expression.inc.
 Expectation dseries expression is saved in +aux_employment/+pac_expectations/+pac_n/evaluate.m.
 
-Total computing time : 0h00m00s
+Total computing time : 0h00m01s

@@ -12,16 +12,17 @@
 , {"residual": {"lhs": "piQ", "rhs": "piQ*rho_piQ+pi_ss_au*(1-rho_piQ)+eps_piQ"}}
 , {"residual": {"lhs": "pi_m", "rhs": "pi_m*rho_pm+pi_ss_au*(1-rho_pm)+eps_pi_m"}}
 , {"residual": {"lhs": "dln_pcom", "rhs": "dln_pcom*rho_pcom+eps_pcom"}}
-, {"residual": {"lhs": "ib_hat", "rhs": "ib_hat*rho_ib_aux+yhat_au*a_ib_y+pi_au_gap*a_ib_pi+u_gap*a_ib_u+eps_var_ib"}}
-, {"residual": {"lhs": "rKB_hat", "rhs": "rKB_hat*rho_rKB_aux+i_gap*a_rKB_i+eps_var_rKB"}}
-, {"residual": {"lhs": "AUX_DIFF_172", "rhs": "eps_ib+yhat_au*b3_ib+b0_ib*(ib_hat-ln_ib_level)+b1_ib*AUX_DIFF_LAG_175+b2_ib*AUX_DIFF_LAG_184+pac_expectation_pac_ib"}}
-, {"residual": {"lhs": "AUX_DIFF_172", "rhs": "0"}}
-, {"residual": {"lhs": "AUX_DIFF_LAG_175", "rhs": "AUX_DIFF_172"}}
-, {"residual": {"lhs": "AUX_DIFF_LAG_184", "rhs": "AUX_DIFF_LAG_175"}}
-, {"residual": {"lhs": "pac_expectation_pac_ib", "rhs": "h_pac_ib_constant+yhat_au*h_pac_ib_var_yhat_au_lag_1+i_gap*h_pac_ib_var_i_gap_lag_1+pi_au_gap*h_pac_ib_var_pi_au_gap_lag_1+u_gap*h_pac_ib_var_u_gap_lag_1+yhat_us*h_pac_ib_var_yhat_us_lag_1+pi_us_gap*h_pac_ib_var_pi_us_gap_lag_1+ibar*h_pac_ib_var_ibar_lag_1+pibar_au*h_pac_ib_var_pibar_au_lag_1+pibar_us*h_pac_ib_var_pibar_us_lag_1+piQ*h_pac_ib_var_piQ_lag_1+pi_m*h_pac_ib_var_pi_m_lag_1+dln_pcom*h_pac_ib_var_dln_pcom_lag_1+ib_hat*h_pac_ib_var_ib_hat_lag_1+rKB_hat*h_pac_ib_var_rKB_hat_lag_1"}}
+, {"residual": {"lhs": "tau_CIT_gap", "rhs": "tau_CIT_gap*rho_tau_CIT+eps_tau_CIT"}}
+, {"residual": {"lhs": "ib_hat", "rhs": "ib_hat*rho_ib_aux+yhat_au*a_ib_y+pi_au_gap*a_ib_pi+u_gap*a_ib_u+tau_CIT_gap*a_ib_CIT+eps_var_ib"}}
+, {"residual": {"lhs": "rKB_hat", "rhs": "rKB_hat*rho_rKB_aux+i_gap*a_rKB_i+tau_CIT_gap*a_rKB_CIT+eps_var_rKB"}}
+, {"residual": {"lhs": "AUX_DIFF_185", "rhs": "eps_ib+yhat_au*b3_ib+b0_ib*(ib_hat-ln_ib_level)+b1_ib*AUX_DIFF_LAG_188+b2_ib*AUX_DIFF_LAG_197+pac_expectation_pac_ib"}}
+, {"residual": {"lhs": "AUX_DIFF_185", "rhs": "0"}}
+, {"residual": {"lhs": "AUX_DIFF_LAG_188", "rhs": "AUX_DIFF_185"}}
+, {"residual": {"lhs": "AUX_DIFF_LAG_197", "rhs": "AUX_DIFF_LAG_188"}}
+, {"residual": {"lhs": "pac_expectation_pac_ib", "rhs": "h_pac_ib_constant+yhat_au*h_pac_ib_var_yhat_au_lag_1+i_gap*h_pac_ib_var_i_gap_lag_1+pi_au_gap*h_pac_ib_var_pi_au_gap_lag_1+u_gap*h_pac_ib_var_u_gap_lag_1+yhat_us*h_pac_ib_var_yhat_us_lag_1+pi_us_gap*h_pac_ib_var_pi_us_gap_lag_1+ibar*h_pac_ib_var_ibar_lag_1+pibar_au*h_pac_ib_var_pibar_au_lag_1+pibar_us*h_pac_ib_var_pibar_us_lag_1+piQ*h_pac_ib_var_piQ_lag_1+pi_m*h_pac_ib_var_pi_m_lag_1+dln_pcom*h_pac_ib_var_dln_pcom_lag_1+tau_CIT_gap*h_pac_ib_var_tau_CIT_gap_lag_1+ib_hat*h_pac_ib_var_ib_hat_lag_1+rKB_hat*h_pac_ib_var_rKB_hat_lag_1"}}
 
 ]
-, "external_functions_temporary_terms_jacobian": [], "temporary_terms_jacobian": [], "jacobian": {  "nrows": 19, "ncols": 19, "entries": [{"eq": 1, "col": 1, "var": "yhat_au", "val": "1-lambda_q"}
+, "external_functions_temporary_terms_jacobian": [], "temporary_terms_jacobian": [], "jacobian": {  "nrows": 20, "ncols": 20, "entries": [{"eq": 1, "col": 1, "var": "yhat_au", "val": "1-lambda_q"}
 , {"eq": 1, "col": 2, "var": "pi_au_gap", "val": "(-sigma_q)"}
 , {"eq": 1, "col": 3, "var": "i_gap", "val": "sigma_q"}
 , {"eq": 1, "col": 5, "var": "yhat_us", "val": "(-delta)"}
@@ -45,37 +46,41 @@
 , {"eq": 10, "col": 10, "var": "piQ", "val": "1-rho_piQ"}
 , {"eq": 11, "col": 11, "var": "pi_m", "val": "1-rho_pm"}
 , {"eq": 12, "col": 12, "var": "dln_pcom", "val": "1-rho_pcom"}
-, {"eq": 13, "col": 1, "var": "yhat_au", "val": "(-a_ib_y)"}
-, {"eq": 13, "col": 2, "var": "pi_au_gap", "val": "(-a_ib_pi)"}
-, {"eq": 13, "col": 4, "var": "u_gap", "val": "(-a_ib_u)"}
-, {"eq": 13, "col": 13, "var": "ib_hat", "val": "1-rho_ib_aux"}
-, {"eq": 14, "col": 3, "var": "i_gap", "val": "(-a_rKB_i)"}
-, {"eq": 14, "col": 14, "var": "rKB_hat", "val": "1-rho_rKB_aux"}
-, {"eq": 15, "col": 1, "var": "yhat_au", "val": "(-b3_ib)"}
-, {"eq": 15, "col": 13, "var": "ib_hat", "val": "(-b0_ib)"}
-, {"eq": 15, "col": 15, "var": "ln_ib_level", "val": "b0_ib"}
-, {"eq": 15, "col": 16, "var": "AUX_DIFF_172", "val": "1"}
-, {"eq": 15, "col": 17, "var": "AUX_DIFF_LAG_175", "val": "(-b1_ib)"}
-, {"eq": 15, "col": 18, "var": "AUX_DIFF_LAG_184", "val": "(-b2_ib)"}
-, {"eq": 15, "col": 19, "var": "pac_expectation_pac_ib", "val": "(-1)"}
-, {"eq": 16, "col": 16, "var": "AUX_DIFF_172", "val": "1"}
-, {"eq": 17, "col": 16, "var": "AUX_DIFF_172", "val": "(-1)"}
-, {"eq": 17, "col": 17, "var": "AUX_DIFF_LAG_175", "val": "1"}
-, {"eq": 18, "col": 17, "var": "AUX_DIFF_LAG_175", "val": "(-1)"}
-, {"eq": 18, "col": 18, "var": "AUX_DIFF_LAG_184", "val": "1"}
-, {"eq": 19, "col": 1, "var": "yhat_au", "val": "(-h_pac_ib_var_yhat_au_lag_1)"}
-, {"eq": 19, "col": 2, "var": "pi_au_gap", "val": "(-h_pac_ib_var_pi_au_gap_lag_1)"}
-, {"eq": 19, "col": 3, "var": "i_gap", "val": "(-h_pac_ib_var_i_gap_lag_1)"}
-, {"eq": 19, "col": 4, "var": "u_gap", "val": "(-h_pac_ib_var_u_gap_lag_1)"}
-, {"eq": 19, "col": 5, "var": "yhat_us", "val": "(-h_pac_ib_var_yhat_us_lag_1)"}
-, {"eq": 19, "col": 6, "var": "pi_us_gap", "val": "(-h_pac_ib_var_pi_us_gap_lag_1)"}
-, {"eq": 19, "col": 7, "var": "ibar", "val": "(-h_pac_ib_var_ibar_lag_1)"}
-, {"eq": 19, "col": 8, "var": "pibar_au", "val": "(-h_pac_ib_var_pibar_au_lag_1)"}
-, {"eq": 19, "col": 9, "var": "pibar_us", "val": "(-h_pac_ib_var_pibar_us_lag_1)"}
-, {"eq": 19, "col": 10, "var": "piQ", "val": "(-h_pac_ib_var_piQ_lag_1)"}
-, {"eq": 19, "col": 11, "var": "pi_m", "val": "(-h_pac_ib_var_pi_m_lag_1)"}
-, {"eq": 19, "col": 12, "var": "dln_pcom", "val": "(-h_pac_ib_var_dln_pcom_lag_1)"}
-, {"eq": 19, "col": 13, "var": "ib_hat", "val": "(-h_pac_ib_var_ib_hat_lag_1)"}
-, {"eq": 19, "col": 14, "var": "rKB_hat", "val": "(-h_pac_ib_var_rKB_hat_lag_1)"}
-, {"eq": 19, "col": 19, "var": "pac_expectation_pac_ib", "val": "1"}
-]}, "external_functions_temporary_terms_hessian": [], "temporary_terms_hessian": [], "hessian": {  "nrows": 19, "ncols": 361, "entries": []}, "external_functions_temporary_terms_third_derivative": [], "temporary_terms_third_derivative": [], "third_derivative": {  "nrows": 19, "ncols": 6859, "entries": []}}}
+, {"eq": 13, "col": 13, "var": "tau_CIT_gap", "val": "1-rho_tau_CIT"}
+, {"eq": 14, "col": 1, "var": "yhat_au", "val": "(-a_ib_y)"}
+, {"eq": 14, "col": 2, "var": "pi_au_gap", "val": "(-a_ib_pi)"}
+, {"eq": 14, "col": 4, "var": "u_gap", "val": "(-a_ib_u)"}
+, {"eq": 14, "col": 13, "var": "tau_CIT_gap", "val": "(-a_ib_CIT)"}
+, {"eq": 14, "col": 14, "var": "ib_hat", "val": "1-rho_ib_aux"}
+, {"eq": 15, "col": 3, "var": "i_gap", "val": "(-a_rKB_i)"}
+, {"eq": 15, "col": 13, "var": "tau_CIT_gap", "val": "(-a_rKB_CIT)"}
+, {"eq": 15, "col": 15, "var": "rKB_hat", "val": "1-rho_rKB_aux"}
+, {"eq": 16, "col": 1, "var": "yhat_au", "val": "(-b3_ib)"}
+, {"eq": 16, "col": 14, "var": "ib_hat", "val": "(-b0_ib)"}
+, {"eq": 16, "col": 16, "var": "ln_ib_level", "val": "b0_ib"}
+, {"eq": 16, "col": 17, "var": "AUX_DIFF_185", "val": "1"}
+, {"eq": 16, "col": 18, "var": "AUX_DIFF_LAG_188", "val": "(-b1_ib)"}
+, {"eq": 16, "col": 19, "var": "AUX_DIFF_LAG_197", "val": "(-b2_ib)"}
+, {"eq": 16, "col": 20, "var": "pac_expectation_pac_ib", "val": "(-1)"}
+, {"eq": 17, "col": 17, "var": "AUX_DIFF_185", "val": "1"}
+, {"eq": 18, "col": 17, "var": "AUX_DIFF_185", "val": "(-1)"}
+, {"eq": 18, "col": 18, "var": "AUX_DIFF_LAG_188", "val": "1"}
+, {"eq": 19, "col": 18, "var": "AUX_DIFF_LAG_188", "val": "(-1)"}
+, {"eq": 19, "col": 19, "var": "AUX_DIFF_LAG_197", "val": "1"}
+, {"eq": 20, "col": 1, "var": "yhat_au", "val": "(-h_pac_ib_var_yhat_au_lag_1)"}
+, {"eq": 20, "col": 2, "var": "pi_au_gap", "val": "(-h_pac_ib_var_pi_au_gap_lag_1)"}
+, {"eq": 20, "col": 3, "var": "i_gap", "val": "(-h_pac_ib_var_i_gap_lag_1)"}
+, {"eq": 20, "col": 4, "var": "u_gap", "val": "(-h_pac_ib_var_u_gap_lag_1)"}
+, {"eq": 20, "col": 5, "var": "yhat_us", "val": "(-h_pac_ib_var_yhat_us_lag_1)"}
+, {"eq": 20, "col": 6, "var": "pi_us_gap", "val": "(-h_pac_ib_var_pi_us_gap_lag_1)"}
+, {"eq": 20, "col": 7, "var": "ibar", "val": "(-h_pac_ib_var_ibar_lag_1)"}
+, {"eq": 20, "col": 8, "var": "pibar_au", "val": "(-h_pac_ib_var_pibar_au_lag_1)"}
+, {"eq": 20, "col": 9, "var": "pibar_us", "val": "(-h_pac_ib_var_pibar_us_lag_1)"}
+, {"eq": 20, "col": 10, "var": "piQ", "val": "(-h_pac_ib_var_piQ_lag_1)"}
+, {"eq": 20, "col": 11, "var": "pi_m", "val": "(-h_pac_ib_var_pi_m_lag_1)"}
+, {"eq": 20, "col": 12, "var": "dln_pcom", "val": "(-h_pac_ib_var_dln_pcom_lag_1)"}
+, {"eq": 20, "col": 13, "var": "tau_CIT_gap", "val": "(-h_pac_ib_var_tau_CIT_gap_lag_1)"}
+, {"eq": 20, "col": 14, "var": "ib_hat", "val": "(-h_pac_ib_var_ib_hat_lag_1)"}
+, {"eq": 20, "col": 15, "var": "rKB_hat", "val": "(-h_pac_ib_var_rKB_hat_lag_1)"}
+, {"eq": 20, "col": 20, "var": "pac_expectation_pac_ib", "val": "1"}
+]}, "external_functions_temporary_terms_hessian": [], "temporary_terms_hessian": [], "hessian": {  "nrows": 20, "ncols": 400, "entries": []}, "external_functions_temporary_terms_third_derivative": [], "temporary_terms_third_derivative": [], "third_derivative": {  "nrows": 20, "ncols": 8000, "entries": []}}}
