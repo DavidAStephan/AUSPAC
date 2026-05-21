@@ -472,6 +472,18 @@ tau_PAYG_gap = rho_tau_PAYG * tau_PAYG_gap(-1) + eps_tau_PAYG;
 tau_CIT_gap = rho_tau_CIT * tau_CIT_gap(-1) + eps_tau_CIT;
 
 // =====================================================================
+// Round 1.2 (2026-05-21) — Household wage+transfer income channel (FR-BDF
+// wp1044 §3.5.1 eq 35). wt_H_real_gap is the HP-gap of log of household
+// real labour-plus-transfer income, constructed from ABS 5206 Table 20.
+// Reduced-form AR(1) feeds the var_model companion matrix; the structural
+// b_HtM channel into consumption growth lives in the cherrypicked PAC
+// equation (au_pac.mod ln_c_level), not here.
+// =====================================================================
+
+[name='eq_wt_H_real_gap']
+wt_H_real_gap = rho_wtH * wt_H_real_gap(-1) + alpha_wtH_y * yhat_au(-1) + alpha_wtH_u * u_gap(-1) + alpha_wtH_tau * tau_PAYG_gap(-1) + eps_wtH;
+
+// =====================================================================
 // Round 7 (2026-05-20) — Market vs non-market VA decomposition (audit #45)
 // Decompose aggregate output gap into market sector (manufacturing, finance,
 // retail, mining, construction; ~85% of AU GDP per ABS Cat 5206) and

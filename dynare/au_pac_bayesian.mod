@@ -104,6 +104,7 @@ var
 	tau_GST_gap
 	tau_PAYG_gap
 	tau_CIT_gap
+	wt_H_real_gap
 	yhat_market
 	yhat_nonmarket
 	BLR_hat
@@ -286,6 +287,7 @@ parameters
 	h_pac_c_var_pibar_us_lag_1
 	h_pac_c_var_tau_PAYG_gap_lag_1
 	h_pac_c_var_u_gap_lag_1
+	h_pac_c_var_wt_H_real_gap_lag_1
 	h_pac_c_var_yh_ratio_hat_lag_1
 	h_pac_c_var_yhat_au_lag_1
 	h_pac_c_var_yhat_us_lag_1
@@ -474,6 +476,11 @@ parameters
 	rho_BLR
 	rho_MAPI
 	rho_MAPU
+	rho_wtH
+	alpha_wtH_y
+	alpha_wtH_u
+	alpha_wtH_tau
+	b_HtM
 ;
 
 a_pQ_GST = 0.05;
@@ -527,6 +534,11 @@ h_pac_c_var_pibar_au_lag_1 = -0.001220216363422831;
 h_pac_c_var_pibar_us_lag_1 = 0;
 h_pac_c_var_tau_PAYG_gap_lag_1 = -0.009564712502815697;
 h_pac_c_var_u_gap_lag_1 = -0.007309734434297452;
+// Round 1.2 (2026-05-22): wt_H_real_gap is in the var_model state but c_hat
+// doesn't load on it, so the discounted-sum projection is exactly zero. The
+// b_HtM contemporaneous channel into consumption growth is applied directly
+// to the ln_c_level equation, NOT through pac_expectation.
+h_pac_c_var_wt_H_real_gap_lag_1 = 0;
 h_pac_c_var_yh_ratio_hat_lag_1 = 0.01002197187779131;
 h_pac_c_var_yhat_au_lag_1 = 0.01090617676217883;
 h_pac_c_var_yhat_us_lag_1 = 0.006501609785602032;
@@ -870,6 +882,12 @@ gamma_nonmarket   = 0.30;
 rho_BLR           = 0.90;
 rho_MAPI          = 0.85;
 rho_MAPU          = 0.80;
+// Round 1.2 (2026-05-22): wage+transfer income channel for rule-of-thumb consumers.
+rho_wtH           = 0.50;
+alpha_wtH_y       = 0.50;
+alpha_wtH_u       = 0.30;
+alpha_wtH_tau     = -0.40;
+b_HtM             = 0.32;
 
 
 varexo
@@ -922,6 +940,7 @@ varexo
 	eps_BLR
 	eps_MAPI
 	eps_MAPU
+	eps_wtH
 ;
 
 @#ifdef InvertModel
@@ -942,10 +961,14 @@ model;
 	piQ_hat =  rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+pi_w_gap(-1)*a_pQ_w+tau_GST_gap(-1)*a_pQ_GST+eps_var_pQ;
 
 	[blockname='',name='pac_expectation_pac_c']
-	pac_expectation_pac_c =  h_pac_c_constant + h_pac_c_var_yhat_au_lag_1*yhat_au(-1) + h_pac_c_var_i_gap_lag_1*i_gap(-1) + h_pac_c_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_c_var_u_gap_lag_1*u_gap(-1) + h_pac_c_var_yhat_us_lag_1*yhat_us(-1) + h_pac_c_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_c_var_ibar_lag_1*ibar(-1) + h_pac_c_var_pibar_au_lag_1*pibar_au(-1) + h_pac_c_var_pibar_us_lag_1*pibar_us(-1) + h_pac_c_var_piQ_lag_1*piQ(-1) + h_pac_c_var_pi_m_lag_1*pi_m(-1) + h_pac_c_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_c_var_tau_PAYG_gap_lag_1*tau_PAYG_gap(-1) + h_pac_c_var_yh_ratio_hat_lag_1*yh_ratio_hat(-1) + h_pac_c_var_c_hat_lag_1*c_hat(-1);
+	pac_expectation_pac_c =  h_pac_c_constant + h_pac_c_var_yhat_au_lag_1*yhat_au(-1) + h_pac_c_var_i_gap_lag_1*i_gap(-1) + h_pac_c_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_c_var_u_gap_lag_1*u_gap(-1) + h_pac_c_var_yhat_us_lag_1*yhat_us(-1) + h_pac_c_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_c_var_ibar_lag_1*ibar(-1) + h_pac_c_var_pibar_au_lag_1*pibar_au(-1) + h_pac_c_var_pibar_us_lag_1*pibar_us(-1) + h_pac_c_var_piQ_lag_1*piQ(-1) + h_pac_c_var_pi_m_lag_1*pi_m(-1) + h_pac_c_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_c_var_tau_PAYG_gap_lag_1*tau_PAYG_gap(-1) + h_pac_c_var_wt_H_real_gap_lag_1*wt_H_real_gap(-1) + h_pac_c_var_yh_ratio_hat_lag_1*yh_ratio_hat(-1) + h_pac_c_var_c_hat_lag_1*c_hat(-1);
 
 	[blockname='',name='ln_c_level']
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+eps_c;
+	// Round 1.2 (2026-05-22): + b_HtM*(wt_H_real_gap - yhat_au) contemporaneous
+	// hand-to-mouth income channel (FR-BDF wp1044 §3.5.1 eq 35). Applied here
+	// rather than in aux_consumption.mod to avoid Dynare 6.5 pac.print() crash
+	// when a var_model state appears in the PAC equation RHS.
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+eps_c;
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
@@ -1411,6 +1434,11 @@ model;
 	[blockname='',name='tau_CIT_gap']
 	tau_CIT_gap = rho_tau_CIT * tau_CIT_gap(-1) + eps_tau_CIT;
 
+	// Round 1.2 (2026-05-22): household wage+transfer real-income gap, reduced-form
+	// AR(1) matching aux_consumption.mod var_wt_H_real_gap.
+	[blockname='',name='wt_H_real_gap']
+	wt_H_real_gap = rho_wtH * wt_H_real_gap(-1) + alpha_wtH_y * yhat_au(-1) + alpha_wtH_u * u_gap(-1) + alpha_wtH_tau * tau_PAYG_gap(-1) + eps_wtH;
+
 	[blockname='',name='yhat_nonmarket']
 	yhat_nonmarket = rho_nonmarket * yhat_nonmarket(-1) + (1 - rho_nonmarket) * gamma_nonmarket * yhat_au;
 
@@ -1638,6 +1666,9 @@ steady_state_model;
     tau_PAYG_gap   = 0;
     tau_CIT_gap    = 0;
 
+    // Round 1.2 (2026-05-22): household wage+transfer income gap, zero at SS
+    wt_H_real_gap  = 0;
+
     // Round 7 (branch decomposition, both = 0 at SS)
     yhat_market    = 0;
     yhat_nonmarket = 0;
@@ -1692,6 +1723,7 @@ shocks;
     var eps_BLR;        stderr 0.05;
     var eps_MAPI;       stderr 0.50;
     var eps_MAPU;       stderr 0.30;
+    var eps_wtH;        stderr 0.012;  // Round 1.2: household wage+transfer income shock
 end;
 
 

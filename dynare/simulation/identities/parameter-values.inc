@@ -211,3 +211,15 @@ gamma_nonmarket   = 0.30;    // Non-market cyclical sensitivity to aggregate
 rho_BLR           = 0.90;    // Bank lending rate nowcast persistence
 rho_MAPI          = 0.85;    // Housing price indicator persistence
 rho_MAPU          = 0.80;    // Housing investment underwriting persistence
+// Round 1.2 (2026-05-21) — household wage+transfer income channel for
+// rule-of-thumb consumers (FR-BDF wp1044 §3.5.1 eq 35). wt_H_real_gap is the
+// HP-filter gap of log[(compensation_of_employees + social_assistance)/p_C]
+// from ABS 5206 Table 20 (cf. data/prepare_household_income.m). Reduced-form
+// AR(1) loads on output gap (procyclical wages) and unemployment gap (counter-
+// cyclical transfer support — JobKeeper-style fiscal stimulus dominates). b_HtM
+// from FR-BDF wp1044 posterior 0.32 (s.e. 0.10).
+rho_wtH           = 0.50;    // wt_H gap persistence
+alpha_wtH_y       = 0.50;    // procyclical wages
+alpha_wtH_u       = 0.30;    // countercyclical transfer support
+alpha_wtH_tau     = -0.40;   // PAYG raise drags real wages
+b_HtM             = 0.32;    // rule-of-thumb consumer response (FR-BDF wp1044)

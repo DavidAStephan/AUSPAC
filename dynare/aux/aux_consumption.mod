@@ -10,6 +10,7 @@ var
     ibar            pibar_au        pibar_us
     piQ             pi_m            dln_pcom
     tau_PAYG_gap
+    wt_H_real_gap
     yh_ratio_hat    c_hat
     ln_c_level
 ;
@@ -19,6 +20,7 @@ varexo
     eps_pi_us       eps_ibar        eps_pibar_au    eps_pibar_us
     eps_u_gap       eps_piQ         eps_pi_m        eps_pcom
     eps_tau_PAYG
+    eps_wtH
     eps_var_yh      eps_var_c       eps_c
 ;
 
@@ -33,6 +35,8 @@ parameters
     i_ss            pi_ss_au        pi_ss_us
     rho_piQ         rho_pm        rho_pcom
     rho_tau_PAYG    a_c_PAYG
+    // Round 1.2 (2026-05-21): wage+transfer income channel for hand-to-mouth consumers
+    rho_wtH         alpha_wtH_y     alpha_wtH_u     alpha_wtH_tau   b_HtM
     rho_yh_aux      a_yh_y          a_yh_u
     rho_c_aux       a_c_y           a_c_i           a_c_pi          a_c_u           a_c_yh
     b0_c            b1_c            b2_c            b3_c
@@ -59,6 +63,22 @@ a_c_pi          = 0.010;         a_c_u           = -0.036;        a_c_yh        
 // a_c_PAYG = -alpha_PAYG (negative): PAYG raise drags consumption growth, per
 // eq_dln_c_star_bar Δtau_PAYG_gap term in simulation/identities/model.inc.
 rho_tau_PAYG    = 0.92;          a_c_PAYG        = -0.10;
+// Round 1.2 (2026-05-21): wage+transfer income channel for hand-to-mouth (RoT)
+// consumers, per FR-BDF wp1044 §3.5.1 eq 35:
+//   + b_HtM * Delta[ log(W_H + TG_H) - p_C - y_per_capita ]
+// In AU-PAC gap form: + b_HtM * Delta[wt_H_real_gap - yhat_au], with
+// wt_H_real_gap = HP-gap of log[(comp_employees + social_assistance)/p_C]
+// constructed from ABS 5206 Table 20 (cf. data/prepare_household_income.m).
+// AU sample (1993-2024) features GFC stimulus +4% (2008Q4) and JobKeeper +3% (2020Q2-Q3).
+// Reduced-form for var_model: procyclical wages (alpha_wtH_y>0), countercyclical
+// transfer surge during high unemployment (alpha_wtH_u>0 reflects JobKeeper-style
+// fiscal interventions where transfers dominated; net empirical sign in AU data),
+// PAYG raise drags after-tax income (alpha_wtH_tau<0). b_HtM = 0.32 from FR-BDF
+// wp1044 posterior (s.e. 0.10); promote to estimated_params with N(0.30,0.10) prior
+// once wt_H_real_gap is added to varobs in a follow-on PR.
+rho_wtH         = 0.50;          alpha_wtH_y     = 0.50;
+alpha_wtH_u     = 0.30;          alpha_wtH_tau   = -0.40;
+b_HtM           = 0.32;
 b0_c            = 0.0736;        b1_c            = 0.0375;        b2_c            = -0.3330;       b3_c            = 0.0220;
 beta_pac        = 0.95;
 
@@ -69,6 +89,7 @@ var_model(model_name = esat_consumption,
         'var_ibar', 'var_pibar_au', 'var_pibar_us',
         'var_piQ', 'var_pi_m', 'var_dln_pcom',
         'var_tau_PAYG_gap',
+        'var_wt_H_real_gap',
         'var_yh', 'var_c'
     ]);
 
@@ -118,6 +139,12 @@ model;
     [name = 'var_tau_PAYG_gap']
     tau_PAYG_gap = rho_tau_PAYG*tau_PAYG_gap(-1) + eps_tau_PAYG;
 
+    // Round 1.2 (2026-05-21): household labour+transfer real-income gap.
+    // Reduced-form companion equation; observable series constructed from
+    // ABS 5206 Table 20 (data/prepare_household_income.m).
+    [name = 'var_wt_H_real_gap']
+    wt_H_real_gap = rho_wtH*wt_H_real_gap(-1) + alpha_wtH_y*yhat_au(-1) + alpha_wtH_u*u_gap(-1) + alpha_wtH_tau*tau_PAYG_gap(-1) + eps_wtH;
+
     [name = 'var_yh']
     yh_ratio_hat = rho_yh_aux*yh_ratio_hat(-1) + a_yh_y*yhat_au(-1) + a_yh_u*u_gap(-1) + eps_var_yh;
 
@@ -150,6 +177,7 @@ shocks;
     var eps_pi_m;       stderr 0.5;
     var eps_pcom;       stderr 3.0;
     var eps_tau_PAYG;   stderr 0.20;
+    var eps_wtH;        stderr 0.012;
     var eps_var_yh;       stderr 0.01;
     var eps_var_c;       stderr 0.01;
     var eps_c;       stderr 1.81;

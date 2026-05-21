@@ -26,4 +26,4 @@ Parameters declarations and calibrations are saved in aux_pQ/model/pac-expectati
 Expectation unrolled expression is saved in aux_pQ/model/pac-expectations/pac_pQ-expression.inc.
 Expectation dseries expression is saved in +aux_pQ/+pac_expectations/+pac_pQ/evaluate.m.
 
-Total computing time : 0h00m03s
+Total computing time : 0h00m01s
