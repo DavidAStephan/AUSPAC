@@ -13,6 +13,7 @@ h_pac_pQ_var_pi_us_gap_lag_1 = 0;
 h_pac_pQ_var_pi_w_gap_lag_1 = 0.001165346490302144;
 h_pac_pQ_var_pibar_au_lag_1 = -0.001543732469070786;
 h_pac_pQ_var_pibar_us_lag_1 = 0;
+h_pac_pQ_var_tau_GST_gap_lag_1 = 0.0008210038229253343;
 h_pac_pQ_var_u_gap_lag_1 = -0.001037504482199218;
 h_pac_pQ_var_yhat_au_lag_1 = 0.001309415581591862;
 h_pac_pQ_var_yhat_us_lag_1 = 0.001031305130438237;

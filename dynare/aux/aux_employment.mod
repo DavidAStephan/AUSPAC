@@ -9,6 +9,7 @@ var
     yhat_us         pi_us_gap
     ibar            pibar_au        pibar_us
     piQ             pi_m            dln_pcom
+    dln_pop_bar
     n_hat
     ln_n_level
 ;
@@ -17,6 +18,7 @@ varexo
     eps_q           eps_i           eps_pi          eps_q_us
     eps_pi_us       eps_ibar        eps_pibar_au    eps_pibar_us
     eps_u_gap       eps_piQ         eps_pi_m        eps_pcom
+    eps_pop_bar
     eps_var_n       eps_n
 ;
 
@@ -30,6 +32,7 @@ parameters
     alpha_pc        beta_pc_m       gamma_oil
     i_ss            pi_ss_au        pi_ss_us
     rho_piQ         rho_pm        rho_pcom
+    rho_pop         a_n_pop
     rho_n_aux       a_n_y           a_n_i           a_n_pi          a_n_u
     b0_n            b1_n            b2_n            b3_n            b4_n            b5_n
     beta_pac
@@ -49,6 +52,12 @@ rho_piQ         = 0.85;         rho_pm          = 0.28;         rho_pcom        
 // calibration.inc Bayesian posteriors (Phase B 2026-05-09).
 rho_n_aux       = 0.743;         a_n_y           = 0.094;         a_n_i           = -0.031;
 a_n_pi          = 0.057;         a_n_u           = -0.029;
+// Rounds 4-8 consolidation (2026-05-21): dln_pop_bar as var_model state.
+// rho_pop matches parameter-values.inc Round 5 calibration (AR(1) persistence ~0.95).
+// a_n_pop = 1.0: population trend feeds long-run employment growth one-for-one
+// (constant employment-to-population ratio at trend), per eq_dln_n_star_bar
+// Round 5 shifter in simulation/identities/model.inc.
+rho_pop         = 0.95;          a_n_pop         = 1.0;
 b0_n            = 0.0578;        b1_n            = 0.3118;        b2_n            = 0.0;           b3_n            = 0.0;           b4_n            = 0.0;           b5_n            = -0.0007;
 beta_pac        = 0.98;
 
@@ -58,6 +67,7 @@ var_model(model_name = esat_employment,
         'var_yhat_us', 'var_pi_us_gap',
         'var_ibar', 'var_pibar_au', 'var_pibar_us',
         'var_piQ', 'var_pi_m', 'var_dln_pcom',
+        'var_dln_pop_bar',
         'var_n'
     ]);
 
@@ -103,8 +113,14 @@ model;
     [name = 'var_dln_pcom']
     dln_pcom = rho_pcom*dln_pcom(-1) + eps_pcom;
 
+    // Rounds 4-8 consolidation (2026-05-21): demographic trend gap as
+    // var_model state — orthogonal AR(1), shocks propagate to n_hat
+    // expectations through the a_n_pop loading below.
+    [name = 'var_dln_pop_bar']
+    dln_pop_bar = rho_pop*dln_pop_bar(-1) + eps_pop_bar;
+
     [name = 'var_n']
-    n_hat = rho_n_aux*n_hat(-1) + a_n_y*yhat_au(-1) + a_n_i*i_gap(-1) + a_n_pi*pi_au_gap(-1) + a_n_u*u_gap(-1) + eps_var_n;
+    n_hat = rho_n_aux*n_hat(-1) + a_n_y*yhat_au(-1) + a_n_i*i_gap(-1) + a_n_pi*pi_au_gap(-1) + a_n_u*u_gap(-1) + a_n_pop*dln_pop_bar(-1) + eps_var_n;
 
 
 
@@ -133,6 +149,7 @@ shocks;
     var eps_piQ;        stderr 0.571;
     var eps_pi_m;       stderr 0.5;
     var eps_pcom;       stderr 3.0;
+    var eps_pop_bar;    stderr 0.05;
     var eps_var_n;       stderr 0.01;
     var eps_n;       stderr 0.39;
 end;

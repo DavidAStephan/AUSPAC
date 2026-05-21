@@ -9,6 +9,7 @@ var
     yhat_us         pi_us_gap
     ibar            pibar_au        pibar_us
     piQ             pi_m            dln_pcom
+    tau_CIT_gap
     ib_hat          rKB_hat
     ln_ib_level
 ;
@@ -17,6 +18,7 @@ varexo
     eps_q           eps_i           eps_pi          eps_q_us
     eps_pi_us       eps_ibar        eps_pibar_au    eps_pibar_us
     eps_u_gap       eps_piQ         eps_pi_m        eps_pcom
+    eps_tau_CIT
     eps_var_ib      eps_var_rKB     eps_ib
 ;
 
@@ -30,6 +32,7 @@ parameters
     alpha_pc        beta_pc_m       gamma_oil
     i_ss            pi_ss_au        pi_ss_us
     rho_piQ         rho_pm        rho_pcom
+    rho_tau_CIT     a_ib_CIT        a_rKB_CIT
     rho_ib_aux      a_ib_y          a_ib_pi         a_ib_u
     rho_rKB_aux     a_rKB_i
     b0_ib           b1_ib           b2_ib           b3_ib
@@ -51,6 +54,12 @@ rho_piQ         = 0.85;         rho_pm          = 0.28;         rho_pcom        
 rho_ib_aux      = 0.694;         a_ib_y          = 0.050;         a_ib_pi         = 0.023;
 a_ib_u          = 0.004;
 rho_rKB_aux     = 0.162;         a_rKB_i         = 0.242;
+// Rounds 4-8 consolidation (2026-05-21): tau_CIT_gap (corporate income tax)
+// as var_model state. CIT raise → uc_k up (alpha_CIT=0.02 in eq_uc_k) →
+// dln_ib_star_bar down via -sigma_ces*dln_uc_k. Long-run elasticity into
+// ln_ib_level: -sigma_ces * alpha_CIT ≈ -0.5366*0.02 = -0.011.
+// a_rKB_CIT = +alpha_CIT (direct user-cost channel through rKB_hat).
+rho_tau_CIT     = 0.94;          a_ib_CIT        = -0.011;        a_rKB_CIT       = 0.02;
 b0_ib           = 0.0180;        b1_ib           = 0.0818;        b2_ib           = 0.0;           b3_ib           = 0.3144;
 beta_pac        = 0.98;
 
@@ -60,6 +69,7 @@ var_model(model_name = esat_business_inv,
         'var_yhat_us', 'var_pi_us_gap',
         'var_ibar', 'var_pibar_au', 'var_pibar_us',
         'var_piQ', 'var_pi_m', 'var_dln_pcom',
+        'var_tau_CIT_gap',
         'var_ib', 'var_rKB'
     ]);
 
@@ -105,11 +115,15 @@ model;
     [name = 'var_dln_pcom']
     dln_pcom = rho_pcom*dln_pcom(-1) + eps_pcom;
 
+    // Rounds 4-8 consolidation (2026-05-21): CIT tax gap as var_model state.
+    [name = 'var_tau_CIT_gap']
+    tau_CIT_gap = rho_tau_CIT*tau_CIT_gap(-1) + eps_tau_CIT;
+
     [name = 'var_ib']
-    ib_hat = rho_ib_aux*ib_hat(-1) + a_ib_y*yhat_au(-1) + a_ib_pi*pi_au_gap(-1) + a_ib_u*u_gap(-1) + eps_var_ib;
+    ib_hat = rho_ib_aux*ib_hat(-1) + a_ib_y*yhat_au(-1) + a_ib_pi*pi_au_gap(-1) + a_ib_u*u_gap(-1) + a_ib_CIT*tau_CIT_gap(-1) + eps_var_ib;
 
     [name = 'var_rKB']
-    rKB_hat = rho_rKB_aux*rKB_hat(-1) + a_rKB_i*i_gap(-1) + eps_var_rKB;
+    rKB_hat = rho_rKB_aux*rKB_hat(-1) + a_rKB_i*i_gap(-1) + a_rKB_CIT*tau_CIT_gap(-1) + eps_var_rKB;
 
 
 
@@ -136,6 +150,7 @@ shocks;
     var eps_piQ;        stderr 0.571;
     var eps_pi_m;       stderr 0.5;
     var eps_pcom;       stderr 3.0;
+    var eps_tau_CIT;    stderr 0.30;
     var eps_var_ib;       stderr 0.01;
     var eps_var_rKB;       stderr 0.01;
     var eps_ib;       stderr 2.78;

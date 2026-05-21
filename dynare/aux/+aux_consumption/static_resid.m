@@ -18,7 +18,7 @@ function residual = static_resid(T, y, x, params, T_flag)
 if T_flag
     T = aux_consumption.static_resid_tt(T, y, x, params);
 end
-residual = zeros(18, 1);
+residual = zeros(19, 1);
     residual(1) = (y(1)) - (y(1)*params(2)-params(3)*(y(3)-y(2))+params(1)*y(5)+x(1));
     residual(2) = (y(3)) - (y(3)*params(4)+(1-params(4))*(y(2)*params(5)+y(1)*params(6))+x(2));
     residual(3) = (y(2)) - (y(2)*params(7)+y(1)*params(8)+params(17)*(y(10)-y(8))+params(18)*(y(11)-y(8))+params(19)*y(12)+x(3));
@@ -31,11 +31,12 @@ residual = zeros(18, 1);
     residual(10) = (y(10)) - (y(10)*params(23)+params(21)*(1-params(23))+x(10));
     residual(11) = (y(11)) - (y(11)*params(24)+params(21)*(1-params(24))+x(11));
     residual(12) = (y(12)) - (y(12)*params(25)+x(12));
-    residual(13) = (y(13)) - (y(13)*params(26)+y(1)*params(27)+y(4)*params(28)+x(13));
-    residual(14) = (y(14)) - (y(14)*params(29)+y(1)*params(30)+y(3)*params(31)+y(2)*params(32)+y(4)*params(33)+y(13)*params(34)+x(14));
-    residual(15) = (y(16)) - (x(15)+y(1)*params(38)+y(3)*params(37)+params(35)*(y(14)-y(15))+params(36)*y(17)+y(18));
-residual(16) = y(16);
-    residual(17) = (y(17)) - (y(16));
-    residual(18) = (y(18)) - (params(40)+y(1)*params(41)+y(3)*params(42)+y(2)*params(43)+y(4)*params(44)+y(5)*params(45)+y(6)*params(46)+y(7)*params(47)+y(8)*params(48)+y(9)*params(49)+y(10)*params(50)+y(11)*params(51)+y(12)*params(52)+y(13)*params(53)+y(14)*params(54));
+    residual(13) = (y(13)) - (y(13)*params(26)+x(13));
+    residual(14) = (y(14)) - (y(14)*params(28)+y(1)*params(29)+y(4)*params(30)+x(14));
+    residual(15) = (y(15)) - (y(15)*params(31)+y(1)*params(32)+y(3)*params(33)+y(2)*params(34)+y(4)*params(35)+y(14)*params(36)+y(13)*params(27)+x(15));
+    residual(16) = (y(17)) - (x(16)+y(1)*params(40)+y(3)*params(39)+params(37)*(y(15)-y(16))+params(38)*y(18)+y(19));
+residual(17) = y(17);
+    residual(18) = (y(18)) - (y(17));
+    residual(19) = (y(19)) - (params(42)+y(1)*params(43)+y(3)*params(44)+y(2)*params(45)+y(4)*params(46)+y(5)*params(47)+y(6)*params(48)+y(7)*params(49)+y(8)*params(50)+y(9)*params(51)+y(10)*params(52)+y(11)*params(53)+y(12)*params(54)+y(13)*params(55)+y(14)*params(56)+y(15)*params(57));
 
 end

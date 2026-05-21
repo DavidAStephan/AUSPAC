@@ -13,6 +13,7 @@ varexo
 	pibar_au
 	pibar_us
 	rKB_hat
+	tau_CIT_gap
 	u_gap
 	yhat_au
 	yhat_us;

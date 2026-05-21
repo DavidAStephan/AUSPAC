@@ -1,4 +1,5 @@
 var
+	dln_pop_bar
 	i_gap
 	ln_n_level
 	n_hat

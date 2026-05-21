@@ -12,6 +12,7 @@ varexo
 	pi_us_gap
 	pibar_au
 	pibar_us
+	tau_PAYG_gap
 	u_gap
 	yh_ratio_hat
 	yhat_au

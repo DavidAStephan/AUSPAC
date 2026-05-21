@@ -30,6 +30,8 @@ var
     piQ             pi_m            dln_pcom
     // Phase U addition: wage inflation gap — re-opens the wage->piQ_hat channel
     pi_w_gap
+    // Rounds 4-8 consolidation (2026-05-21): GST tax gap as var_model state
+    tau_GST_gap
     // VA-price aux regression target (the trend_component target for the PAC)
     piQ_hat
     // Cumulative levels for the PAC equation (LHS of eq_piQ_pac is diff(pQ_level))
@@ -40,7 +42,7 @@ varexo
     eps_q           eps_i           eps_pi          eps_q_us
     eps_pi_us       eps_ibar        eps_pibar_au    eps_pibar_us
     eps_u_gap       eps_piQ         eps_pi_m        eps_pcom
-    eps_pi_w        eps_var_pQ      eps_pQ
+    eps_pi_w        eps_tau_GST     eps_var_pQ      eps_pQ
 ;
 
 parameters
@@ -64,6 +66,8 @@ parameters
     rho_pm        rho_pcom
     // pi_w_gap reduced-form companion-matrix coefficients (Phase U)
     rho_pi_w_gap    a_w_pi          a_w_u
+    // Rounds 4-8 consolidation (2026-05-21): GST tax-gap reduced-form
+    rho_tau_GST     a_pQ_GST
     // VA-price PAC short-run coefficients
     b0_pQ           b1_pQ           b2_pQ
     // PAC discount factor
@@ -112,6 +116,12 @@ rho_piQ         = 0.85;         rho_pm          = 0.28;         rho_pcom        
 // pv_u_gap is forward-looking and not a var_model state, so we use u_gap(-1) as
 // the backward-looking analogue with a smaller coefficient.
 rho_pi_w_gap    = 0.21;         a_w_pi          = 0.35;         a_w_u           = -0.05;
+// Rounds 4-8 consolidation (2026-05-21): tau_GST_gap (GST effective rate) as
+// var_model state. Persistence matches parameter-values.inc Round 6.
+// a_pQ_GST = 0.05: indirect CPI→wages→piQ channel (GST passthrough to
+// consumer prices alpha_GST=0.05 in eq_pi_c → wage Phillips → piQ_hat).
+// Calibrated conservatively pending Phase B-style re-estimation.
+rho_tau_GST     = 0.90;         a_pQ_GST        = 0.05;
 
 b0_pQ           = 0.0294;       b1_pQ           = 0.2784;       b2_pQ           = 0.0022;
 beta_pac        = 0.98;
@@ -129,6 +139,7 @@ var_model(model_name = esat_pQ,
         'var_ibar', 'var_pibar_au', 'var_pibar_us',
         'var_piQ', 'var_pi_m', 'var_dln_pcom',
         'var_pi_w_gap',
+        'var_tau_GST_gap',
         'var_piQ_hat'
     ]);
 
@@ -193,6 +204,10 @@ model;
     [name = 'var_pi_w_gap']
     pi_w_gap = rho_pi_w_gap*pi_w_gap(-1) + a_w_pi*pi_au_gap(-1) + a_w_u*u_gap(-1) + eps_pi_w;
 
+    // Rounds 4-8 consolidation (2026-05-21): GST tax-gap as var_model state.
+    [name = 'var_tau_GST_gap']
+    tau_GST_gap = rho_tau_GST*tau_GST_gap(-1) + eps_tau_GST;
+
     // ---------------------------------------------------------------
     // piQ_hat auxiliary regression (the TARGET projection for VA-price PAC)
     // Phase U: pi_w_gap(-1) added per FR-BDF wp736 Table 4.4.4 — the
@@ -200,9 +215,11 @@ model;
     // wage->price spiral. Coefficient calibration: FR-BDF reports
     // +1.2e-2 in Table 4.4.4; we adopt the same value pending Phase B
     // re-estimation of the projection coefficients on AU data.
+    // Rounds 4-8 consolidation: +a_pQ_GST*tau_GST_gap(-1) — indirect GST
+    // pass-through to VA-price target via wage Phillips.
     // ---------------------------------------------------------------
     [name = 'var_piQ_hat']
-    piQ_hat = rho_pQ_aux*piQ_hat(-1) + a_pQ_y*yhat_au(-1) + a_pQ_i*i_gap(-1) + a_pQ_pi*pi_au_gap(-1) + a_pQ_u*u_gap(-1) + a_pQ_w*pi_w_gap(-1) + eps_var_pQ;
+    piQ_hat = rho_pQ_aux*piQ_hat(-1) + a_pQ_y*yhat_au(-1) + a_pQ_i*i_gap(-1) + a_pQ_pi*pi_au_gap(-1) + a_pQ_u*u_gap(-1) + a_pQ_w*pi_w_gap(-1) + a_pQ_GST*tau_GST_gap(-1) + eps_var_pQ;
 
     // ---------------------------------------------------------------
     // VA-price PAC equation — this is what pac.print expands
@@ -230,6 +247,7 @@ shocks;
     var eps_pi_m;       stderr 0.5;
     var eps_pcom;       stderr 3.0;
     var eps_pi_w;       stderr 0.1407;
+    var eps_tau_GST;    stderr 0.10;
     var eps_var_pQ;     stderr 0.01;
     var eps_pQ;         stderr 0.571;
 end;

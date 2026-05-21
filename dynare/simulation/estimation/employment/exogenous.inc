@@ -1,5 +1,6 @@
 varexo
 	dln_pcom
+	dln_pop_bar
 	eps_n
 	eps_var_n
 	i_gap

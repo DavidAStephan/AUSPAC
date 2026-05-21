@@ -6,7 +6,7 @@ if nargin<3
 end
 
 if strcmp(model_name, 'esat_consumption')
-    ar = zeros(14, 14, 1);
+    ar = zeros(15, 15, 1);
     ar(1,1,1) = params(2);
     ar(1,3,1) = params(3);
     ar(1,2,1) = (-params(3));
@@ -31,27 +31,29 @@ if strcmp(model_name, 'esat_consumption')
     ar(10,10,1) = params(23);
     ar(11,11,1) = params(24);
     ar(12,12,1) = params(25);
-    ar(13,1,1) = params(27);
-    ar(13,4,1) = params(28);
     ar(13,13,1) = params(26);
-    ar(14,1,1) = params(30);
-    ar(14,3,1) = params(32);
-    ar(14,2,1) = params(31);
-    ar(14,4,1) = params(33);
-    ar(14,13,1) = params(34);
-    ar(14,14,1) = params(29);
+    ar(14,1,1) = params(29);
+    ar(14,4,1) = params(30);
+    ar(14,14,1) = params(28);
+    ar(15,1,1) = params(32);
+    ar(15,3,1) = params(34);
+    ar(15,2,1) = params(33);
+    ar(15,4,1) = params(35);
+    ar(15,13,1) = params(27);
+    ar(15,14,1) = params(36);
+    ar(15,15,1) = params(31);
     if nargout>1
-        a0 = eye(14);
+        a0 = eye(15);
         if reducedform
             for i=1:1
                 ar(:,:,i) = a0\ar(:,:,i);
             end
             if nargout<3
-                a0 = eye(14);
+                a0 = eye(15);
             end
         end
         if nargout>2
-            constants = zeros(14,1);
+            constants = zeros(15,1);
             constants(7) = (1-params(12))*params(20);
             constants(8) = (1-params(13))*params(21);
             constants(9) = (1-params(14))*params(22);
@@ -60,7 +62,7 @@ if strcmp(model_name, 'esat_consumption')
         end
         if reducedform
             constants = a0\constants;
-            a0 = eye(14);
+            a0 = eye(15);
         end
     end
     return

@@ -2,13 +2,13 @@ Starting Dynare (version 6.5).
 Calling Dynare with arguments: noclearall
 Starting preprocessing of the model file ...
 Substitution of Diff operator: added 3 auxiliary variables and equations.
-Found 19 equation(s).
+Found 20 equation(s).
 Evaluating expressions...
 Computing static model derivatives (order 1).
 Normalizing the static model...
 Finding the optimal block decomposition of the static model...
-15 block(s) found:
-  14 recursive block(s) and 1 simultaneous block(s).
+16 block(s) found:
+  15 recursive block(s) and 1 simultaneous block(s).
   the largest simultaneous block has 3 equation(s)
                                  and 3 feedback variable(s).
 Computing dynamic model derivatives (order 2).

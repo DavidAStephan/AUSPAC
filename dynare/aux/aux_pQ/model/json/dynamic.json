@@ -12,92 +12,106 @@
 , {"residual": {"lhs": "piQ", "rhs": "piQ(-1)*rho_piQ+pi_ss_au*(1-rho_piQ)+eps_piQ"}}
 , {"residual": {"lhs": "pi_m", "rhs": "pi_m(-1)*rho_pm+pi_ss_au*(1-rho_pm)+eps_pi_m"}}
 , {"residual": {"lhs": "dln_pcom", "rhs": "dln_pcom(-1)*rho_pcom+eps_pcom"}}
-, {"residual": {"lhs": "piQ_star", "rhs": "rho_pQ_star*piQ_star(-1)+pi_ss_au*(1-rho_pQ_star)+eps_piQ_star"}}
-, {"residual": {"lhs": "pQ_star_level", "rhs": "pQ_star_level(-1)+piQ_star-pi_ss_au"}}
-, {"residual": {"lhs": "AUX_DIFF_161", "rhs": "eps_pQ+yhat_au*b2_pQ+b0_pQ*(pQ_star_level(-1)-pQ_level(-1))+b1_pQ*AUX_DIFF_LAG_164+pac_expectation_pac_pQ"}}
-, {"residual": {"lhs": "AUX_DIFF_161", "rhs": "pQ_level-pQ_level(-1)"}}
-, {"residual": {"lhs": "AUX_DIFF_LAG_164", "rhs": "AUX_DIFF_161(-1)"}}
-, {"residual": {"lhs": "pac_expectation_pac_pQ", "rhs": "h_pac_pQ_constant+yhat_au(-1)*h_pac_pQ_var_yhat_au_lag_1+i_gap(-1)*h_pac_pQ_var_i_gap_lag_1+pi_au_gap(-1)*h_pac_pQ_var_pi_au_gap_lag_1+u_gap(-1)*h_pac_pQ_var_u_gap_lag_1+yhat_us(-1)*h_pac_pQ_var_yhat_us_lag_1+pi_us_gap(-1)*h_pac_pQ_var_pi_us_gap_lag_1+ibar(-1)*h_pac_pQ_var_ibar_lag_1+pibar_au(-1)*h_pac_pQ_var_pibar_au_lag_1+pibar_us(-1)*h_pac_pQ_var_pibar_us_lag_1+piQ(-1)*h_pac_pQ_var_piQ_lag_1+pi_m(-1)*h_pac_pQ_var_pi_m_lag_1+dln_pcom(-1)*h_pac_pQ_var_dln_pcom_lag_1+piQ_star(-1)*h_pac_pQ_var_piQ_star_lag_1"}}
+, {"residual": {"lhs": "pi_w_gap", "rhs": "rho_pi_w_gap*pi_w_gap(-1)+pi_au_gap(-1)*a_w_pi+u_gap(-1)*a_w_u+eps_pi_w"}}
+, {"residual": {"lhs": "tau_GST_gap", "rhs": "rho_tau_GST*tau_GST_gap(-1)+eps_tau_GST"}}
+, {"residual": {"lhs": "piQ_hat", "rhs": "rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+pi_w_gap(-1)*a_pQ_w+tau_GST_gap(-1)*a_pQ_GST+eps_var_pQ"}}
+, {"residual": {"lhs": "AUX_DIFF_191", "rhs": "eps_pQ+yhat_au*b2_pQ+b0_pQ*(piQ_hat(-1)-pQ_level(-1))+b1_pQ*AUX_DIFF_LAG_194+pac_expectation_pac_pQ"}}
+, {"residual": {"lhs": "AUX_DIFF_191", "rhs": "pQ_level-pQ_level(-1)"}}
+, {"residual": {"lhs": "AUX_DIFF_LAG_194", "rhs": "AUX_DIFF_191(-1)"}}
+, {"residual": {"lhs": "pac_expectation_pac_pQ", "rhs": "h_pac_pQ_constant+yhat_au(-1)*h_pac_pQ_var_yhat_au_lag_1+i_gap(-1)*h_pac_pQ_var_i_gap_lag_1+pi_au_gap(-1)*h_pac_pQ_var_pi_au_gap_lag_1+u_gap(-1)*h_pac_pQ_var_u_gap_lag_1+yhat_us(-1)*h_pac_pQ_var_yhat_us_lag_1+pi_us_gap(-1)*h_pac_pQ_var_pi_us_gap_lag_1+ibar(-1)*h_pac_pQ_var_ibar_lag_1+pibar_au(-1)*h_pac_pQ_var_pibar_au_lag_1+pibar_us(-1)*h_pac_pQ_var_pibar_us_lag_1+piQ(-1)*h_pac_pQ_var_piQ_lag_1+pi_m(-1)*h_pac_pQ_var_pi_m_lag_1+dln_pcom(-1)*h_pac_pQ_var_dln_pcom_lag_1+pi_w_gap(-1)*h_pac_pQ_var_pi_w_gap_lag_1+tau_GST_gap(-1)*h_pac_pQ_var_tau_GST_gap_lag_1+piQ_hat(-1)*h_pac_pQ_var_piQ_hat_lag_1"}}
 
 ]
-, "external_functions_temporary_terms_jacobian": [], "temporary_terms_jacobian": [], "jacobian": {  "nrows": 18, "ncols": 48, "entries": [{"eq": 1, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-lambda_q)"}
-, {"eq": 1, "col": 17, "var": "yhat_au", "shift": 0, "val": "1"}
+, "external_functions_temporary_terms_jacobian": [], "temporary_terms_jacobian": [], "jacobian": {  "nrows": 19, "ncols": 52, "entries": [{"eq": 1, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-lambda_q)"}
+, {"eq": 1, "col": 18, "var": "yhat_au", "shift": 0, "val": "1"}
 , {"eq": 1, "col": 2, "var": "pi_au_gap", "shift": -1, "val": "(-sigma_q)"}
 , {"eq": 1, "col": 3, "var": "i_gap", "shift": -1, "val": "sigma_q"}
 , {"eq": 1, "col": 5, "var": "yhat_us", "shift": -1, "val": "(-delta)"}
-, {"eq": 1, "col": 35, "var": "eps_q", "shift": 0, "val": "(-1)"}
+, {"eq": 1, "col": 37, "var": "eps_q", "shift": 0, "val": "(-1)"}
 , {"eq": 2, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-((1-lambda_i)*beta_i))"}
 , {"eq": 2, "col": 2, "var": "pi_au_gap", "shift": -1, "val": "(-((1-lambda_i)*alpha_i))"}
 , {"eq": 2, "col": 3, "var": "i_gap", "shift": -1, "val": "(-lambda_i)"}
-, {"eq": 2, "col": 19, "var": "i_gap", "shift": 0, "val": "1"}
-, {"eq": 2, "col": 36, "var": "eps_i", "shift": 0, "val": "(-1)"}
+, {"eq": 2, "col": 20, "var": "i_gap", "shift": 0, "val": "1"}
+, {"eq": 2, "col": 38, "var": "eps_i", "shift": 0, "val": "(-1)"}
 , {"eq": 3, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-kappa_pi)"}
 , {"eq": 3, "col": 2, "var": "pi_au_gap", "shift": -1, "val": "(-lambda_pi)"}
-, {"eq": 3, "col": 18, "var": "pi_au_gap", "shift": 0, "val": "1"}
+, {"eq": 3, "col": 19, "var": "pi_au_gap", "shift": 0, "val": "1"}
 , {"eq": 3, "col": 8, "var": "pibar_au", "shift": -1, "val": "(-((-alpha_pc)-beta_pc_m))"}
 , {"eq": 3, "col": 10, "var": "piQ", "shift": -1, "val": "(-alpha_pc)"}
 , {"eq": 3, "col": 11, "var": "pi_m", "shift": -1, "val": "(-beta_pc_m)"}
 , {"eq": 3, "col": 12, "var": "dln_pcom", "shift": -1, "val": "(-gamma_oil)"}
-, {"eq": 3, "col": 37, "var": "eps_pi", "shift": 0, "val": "(-1)"}
+, {"eq": 3, "col": 39, "var": "eps_pi", "shift": 0, "val": "(-1)"}
 , {"eq": 4, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-okun_coeff)"}
 , {"eq": 4, "col": 4, "var": "u_gap", "shift": -1, "val": "(-rho_u_gap)"}
-, {"eq": 4, "col": 20, "var": "u_gap", "shift": 0, "val": "1"}
-, {"eq": 4, "col": 43, "var": "eps_u_gap", "shift": 0, "val": "(-1)"}
+, {"eq": 4, "col": 21, "var": "u_gap", "shift": 0, "val": "1"}
+, {"eq": 4, "col": 45, "var": "eps_u_gap", "shift": 0, "val": "(-1)"}
 , {"eq": 5, "col": 5, "var": "yhat_us", "shift": -1, "val": "(-lambda_q_us)"}
-, {"eq": 5, "col": 21, "var": "yhat_us", "shift": 0, "val": "1"}
-, {"eq": 5, "col": 38, "var": "eps_q_us", "shift": 0, "val": "(-1)"}
+, {"eq": 5, "col": 22, "var": "yhat_us", "shift": 0, "val": "1"}
+, {"eq": 5, "col": 40, "var": "eps_q_us", "shift": 0, "val": "(-1)"}
 , {"eq": 6, "col": 5, "var": "yhat_us", "shift": -1, "val": "(-kappa_pi_us)"}
 , {"eq": 6, "col": 6, "var": "pi_us_gap", "shift": -1, "val": "(-lambda_pi_us)"}
-, {"eq": 6, "col": 22, "var": "pi_us_gap", "shift": 0, "val": "1"}
-, {"eq": 6, "col": 39, "var": "eps_pi_us", "shift": 0, "val": "(-1)"}
+, {"eq": 6, "col": 23, "var": "pi_us_gap", "shift": 0, "val": "1"}
+, {"eq": 6, "col": 41, "var": "eps_pi_us", "shift": 0, "val": "(-1)"}
 , {"eq": 7, "col": 7, "var": "ibar", "shift": -1, "val": "(-lambda_ibar)"}
-, {"eq": 7, "col": 23, "var": "ibar", "shift": 0, "val": "1"}
-, {"eq": 7, "col": 40, "var": "eps_ibar", "shift": 0, "val": "(-1)"}
+, {"eq": 7, "col": 24, "var": "ibar", "shift": 0, "val": "1"}
+, {"eq": 7, "col": 42, "var": "eps_ibar", "shift": 0, "val": "(-1)"}
 , {"eq": 8, "col": 8, "var": "pibar_au", "shift": -1, "val": "(-lambda_pibar)"}
-, {"eq": 8, "col": 24, "var": "pibar_au", "shift": 0, "val": "1"}
-, {"eq": 8, "col": 41, "var": "eps_pibar_au", "shift": 0, "val": "(-1)"}
+, {"eq": 8, "col": 25, "var": "pibar_au", "shift": 0, "val": "1"}
+, {"eq": 8, "col": 43, "var": "eps_pibar_au", "shift": 0, "val": "(-1)"}
 , {"eq": 9, "col": 9, "var": "pibar_us", "shift": -1, "val": "(-lambda_pibar_us)"}
-, {"eq": 9, "col": 25, "var": "pibar_us", "shift": 0, "val": "1"}
-, {"eq": 9, "col": 42, "var": "eps_pibar_us", "shift": 0, "val": "(-1)"}
+, {"eq": 9, "col": 26, "var": "pibar_us", "shift": 0, "val": "1"}
+, {"eq": 9, "col": 44, "var": "eps_pibar_us", "shift": 0, "val": "(-1)"}
 , {"eq": 10, "col": 10, "var": "piQ", "shift": -1, "val": "(-rho_piQ)"}
-, {"eq": 10, "col": 26, "var": "piQ", "shift": 0, "val": "1"}
-, {"eq": 10, "col": 44, "var": "eps_piQ", "shift": 0, "val": "(-1)"}
+, {"eq": 10, "col": 27, "var": "piQ", "shift": 0, "val": "1"}
+, {"eq": 10, "col": 46, "var": "eps_piQ", "shift": 0, "val": "(-1)"}
 , {"eq": 11, "col": 11, "var": "pi_m", "shift": -1, "val": "(-rho_pm)"}
-, {"eq": 11, "col": 27, "var": "pi_m", "shift": 0, "val": "1"}
-, {"eq": 11, "col": 45, "var": "eps_pi_m", "shift": 0, "val": "(-1)"}
+, {"eq": 11, "col": 28, "var": "pi_m", "shift": 0, "val": "1"}
+, {"eq": 11, "col": 47, "var": "eps_pi_m", "shift": 0, "val": "(-1)"}
 , {"eq": 12, "col": 12, "var": "dln_pcom", "shift": -1, "val": "(-rho_pcom)"}
-, {"eq": 12, "col": 28, "var": "dln_pcom", "shift": 0, "val": "1"}
-, {"eq": 12, "col": 46, "var": "eps_pcom", "shift": 0, "val": "(-1)"}
-, {"eq": 13, "col": 13, "var": "piQ_star", "shift": -1, "val": "(-rho_pQ_star)"}
-, {"eq": 13, "col": 29, "var": "piQ_star", "shift": 0, "val": "1"}
-, {"eq": 13, "col": 47, "var": "eps_piQ_star", "shift": 0, "val": "(-1)"}
-, {"eq": 14, "col": 29, "var": "piQ_star", "shift": 0, "val": "(-1)"}
-, {"eq": 14, "col": 15, "var": "pQ_star_level", "shift": -1, "val": "(-1)"}
-, {"eq": 14, "col": 31, "var": "pQ_star_level", "shift": 0, "val": "1"}
-, {"eq": 15, "col": 17, "var": "yhat_au", "shift": 0, "val": "(-b2_pQ)"}
-, {"eq": 15, "col": 14, "var": "pQ_level", "shift": -1, "val": "b0_pQ"}
-, {"eq": 15, "col": 15, "var": "pQ_star_level", "shift": -1, "val": "(-b0_pQ)"}
-, {"eq": 15, "col": 48, "var": "eps_pQ", "shift": 0, "val": "(-1)"}
-, {"eq": 15, "col": 32, "var": "AUX_DIFF_161", "shift": 0, "val": "1"}
-, {"eq": 15, "col": 33, "var": "AUX_DIFF_LAG_164", "shift": 0, "val": "(-b1_pQ)"}
-, {"eq": 15, "col": 34, "var": "pac_expectation_pac_pQ", "shift": 0, "val": "(-1)"}
-, {"eq": 16, "col": 14, "var": "pQ_level", "shift": -1, "val": "1"}
-, {"eq": 16, "col": 30, "var": "pQ_level", "shift": 0, "val": "(-1)"}
-, {"eq": 16, "col": 32, "var": "AUX_DIFF_161", "shift": 0, "val": "1"}
-, {"eq": 17, "col": 16, "var": "AUX_DIFF_161", "shift": -1, "val": "(-1)"}
-, {"eq": 17, "col": 33, "var": "AUX_DIFF_LAG_164", "shift": 0, "val": "1"}
-, {"eq": 18, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-h_pac_pQ_var_yhat_au_lag_1)"}
-, {"eq": 18, "col": 2, "var": "pi_au_gap", "shift": -1, "val": "(-h_pac_pQ_var_pi_au_gap_lag_1)"}
-, {"eq": 18, "col": 3, "var": "i_gap", "shift": -1, "val": "(-h_pac_pQ_var_i_gap_lag_1)"}
-, {"eq": 18, "col": 4, "var": "u_gap", "shift": -1, "val": "(-h_pac_pQ_var_u_gap_lag_1)"}
-, {"eq": 18, "col": 5, "var": "yhat_us", "shift": -1, "val": "(-h_pac_pQ_var_yhat_us_lag_1)"}
-, {"eq": 18, "col": 6, "var": "pi_us_gap", "shift": -1, "val": "(-h_pac_pQ_var_pi_us_gap_lag_1)"}
-, {"eq": 18, "col": 7, "var": "ibar", "shift": -1, "val": "(-h_pac_pQ_var_ibar_lag_1)"}
-, {"eq": 18, "col": 8, "var": "pibar_au", "shift": -1, "val": "(-h_pac_pQ_var_pibar_au_lag_1)"}
-, {"eq": 18, "col": 9, "var": "pibar_us", "shift": -1, "val": "(-h_pac_pQ_var_pibar_us_lag_1)"}
-, {"eq": 18, "col": 10, "var": "piQ", "shift": -1, "val": "(-h_pac_pQ_var_piQ_lag_1)"}
-, {"eq": 18, "col": 11, "var": "pi_m", "shift": -1, "val": "(-h_pac_pQ_var_pi_m_lag_1)"}
-, {"eq": 18, "col": 12, "var": "dln_pcom", "shift": -1, "val": "(-h_pac_pQ_var_dln_pcom_lag_1)"}
-, {"eq": 18, "col": 13, "var": "piQ_star", "shift": -1, "val": "(-h_pac_pQ_var_piQ_star_lag_1)"}
-, {"eq": 18, "col": 34, "var": "pac_expectation_pac_pQ", "shift": 0, "val": "1"}
-]}, "external_functions_temporary_terms_hessian": [], "temporary_terms_hessian": [], "hessian": {  "nrows": 18, "ncols": 2304, "entries": []}, "external_functions_temporary_terms_third_derivative": [], "temporary_terms_third_derivative": [], "third_derivative": {  "nrows": 18, "ncols": 110592, "entries": []}}}
+, {"eq": 12, "col": 29, "var": "dln_pcom", "shift": 0, "val": "1"}
+, {"eq": 12, "col": 48, "var": "eps_pcom", "shift": 0, "val": "(-1)"}
+, {"eq": 13, "col": 2, "var": "pi_au_gap", "shift": -1, "val": "(-a_w_pi)"}
+, {"eq": 13, "col": 4, "var": "u_gap", "shift": -1, "val": "(-a_w_u)"}
+, {"eq": 13, "col": 13, "var": "pi_w_gap", "shift": -1, "val": "(-rho_pi_w_gap)"}
+, {"eq": 13, "col": 30, "var": "pi_w_gap", "shift": 0, "val": "1"}
+, {"eq": 13, "col": 49, "var": "eps_pi_w", "shift": 0, "val": "(-1)"}
+, {"eq": 14, "col": 14, "var": "tau_GST_gap", "shift": -1, "val": "(-rho_tau_GST)"}
+, {"eq": 14, "col": 31, "var": "tau_GST_gap", "shift": 0, "val": "1"}
+, {"eq": 14, "col": 50, "var": "eps_tau_GST", "shift": 0, "val": "(-1)"}
+, {"eq": 15, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-a_pQ_y)"}
+, {"eq": 15, "col": 2, "var": "pi_au_gap", "shift": -1, "val": "(-a_pQ_pi)"}
+, {"eq": 15, "col": 3, "var": "i_gap", "shift": -1, "val": "(-a_pQ_i)"}
+, {"eq": 15, "col": 4, "var": "u_gap", "shift": -1, "val": "(-a_pQ_u)"}
+, {"eq": 15, "col": 13, "var": "pi_w_gap", "shift": -1, "val": "(-a_pQ_w)"}
+, {"eq": 15, "col": 14, "var": "tau_GST_gap", "shift": -1, "val": "(-a_pQ_GST)"}
+, {"eq": 15, "col": 15, "var": "piQ_hat", "shift": -1, "val": "(-rho_pQ_aux)"}
+, {"eq": 15, "col": 32, "var": "piQ_hat", "shift": 0, "val": "1"}
+, {"eq": 15, "col": 51, "var": "eps_var_pQ", "shift": 0, "val": "(-1)"}
+, {"eq": 16, "col": 18, "var": "yhat_au", "shift": 0, "val": "(-b2_pQ)"}
+, {"eq": 16, "col": 15, "var": "piQ_hat", "shift": -1, "val": "(-b0_pQ)"}
+, {"eq": 16, "col": 16, "var": "pQ_level", "shift": -1, "val": "b0_pQ"}
+, {"eq": 16, "col": 52, "var": "eps_pQ", "shift": 0, "val": "(-1)"}
+, {"eq": 16, "col": 34, "var": "AUX_DIFF_191", "shift": 0, "val": "1"}
+, {"eq": 16, "col": 35, "var": "AUX_DIFF_LAG_194", "shift": 0, "val": "(-b1_pQ)"}
+, {"eq": 16, "col": 36, "var": "pac_expectation_pac_pQ", "shift": 0, "val": "(-1)"}
+, {"eq": 17, "col": 16, "var": "pQ_level", "shift": -1, "val": "1"}
+, {"eq": 17, "col": 33, "var": "pQ_level", "shift": 0, "val": "(-1)"}
+, {"eq": 17, "col": 34, "var": "AUX_DIFF_191", "shift": 0, "val": "1"}
+, {"eq": 18, "col": 17, "var": "AUX_DIFF_191", "shift": -1, "val": "(-1)"}
+, {"eq": 18, "col": 35, "var": "AUX_DIFF_LAG_194", "shift": 0, "val": "1"}
+, {"eq": 19, "col": 1, "var": "yhat_au", "shift": -1, "val": "(-h_pac_pQ_var_yhat_au_lag_1)"}
+, {"eq": 19, "col": 2, "var": "pi_au_gap", "shift": -1, "val": "(-h_pac_pQ_var_pi_au_gap_lag_1)"}
+, {"eq": 19, "col": 3, "var": "i_gap", "shift": -1, "val": "(-h_pac_pQ_var_i_gap_lag_1)"}
+, {"eq": 19, "col": 4, "var": "u_gap", "shift": -1, "val": "(-h_pac_pQ_var_u_gap_lag_1)"}
+, {"eq": 19, "col": 5, "var": "yhat_us", "shift": -1, "val": "(-h_pac_pQ_var_yhat_us_lag_1)"}
+, {"eq": 19, "col": 6, "var": "pi_us_gap", "shift": -1, "val": "(-h_pac_pQ_var_pi_us_gap_lag_1)"}
+, {"eq": 19, "col": 7, "var": "ibar", "shift": -1, "val": "(-h_pac_pQ_var_ibar_lag_1)"}
+, {"eq": 19, "col": 8, "var": "pibar_au", "shift": -1, "val": "(-h_pac_pQ_var_pibar_au_lag_1)"}
+, {"eq": 19, "col": 9, "var": "pibar_us", "shift": -1, "val": "(-h_pac_pQ_var_pibar_us_lag_1)"}
+, {"eq": 19, "col": 10, "var": "piQ", "shift": -1, "val": "(-h_pac_pQ_var_piQ_lag_1)"}
+, {"eq": 19, "col": 11, "var": "pi_m", "shift": -1, "val": "(-h_pac_pQ_var_pi_m_lag_1)"}
+, {"eq": 19, "col": 12, "var": "dln_pcom", "shift": -1, "val": "(-h_pac_pQ_var_dln_pcom_lag_1)"}
+, {"eq": 19, "col": 13, "var": "pi_w_gap", "shift": -1, "val": "(-h_pac_pQ_var_pi_w_gap_lag_1)"}
+, {"eq": 19, "col": 14, "var": "tau_GST_gap", "shift": -1, "val": "(-h_pac_pQ_var_tau_GST_gap_lag_1)"}
+, {"eq": 19, "col": 15, "var": "piQ_hat", "shift": -1, "val": "(-h_pac_pQ_var_piQ_hat_lag_1)"}
+, {"eq": 19, "col": 36, "var": "pac_expectation_pac_pQ", "shift": 0, "val": "1"}
+]}, "external_functions_temporary_terms_hessian": [], "temporary_terms_hessian": [], "hessian": {  "nrows": 19, "ncols": 2704, "entries": []}, "external_functions_temporary_terms_third_derivative": [], "temporary_terms_third_derivative": [], "third_derivative": {  "nrows": 19, "ncols": 140608, "entries": []}}}

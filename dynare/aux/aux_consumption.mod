@@ -9,6 +9,7 @@ var
     yhat_us         pi_us_gap
     ibar            pibar_au        pibar_us
     piQ             pi_m            dln_pcom
+    tau_PAYG_gap
     yh_ratio_hat    c_hat
     ln_c_level
 ;
@@ -17,6 +18,7 @@ varexo
     eps_q           eps_i           eps_pi          eps_q_us
     eps_pi_us       eps_ibar        eps_pibar_au    eps_pibar_us
     eps_u_gap       eps_piQ         eps_pi_m        eps_pcom
+    eps_tau_PAYG
     eps_var_yh      eps_var_c       eps_c
 ;
 
@@ -30,6 +32,7 @@ parameters
     alpha_pc        beta_pc_m       gamma_oil
     i_ss            pi_ss_au        pi_ss_us
     rho_piQ         rho_pm        rho_pcom
+    rho_tau_PAYG    a_c_PAYG
     rho_yh_aux      a_yh_y          a_yh_u
     rho_c_aux       a_c_y           a_c_i           a_c_pi          a_c_u           a_c_yh
     b0_c            b1_c            b2_c            b3_c
@@ -51,6 +54,11 @@ rho_piQ         = 0.85;         rho_pm          = 0.28;         rho_pcom        
 rho_yh_aux      = 0.93;          a_yh_y          = 0.12;          a_yh_u          = -0.07;
 rho_c_aux       = 0.581;         a_c_y           = 0.058;         a_c_i           = -0.043;
 a_c_pi          = 0.010;         a_c_u           = -0.036;        a_c_yh          = 0.10;
+// Rounds 4-8 consolidation (2026-05-21): tau_PAYG_gap (personal income tax)
+// as var_model state. AR(1) persistence matches parameter-values.inc Round 6.
+// a_c_PAYG = -alpha_PAYG (negative): PAYG raise drags consumption growth, per
+// eq_dln_c_star_bar Δtau_PAYG_gap term in simulation/identities/model.inc.
+rho_tau_PAYG    = 0.92;          a_c_PAYG        = -0.10;
 b0_c            = 0.0736;        b1_c            = 0.0375;        b2_c            = -0.3330;       b3_c            = 0.0220;
 beta_pac        = 0.95;
 
@@ -60,6 +68,7 @@ var_model(model_name = esat_consumption,
         'var_yhat_us', 'var_pi_us_gap',
         'var_ibar', 'var_pibar_au', 'var_pibar_us',
         'var_piQ', 'var_pi_m', 'var_dln_pcom',
+        'var_tau_PAYG_gap',
         'var_yh', 'var_c'
     ]);
 
@@ -105,11 +114,15 @@ model;
     [name = 'var_dln_pcom']
     dln_pcom = rho_pcom*dln_pcom(-1) + eps_pcom;
 
+    // Rounds 4-8 consolidation (2026-05-21): PAYG tax gap as var_model state.
+    [name = 'var_tau_PAYG_gap']
+    tau_PAYG_gap = rho_tau_PAYG*tau_PAYG_gap(-1) + eps_tau_PAYG;
+
     [name = 'var_yh']
     yh_ratio_hat = rho_yh_aux*yh_ratio_hat(-1) + a_yh_y*yhat_au(-1) + a_yh_u*u_gap(-1) + eps_var_yh;
 
     [name = 'var_c']
-    c_hat = rho_c_aux*c_hat(-1) + a_c_y*yhat_au(-1) + a_c_i*i_gap(-1) + a_c_pi*pi_au_gap(-1) + a_c_u*u_gap(-1) + a_c_yh*yh_ratio_hat(-1) + eps_var_c;
+    c_hat = rho_c_aux*c_hat(-1) + a_c_y*yhat_au(-1) + a_c_i*i_gap(-1) + a_c_pi*pi_au_gap(-1) + a_c_u*u_gap(-1) + a_c_yh*yh_ratio_hat(-1) + a_c_PAYG*tau_PAYG_gap(-1) + eps_var_c;
 
 
 
@@ -136,6 +149,7 @@ shocks;
     var eps_piQ;        stderr 0.571;
     var eps_pi_m;       stderr 0.5;
     var eps_pcom;       stderr 3.0;
+    var eps_tau_PAYG;   stderr 0.20;
     var eps_var_yh;       stderr 0.01;
     var eps_var_c;       stderr 0.01;
     var eps_c;       stderr 1.81;
