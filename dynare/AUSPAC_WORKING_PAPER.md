@@ -1014,6 +1014,25 @@ The aux-regression loadings $a_{X,Y}$ are chosen to mirror the *structural* coef
 
 The aux-file state vector sizes are not the same as the underlying E-SAT core because each block additionally carries its own auxiliary regression target(s) — $\widehat{\pi Q}$ for the VA price block, $\widehat{yh}, \widehat{c}$ for consumption, $\widehat{ib}, \widehat{rKB}$ for business investment, $\widehat{ih}$ for housing investment, $\widehat{n}$ for employment — plus, in the case of `aux_pQ`, the wage-gap state $\tilde{\pi}^w_{gap}$ added in Phase U.
 
+### 4.11.3 Round 1.2 — hand-to-mouth wage+transfer income channel (2026-05-22)
+
+Following FR-BDF wp1044 §3.5.1 eq 35, the consumption short-run PAC equation was extended with a contemporaneous response to wage-plus-transfer income relative to per-capita output:
+
+$$\Delta \ln C^{PAC}_t = \dots + b_{HtM} \cdot \bigl(\widetilde{wt}^H_t - \hat{y}^{au}_t\bigr)$$
+
+where $\widetilde{wt}^H_t$ is the HP-filter gap of log of real household labour-plus-transfer income, constructed from ABS 5206 Table 20 (compensation of employees A2302915V, social assistance benefits A2302919C, household HFCE IPD A2303940R) by [`data/prepare_household_income.m`](../data/prepare_household_income.m). The series captures the GFC stimulus peak (+4.0% in 2008Q4) and JobKeeper (+3.2% in 2020Q3) as the most extreme cyclical episodes.
+
+$\widetilde{wt}^H_t$ enters the per-block `var_model` of `aux_consumption.mod` as a new state with a reduced-form AR(1) (procyclical wages, countercyclical transfer support reflecting AU's JobKeeper-style fiscal response, PAYG drag). The `phaseW_recherrypick` step regenerates the consumption PAC's policy-function coefficient $h_{pac,c,wtH}$ as exactly zero, since $\widehat{c}_t$ doesn't load directly on $\widetilde{wt}^H_t$ in the target projection — the channel is purely contemporaneous, consistent with the rule-of-thumb interpretation.
+
+**Empirical result: the calibrated channel worsens fit by 5.7 nats.** A fresh 20k×2 MCMC under the Round 1.2 model (`b_HtM = 0.32` from the FR-BDF wp1044 posterior) yields MHM = **−785.80** vs the pre-Round-1.2 baseline of **−780.10**. The other estimated parameters barely shift relative to the pre-Round-1.2 posterior (consumption-PAC coefficients move by less than 0.05), confirming that the channel as calibrated does not match AU consumption dynamics. The negative result is documented honestly: AU consumption is well-fit by the existing rate-channel and yh_ratio mechanism, and the additional FR-BDF-calibrated HtM channel adds noise rather than signal at this calibration point.
+
+The structural plumbing (new `var_model` state, `eps_wtH` shock, data column, production-.mod patches) is retained because two natural extensions can plausibly improve the fit:
+
+1. **Promote $b_{HtM}$ to `estimated_params`** with a prior $N(0.30, 0.10)$ centred on the FR-BDF posterior. The posterior may pull $b_{HtM}$ towards zero, eliminating the −5.7 nat penalty while preserving the structural plumbing for future use.
+2. **Add `au_wt_H_real_gap` to `varobs`** so the model uses the empirical series directly rather than treating it as a latent state predicted from `yhat_au`, `u_gap`, and `tau_PAYG_gap`. With the real series in the likelihood, the channel may rebalance.
+
+Either follow-up would require a fresh MCMC under the expanded estimation surface. The Round 1.2 work is currently best understood as **structural infrastructure for future estimation**, not as a fit-improving change.
+
 ### 4.12 AU-PAC modelling choices and simplifications
 
 This subsection documents the modelling choices that shape AU-PAC. The headline monetary-transmission channels — cost of capital, exchange rate, mortgage rate, expectations, and the wage–price spiral — are all implemented and estimated on AU data. Several wp736 features are simplified or omitted; each is flagged below.
