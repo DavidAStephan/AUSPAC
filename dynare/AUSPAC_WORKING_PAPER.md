@@ -973,7 +973,46 @@ Six concurrent extensions added to the production model, calibrated to AU-releva
   - $MAPU_t$ (Mortgage Asset Price Underwriting): AR(1) projection of $\Delta \ln I^H_t$.
   Each carries an exogenous shock for direct nowcast injection ($\varepsilon^{BLR}, \varepsilon^{MAPI}, \varepsilon^{MAPU}$).
 
-**Variable / shock counts.** The extensions add 11 endogenous variables, 18 calibrated parameters, and 9 exogenous shocks; production model goes from 164 to 175 endogenous variables and from 33 to 49 shocks. Smoke-tested 2026-05-20 — model preprocesses, solves under Blanchard-Kahn, and IRFs propagate through all the new channels. None of the new variables is in `varobs`, so the Bayesian likelihood and posterior are unchanged from the v3.1.1 baseline.
+**Variable / shock counts.** The extensions add 11 endogenous variables, 18 calibrated parameters, and 9 exogenous shocks; production model goes from 164 to 175 endogenous variables and from 33 to 49 shocks. Smoke-tested 2026-05-20 — model preprocesses, solves under Blanchard-Kahn, and IRFs propagate through all the new channels. None of the new variables is in `varobs`, so the Bayesian likelihood and posterior are unchanged from the v3.1.1 baseline. See §4.11.2 for the rational-expectations consolidation that wired the Round 5–6 shocks into PAC expectation formulas on 2026-05-21.
+
+### 4.11.2 Rounds 4–8 expectation consolidation (2026-05-21)
+
+The Rounds 4–8 extensions of §4.11.1 added new structural equations and shocks to `model.inc`, but the per-block `var_model` companion matrices in `dynare/aux/` were not extended at the same time. As a result, between 2026-05-20 and 2026-05-21 the production model carried an internal inconsistency: a $\tau^{CIT,gap}$ shock would (correctly) raise the user cost of capital and depress business investment in the *structural* simulation block, yet the PAC expectation formula `pac_expectation(pac_ib)` — a closed-form linear combination over the lagged augmented E-SAT state — projected forward as if the shock did not exist. Forward-looking agents in the PAC block did not anticipate the long-run effect of tax shocks on their target, so the expectation operator returned a downward-biased response to anything driven by the new shocks.
+
+This subsection documents the targeted fix landed in PR #6 (commit 6811940). For each new shock with a *direct* structural channel into a PAC target, the corresponding aux file was extended with (a) the new variable as a `var_model` state in its orthogonal AR(1) reduced form and (b) a loading from that state into the PAC target's auxiliary regression. `phaseW_recherrypick.m` was then re-run to regenerate the closed-form policy-function coefficients $h_{pac,X}$, which were patched into `au_pac.mod` and `au_pac_bayesian.mod` alongside the new aux-regression loadings. No `aggregate()` re-run was needed; all Phase U/V/W manual overrides are preserved.
+
+### Table 4.11.2.1: Channels wired in PR #6
+
+| Aux file | New `var_model` state | PAC target | Aux-regression loading | New $h_{pac,X}$ coefficient |
+|---|---|---|---|---|
+| `aux_employment.mod` | $\Delta \ln \overline{POP}_t$ | $\widehat{n}_t$ | $a_{n,pop} = 1.0$ (one-for-one) | $h_{pac,n,pop} = +0.1240$ |
+| `aux_consumption.mod` | $\tau^{PAYG,gap}_t$ | $\widehat{c}_t$ | $a_{c,PAYG} = -\alpha_{PAYG} = -0.10$ | $h_{pac,c,PAYG} = -0.00956$ |
+| `aux_business_inv.mod` | $\tau^{CIT,gap}_t$ | $\widehat{ib}_t$, $\widehat{rKB}_t$ | $a_{ib,CIT} = -\sigma_{ces}\alpha_{CIT} = -0.011$, $a_{rKB,CIT} = +\alpha_{CIT} = +0.02$ | $h_{pac,ib,CIT} = -2.41 \times 10^{-4}$ |
+| `aux_pQ.mod` | $\tau^{GST,gap}_t$ | $\widehat{\pi Q}_t$ | $a_{pQ,GST} = 0.05$ (indirect via CPI → wages → VA) | $h_{pac,pQ,GST} = +8.21 \times 10^{-4}$ |
+
+The aux-regression loadings $a_{X,Y}$ are chosen to mirror the *structural* coefficient that the same shock carries in `model.inc` (e.g. $\alpha_{PAYG}$ in eq_dln_c_star_bar maps one-for-one to $-a_{c,PAYG}$); they are explicit, calibrated, and documented inline in each aux file. The cherrypicked $h_{pac,X,Y}$ coefficients in the right-most column are the closed-form policy-function projections obtained from `pac.print()` over the extended companion matrix. Sizes vary across blocks for two reasons: (i) the structural loading itself differs (1.0 vs 0.02), and (ii) the cherrypicked discounted-sum weights the new state by its forward trajectory under the extended VAR companion, which depends on the new state's AR(1) persistence ($\rho_{pop} = 0.95$ vs $\rho_{\tau} \in [0.90, 0.94]$) and the cumulative impact through the PAC ECM speed $b_{0,X}$.
+
+**Skipped channels.** Three of the six Round 4–8 extensions are intentionally *not* wired into PAC expectations:
+
+- **Round 4 ($i^{us}$, $\bar{i}^{us}$).** The US policy-rate process is structurally isolated under the current model: no AU PAC equation references it (UIP runs through $\bar{i}$, not $\bar{i}^{us}$), so adding it to a `var_model` would produce zero loadings on every PAC target. The deeper gap — connecting US monetary policy to AU expectations via UIP — is a separate piece of architectural work flagged in Section 7.
+- **Round 7 ($\hat{y}^{market}_t$, $\hat{y}^{nm}_t$).** Both variables are identities in $\hat{y}_{au}$, which is already the leading state in every `var_model`. PAC expectations therefore project them automatically — no separate wiring is required.
+- **Round 8 ($BLR_t$, $MAPI_t$, $MAPU_t$).** One-way nowcast projections with no feedback into the rest of the model. Their shocks are observation-equation only; they cannot enter PAC expectations because the variables themselves cannot affect any PAC target by construction.
+
+**Likelihood preservation.** A natural concern is whether the cached MCMC posterior (Laplace −779.30 / MHM −780.36; see §5) remains valid for the extended model. It does, by construction. The four new shocks ($\varepsilon^{pop,bar}, \varepsilon^{\tau,GST}, \varepsilon^{\tau,PAYG}, \varepsilon^{\tau,CIT}$) are not in `varobs`, and the corresponding state variables have zero realised values throughout the 1994Q1–2024Q4 sample. The new $h_{pac,X,Y}$ terms in each `pac_expectation_pac_X` identity are therefore exactly zero in every observed period, and the Kalman filter's recursion is bit-identical to the pre-consolidation model. Reloading the cached chain under the consolidated model reproduces MHM = −780.362 to numerical precision. A fresh 20k MCMC under the consolidated model was nonetheless run as an empirical check; it returned **Laplace = −779.285** (vs cached −779.30; +0.015 nats, mode bit-identical within numerical precision) and **MHM = −780.099** (vs cached −780.36; +0.26 nats, within typical MHM stochastic noise on a 20k×2-chain estimate). All 28 estimated posteriors are within standard error of the cached values. The fresh chain is now the authoritative cache and the new mode file lives in `dynare/au_pac_bayesian/Output/au_pac_bayesian_mode.mat`.
+
+**Companion-matrix dimensionality.** After the consolidation each aux file's `var_model` state vector has been extended by one or two states beyond the pre-consolidation count of 13–14 per block. The *core* E-SAT companion underlying §3.2's Table 3.3 remains 12 × 12 — the four new states are all *block-specific* additions that live only in the aux file where they have a structural channel. The references to "12 × 12" in §3.2, §4.12 (E-SAT stability eigenvalue check) and Appendix A.8 / B.4 continue to refer to the E-SAT core; the per-block PAC companions are listed in [Table 4.11.2.2](#table-411222-per-block-companion-matrix-sizes-post-consolidation).
+
+### Table 4.11.2.2: Per-block companion-matrix sizes post-consolidation
+
+| Block | Pre-consolidation size | Post-consolidation size | Added state(s) |
+|---|---|---|---|
+| `aux_pQ` | 14 | 15 | $\tau^{GST,gap}$ |
+| `aux_consumption` | 14 | 15 | $\tau^{PAYG,gap}$ |
+| `aux_business_inv` | 14 | 15 | $\tau^{CIT,gap}$ |
+| `aux_housing_inv` | 13 | 13 | (none — no Round 4–8 channel) |
+| `aux_employment` | 13 | 14 | $\Delta \ln \overline{POP}$ |
+
+The aux-file state vector sizes are not the same as the underlying E-SAT core because each block additionally carries its own auxiliary regression target(s) — $\widehat{\pi Q}$ for the VA price block, $\widehat{yh}, \widehat{c}$ for consumption, $\widehat{ib}, \widehat{rKB}$ for business investment, $\widehat{ih}$ for housing investment, $\widehat{n}$ for employment — plus, in the case of `aux_pQ`, the wage-gap state $\tilde{\pi}^w_{gap}$ added in Phase U.
 
 ### 4.12 AU-PAC modelling choices and simplifications
 
