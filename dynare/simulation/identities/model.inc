@@ -89,16 +89,32 @@ ln_QN = ln_QN(-1) + dln_y_star;
 ln_Q = ln_QN + yhat_au;
 
 [name='eq_ln_C_star']
-ln_C_star = ln_C_star(-1) + dln_c_star_bar;
+// Option α (2026-05-23): subtract trend g_bar_C so ln_C_star tracks the
+// CYCLICAL deviation of the LR target around the trend (stationary). The
+// trend itself is carried by dln_c_star_bar's non-zero SS, and reaches the
+// observable via dln_C_obs = dln_c + dln_c_star_bar.
+ln_C_star = ln_C_star(-1) + (dln_c_star_bar - g_bar_C);
 
 [name='eq_ln_C']
 ln_C = ln_C_star + ln_c_level;
 
+// Option α (2026-05-23): total consumption growth = trend + cycle.
+// Defined directly as cycle + trend (rather than diff(ln_C)) to avoid the
+// non-stationarity of ln_C interfering with Dynare's SS check.
+// SS = g_bar_C; matched directly to (non-demeaned) observed dln_c data.
+[name='eq_dln_C_obs']
+dln_C_obs = dln_c + dln_c_star_bar;
+
 [name='eq_ln_IB_star']
-ln_IB_star = ln_IB_star(-1) + dln_ib_star_bar;
+// Option α (2026-05-23): same treatment as ln_C_star.
+ln_IB_star = ln_IB_star(-1) + (dln_ib_star_bar - g_bar_IB);
 
 [name='eq_ln_IB']
 ln_IB = ln_IB_star + ln_ib_level;
+
+// Option α (2026-05-23): total investment growth = trend + cycle.
+[name='eq_dln_IB_obs']
+dln_IB_obs = dln_ib + dln_ib_star_bar;
 
 [name='eq_ln_IH_star']
 ln_IH_star = ln_IH_star(-1) + dln_ih_star_bar;
@@ -125,6 +141,9 @@ ln_P = ln_P_star + pQ_level;
 dln_y_star = alpha_k * dln_k + (1 - alpha_k) * dln_n_star_bar + dln_tfp;
 
 [name='eq_ln_tfp_LR']
+// (Drift was considered here but reverted — gap-form SS pins ln_tfp_LR=0.
+// See Option α comments in eq_dln_c_star_bar / eq_dln_ib_star_bar; pi_w
+// trend mismatch is a known limitation to fix in Option β.)
 ln_tfp_LR = ln_tfp_LR(-1) + eps_tfp_LR;
 
 [name='eq_ln_tfp']
@@ -198,10 +217,15 @@ pv_r_lh_gap = (1 - beta_c) * (i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au
 
 [name='eq_dln_c_star_bar']
 // Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — personal income tax change drags consumption growth.
-dln_c_star_bar = kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
+// Option α (2026-05-23): + g_bar_C drift carries the BGP trend in the LR target,
+// so ln_C_star grows at the structural BGP rate at SS.
+dln_c_star_bar = g_bar_C + kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
 
 [name='eq_c_gap']
-c_gap = c_gap(-1) + dln_c_star - dln_c;
+// Option α (2026-05-23): subtract trend dln_c_star_bar so c_gap accumulates the
+// CYCLICAL deviation only and remains stationary at SS (was drifting upward
+// at rate g_bar_C once dln_c_star_bar got non-zero SS).
+c_gap = c_gap(-1) + (dln_c_star - dln_c_star_bar) - dln_c;
 
 [name='eq_dln_ib_star']
 dln_ib_star = rho_ib_star * dln_ib_star(-1) + (1 - rho_ib_star) * dln_ib_star_bar;
@@ -214,10 +238,13 @@ uc_k = wacc + delta_k - (pi_ib - piQ) + alpha_CIT * tau_CIT_gap;
 dln_uc_k = uc_k - uc_k(-1);
 
 [name='eq_dln_ib_star_bar']
-dln_ib_star_bar = kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
+// Option α (2026-05-23): + g_bar_IB drift carries the BGP trend (investment
+// grows at output rate on BGP, so g_bar_IB = g_bar_C).
+dln_ib_star_bar = g_bar_IB + kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
 
 [name='eq_ib_gap']
-ib_gap = ib_gap(-1) + dln_ib_star - dln_ib;
+// Option α (2026-05-23): same fix as c_gap — subtract trend.
+ib_gap = ib_gap(-1) + (dln_ib_star - dln_ib_star_bar) - dln_ib;
 
 [name='eq_dln_ib_1']
 dln_ib_1 = dln_ib(-1);
