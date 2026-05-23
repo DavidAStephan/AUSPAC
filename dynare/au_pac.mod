@@ -56,8 +56,10 @@ var
 	ih_hat
 	ln_C
 	ln_C_star
+	dln_C_obs
 	ln_IB
 	ln_IB_star
+	dln_IB_obs
 	ln_IH
 	ln_IH_star
 	ln_K
@@ -481,6 +483,8 @@ parameters
 	alpha_wtH_u
 	alpha_wtH_tau
 	b_HtM
+	g_bar_C
+	g_bar_IB
 ;
 
 a_pQ_GST = 0.05;
@@ -965,16 +969,28 @@ model;
 	ln_Q =  ln_QN + yhat_au;
 
 	[blockname='',name='ln_C_star']
-	ln_C_star =  ln_C_star(-1) + dln_c_star_bar;
+	// Option α (2026-05-23): subtract trend g_bar_C so ln_C_star stays stationary.
+	ln_C_star =  ln_C_star(-1) + (dln_c_star_bar - g_bar_C);
 
 	[blockname='',name='ln_C']
 	ln_C =  ln_C_star + ln_c_level;
 
+	// Option α (2026-05-23): total consumption growth = trend + cycle.
+	// Direct definition (not via diff(ln_C)) to avoid non-stationarity SS issues.
+	// SS = g_bar_C; matched directly to (non-demeaned) observed dln_c data.
+	[blockname='',name='dln_C_obs']
+	dln_C_obs =  dln_c + dln_c_star_bar;
+
 	[blockname='',name='ln_IB_star']
-	ln_IB_star =  ln_IB_star(-1) + dln_ib_star_bar;
+	// Option α (2026-05-23): subtract trend g_bar_IB so ln_IB_star stays stationary.
+	ln_IB_star =  ln_IB_star(-1) + (dln_ib_star_bar - g_bar_IB);
 
 	[blockname='',name='ln_IB']
 	ln_IB =  ln_IB_star + ln_ib_level;
+
+	// Option α (2026-05-23): total investment growth = trend + cycle.
+	[blockname='',name='dln_IB_obs']
+	dln_IB_obs =  dln_ib + dln_ib_star_bar;
 
 	[blockname='',name='ln_IH_star']
 	ln_IH_star =  ln_IH_star(-1) + dln_ih_star_bar;
@@ -1001,6 +1017,12 @@ model;
 	dln_y_star =  alpha_k * dln_k + (1 - alpha_k) * dln_n_star_bar + dln_tfp;
 
 	[blockname='',name='ln_tfp_LR']
+	// (Originally considered RW + drift here, but Dynare's gap-form SS pins
+	// ln_tfp_LR = 0 which would contradict any non-zero drift. Drift relocated
+	// to dln_c_star_bar / dln_ib_star_bar directly so the affected SS values
+	// are on stationary growth-rate variables. pi_w trend stays at pi_ss and
+	// the wage-trend mismatch is treated as a known limitation of Option α
+	// to be revisited in Option β with a proper time-varying trend.)
 	ln_tfp_LR =  ln_tfp_LR(-1) + eps_tfp_LR;
 
 	[blockname='',name='ln_tfp']
@@ -1072,10 +1094,12 @@ model;
 
 	[blockname='',name='dln_c_star_bar']
 	// Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — income-tax drag.
-	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
+	// Option α (2026-05-23): + g_bar_C drift carries BGP consumption trend.
+	dln_c_star_bar =  g_bar_C + kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
 
 	[blockname='',name='c_gap']
-	c_gap =  c_gap(-1) + dln_c_star - dln_c;
+	// Option α (2026-05-23): subtract dln_c_star_bar so c_gap remains stationary.
+	c_gap =  c_gap(-1) + (dln_c_star - dln_c_star_bar) - dln_c;
 
 	[blockname='',name='dln_ib_star']
 	dln_ib_star =  rho_ib_star * dln_ib_star(-1) + (1 - rho_ib_star) * dln_ib_star_bar;
@@ -1088,10 +1112,11 @@ model;
 	dln_uc_k =  uc_k - uc_k(-1);
 
 	[blockname='',name='dln_ib_star_bar']
-	dln_ib_star_bar =  kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
+	// Option α (2026-05-23): + g_bar_IB drift = g_bar_C (BGP).
+	dln_ib_star_bar =  g_bar_IB + kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
 
 	[blockname='',name='ib_gap']
-	ib_gap =  ib_gap(-1) + dln_ib_star - dln_ib;
+	ib_gap =  ib_gap(-1) + (dln_ib_star - dln_ib_star_bar) - dln_ib;
 
 	[blockname='',name='dln_ib_1']
 	dln_ib_1 =  dln_ib(-1);
@@ -1390,9 +1415,9 @@ steady_state_model;
     // Household consumption PAC
     pv_yh          = 0;       // permanent income PV = 0 at SS (gap model)
     pv_r_lh_gap    = 0;       // real lending rate PV = 0 at SS (audit #26, FR-BDF eq 61)
-    dln_c          = 0;       // zero consumption growth in stationary model
-    dln_c_star     = 0;
-    dln_c_star_bar = 0;
+    dln_c          = 0;       // cyclical consumption growth = 0 at SS
+    dln_c_star     = g_bar_C; // Option α: dln_c_star tracks dln_c_star_bar
+    dln_c_star_bar = g_bar_C; // Option α: trend BGP consumption growth
     c_gap          = 0;
 
     // User cost of capital: uc_k = wacc + delta_k at SS (pi_ib = piQ at SS)
@@ -1400,9 +1425,9 @@ steady_state_model;
     dln_uc_k       = 0;            // user cost constant at SS
 
     // Business investment PAC
-    dln_ib         = 0;       // zero investment growth in stationary model
-    dln_ib_star    = 0;
-    dln_ib_star_bar = 0;
+    dln_ib         = 0;       // cyclical investment growth = 0 at SS
+    dln_ib_star    = g_bar_IB; // Option α: tracks dln_ib_star_bar
+    dln_ib_star_bar = g_bar_IB;// Option α: trend BGP investment growth
     ib_gap         = 0;
     dln_ib_1       = 0;
 
@@ -1554,6 +1579,10 @@ steady_state_model;
 
     // Round 1.2 (2026-05-22): household wage+transfer income gap, zero at SS
     wt_H_real_gap  = 0;
+
+    // Option α (2026-05-23): total observable growth = cycle + trend.
+    dln_C_obs      = g_bar_C;
+    dln_IB_obs     = g_bar_IB;
 
     // Round 7 (branch decomposition, both = 0 at SS)
     yhat_market    = 0;
@@ -1718,6 +1747,12 @@ alpha_wtH_y       = 0.50;
 alpha_wtH_u       = 0.30;
 alpha_wtH_tau     = -0.40;
 b_HtM             = 0.32;
+// Option α (2026-05-23): BGP trend drift parameters, calibrated from CES 2026
+// post-2008Q3 regime (see CES_PRODUCTION_FUNCTION_APPROACH.md):
+//   g_bar_C  = dln_pop_bar + dln_E_bar/(1-α_k) = 0.375 + (0.49/4)/0.55 ≈ 0.498 % qoq
+//   g_bar_IB = g_bar_C (BGP: investment grows at output rate)
+g_bar_C           = 0.498;
+g_bar_IB          = 0.498;
 
 shocks;
     var eps_q;          stderr 0.5356;

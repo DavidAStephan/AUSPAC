@@ -53,7 +53,12 @@ assert(~isempty(W_H), 'Series A2302915V not found in Table 20');
 assert(~isempty(TG_H), 'Series A2302919C not found in Table 20');
 
 % --- Construct nominal household labour+transfer income ---------------------
-labtrans = W_H + TG_H;                    % $M, SA, quarterly
+labtrans = W_H + TG_H;                    % $M, SA, quarterly (Round 1.2 base)
+% Round 1.2 Option 2 (2026-05-23): decompose into wages-only and transfers-only
+% so the HtM channel can have separate elasticities. Wages are smoothly cyclical
+% (no GFC stimulus / JobKeeper spikes); transfers are spike-dominated.
+labtrans_W  = W_H;                        % wages-only
+labtrans_TG = TG_H;                       % transfers-only
 
 % --- CPI deflator: implicit deflator p_C = nominal consumption / real consumption
 %     We already have nominal C in column C_H, and existing extended_dataset.csv
@@ -92,23 +97,33 @@ for i = 1:numel(ipd_dates)
 end
 
 [common_dates, ia, ib] = intersect(dates_num, ipd_dates_num);
-labtrans_aligned = labtrans(ia);
-p_C_aligned      = p_C_raw(ib);
+labtrans_aligned    = labtrans(ia);
+labtrans_W_aligned  = labtrans_W(ia);     % Option 2: wages-only
+labtrans_TG_aligned = labtrans_TG(ia);    % Option 2: transfers-only
+p_C_aligned         = p_C_raw(ib);
 
-% Compute log of real household labour+transfer income (× 100 for index form)
-labtrans_real = labtrans_aligned ./ (p_C_aligned / 100);    % rebase IPD to fraction
-log_lt_real   = log(labtrans_real);
+% Real series (deflated by HFCE IPD rebased to fraction)
+deflator      = p_C_aligned / 100;
+labtrans_real    = labtrans_aligned    ./ deflator;
+labtrans_W_real  = labtrans_W_aligned  ./ deflator;
+labtrans_TG_real = labtrans_TG_aligned ./ deflator;
+log_lt_real    = log(labtrans_real);
+log_W_real     = log(labtrans_W_real);
+log_TG_real    = log(labtrans_TG_real);
 
-% --- Construct gap variable -------------------------------------------------
-% HP filter the log series to get a smooth trend, then take deviation.
-% Use lambda = 1600 (standard quarterly filter).
+% --- Construct gap variables -----------------------------------------------
+% HP filter each log series to get a smooth trend; gap = level - trend.
 T = numel(log_lt_real);
 lambda = 1600;
-% Manual HP filter (no Econometrics Toolbox dependency)
 I = speye(T);
 D = spdiags([ones(T-2,1) -2*ones(T-2,1) ones(T-2,1)], 0:2, T-2, T);
-trend  = (I + lambda * (D' * D)) \ log_lt_real;
-log_lt_gap = log_lt_real - trend;        % centred at 0 by construction
+HPmat = (I + lambda * (D' * D));
+trend       = HPmat \ log_lt_real;
+trend_W     = HPmat \ log_W_real;
+trend_TG    = HPmat \ log_TG_real;
+log_lt_gap = log_lt_real - trend;
+log_W_gap  = log_W_real  - trend_W;
+log_TG_gap = log_TG_real - trend_TG;
 
 % --- Merge into extended_dataset.csv ---------------------------------------
 % ABS uses end-of-quarter dating (Mar/Jun/Sep/Dec); extended_dataset.csv uses
@@ -123,19 +138,31 @@ ext_q = floor((ext_m - 1) / 3) + 1;           % 1..4
 [abs_y, abs_m] = datevec(common_dates);
 abs_q = floor((abs_m - 1) / 3) + 1;
 
-wt_H_real_gap = nan(height(ext), 1);
+wt_H_real_gap   = nan(height(ext), 1);
+wt_H_W_gap      = nan(height(ext), 1);
+wt_H_TG_gap     = nan(height(ext), 1);
 for i = 1:height(ext)
     idx = find(abs_y == ext_y(i) & abs_q == ext_q(i), 1);
     if ~isempty(idx)
         wt_H_real_gap(i) = log_lt_gap(idx);
+        wt_H_W_gap(i)    = log_W_gap(idx);
+        wt_H_TG_gap(i)   = log_TG_gap(idx);
     end
 end
 
 ext.au_wt_H_real_gap = wt_H_real_gap;
+ext.au_wt_H_W_gap    = wt_H_W_gap;       % Option 2: wages-only
+ext.au_wt_H_TG_gap   = wt_H_TG_gap;      % Option 2: transfers-only
 writetable(ext, ext_csv);
 
-fprintf('Appended au_wt_H_real_gap to %s (n=%d non-NaN of %d rows).\n', ...
+fprintf('Appended au_wt_H_real_gap / au_wt_H_W_gap / au_wt_H_TG_gap to %s (n=%d non-NaN of %d rows).\n', ...
         ext_csv, sum(~isnan(wt_H_real_gap)), height(ext));
+fprintf('  Wages-only      sd = %.4f, range [%+.3f, %+.3f]\n', ...
+        std(log_W_gap,'omitnan'), min(log_W_gap), max(log_W_gap));
+fprintf('  Transfers-only  sd = %.4f, range [%+.3f, %+.3f]\n', ...
+        std(log_TG_gap,'omitnan'), min(log_TG_gap), max(log_TG_gap));
+fprintf('  Combined (W+TG) sd = %.4f, range [%+.3f, %+.3f]\n', ...
+        std(log_lt_gap,'omitnan'), min(log_lt_gap), max(log_lt_gap));
 
 % --- Quick diagnostic plot --------------------------------------------------
 try
