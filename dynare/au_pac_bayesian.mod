@@ -37,6 +37,7 @@ var
 	dln_ulc
 	dln_x
 	dln_y_star
+	dy_bar_gap
 	i_10y
 	i_BBB
 	i_COE
@@ -481,6 +482,7 @@ parameters
 	alpha_wtH_u
 	alpha_wtH_tau
 	b_HtM
+	b_PAC_c
 ;
 
 a_pQ_GST = 0.05;
@@ -888,6 +890,10 @@ alpha_wtH_y       = 0.50;
 alpha_wtH_u       = 0.30;
 alpha_wtH_tau     = -0.40;
 b_HtM             = 0.32;
+// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality coefficient on
+// HP-filtered trend GDP growth.  Initial value (1 - b1_c) at the round12
+// posterior mean; promoted to estimated below.
+b_PAC_c           = 0.95;
 
 
 varexo
@@ -941,6 +947,7 @@ varexo
 	eps_MAPI
 	eps_MAPU
 	eps_wtH
+	eps_dy_bar
 ;
 
 @#ifdef InvertModel
@@ -968,7 +975,10 @@ model;
 	// hand-to-mouth income channel (FR-BDF wp1044 §3.5.1 eq 35). Applied here
 	// rather than in aux_consumption.mod to avoid Dynare 6.5 pac.print() crash
 	// when a var_model state appears in the PAC equation RHS.
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+eps_c;
+	// Phase L1.3a (2026-05-25): + b_PAC_c*dy_bar_gap(-1) growth-neutrality
+	// term tying consumption growth to HP-filtered trend GDP growth (wp1044
+	// Eq 35).  dy_bar_gap is a varobs sourced from data/trend_series.mat.
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
@@ -1454,6 +1464,14 @@ model;
 	[blockname='',name='MAPU_hat']
 	MAPU_hat = rho_MAPU * MAPU_hat(-1) + (1 - rho_MAPU) * dln_ih + eps_MAPU;
 
+	// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality trend.
+	// dy_bar_gap = demeaned HP-filtered trend GDP growth, declared as
+	// observable (varobs).  Modelled as random walk so the Kalman filter
+	// tracks the smooth data path; eps_dy_bar stderr is calibrated small
+	// so the observable dominates.
+	[blockname='',name='dy_bar_gap']
+	dy_bar_gap = dy_bar_gap(-1) + eps_dy_bar;
+
 end;
 
 steady_state_model;
@@ -1677,6 +1695,9 @@ steady_state_model;
     BLR_hat        = 0;
     MAPI_hat       = 0;
     MAPU_hat       = 0;
+
+    // Phase L1.3a (HP-filtered trend GDP growth, demeaned)
+    dy_bar_gap     = 0;
 end;
 
 shocks;
@@ -1724,10 +1745,13 @@ shocks;
     var eps_MAPI;       stderr 0.50;
     var eps_MAPU;       stderr 0.30;
     var eps_wtH;        stderr 0.012;  // Round 1.2: household wage+transfer income shock
+    // Phase L1.3a: random-walk innovation for HP-filtered trend GDP growth.
+    // Stderr calibrated small so the observable dominates the Kalman trajectory.
+    var eps_dy_bar;     stderr 0.05;
 end;
 
 
-varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
+varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dy_bar_gap;
 
 estimated_params;
     b0_pQ,      beta_pdf,       0.03,   0.015;
@@ -1765,6 +1789,10 @@ estimated_params;
     // omega_pc:     IAD weight on import-price in CPI target (calibrated, not estimated; see §4.13.2)
     alpha_pc_lag, normal_pdf,   0.16,   0.10;
     b_ECM_pc,     beta_pdf,     0.05,   0.025;
+    // Phase L1.3a: wp1044 Eq 35 growth-neutrality coefficient.
+    // Wide-ish normal prior centered slightly below (1-b1_c) to allow data
+    // to update; positive bias since trend growth should pass through.
+    b_PAC_c,      normal_pdf,   0.85,   0.30;
     stderr eps_q,       inv_gamma_pdf,  0.80,  inf;
     stderr eps_i,       inv_gamma_pdf,  0.10,  inf;
     stderr eps_pi,      inv_gamma_pdf,  0.60,  inf;
@@ -1776,22 +1804,22 @@ estimated_params;
     stderr eps_10y,     inv_gamma_pdf,  0.10,  inf;
 end;
 
-// 2026-05-20: 20k×2-chain MCMC cached in au_pac_bayesian/metropolis/ +
-// Output/au_pac_bayesian_mode (Laplace -779.3032, MHM -780.3624). Default
-// behaviour is cheap reload via mode_compute=0 + load_mh_file. To re-run
-// MCMC after a structural change to the model or estimated_params:
-//   - set mode_compute=4, mh_replic=20000, remove load_mh_file + mode_file
-//   - run dynare au_pac_bayesian (≈ 50 min wall time on Apple Silicon)
-//   - revert to mode_compute=0 + load_mh_file once converged.
+// Phase L1.3a (2026-05-25): structural change -- added dy_bar_gap RW
+// machinery + b_PAC_c estimated param + 10th observable.  The cached
+// round12 mode file (Laplace -779.30, MHM -780.36 on 9 obs) is now
+// incompatible.  Running fresh mode_compute=4 + mh_replic=20000.  Once
+// converged, snapshot the chain to au_pac_bayesian.cached_L1_3a_<date>/
+// and revert to mode_compute=0 + load_mh_file for cheap reload.
+//
+// Expected mechanical LMD penalty: ~112 nats from adding the 10th
+// observable; subtract before comparing to the round12 -785.80 MHM.
 estimation(datafile='estimation_data.mat',
            first_obs=1,
-           mode_compute=0,
-           mode_file='au_pac_bayesian/Output/au_pac_bayesian_mode',
+           mode_compute=4,
            presample=4,
-           mh_replic=0,
-           load_mh_file,
+           mh_replic=20000,
            mh_nblocks=2,
-           mh_jscale=0.4,
+           mh_jscale=0.25,
            diffuse_filter,
            nograph)
-           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y;
+           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dy_bar_gap;

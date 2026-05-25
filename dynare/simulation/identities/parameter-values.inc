@@ -223,3 +223,7 @@ alpha_wtH_y       = 0.50;    // procyclical wages
 alpha_wtH_u       = 0.30;    // countercyclical transfer support
 alpha_wtH_tau     = -0.40;   // PAYG raise drags real wages
 b_HtM             = 0.32;    // rule-of-thumb consumer response (FR-BDF wp1044)
+// Phase L1.3a (2026-05-25) — wp1044 Eq 35 growth-neutrality coefficient on
+// HP-filtered trend GDP growth.  Initial value (1 - b1_c) at round12 posterior
+// mean; promoted to estimated in au_pac_bayesian.mod.
+b_PAC_c           = 0.95;    // initial value, overwritten by L1.3a MCMC posterior

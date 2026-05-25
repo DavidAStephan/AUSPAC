@@ -32,4 +32,5 @@ varexo
 	eps_pcom
 	eps_lh
 	eps_ph
-	eps_wtH;
+	eps_wtH
+	eps_dy_bar;

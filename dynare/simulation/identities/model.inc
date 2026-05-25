@@ -517,3 +517,15 @@ MAPI_hat = rho_MAPI * MAPI_hat(-1) + (1 - rho_MAPI) * ph_gap + eps_MAPI;
 [name='eq_MAPU_hat']
 MAPU_hat = rho_MAPU * MAPU_hat(-1) + (1 - rho_MAPU) * dln_ih + eps_MAPU;
 
+// =====================================================================
+// Phase L1.3a (2026-05-25) — wp1044 Eq 35 growth-neutrality trend
+// dy_bar_gap = demeaned HP-filtered trend GDP growth (data path from
+// data/trend_series.mat).  Declared as observable in au_pac_bayesian.mod
+// (varobs) so the Kalman filter pulls dy_bar_gap onto the data; in the
+// production model it follows a RW with small eps_dy_bar innovations
+// around 0.  Used as growth-neutrality term in eq_c via +b_PAC_c·dy_bar_gap(-1).
+// =====================================================================
+
+[name='eq_dy_bar_gap']
+dy_bar_gap = dy_bar_gap(-1) + eps_dy_bar;
+

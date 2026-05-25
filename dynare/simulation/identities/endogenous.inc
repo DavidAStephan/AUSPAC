@@ -147,4 +147,5 @@ var
 	yhat_nonmarket
 	BLR_hat
 	MAPI_hat
-	MAPU_hat;
+	MAPU_hat
+	dy_bar_gap;

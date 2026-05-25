@@ -223,3 +223,6 @@
     BLR_hat        = 0;
     MAPI_hat       = 0;
     MAPU_hat       = 0;
+
+    // Phase L1.3a — HP-filtered trend GDP growth (demeaned), zero at SS
+    dy_bar_gap     = 0;

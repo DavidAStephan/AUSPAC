@@ -37,6 +37,7 @@ var
 	dln_ulc
 	dln_x
 	dln_y_star
+	dy_bar_gap
 	i_10y
 	i_BBB
 	i_COE
@@ -481,6 +482,7 @@ parameters
 	alpha_wtH_u
 	alpha_wtH_tau
 	b_HtM
+	b_PAC_c
 ;
 
 a_pQ_GST = 0.05;
@@ -823,6 +825,7 @@ varexo
 	eps_MAPI
 	eps_MAPU
 	eps_wtH
+	eps_dy_bar
 ;
 
 @#ifdef InvertModel
@@ -853,7 +856,11 @@ model;
 	// pac.print() crashes when a var_model state appears on the RHS of the PAC
 	// equation. wt_H_real_gap is itself a var_model state (companion matrix is
 	// extended), so the AR(1)-side feedback to expectations is preserved.
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+eps_c;
+	// Phase L1.3a (2026-05-25): + b_PAC_c*dy_bar_gap(-1) growth-neutrality
+	// term tying consumption growth to HP-filtered trend GDP growth (wp1044
+	// Eq 35).  Production-model dy_bar_gap evolves as a RW around 0 (data
+	// path is loaded only by au_pac_bayesian.mod via varobs).
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
@@ -1340,6 +1347,14 @@ model;
 	[blockname='',name='MAPU_hat']
 	MAPU_hat = rho_MAPU * MAPU_hat(-1) + (1 - rho_MAPU) * dln_ih + eps_MAPU;
 
+	// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality trend.
+	// In the production model dy_bar_gap follows a RW around zero with
+	// eps_dy_bar innovations; in au_pac_bayesian.mod the same variable is
+	// declared as varobs so the Kalman filter pulls it onto the HP-trend
+	// data path.
+	[blockname='',name='dy_bar_gap']
+	dy_bar_gap = dy_bar_gap(-1) + eps_dy_bar;
+
 end;
 
 steady_state_model;
@@ -1563,6 +1578,9 @@ steady_state_model;
     BLR_hat        = 0;
     MAPI_hat       = 0;
     MAPU_hat       = 0;
+
+    // Phase L1.3a (HP-filtered trend GDP growth, demeaned)
+    dy_bar_gap     = 0;
 end;
 
 
@@ -1718,6 +1736,11 @@ alpha_wtH_y       = 0.50;
 alpha_wtH_u       = 0.30;
 alpha_wtH_tau     = -0.40;
 b_HtM             = 0.32;
+// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality coefficient on
+// HP-filtered trend GDP growth.  Initial value (1 - b1_c) at the round12
+// posterior mean.  Will be overwritten by the Bayesian posterior once
+// the L1.3a MCMC completes.
+b_PAC_c           = 0.95;
 
 shocks;
     var eps_q;          stderr 0.5356;
@@ -1764,6 +1787,8 @@ shocks;
     var eps_MAPI;       stderr 0.50;
     var eps_MAPU;       stderr 0.30;
     var eps_wtH;        stderr 0.012;  // Round 1.2: household wage+transfer income shock
+    // Phase L1.3a: random-walk innovation for HP-filtered trend GDP growth.
+    var eps_dy_bar;     stderr 0.05;
 end;
 
 stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap;

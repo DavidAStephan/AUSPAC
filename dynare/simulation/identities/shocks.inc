@@ -64,3 +64,4 @@
     var eps_MAPU;     stderr 0.30;   // Round 8: MAPU nowcast shock
     var eps_wtH;      stderr 0.012;  // Round 1.2: household wage+transfer-income shock
                                      //   (sd from HP-gap of ABS 5206 Table 20, 1993-2024)
+    var eps_dy_bar;   stderr 0.05;   // Phase L1.3a: HP-filtered trend GDP growth RW innovation
