@@ -1033,59 +1033,6 @@ The structural plumbing (new `var_model` state, `eps_wtH` shock, data column, pr
 
 Either follow-up would require a fresh MCMC under the expanded estimation surface. The Round 1.2 work is currently best understood as **structural infrastructure for future estimation**, not as a fit-improving change.
 
-### 4.11.4 Round 1.2 follow-up: b_HtM estimated and wt_H_real_gap observed (2026-05-23)
-
-We pursued **both** recommended follow-ups: promoted `b_HtM` to `estimated_params` with prior $N(0.30, 0.10)$ centred on the FR-BDF wp1044 posterior, and added `wt_H_real_gap` to `varobs` as a 10th observable so the Kalman filter uses the empirical ABS 5206 Table 20 series directly. A sequence of MCMC variants explored how trend treatment affects the `b_HtM` identification (the AU productivity slowdown 1990s → 2010s makes the constant-sample-mean demeaning convention used in prior runs systematically biased post-2008).
-
-#### Five trend specifications (all with `b_HtM` estimated, `wt_H_real_gap` observed)
-
-| Spec | Trend treatment for `dln_c`, `dln_ib`, `pi_w` | `b_HtM` posterior mean | 90% HPD | MHM LMD |
-|---|---|---|---|---|
-| Seeded baseline | Sample-mean demeaning (no NaN, no TVD) | 0.096 | [−0.018, +0.223] | −1128.42 |
-| Option 4 | Sample-mean demeaning + 6 stimulus quarters NaN-d in `wt_H_real_gap` | **0.190** | [+0.014, +0.373] | −1104.79 |
-| TVD | HP-filter trend of log(consumption / GFCF / ULC) subtracted | 0.078 | [−0.066, +0.218] | **−1083.88** (best) |
-| FR-BDF demeaning | CES Ē two-break trend + employment HP-trend, subtracted from data | 0.160 | [+0.001, +0.299] | −1098.06 |
-| **Option α** (FR-BDF-faithful) | **Trend lives IN the model**: `dln_c_star_bar` SS = `g_bar_C = 0.498% qoq` (post-2008 CES BGP); observable matched to `dln_C_obs = dln_c + dln_c_star_bar`; data is raw, no demeaning | **0.114** | **[−0.104, +0.293]** | −1101.87 |
-
-#### Headline empirical finding
-
-**Australia's hand-to-mouth consumer channel is much weaker than France's**, with point estimates in [0.08, 0.19] across all five trend specifications. France's wp1044 posterior of 0.32 sits outside the AU 90% HPDs in 3 of 5 specs. The 90% HPD touches or crosses zero in 3 of 5 specs, including the most data-faithful (TVD) and most FR-BDF-faithful (Option α). The robust statement is that **AU households respond less strongly to wage-plus-transfer income gains than French households do** — consistent with AU's higher household-debt-to-income ratio (transfers absorbed by mortgage paydown rather than consumption) and weaker credit-constraint share in the Kaplan-Violante-Weidner (2014) sense.
-
-#### Option α — the FR-BDF-faithful trend treatment in detail
-
-Option α implements the FR-BDF wp1044 §3.5 design: **trends live in the model's structural targets rather than being subtracted from data ex ante**. Two calibrated trend parameters from the post-2008Q3 CES BGP:
-
-- `g_bar_C = 0.498` % qoq = `dln_pop_bar + dln_E_bar/(1-α_k)` ≈ 2.0% p.a. real consumption growth
-- `g_bar_IB = g_bar_C` (BGP: investment grows at output rate)
-
-These enter the structural target equations:
-
-$$
-\overline{\Delta \ln C^*}_t \;=\; g_{bar,C} \;+\; \kappa_{inc}\, \Delta pv_{yh,t} \;+\; \alpha_{c,r}\, \Delta\!\left(i^{lh}_t - \pi^c_t - r^{ss}_{lh}\right) \;-\; \alpha_{PAYG}\, \Delta \tau^{PAYG}_t
-$$
-
-$$
-\overline{\Delta \ln I^B_*}_t \;=\; g_{bar,IB} \;+\; \kappa_{ib,y}\, \hat{y}^{au}_t \;-\; \sigma_{ces}\, \Delta \ln uc^K_t
-$$
-
-so the long-run targets `ln_C_star`, `ln_IB_star` carry the BGP trend through their respective `dln_*_star_bar` drivers. The observable matching is to two new identity variables defined directly as cycle + trend:
-
-$$
-\widetilde{\Delta \ln C}_t \;\equiv\; \Delta \ln C^{cycle}_t + \overline{\Delta \ln C^*}_t \qquad (\text{SS} = g_{bar,C})
-$$
-
-and analogously for investment. **No demeaning of `dln_c` or `dln_ib`** in `prepare_estimation_data.m` — the data is passed through raw with `DEMEAN_MODE = 'none'`. The Kalman filter then has the trend baked into the model's prediction rather than relying on a constant sample-mean adjustment.
-
-Two technical fixes were needed to keep Dynare's SS solver consistent: (i) `c_gap` and `ib_gap` now subtract `dln_c_star_bar` / `dln_ib_star_bar` to remain stationary at SS (else they drift at rate `g_bar_C`), and (ii) `ln_C_star` and `ln_IB_star` evolve as `(dln_*_star_bar − g_bar_*)` so they stay stationary as well. The cumulative trend is still carried by the model — `dln_C_obs = dln_c + dln_c_star_bar` has the correct SS = `g_bar_C` even though `ln_C_star` is centred.
-
-#### Known Option α limitation
-
-`pi_w` was not given a drift in Option α (the natural place — drift in `ln_tfp_LR` propagating via `dln_prod` — creates SS-consistency problems with `dln_n_star_bar`'s structural identity). So `pi_w` model SS stays at `pi_ss = 0.625% qoq` while observed `pi_w` mean is 1.16% qoq — a persistent 0.5% qoq mismatch that costs roughly 5–10 nats of LMD. This is why Option α's MHM (−1101.87) is below TVD's (−1083.88) despite being structurally more "correct". Fixing this requires **Option β**: a time-varying trend with breaks at 2002Q2 and 2008Q3 matching the CES Ē regime structure, applied to both `dln_c_star_bar` and a new wage trend equation.
-
-#### Mode-search numerical issues encountered
-
-Both `mode_compute=4` (csminwel) and `mode_compute=5` (newrat) crashed in `dsge_likelihood` line 763 with a dimension mismatch in the numerical gradient computation. The crash is triggered by the interaction of (i) Dynare 6.5's diffuse Kalman filter, (ii) partial-NaN observations (the 6 stimulus quarters NaN-d in `wt_H_real_gap`), and (iii) finite-difference gradient under parameter perturbation. Workaround used here: `mode_compute=0` (skip mode search; use the seed mode as the linearisation point) with `mh_jscale=0.15` (shrink Metropolis jumps to compensate for the mis-tuned Hessian). Acceptance ratio recovered from ~3% to roughly 20%. This is a known Dynare 6.5 issue, not specific to AUSPAC. Documented in `NEXT_SESSION.md` for future reference.
-
 ### 4.12 AU-PAC modelling choices and simplifications
 
 This subsection documents the modelling choices that shape AU-PAC. The headline monetary-transmission channels — cost of capital, exchange rate, mortgage rate, expectations, and the wage–price spiral — are all implemented and estimated on AU data. Several wp736 features are simplified or omitted; each is flagged below.

@@ -223,16 +223,3 @@ alpha_wtH_y       = 0.50;    // procyclical wages
 alpha_wtH_u       = 0.30;    // countercyclical transfer support
 alpha_wtH_tau     = -0.40;   // PAYG raise drags real wages
 b_HtM             = 0.32;    // rule-of-thumb consumer response (FR-BDF wp1044)
-// Option α (2026-05-23) — FR-BDF-faithful trend drift parameters. Calibrated
-// from CES 2026 post-2008Q3 regime so the model's LR target carries the BGP
-// growth rate. Observable matching is to the model's TOTAL growth
-// (dln_C_obs = dln_c + dln_c_star_bar) rather than to the cyclical gap — and
-// dln_c / dln_ib data is no longer demeaned.
-//   g_bar_C  = dln_pop_bar + dln_E_bar/(1-α_k) = 0.375 + (0.49/4)/0.55
-//            ≈ 0.498 % qoq (≈ 2.0% p.a. real consumption growth, post-2008 BGP)
-//   g_bar_IB = g_bar_C   (BGP: investment grows at output rate)
-// Note: pi_w model SS stays at pi_ss (= 0.625% qoq) — the wage-trend
-// mismatch (data mean ≈ 1.16% qoq) is a known Option α limitation, to be
-// addressed in Option β via a proper time-varying productivity trend.
-g_bar_C           = 0.498;
-g_bar_IB          = 0.498;

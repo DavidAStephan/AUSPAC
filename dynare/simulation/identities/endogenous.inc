@@ -121,10 +121,8 @@ var
 	ln_Q
 	ln_C_star
 	ln_C
-	dln_C_obs
 	ln_IB_star
 	ln_IB
-	dln_IB_obs
 	ln_IH_star
 	ln_IH
 	ln_N_star
