@@ -12,7 +12,7 @@ L1 (Bayesian MCMC on the joint model) and L2 (block-by-block iterative OLS) diff
 
 1. **Cross-block contamination via the Kalman filter.** When VA-price, employment, consumption, business inv, and housing inv are all in one likelihood, a misspecification in one block can pull parameters in another. wp1044's block-by-block OLS isolates each PAC eq.
 
-2. **Trend treatment as observable vs known regressor.** L1 treats `dy_bar_gap` as a noisy observable on a RW endogenous variable; the Kalman filter blends the data path with model uncertainty. L2 treats `Δȳ_t` as a known, pre-computed time series — no measurement noise, no model uncertainty about its path. This eliminates the ~112-nat-per-observable mechanical LMD penalty.
+2. **Trend treatment as observable vs known regressor.** L1 treats `dy_bar_gap` as a noisy observable on a RW endogenous variable; the Kalman filter blends the data path with model uncertainty. L2 treats `Δȳ_t` as a known, pre-computed time series — no measurement noise, no model uncertainty about its path. Initially I expected this to mean L1 would pay a ~112-nat-per-obs "mechanical LMD penalty" but the L1.3a Laplace LMD (-684.86 vs round12's -779.30, **+94 nats better** at 10 obs vs 9) showed the trend observable contributes positively, not negatively. The actual L1-vs-L2 LMD comparison goes the other way: L1 may have an *advantage* because the Kalman filter exploits the smooth structure of the HP-trend series. L2's argument is identification, not fit quality.
 
 3. **E-SAT VAR identification.** L1 estimates the VAR jointly with everything else; the policy-function projection coefficients `d_i` (for PV computation) are derived from the joint posterior. L2 estimates the E-SAT VAR alone first, then *takes those `d_i` as fixed* for the PAC regression. The two approaches deliver identifiably different `d_i` estimates when the structural model is misspecified.
 
@@ -26,7 +26,7 @@ L2 is a ~2-week build (per NEXT_SESSION.md estimate). Build cost is high, so don
 
 - **L1.3a `b_PAC_c` posterior is far from `(1 - b1_c)`** by more than 2 posterior SDs. wp1044 notes the coefficient is "somewhat modified" from `(1 - β_1)`; if AU posterior says it's *very* different, that's an identification signal worth investigating with iterative OLS.
 - **Chain convergence problems persist** after L1.3 mh_jscale tuning (e.g. one chain stuck at < 10% acceptance). The Kalman filter joint posterior may be too flat or multimodal for MCMC to traverse — iterative OLS sidesteps this.
-- **MHM net of mechanical penalty is *worse* on L1.3a vs round12** (consumption-only). Adding the trend treatment hurts the joint fit because the model can't reconcile the data path of `dy_bar_gap` with the model's other constraints. Iterative OLS doesn't have this problem because the trend is exogenous to the PAC estimator.
+- **MHM is *worse* on L1.3a vs round12** (consumption-only) -- i.e. the L1.3a model fits the data, including dy_bar_gap, worse than the no-trend baseline fit its smaller data. (Originally framed as "net of mechanical penalty"; the L1.3a Laplace LMD result -684.86 vs round12 -779.30 = +94 nats Laplace showed the trend observable actually helps fit, not hurts. So a *negative* MHM result for L1.3a is now unlikely; if it does happen, that's a strong signal that joint Kalman estimation breaks somewhere.) Iterative OLS doesn't have this problem because the trend is exogenous to the PAC estimator.
 - **L1.3b results show systematic shifts** in derived `(1 - Σβ - ω)` coefficients across the 4 derived-coefficient blocks (employment, VA price, business inv, housing inv) in implausible directions (e.g. coefficient going negative, β_k summing past 1).
 
 If none of these triggers fire, L1 is good enough and the 2-week L2 cost isn't justified.
@@ -146,7 +146,7 @@ For first-pass L2 reporting, use the OLS SEs and note the limitation.
 **Buys**:
 - Direct comparison to wp1044's French estimates (apples-to-apples)
 - Cleanly identifiable β_PAC per block (no Kalman filter blending)
-- No mechanical LMD penalty from extra observables
+- ~~No mechanical LMD penalty from extra observables~~ -- struck out; the L1.3a Laplace evidence showed the predicted penalty was wrong-signed. Adding tightly-fit HP-trend observables *improves* LMD.
 - Robust to block-level misspecification
 
 **Doesn't buy**:

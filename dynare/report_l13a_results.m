@@ -15,11 +15,15 @@
 %   - stdout: formatted comparison table
 %   - dynare/L1_3a_report.txt: same content saved for the record
 %
-% MHM comparison note: L1.3a has 10 observables vs round12's 9.  Adding an
-% observable mechanically shifts the log marginal density by roughly
-% -T·log(prior-predictive variance) ~= -112 nats at T=122 quarters when
-% the new observable's data is informative.  For cross-spec MHM comparison
-% the offset is subtracted from the L1.3a number; within-spec it cancels.
+% LMD comparison note: L1.3a has 10 observables vs round12's 9.  The
+% earlier "-112 nat mechanical penalty per added obs" framing
+% (NEXT_SESSION.md, the L1.3a commit message) assumed the new observable
+% contributed a Gaussian residual with unit variance.  The actual L1.3a
+% Laplace LMD of -684.86 vs round12's -779.30 means adding dy_bar_gap
+% improved the fit by +94 nats -- because the demeaned HP-trend signal
+% has sd ~0.16% q/q (much tighter than unit variance), so its likelihood
+% contribution is large and positive, not a penalty.  No offset is
+% subtracted in the comparison below; LMD difference is reported as is.
 
 clear; clc;
 fprintf('=== L1.3a posterior comparison (vs round12 baseline) ===\n\n');
@@ -75,19 +79,15 @@ if isfield(oo_B, 'MarginalDensity')
     end
 end
 
-mech_penalty_per_obs = 112;       % approximate per NEXT_SESSION.md analysis
-penalty_L = 1 * mech_penalty_per_obs;   % L1.3a adds 1 observable vs baseline
-penalty_B = 0;
-
 fprintf('%-32s %12s %12s %12s\n', 'Quantity', 'L1.3a', 'baseline', 'L1.3a - base');
 fprintf('%-32s %12s %12s %12s\n', '--------', '-----', '--------', '------------');
 fprintf('%-32s %12.2f %12.2f %12.2f\n', ...
     'Laplace LMD', laplace_L, laplace_B, laplace_L - laplace_B);
 fprintf('%-32s %12.2f %12.2f %12.2f\n', ...
     'ModifiedHarmonicMean LMD', mhm_L, mhm_B, mhm_L - mhm_B);
-fprintf('%-32s %12.2f %12.2f %12.2f\n', ...
-    '  net of ~112 obs penalty', mhm_L + penalty_L, mhm_B + penalty_B, ...
-    (mhm_L + penalty_L) - (mhm_B + penalty_B));
+fprintf('  (Direct comparison.  No mechanical-penalty subtraction --\n');
+fprintf('   the earlier -112-nat-per-obs heuristic was wrong: a tightly-\n');
+fprintf('   fit HP-trend observable contributes positively, not negatively.)\n');
 fprintf('\n');
 
 %% ---------------------------------------------------------------
@@ -146,8 +146,9 @@ fprintf(fid, 'baseline: %s\n\n', f_base);
 fprintf(fid, '--- Marginal density ---\n');
 fprintf(fid, '%-32s %12.2f %12.2f %12.2f\n', 'Laplace LMD', laplace_L, laplace_B, laplace_L - laplace_B);
 fprintf(fid, '%-32s %12.2f %12.2f %12.2f\n', 'MHM LMD', mhm_L, mhm_B, mhm_L - mhm_B);
-fprintf(fid, '%-32s %12.2f %12.2f %12.2f\n', '  net of ~112 obs penalty', ...
-    mhm_L + penalty_L, mhm_B + penalty_B, (mhm_L + penalty_L) - (mhm_B + penalty_B));
+fprintf(fid, '  (Direct comparison.  Earlier "-112 nat mechanical penalty"\n');
+fprintf(fid, '   prediction was wrong: dy_bar_gap is tightly-fit (sd ~0.16%% q/q)\n');
+fprintf(fid, '   so it contributes positively to LMD, not as a penalty.)\n');
 fprintf(fid, '\n');
 
 print_param_table(L, B, key_params,   'estimated_params (deep structural)',  fid);
