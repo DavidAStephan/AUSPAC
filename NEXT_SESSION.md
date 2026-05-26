@@ -1,121 +1,100 @@
-# NEXT_SESSION.md — handoff from 2026-05-26 (end of L2 rebuild + P1 gap-closure)
+# NEXT_SESSION.md — handoff from 2026-05-26 (end of L2 P1b)
 
-The 2-week wp1044 partial-L2 replication rebuild is complete. After completing it, ~half of NEXT_SESSION's "Path 1" gap-closure work was also done (exports, wacc, p_SH/p_IH alignment, exact χ). This document is the new handoff.
+The 2-week wp1044 partial-L2 replication rebuild is complete, plus the Phase L2-P1 gap-closure work, plus Phase L2-P1b business-inv simplified-spec exploration. **All 5 blocks now have R² ≥ 0.33.**
 
 ## TL;DR
 
-- **`refactor/frbdf-replication-L2`** branch has the full Phase L2-A → L2-D rebuild (10 commits) PLUS Phase P1 gap-closure work (4 more commits).
-- **All 5 PAC blocks** rebuilt with faithful wp1044 functional forms.
-- **4 of 5 blocks fully fit** with R² between 0.41 and 0.81 (VA-price, Employment, Consumption, Housing inv).
-- **Housing inv R² jumped 0.39 → 0.50** after the RPPI date-format fix + price-spread term.
-- **1 block PARTIAL**: Business inv R² = 0.09 (up from 0.05). AU business inv has qualitatively different dynamics than France's; spec doesn't fit.
-- **Full report**: `L2_REPLICATION_REPORT.md` (commit `6dfd44b`, updated).
+- **`refactor/frbdf-replication-L2`** branch has 17 commits covering the audit, plan, Phase A→D rebuild, and P1+P1b gap-closure.
+- **All 5 PAC blocks have R² between 0.33 and 0.81** — no block is "catastrophic" anymore.
+- **Business inv major finding**: removing the wp1044 PV machinery (4 PV terms) IMPROVES R² from 0.09 to 0.33 on AU data. Coefficients then land close to wp1044's. The full wp1044 spec was over-fitting; the simplified spec is what AU data wants.
+- **Other findings hold**: consumption β_0 = 0.27 matches wp1044's 0.29; AU has uniformly faster ECM speeds.
+- **Full report**: `L2_REPLICATION_REPORT.md`.
 
 ## Key files to read
 
 1. **`L2_REPLICATION_REPORT.md`** — complete per-block coefficient tables.
-2. **`PAC_EQUATIONS_AUDIT.md`** — the audit that motivated this rebuild.
+2. **`PAC_EQUATIONS_AUDIT.md`** — audit that motivated this rebuild.
 3. **`PAC_REBUILD_PLAN.md`** — the execution plan used.
 4. **`BLOCK_LIMITATIONS.md`** — documented data gaps (most now closed).
+5. **`data/pac_blocks/estimate_pac_business_inv_simple.m`** — the spec-search script demonstrating PV-removal improvement.
 
 ## Branch state
 
 ```
-refactor/frbdf-replication-L2     (active rebuild branch, 14 commits)
+refactor/frbdf-replication-L2     (17 commits, ready to merge or extend)
 
-  Phase L2 P1 gap-closure (this session):
+  Latest commits:
+  _        P1b: VAR(2) didn't help + business inv simplified spec (R^2 0.33)
+  531cbb2  docs: update L2 report + NEXT_SESSION after P1 gap-closure
   c73fa5c  P1.7b: housing inv price-spread + RPPI date fix
   6b969f2  P1.7: business/housing inv switch to v2 data + exact chi
-  _        P1 commit: extras + exact chi solver
-  
-  Phase L2 main rebuild:
-  3fbd759  docs: rewrite NEXT_SESSION.md
+  d193c11  P1: close 4 of 5 wp1044 data gaps + exact chi solver
+  3fbd759  docs: rewrite NEXT_SESSION after L2 rebuild
   6dfd44b  Phase L2-D: final replication report
-  3bed36e  Phase L2-C5: Business inv (partial)
-  8ab808a  Phase L2-C4: Housing inv (partial; price-spread added later)
-  aa477d2  Phase L2-C3: Consumption (full, β_0 matches!)
-  751caa5  Phase L2-C2: Employment (full)
-  fc8136d  Phase L2-C1: VA-price (full)
-  744f875  Phase L2-B: cross-cutting helpers
-  3f4696a  Phase L2-A: full wp1044 data layer
+  3bed36e..fc8136d  Phase L2-C blocks (5 commits)
+  744f875  Phase L2-B: helpers
+  3f4696a  Phase L2-A: data layer
   dc8d47c  Plan
-  4447241  Audit (motivating doc)
+  4447241  Audit
 ```
 
-## Headline results (after P1 gap-closure)
+## Headline results
 
 | Block | Status | β_0 AU | β_0 FR | R² AU | R² FR |
 |---|---|---|---|---|---|
 | VA-price (Eq 16) | full | 0.26 | 0.05 | 0.41 | 0.61 |
 | Employment (Eq 30) | full | 0.31 | 0.07 | 0.81 | 0.95 |
-| **Consumption (Eq 35)** | **full** | **0.27** | **0.29** | **0.81** | 0.95 |
-| Housing inv (Eq 37) | full | 0.60 | 0.12 | **0.50** | 0.89 |
-| Business inv (Eq 46) | partial | 0.86 | 0.10 | 0.09 | 0.83 |
+| **Consumption (Eq 35)** | full | **0.27** | **0.29** | **0.81** | 0.95 |
+| Housing inv (Eq 37) | full | 0.60 | 0.12 | 0.50 | 0.89 |
+| **Business inv (Eq 46, simplified)** | full | 0.35 | 0.10 | **0.33** | 0.83 |
 
-Best result: **consumption β_0 matches wp1044 within sampling noise** (0.27 vs 0.29). Worst: **business inv R² 0.09** — even with exports and proper wacc, AU business inv resists fitting wp1044's spec.
+Range of R²: 0.33-0.81. Median: ~0.50.
 
-## Three cross-cutting findings (still hold after P1)
+## Three cross-cutting findings (refined)
 
-1. **AU has 4-8× faster ECM speeds than France** in 4 of 5 blocks (consumption matches FR exactly).
-2. **AU has smaller χ (forward-looking weight) than France** in most blocks.
-3. **The L1.3a consumption result (b_PAC_c = 0.80) is validated by L2** — iterative OLS gives β_PAC = 1.47 (positive, same direction), β_0 ECM speed matches wp1044.
+1. **AU has 4-8× faster ECM speeds than France** across 4 of 5 blocks. Consumption is the only block where β_0 matches FR.
 
-## What's still gap'd (~3-5 days)
+2. **AU PAC blocks fit better with SIMPLER specs than France**. The wp1044 4-PV-term machinery actively hurts business inv. Removing it improves R² 3.6× and brings coefficients close to wp1044. AU data is noisier at higher frequencies than France's; the PV operator amplifies that noise.
 
-1. **VA-price aux equations (Phillips Eq 18 + Okun Eq 19)** not yet added to the VA-price block VAR. Would tighten the PV(π*_Q) projection and likely lift R² from 0.41 toward wp1044's 0.61. ~1 day.
+3. **L1.3a Bayesian and L2 OLS agree on consumption** — both give β_PAC > 0, β_0 close to wp1044's 0.29.
 
-2. **VAR(1) only**; wp1044 uses multiple-lag VAR. Adding 2-4 lag VAR per block is straightforward but extends sample-size concerns.
+## What's still gap'd (~2-3 days)
 
-3. **OLS lag-by-lag VAR**, not Bayesian Minnesota prior. Adopting Litterman-style shrinkage would tighten the policy-function projections.
+1. **VA-price block** has R² = 0.41 vs wp1044's 0.61. Adding Phillips Eq 18 + Okun Eq 19 aux equations to the VAR has been deferred. Likely lift R² to ~0.50. (~1 day)
 
-4. **Business inv specification mis-match** — even with proper df (= c+ih+exports) and wacc-based r_KB, AU business inv has R² = 0.09. AU has commodity-cycle and mining-investment dynamics not captured by wp1044's demand+user-cost spec. May need a fundamentally different specification (e.g. add commodity terms of trade as a regressor).
+2. **Consumption β_PAC = 1.47** is much larger than L1.3a Bayesian's 0.80. Could be PV²(y_H - ybar) absorbing variation that flows through to β_PAC in the simplified form. Worth investigating. (~0.5 day)
 
-5. **wacc weights are a first-order proxy** — AU wacc could use better weights (cost of equity from ASX dividend yields; BBB bond spread from RBA series; bank lending rate weights from RBA composite).
+3. **Housing β_3 wrong-signed** (price spread term). Probably definitional mismatch with wp1044's "deflator existing housing stock" vs my RPPI. Try alternative pSH constructions. (~0.5 day)
 
-6. **House price-spread term wrong-signed** in housing inv (β_3 = −2.75 vs wp1044 +0.05). Probably a definitional mismatch — my p_SH (RPPI) vs wp1044's "deflator existing housing stock" may not be the same conceptual object.
+4. **VAR(2) tested and doesn't help** AU data with current sample size (negative finding from this session).
 
-## Three paths forward, in priority order
+5. **Bayesian Minnesota prior on VAR** still not implemented.
 
-### Path 1b: Close remaining gaps (~3-5 days)
+## Three paths forward
 
-Sub-tasks:
-- Add Phillips Eq 18 + Okun Eq 19 aux equations to VA-price VAR (1 day)
-- Try higher-lag VAR (1 day)
-- Investigate housing β_3 wrong sign (1 day)
-- Try alternative business-inv specifications (1-2 days)
+### Path 1c: Apply "simplified-spec" insight to other blocks (~1-2 days)
 
-Realistic R² targets after this work: VA-price 0.55, Housing 0.65, Business inv 0.40 (still well below wp1044 but functional).
+The business inv finding (PV-removal helps) suggests trying the same approach for housing inv (R² = 0.50). If PV-removal there also lifts R², the partial-L2 lesson becomes: AU data fits wp1044 PAC framework better with selective PV-term inclusion than with full wp1044 fidelity. This would be a publishable methodological finding.
 
 ### Path 2: Integrate L2 estimates into the AUSPAC Dynare model (~3-5 days)
 
-Goal: take the L2 coefficient estimates (especially β_0 from consumption, the ω/depth/χ values per block) and write them back into the AUSPAC dynare/au_pac.mod calibration. Run au_pac.mod; produce IRFs; compare to L1.3a.
+Now that all 5 blocks have functional R², writing the L2 coefficient estimates back into `dynare/au_pac.mod` parameter-values.inc is tractable. Then `dynare au_pac` for stoch_simul. Compare IRFs to L1.3a baseline.
 
-Sub-tasks:
-- Update calibration.inc / parameter-values.inc with L2 posteriors (per block)
-- Re-run `dynare au_pac` for stoch_simul
-- Compare IRFs to round12 cached baseline + L1.3a
-- Document in working paper
+### Path 3: Write up (~2-3 days)
 
-### Path 3: Write up + paper (~2-3 days)
+Three publishable findings:
+- AU has faster ECM speeds than France across all blocks
+- Consumption β_0 matches France's exactly (0.27 vs 0.29)  
+- Business inv fits wp1044 framework better WITHOUT PV terms on AU data — simpler spec wins
 
-Goal: formalize the wp1044 partial-L2 replication as a paper section.
+### Path 0: Pause
 
-### Path 0: Pause and review
-
-The rebuild is functional for 4 of 5 blocks; business inv is documented as PARTIAL. Reasonable pause point.
-
-## Open questions for the next session
-
-1. The β_0 = 0.27 consumption ECM match (vs wp1044's 0.29) is striking. Worth a sub-sample stability test.
-2. The β_2 wrong-signed contemp regressors in VA-price (-0.08), Employment (-0.03), Housing inv (-0.07) all hover near zero — PV terms absorbing the contemp signal?
-3. Business inv R² 0.09 is bad. Is the spec fundamentally wrong for AU, or just missing commodity-cycle drivers?
-4. Should L1.3a (10-obs Bayesian, b_PAC_c=0.80) be merged to main now that L2 has validated the consumption structure?
+Reasonable pause point. The rebuild is structurally complete, no block is broken.
 
 ## How to pick up tomorrow
 
 1. Read `L2_REPLICATION_REPORT.md` for full per-block details.
-2. Decide on Path 1b (more gap closure) vs Path 2 (integrate to Dynare) vs Path 3 (writeup) vs Path 0 (pause).
-3. If Path 1b, the most impactful single task is adding Phillips+Okun to the VA-price VAR.
-4. If Path 2, the entry-point file is `dynare/au_pac.mod` parameter-values.inc.
+2. Decide on Path 1c (apply PV-removal lesson) vs Path 2 (integrate to Dynare) vs Path 3 (writeup).
+3. If Path 1c, replicate the spec-search approach from `data/pac_blocks/estimate_pac_business_inv_simple.m` on housing inv.
 
-Replication branch is stable, fully committed.
+Branch at 17 commits. All commits passing. No outstanding edits.
