@@ -128,11 +128,11 @@ fprintf('    pi_Q_star: mean=%.3f, sd=%.3f over %d obs\n', ...
 %% p_Q_star_minus_p_Q (ECM term for Eq 16): integrate pi_Q_star - piQ
 % pi_Q_star_t - piQ_t is the inflation gap; the price-LEVEL gap is its
 % cumulative sum (with a constant of integration determined by demeaning).
-inflation_diff = (pi_Q_star - piQ) / 100;   % back to log units
-inflation_diff(isnan(inflation_diff)) = 0;
-p_Q_star_minus_p_Q = cumsum(inflation_diff);
+inflation_diff_pp = pi_Q_star - piQ;        % keep in q/q pp form
+inflation_diff_pp(isnan(inflation_diff_pp)) = 0;
+p_Q_star_minus_p_Q = cumsum(inflation_diff_pp);
 p_Q_star_minus_p_Q = p_Q_star_minus_p_Q - mean(p_Q_star_minus_p_Q);
-fprintf('A3b. p*_Q - p_Q (ECM level gap): sd=%.4f over %d obs\n', ...
+fprintf('A3b. p*_Q - p_Q (ECM level gap, pp scale): sd=%.4f over %d obs\n', ...
     std(p_Q_star_minus_p_Q, 'omitnan'), sum(~isnan(p_Q_star_minus_p_Q)));
 
 %% A4. Synthetic df = c + ih (proxy; full def. needs exports + gov_inv)
