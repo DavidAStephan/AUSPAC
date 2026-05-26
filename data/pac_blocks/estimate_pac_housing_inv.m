@@ -69,6 +69,20 @@ Delta_y_minus_tilde = dlog_y - y_tilde;
 d20q1 = L2.del_20Q1; d20q2 = L2.del_20Q2; d20q3 = L2.del_20Q3;
 d21q2 = L2.del_21Q2;
 
+% Price-spread term (wp1044 Eq 37 β_3): (pSH - pIH)_{t-1} - (pSH - pIH)_{t-5}
+% AU data: p_SH from ABS 6416 RPPI (74 obs from 2003Q3); p_IH from
+% ABS 5206 dwellings IPD (140 obs).  Both in level (index) form.
+if isfield(L2, 'p_SH') && isfield(L2, 'p_IH')
+    log_pSH = log(L2.p_SH);
+    log_pIH = log(L2.p_IH);
+    rel_price = log_pSH - log_pIH;
+    price_spread = lagn(rel_price, 1) - lagn(rel_price, 5);
+    fprintf('Price spread: %d valid obs\n', sum(~isnan(price_spread)));
+else
+    price_spread = nan(L2.nQ, 1);
+    fprintf('Price spread: SKIPPED (p_SH or p_IH not available)\n');
+end
+
 %% Aux VAR for the block
 [Phi, state_names, ZL_full, ~, n_var] = build_block_var('ih', L2, base, 1:L2.nQ);
 idx_IH = find(strcmp(state_names, 'IH_gap'));
@@ -104,20 +118,24 @@ for iter = 1:max_iter
     LHS = dln_ih - PV_IH_gap + PV_IH_trend - derived_coef * Delta_log_IH_bar;
 
     X = [ones(L2.nQ, 1), lag1(ih_target_minus_actual), lag1(dln_ih), ...
-         Delta_y_minus_tilde, d20q1, d20q2, d20q3, d21q2];
+         Delta_y_minus_tilde, price_spread, ...
+         d20q1, d20q2, d20q3, d21q2];
     names_free = {'(intercept)', 'beta_0 (ECM I*_H-I_H lag)', 'beta_1 (Δlog I_H lag)', ...
-                  'beta_2 (Δy - y_tilde contemp)', 'd_20Q1', 'd_20Q2', 'd_20Q3', 'd_21Q2'};
+                  'beta_2 (Δy - y_tilde contemp)', 'beta_3 (price spread 1-5)', ...
+                  'd_20Q1', 'd_20Q2', 'd_20Q3', 'd_21Q2'};
 
     [b, se, tstat, R2, ~, n_ols] = ols_with_se(X, LHS);
     beta_0_new = max(0.01, min(0.80, damping * b(2) + (1-damping) * beta_0));
     beta_1_new = max(0.01, min(0.50, damping * b(3) + (1-damping) * beta_1));
     beta_2_new = damping * b(4) + (1-damping) * beta_2;
+    if iter == 1, beta_3 = 0.05; end
+    beta_3_new = damping * b(5) + (1-damping) * beta_3;
 
-    delta = norm([beta_0_new - beta_0, beta_1_new - beta_1, beta_2_new - beta_2]);
-    history(iter, :) = [iter, beta_0_new, beta_1_new, beta_2_new, chi, R2, delta];
-    fprintf('iter %2d: b0=%.4f, b1=%.4f, b2=%.4f, chi=%.4f, R^2=%.3f, ||d||=%.5f\n', ...
-        iter, beta_0_new, beta_1_new, beta_2_new, chi, R2, delta);
-    beta_0 = beta_0_new; beta_1 = beta_1_new; beta_2 = beta_2_new;
+    delta = norm([beta_0_new - beta_0, beta_1_new - beta_1, beta_2_new - beta_2, beta_3_new - beta_3]);
+    history(iter, :) = [iter, beta_0_new, beta_1_new, beta_2_new, beta_3_new, chi, R2, delta];
+    fprintf('iter %2d: b0=%.4f, b1=%.4f, b2=%.4f, b3=%.4f, chi=%.4f, R^2=%.3f, ||d||=%.5f\n', ...
+        iter, beta_0_new, beta_1_new, beta_2_new, beta_3_new, chi, R2, delta);
+    beta_0 = beta_0_new; beta_1 = beta_1_new; beta_2 = beta_2_new; beta_3 = beta_3_new;
     if delta < tol, fprintf('Converged at iter %d.\n\n', iter); break; end
 end
 

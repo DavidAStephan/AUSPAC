@@ -72,16 +72,13 @@ fprintf('p_IH (dwellings IPD): %d valid obs\n', sum(~isnan(p_IH)));
 %% 4. p_SH: ABS 6416 RPPI weighted-8-cities (Index Numbers, col 10 in CSV)
 csv_rppi = fullfile(projectdir, 'data', 'abs_rba', 'abs_6416_rppi.csv');
 fprintf('Reading RPPI from %s...\n', csv_rppi);
-T_rppi = readtable(csv_rppi, 'HeaderLines', 9, 'ReadVariableNames', false);
-% Var1 is datetime (auto-parsed); Var10 = weighted-8-cities Index Number
-if isa(T_rppi.Var1, 'datetime')
-    rppi_dates = T_rppi.Var1;
-elseif iscell(T_rppi.Var1)
-    rppi_dates = datetime(T_rppi.Var1);
-else
-    rppi_dates = datetime(T_rppi.Var1, 'ConvertFrom', 'datenum');
-end
-rppi_index = T_rppi.Var10;
+% Force dd/MM/uuuu parsing -- ABS RPPI uses Australian date format
+opts = detectImportOptions(csv_rppi, 'NumHeaderLines', 9);
+opts.VariableTypes{1} = 'char';      % read date as string first
+T_rppi = readtable(csv_rppi, opts);
+rppi_dates_str = T_rppi.(opts.VariableNames{1});
+rppi_dates = datetime(rppi_dates_str, 'InputFormat', 'dd/MM/uuuu');
+rppi_index = T_rppi.(opts.VariableNames{10});
 p_SH = align_q(rppi_index, rppi_dates, supply_dates);
 fprintf('p_SH (RPPI 8-cities): %d valid obs (RPPI starts ~2003)\n', sum(~isnan(p_SH)));
 
