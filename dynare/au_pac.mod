@@ -1742,6 +1742,34 @@ b_HtM             = 0.32;
 // the L1.3a MCMC completes.
 b_PAC_c           = 0.95;
 
+// ====================================================================
+// Phase L2 P1c Option 1 (2026-05-26): wp1044 BI calibration import
+// ====================================================================
+// AU business investment data structurally rejects the wp1044 PAC
+// restriction (PV terms at coef=+1).  After ~7 spec variants tested in
+// Phase L2 P1c (commits 78d7c41, 85f67db, etc.), every strict-PAC
+// configuration on AU data gives R^2 < 0 on raw dln_ib.  Free-estimated
+// PV(Δq̂) coefficient comes out negative (~ -5) instead of structural +1.
+//
+// DECISION (see PAC_BI_AU_EXPLORATION.md §7): import wp1044 Table 3.5.13
+// French calibration for the BI block.  Other 4 PAC blocks remain on
+// AU-estimated values from Phase L2.  This is a standard small-open-
+// economy modelling approach where local data identification fails:
+// borrow deep parameters from a larger / better-identified economy
+// and let the AU-specific channels (E-SAT VAR, other blocks, AU shocks)
+// inject AU-specific dynamics through the simulation.
+//
+// IRFs through the BI expectations channel will then be structurally
+// correct (PAC FOC satisfied with coef=+1 on PV).  AU mining-cycle
+// dynamics enter through the E-SAT VAR's response to commodity-driven
+// trade shocks rather than through the BI block's own parameters.
+b0_ib       = 0.096;   // wp1044 Table 3.5.13 (overrides Phase V writeback 0.0181)
+b1_ib       = 0.33;    // wp1044 Table 3.5.13 (overrides 0.0809)
+b2_ib       = 0.11;    // wp1044 Table 3.5.13 (overrides 0; depth-2 PAC)
+b3_ib       = 0.69;    // wp1044 Table 3.5.13 (overrides 0.3120; coef on Δdf gap)
+// omega_ib already 0.35 (matches wp1044)
+// sigma_ces already 0.5366 (matches wp1044's 0.50 within calibration tolerance)
+
 shocks;
     var eps_q;          stderr 0.5356;
     var eps_i;          stderr 0.1105;

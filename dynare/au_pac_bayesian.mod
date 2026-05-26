@@ -895,6 +895,18 @@ b_HtM             = 0.32;
 // posterior mean; promoted to estimated below.
 b_PAC_c           = 0.95;
 
+// ====================================================================
+// Phase L2 P1c Option 1 (2026-05-26): wp1044 BI calibration import
+// ====================================================================
+// See PAC_BI_AU_EXPLORATION.md for full rationale.  AU BI data
+// structurally rejects wp1044 PAC's coef=+1 PV restriction across
+// 7+ spec variants.  Import French Table 3.5.13 calibration here AND
+// remove b0_ib, b1_ib, b3_ib from the estimated_params block below
+// (lines ~1764-1766) so Bayesian estimation doesn't override.
+b0_ib       = 0.096;   // wp1044 Table 3.5.13
+b1_ib       = 0.33;    // wp1044 Table 3.5.13
+b2_ib       = 0.11;    // wp1044 Table 3.5.13 (depth-2 PAC)
+b3_ib       = 0.69;    // wp1044 Table 3.5.13 (coef on Δdf gap / yhat_au)
 
 varexo
 	eps_10y
@@ -1761,9 +1773,13 @@ estimated_params;
     b1_c,       beta_pdf,       0.05,   0.03;
     b2_c,       normal_pdf,    -0.55,   0.20;
     b3_c,       normal_pdf,     0.02,   0.05;
-    b0_ib,      beta_pdf,       0.02,   0.01;
-    b1_ib,      beta_pdf,       0.09,   0.05;
-    b3_ib,      normal_pdf,     0.34,   0.10;
+    // Business inv params PINNED at wp1044 calibration (Phase L2 P1c Option 1,
+    // 2026-05-26).  See PAC_BI_AU_EXPLORATION.md §7.  AU data structurally
+    // rejects strict PAC for BI; import wp1044 deep parameters so IRFs through
+    // the BI expectation channel are structurally correct.
+    //   b0_ib  = 0.096  (wp1044 Table 3.5.13; was beta_pdf 0.02, 0.01)
+    //   b1_ib  = 0.33   (wp1044; was beta_pdf 0.09, 0.05)
+    //   b3_ib  = 0.69   (wp1044; was normal_pdf 0.34, 0.10)
     b0_ih,      beta_pdf,       0.03,   0.015;
     b1_ih,      beta_pdf,       0.11,   0.05;
     b3_ih,      normal_pdf,     0.23,   0.10;

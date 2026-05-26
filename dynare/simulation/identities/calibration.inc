@@ -116,14 +116,18 @@ beta_c          = 0.95;     // permanent income discount (paper Section 4.6.1, ~
 alpha_c_r       = -0.95;    // real lending rate -> consumption (paper Table 4.6.14, alpha_1=-0.95)
 // growth neutrality coeff = 1 - 0.35 - 0.35 = 0.30
 
-// Business investment PAC parameters (calibrated from Section 4.6.2 / Table 4.6.2)
-// Australia: investment more volatile than consumption, strong accelerator
-// 2nd-order adjustment costs
-b0_ib = 0.0177;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0047, 0.0323]
-b1_ib = 0.0849;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.0196, 0.1503]
-b2_ib = -0.0445;  // 2nd lag (OLS, not in Bayesian estimated_params)
-omega_ib        = 0.35;     // expectations/forward component
-b3_ib = 0.3074;   // MCMC refresh 2026-05-11: posterior mean, 90% HPD [0.1825, 0.4828]
+// Business investment PAC parameters
+// Phase L2 P1c Option 1 (2026-05-26): imported from wp1044 Table 3.5.13.
+// AU data structurally rejects strict PAC (PV coef=+1 restriction fails;
+// see PAC_BI_AU_EXPLORATION.md).  Use French deep parameters so IRFs
+// through the BI expectation channel are structurally correct.
+// Previous AU MCMC values are preserved as comments for the historical
+// record.
+b0_ib = 0.096;   // wp1044 Table 3.5.13 (was AU MCMC posterior 0.0177)
+b1_ib = 0.33;    // wp1044 Table 3.5.13 (was 0.0849)
+b2_ib = 0.11;    // wp1044 Table 3.5.13 (was -0.0445)
+omega_ib        = 0.35;     // matches wp1044 directly
+b3_ib = 0.69;    // wp1044 Table 3.5.13 (was 0.3074)
 b4_ib           = -0.03;    // real interest rate -> investment (user cost channel)
 rho_ib_star     = 0.95;     // target persistence
 kappa_wacc      = 0.038;    // WACC gap -> investment target (posterior mean, legacy)
