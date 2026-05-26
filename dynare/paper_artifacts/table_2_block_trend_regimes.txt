@@ -1,9 +1,9 @@
 Table 2 — L1.2 block-specific HP-filtered trend growth rates (annualised %)
 
 block trend series	mean (% p.a.)	first 8q mean	last 8q mean
-real GDP trend (y_bar)	—	—	2.056
-market VA trend (q_bar)	—	—	1.873
-employment trend (n_bar)	—	—	2.868
-housing inv trend (I_H_bar)	—	—	—
-user cost trend (r_KB_bar)	—	—	26.340
-VA-price inflation trend (pi_Q_bar)	—	—	-0.256
+real GDP trend (y_bar)	3.024	3.677	2.056
+market VA trend (q_bar)	3.074	3.866	1.873
+employment trend (n_bar)	1.870	0.514	2.868
+housing inv trend (I_H_bar)	3.940	6.736	3.644
+user cost trend (r_KB_bar)	-0.958	1.066	26.340
+VA-price inflation trend (pi_Q_bar)	-0.000	0.019	-0.256

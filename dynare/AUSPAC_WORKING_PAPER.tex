@@ -103,6 +103,121 @@
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+% paper_header.tex -- pandoc/tectonic LaTeX header to map Unicode Greek + math
+% symbols in body text to their LaTeX math-mode equivalents, so that lmroman
+% (which lacks Greek glyphs) can render them via math mode.  Used with:
+%
+%     pandoc AUSPAC_WORKING_PAPER.md -o AUSPAC_WORKING_PAPER.tex \
+%            --standalone --mathjax --include-in-header=paper_header.tex
+%     tectonic AUSPAC_WORKING_PAPER.tex
+%
+\usepackage{newunicodechar}
+% Lowercase Greek used in body text
+\newunicodechar{α}{$\alpha$}
+\newunicodechar{β}{$\beta$}
+\newunicodechar{γ}{$\gamma$}
+\newunicodechar{δ}{$\delta$}
+\newunicodechar{ε}{$\varepsilon$}
+\newunicodechar{ζ}{$\zeta$}
+\newunicodechar{η}{$\eta$}
+\newunicodechar{θ}{$\theta$}
+\newunicodechar{ι}{$\iota$}
+\newunicodechar{κ}{$\kappa$}
+\newunicodechar{λ}{$\lambda$}
+\newunicodechar{μ}{$\mu$}
+\newunicodechar{ν}{$\nu$}
+\newunicodechar{ξ}{$\xi$}
+\newunicodechar{ο}{$o$}
+\newunicodechar{π}{$\pi$}
+\newunicodechar{ρ}{$\rho$}
+\newunicodechar{σ}{$\sigma$}
+\newunicodechar{ς}{$\varsigma$}
+\newunicodechar{τ}{$\tau$}
+\newunicodechar{υ}{$\upsilon$}
+\newunicodechar{φ}{$\varphi$}
+\newunicodechar{χ}{$\chi$}
+\newunicodechar{ψ}{$\psi$}
+\newunicodechar{ω}{$\omega$}
+% Uppercase Greek
+\newunicodechar{Α}{$A$}
+\newunicodechar{Β}{$B$}
+\newunicodechar{Γ}{$\Gamma$}
+\newunicodechar{Δ}{$\Delta$}
+\newunicodechar{Ε}{$E$}
+\newunicodechar{Ζ}{$Z$}
+\newunicodechar{Η}{$H$}
+\newunicodechar{Θ}{$\Theta$}
+\newunicodechar{Ι}{$I$}
+\newunicodechar{Κ}{$K$}
+\newunicodechar{Λ}{$\Lambda$}
+\newunicodechar{Μ}{$M$}
+\newunicodechar{Ν}{$N$}
+\newunicodechar{Ξ}{$\Xi$}
+\newunicodechar{Ο}{$O$}
+\newunicodechar{Π}{$\Pi$}
+\newunicodechar{Ρ}{$P$}
+\newunicodechar{Σ}{$\Sigma$}
+\newunicodechar{Τ}{$T$}
+\newunicodechar{Υ}{$\Upsilon$}
+\newunicodechar{Φ}{$\Phi$}
+\newunicodechar{Χ}{$X$}
+\newunicodechar{Ψ}{$\Psi$}
+\newunicodechar{Ω}{$\Omega$}
+% Math relations / operators used in body text
+\newunicodechar{≈}{$\approx$}
+\newunicodechar{≃}{$\simeq$}
+\newunicodechar{≅}{$\cong$}
+\newunicodechar{≤}{$\leq$}
+\newunicodechar{≥}{$\geq$}
+\newunicodechar{≠}{$\neq$}
+\newunicodechar{≡}{$\equiv$}
+\newunicodechar{≪}{$\ll$}
+\newunicodechar{≫}{$\gg$}
+\newunicodechar{∞}{$\infty$}
+\newunicodechar{∂}{$\partial$}
+\newunicodechar{∇}{$\nabla$}
+\newunicodechar{∈}{$\in$}
+\newunicodechar{∉}{$\notin$}
+\newunicodechar{∪}{$\cup$}
+\newunicodechar{∩}{$\cap$}
+\newunicodechar{⊂}{$\subset$}
+\newunicodechar{⊃}{$\supset$}
+\newunicodechar{⊆}{$\subseteq$}
+\newunicodechar{∑}{$\sum$}
+\newunicodechar{∏}{$\prod$}
+\newunicodechar{∫}{$\int$}
+\newunicodechar{√}{$\sqrt{}$}
+\newunicodechar{±}{$\pm$}
+\newunicodechar{∓}{$\mp$}
+\newunicodechar{×}{$\times$}
+\newunicodechar{÷}{$\div$}
+\newunicodechar{·}{$\cdot$}
+\newunicodechar{→}{$\rightarrow$}
+\newunicodechar{←}{$\leftarrow$}
+\newunicodechar{⇒}{$\Rightarrow$}
+\newunicodechar{⇐}{$\Leftarrow$}
+\newunicodechar{↔}{$\leftrightarrow$}
+\newunicodechar{⇔}{$\Leftrightarrow$}
+% Note: ŷ, π̃, ỹ etc. are combining-character sequences (multi-codepoint),
+% which newunicodechar cannot map.  pandoc generally renders them as accent
+% commands in math mode, so they're fine inside $...$ and inside displayed
+% math, but bare body-text occurrences will fall back to lmroman without
+% the accent (e.g. "y" instead of "ŷ").  If this matters, wrap the affected
+% words in math mode in the source markdown.
+\newunicodechar{Δ}{$\Delta$}
+\newunicodechar{ȳ}{$\bar{y}$}    % U+0233 y-with-macron, used in pv_yh discussion
+% Misc symbols that recur in this paper
+\newunicodechar{₀}{$_0$}
+\newunicodechar{₁}{$_1$}
+\newunicodechar{₂}{$_2$}
+\newunicodechar{₃}{$_3$}
+\newunicodechar{₄}{$_4$}
+\newunicodechar{₅}{$_5$}
+\newunicodechar{ₖ}{$_k$}
+\newunicodechar{·}{$\cdot$}
+\newunicodechar{−}{$-$}    % minus sign (different from hyphen)
+\newunicodechar{–}{--}     % en-dash
+\newunicodechar{—}{---}    % em-dash
 \usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
@@ -536,7 +651,7 @@ unemployment PV, and permanent-income PV all use forward-looking
 recursive forms. Under full model-consistent expectations (MCE), all
 expectations are forward-looking. The forward-NPV UIP is what produces
 the FR-BDF-style amplification of the exchange-rate channel documented
-in §6.2.
+in §7.2.
 
 \subsubsection{2.3 Key transmission
 channels}\label{key-transmission-channels}
@@ -1379,6 +1494,48 @@ unconventional-monetary-policy era --- the FR-BDF 2026 methodology
 innovations were motivated by precisely the data pathologies AUSPAC
 encountered.
 
+\textbf{L1.2 block-specific HP-filtered trends}. The Phase L2 data layer
+(\texttt{data/prepare\_l2\_data.m}) constructs HP-filtered trend objects
+for each PAC block's target variable. The trends feed both the
+structural targets (the wp1044 ECM regressors of §3.5 and §4.3--§4.7)
+and the growth-neutrality regressors (the derived-coefficient
+\texttt{(1−Σβ−ω)·Δȳ\_\{t-1\}} term). Mean trend growth rates over the
+1994Q1--2024Q4 sample, with first-eight-quarter and last-eight-quarter
+means for comparison (annualised \%, computed by
+\texttt{data/make\_paper\_artifacts.py}):
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+block trend series & mean (\% p.a.) & first 8q mean & last 8q mean \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+real GDP trend (y\_bar) & 3.02 & 3.68 & 2.06 \\
+market VA trend (q\_bar) & 3.07 & 3.87 & 1.87 \\
+employment trend (n\_bar) & 1.87 & 0.51 & 2.87 \\
+housing inv trend (I\_H\_bar) & 3.94 & 6.74 & 3.64 \\
+user cost trend (r\_KB\_bar) & −0.96 & 1.07 & 26.34 \\
+VA-price inflation trend (pi\_Q\_bar) & 0.00 & 0.02 & −0.26 \\
+\end{longtable}
+}
+
+Three structural observations. (1) Real GDP trend growth has decelerated
+from 3.7\% p.a. in the early-1990s to 2.1\% p.a. in the last eight
+quarters of the sample --- consistent with the slowing potential-output
+debate in Australian macro (Cusbert 2017, Bishop and Cassidy 2018). (2)
+The user-cost trend (r\_KB\_bar) shows the biggest end-of-sample jump
+(+26\% p.a. in the last 8 quarters) reflecting the 2022-23 RBA
+tightening cycle pushing the nominal user cost up. (3) The market-VA
+trend (q\_bar, 3.07\% p.a. mean) is close to but a touch above the
+real-GDP trend, consistent with market-VA (excluding non-market services
+like government and dwellings) being a slightly faster-growing
+aggregate. These trend numbers feed directly into the L1.1
+trend-efficiency Ē\_t calibration (Table 4.2.1) and the
+growth-neutrality regressors that the iterative-OLS pipeline (§3.5)
+imposes on every PAC equation.
+
 \subsubsection{4.3 Value-added price of market branches (FR-BDF Section
 4.4)}\label{value-added-price-of-market-branches-fr-bdf-section-4.4}
 
@@ -2196,6 +2353,18 @@ PV(Δlog r̄\_KB) coef & −σ = −0.50 & −σ imposed & +0.001 \\
 \end{longtable}
 }
 
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={AU BI: 11 spec variants tested in Phase L2 P1c}]{paper_artifacts/chart_bi_exploration.png}}
+\caption{AU BI: 11 spec variants tested in Phase L2 P1c}
+\end{figure}
+
+\emph{Figure 4.6.2: Eleven specification variants of wp1044 Eq 46 tested
+in Phase L2 P1c on AU data. Every strict-PAC variant delivers R² ≤ 0.11
+(red bars); free-PV variant v3-A delivers R² = 0.53 but with PV(Δq̂) =
+−5.03 (wrong sign vs structural +1). Dashed blue line: wp1044's reported
+R² = 0.83 on French data. Full table in Appendix G.}
+
 \textbf{The headline diagnostic}: when PV regressors are free-estimated
 on AU data (v3-A column), the lead PV(Δq̂) coefficient comes out at
 \textbf{−5.03} --- wrong sign and 5× wrong magnitude relative to the
@@ -2604,8 +2773,8 @@ Trade volumes use the ABS 5206 Seasonally-Adjusted chain volume measures
 absorbing the trade-collapse-and-rebound outliers.
 
 The long-run elasticities (β\_m, β\_x, γ\_m, γ\_x) are calibrated at
-sensible AU values and given Normal priors centred there (Section 5.4,
-Table 5.6). A bivariate Engle-Granger style OLS of log volumes on log
+sensible AU values and given Normal priors centred there (§6.4, Table
+5.6). A bivariate Engle-Granger style OLS of log volumes on log
 consumption (1959Q3--2025Q4) gives β\_m ≈ +1.73 (t = +113) and β\_x ≈
 +1.56 (t = +119); the model priors at 1.50 and 1.20 sit within one
 standard deviation. The short-run coefficient \texttt{b1\_m} is set to
@@ -2959,7 +3128,7 @@ gap. Under the VAR regime the recursion is backward AR(1) ---
 \texttt{pv\_i\_uip} accumulates only as past i\_gap realisations roll
 in, and the peak AUD appreciation is delayed by 10--15 quarters relative
 to Hybrid/MCE. This forward-looking specification is what generates the
-FR-BDF-style Hybrid \textgreater{} VAR amplification documented in §6.2.
+FR-BDF-style Hybrid \textgreater{} VAR amplification documented in §7.2.
 
 The sign convention is s\_gap \textgreater{} 0 = AUD depreciation;
 higher AU rates appreciate the AUD. Steady state: \(pv^{uip}_{SS} = 0\),
@@ -3400,7 +3569,7 @@ data \emph{smoothing} in the sense of the Kalman-smoothed-targets
 approach we evaluated in §5.3: the gap variables are observed inputs to
 the model, not unobserved targets reconstructed from a fitted model.
 Convergence to the balanced growth path is asserted via the linearised
-gap formulation; §6.1.1 validates BGP stability under off-SS impulses.
+gap formulation; §7.1.1 validates BGP stability under off-SS impulses.
 
 \textbf{Sectoral net-financial-wealth dynamics.} AU-PAC includes the
 four sectoral wealth gap variables (\texttt{w\_F,\ w\_G,\ w\_H,\ w\_N})
@@ -3413,10 +3582,10 @@ quarter half-lives --- but no analytical proof of BGP convergence under
 arbitrary shocks is provided.
 
 \textbf{Conditional projection framework.} AU-PAC's conditional
-forecasting (Section 6.4) and pseudo-real-time recursive forecast
-(Section 5.5) take the US bloc, foreign demand, and commodity-price
-paths as external assumptions while letting domestic policy and demand
-respond endogenously. The exogenisable variables are \texttt{yhat\_us},
+forecasting (§7.5) and pseudo-real-time recursive forecast (§6.5) take
+the US bloc, foreign demand, and commodity-price paths as external
+assumptions while letting domestic policy and demand respond
+endogenously. The exogenisable variables are \texttt{yhat\_us},
 \texttt{pi\_us}, \texttt{dln\_pcom}, and optionally \texttt{i\_au} for
 RBA path-conditioning experiments. No analogue to the Eurosystem BMPE
 harmonisation (wp736 §4.11) is required.
@@ -3598,7 +3767,7 @@ export equation and a smaller loading in the import deflator
 because French exports are dominated by manufacturing and services. The
 commodity-price shock \texttt{eps\_pcom} is treated as exogenous in
 AU-PAC and tracked as a first-order AU-specific propagation channel in
-§6.3.4.
+§7.3.4.
 
 \paragraph{4.13.4 Calibration imports from
 FR-BDF}\label{calibration-imports-from-fr-bdf}
@@ -3756,6 +3925,40 @@ Each sub-section summarises a single finding visible only when the five
 blocks' coefficients are read against each other and against wp1044's
 French reference; the per-block tables in §4 carry the underlying
 numbers.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Cross-block β₀: AU L2 vs wp1044 FR}]{paper_artifacts/chart_beta0_cross_block.png}}
+\caption{Cross-block β₀: AU L2 vs wp1044 FR}
+\end{figure}
+
+\emph{Figure 5.1: Cross-block error-correction coefficient β₀ from the
+Phase L2 iterative-OLS estimates (§4.3--§4.7) against the wp1044 French
+reference. AU is 4--8× faster than France in four of five blocks;
+consumption is the exception (AU ≈ FR, the headline finding of §5.2).
+Business inv carries the wp1044 import (Option 1, §3.6).}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Consumption headline: AU/FR β₀ ratio across blocks}]{paper_artifacts/chart_consumption_headline.png}}
+\caption{Consumption headline: AU/FR β₀ ratio across blocks}
+\end{figure}
+
+\emph{Figure 5.2: AU/FR β₀ ratio across the four AU-estimated blocks.
+Consumption is the only block where the ratio is ≈ 1 (the others are
+4-8×). Re-rendering of the same finding as Figure 5.1, oriented to
+highlight the consumption exception.}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Cross-block R²: 4 of 5 blocks fit wp1044 form on AU data}]{paper_artifacts/chart_r2_cross_block.png}}
+\caption{Cross-block R²: 4 of 5 blocks fit wp1044 form on AU data}
+\end{figure}
+
+\emph{Figure 5.3: Cross-block R² of the Phase L2 fits. Four blocks
+deliver R² in {[}0.41, 0.81{]}; business inv with strict wp1044 PAC
+delivers R² = 0.09 (the structural rejection of §5.3 and §4.6.2). The
+wp1044 French R² range is {[}0.61, 0.95{]}.}
 
 \subsubsection{5.1 AU ECM speeds are 4--8× faster than France in four of
 five
@@ -4122,12 +4325,12 @@ posterior findings relative to calibration:
 \tightlist
 \item
   Wage persistence (lambda\_w): 0.225 vs calibrated 0.55. The
-  full-system Bayesian estimate (Section 5.4) refines this to 0.329,
-  consistent with moderate own-lag persistence in a standard NK wage
-  Phillips curve.
+  full-system Bayesian estimate (§6.4) refines this to 0.329, consistent
+  with moderate own-lag persistence in a standard NK wage Phillips
+  curve.
 \item
   CPI passthrough (gamma\_w): 0.770 in E-SAT, refined to 0.138 in the
-  full-system Bayesian (Section 5.4) --- moderate contemporaneous CPI
+  full-system Bayesian (§6.4) --- moderate contemporaneous CPI
   passthrough.
 \item
   Demand bridge (lambda\_dom): 0.399 vs calibrated 0.10 --- demand
@@ -4577,11 +4780,11 @@ monetary-policy shock standard deviation.
 
 The walkthrough below describes the \textbf{Phase T single-regime
 architecture} documented in §3.4 --- the current production model in
-\texttt{au\_pac.mod}. Figures 6.1--6.2 below visualise three IRF traces
+\texttt{au\_pac.mod}. Figures 7.1--7.2 below visualise three IRF traces
 (VAR / Hybrid / MCE) from the earlier three-regime workflow; they are
 kept as documentation of the architectural evolution. The numerical
 values in Table 6.3 below and the channel-by-channel walkthrough in
-§6.2.2 reflect the Phase T (formerly ``Hybrid'') trace --- the regime
+§7.2.2 reflect the Phase T (formerly ``Hybrid'') trace --- the regime
 that is closest to the current single-regime policy-function
 expectations.
 
@@ -6447,6 +6650,34 @@ Assessment of Monetary Policy Transmission to the French Economy.''
 \emph{Banque de France Working Paper} No.~736. (Cited throughout as
 ``wp736'' / ``FR-BDF''.)
 
+Dubois, É., Aldama, P., Bonnet, X., Lepetit, A., Lemoine, M., Mogliani,
+M., and Zhutova, A. (2026). ``FR-BDF Reloaded: An Update of the FR-BDF
+Model after a Decade of Use.'' \emph{Banque de France Working Paper}
+No.~1044. (Cited throughout as ``wp1044''. Provides the supply-block
+re-calibration method (§4.2.3), the full set of five PAC equation
+specifications (Eqs 16, 30, 35, 37, 46) that this paper replicates on AU
+data via the Phase L2 partial replication of §3.5, and the BI Table
+3.5.13 calibration imported via Option 1 of §3.6 / §4.6.2.) Source PDF
+at
+\href{../references/FR-BDF-update.pdf}{\texttt{references/FR-BDF-update.pdf}}.
+
+Adjemian, S., Brayton, F., and Zimic, S. (2024). ``Solving
+semi-structural models with Dynare.'' Dynare reference manual and
+workflow notes for the \texttt{pac\_expectation} / \texttt{cherrypick} /
+\texttt{aggregate} pipeline used to build \texttt{dynare/au\_pac.mod}
+from per-block auxiliary \texttt{.mod} files (§3.4).
+
+Dees, S., Henrot, M., and Vourc'h, A. (2022). ``The financial
+accelerator in the non-financial corporate sector: Evidence and
+modelling for FR-BDF.'' \emph{Banque de France Working Paper}.
+Referenced in §8 (Conclusion) as a candidate v3.0 extension for the
+cost-of-capital channel.
+
+Bové, M., Boutin-Dufresne, F., and Penalver, A. (2020). ``Modelling
+household debt service in a semi-structural framework.'' \emph{Banque de
+France}. Referenced in §8 as a candidate v3.0 extension for the
+mortgage-rate channel.
+
 Tinsley, P.A. (1993). ``Fitting Both Data and Theories: Polynomial
 Adjustment Costs and Error-Correction Decision Rules.'' \emph{FEDS
 Working Paper} No.~93-21, Board of Governors of the Federal Reserve
@@ -6500,6 +6731,23 @@ Hambur, J., Cassidy, N., and Pugsley, B. (2024). ``How Has Australian
 Monetary Policy Affected the Economy in Recent Years?'' \emph{RBA
 Research Discussion Paper}.
 
+Cassidy, N. and Doyle, M.-A. (2018). ``Wage Growth Puzzles and the
+Phillips Curve in Australia.'' \emph{RBA Bulletin}, March 2018. Source
+for the post-2015 RBA wage Phillips-curve discussion (§4.4.1, §8 finding
+4).
+
+Bishop, J. and Cassidy, N. (2017). ``Insights into Low Wage Growth in
+Australia.'' \emph{RBA Bulletin}, March 2017. Companion to Cassidy and
+Doyle (2018) on AU wage non-responsiveness.
+
+Bishop, J. and Cassidy, N. (2018). ``Trends in Potential Output
+Growth.'' \emph{RBA Bulletin}. Referenced in §4.2.3 for the
+trend-GDP-deceleration discussion.
+
+Cusbert, T. (2017). ``Estimating the NAIRU and the Unemployment Gap.''
+\emph{RBA Bulletin}, June 2017. Trend potential-output reference,
+§4.2.3.
+
 Ballantyne, A., Sharma, T., and Taylor, T. (2024). ``Assessing Full
 Employment in Australia.'' \emph{RBA Bulletin}.
 
@@ -6522,7 +6770,7 @@ growth rates anchored at the 2003Q3 overlap.
 
 Australian Bureau of Statistics (2024). ``Wage Price Index, Australia.''
 Cat. No.~6345.0. Quarterly index, SA Private+Public All industries ---
-used as the wage-inflation observable in Section 5.4.
+used as the wage-inflation observable in §6.4.
 
 Bank for International Settlements (2024). ``Effective Exchange Rate
 Indices.'' BIS REER / NEER series for AUD.
@@ -6535,5 +6783,15 @@ rates plus award-floor enterprise agreements).
 Reserve Bank of Australia (2024). ``Statistical Tables: F1 (interest
 rates), F11 (mortgage rates), G3 (commodity prices).'' Quarterly time
 series, 1976--2024.
+
+Australian Bureau of Statistics (2025). ``Private New Capital
+Expenditure and Expected Expenditure, Australia.'' Cat. No.~5625.0.
+Quarterly chain-volume measures, seasonally adjusted, by industry.
+Mining vs non-mining split obtained via Series IDs A3515875V (mining
+buildings + structures) and A124798315W (non-mining); used to prepare
+the Phase L3 mining-vs-non-mining BI hypothesis test referenced in §5.3
+and Appendix G. Downloaded artefacts in
+\texttt{data/abs\_rba/abs\_5625\_*.xlsx}; documentation in
+\texttt{data/abs\_rba/abs\_5625\_README.md}.
 
 \end{document}

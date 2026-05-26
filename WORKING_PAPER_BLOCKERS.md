@@ -1,14 +1,15 @@
-# WORKING_PAPER_BLOCKERS.md — Phase B blockers and workarounds
+# WORKING_PAPER_BLOCKERS.md — Phase B blockers and workarounds (RESOLVED 2026-05-26)
 
 **Generated**: 2026-05-26 during the Phase L2 → working-paper-v2 regeneration session.
+**Updated**: 2026-05-26 — all three blockers below have been resolved in-session via the workarounds tabulated. Kept for reference and for the next time someone hits the same launcher errors.
 
-The Phase WP-B build (data/tables/charts/IRFs in `dynare/paper_artifacts/`) requires MATLAB + Dynare runs to refresh `.mat` artifacts and PNGs. The environment Claude is running in cannot start either:
+| Tool | Status | Detail | Workaround |
+|---|---|---|---|
+| MATLAB R2020a (`/Applications/MATLAB_R2020a.app/bin/matlab -batch`) | **RESOLVED** via `arch -x86_64` prefix | R2020a's `bin/util/arch.sh` checks `uname -p`: on Intel Macs it returns `i386` and ARCH is set to `maci64`; on Apple Silicon it returns `arm` and ARCH stays unset → the launcher prints `"Sorry! We could not determine the machine architecture for your host"` and exits 1. The `arch -x86_64` wrapper forces the child process to run in Rosetta's x86_64 personality, which makes `uname -p` return `i386`, so the detection passes and MATLAB starts normally. | `arch -x86_64 /Applications/MATLAB_R2020a.app/bin/matlab -batch "..."` |
+| Dynare 6.5 (`/Applications/Dynare/6.5-x86_64/`) | **RESOLVED** transitively | Once MATLAB batch works, Dynare runs as its MATLAB Mex layer. | `arch -x86_64 .../matlab -batch "addpath('/Applications/Dynare/6.5-x86_64/matlab'); dynare au_pac_bayesian.mod"` |
+| LaTeX (`pdflatex`, `xelatex`) | **RESOLVED** via `tectonic` | No standard TeX Live distribution installed, but `tectonic` (a self-contained Rust-implemented LaTeX engine) is in `/opt/homebrew/bin/tectonic`. | `cd dynare && tectonic AUSPAC_WORKING_PAPER.tex` — produces `AUSPAC_WORKING_PAPER.pdf`. Greek-letter warnings in lmroman are non-fatal. |
 
-| Tool | Status | Detail |
-|---|---|---|
-| MATLAB R2020a (`/Applications/MATLAB_R2020a.app/bin/matlab -batch`) | Blocked | Exits with `"Sorry! We could not determine the machine architecture for your host. Please contact: MathWorks Technical Support"`. R2020a is an x86_64 binary running under Rosetta on the user's Apple Silicon machine; the `-batch` non-interactive path triggers the architecture-detection guard before any user code runs. Interactive MATLAB still works from the GUI; only batch mode is blocked. |
-| Dynare 6.5 (`/Applications/Dynare/6.5-x86_64/`) | Blocked transitively | Dynare runs as a MATLAB Mex layer; without working MATLAB batch we cannot drive `dynare au_pac.mod` from a shell. |
-| LaTeX (`pdflatex`, `xelatex`) | Not installed | No LaTeX distribution on system. PDF compilation of the paper is not possible from this environment; HTML + .tex outputs are. |
+For future sessions hitting the MATLAB launcher error: the one-liner is `arch -x86_64 /Applications/MATLAB_R2020a.app/bin/matlab -batch "...your matlab code..."`. The Octave + brew-dynare path is also available but Octave's MH MCMC is ~5× slower than MATLAB's on this workload, so prefer MATLAB.
 
 Per [NEXT_SESSION.md](NEXT_SESSION.md) §working-principles point 5: "Stop-on-blocker — if Dynare fails at Phase B3, document the error in WORKING_PAPER_BLOCKERS.md and proceed with the other phases; pick up Dynare separately."
 

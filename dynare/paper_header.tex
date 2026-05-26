@@ -1,0 +1,115 @@
+% paper_header.tex -- pandoc/tectonic LaTeX header to map Unicode Greek + math
+% symbols in body text to their LaTeX math-mode equivalents, so that lmroman
+% (which lacks Greek glyphs) can render them via math mode.  Used with:
+%
+%     pandoc AUSPAC_WORKING_PAPER.md -o AUSPAC_WORKING_PAPER.tex \
+%            --standalone --mathjax --include-in-header=paper_header.tex
+%     tectonic AUSPAC_WORKING_PAPER.tex
+%
+\usepackage{newunicodechar}
+% Lowercase Greek used in body text
+\newunicodechar{α}{$\alpha$}
+\newunicodechar{β}{$\beta$}
+\newunicodechar{γ}{$\gamma$}
+\newunicodechar{δ}{$\delta$}
+\newunicodechar{ε}{$\varepsilon$}
+\newunicodechar{ζ}{$\zeta$}
+\newunicodechar{η}{$\eta$}
+\newunicodechar{θ}{$\theta$}
+\newunicodechar{ι}{$\iota$}
+\newunicodechar{κ}{$\kappa$}
+\newunicodechar{λ}{$\lambda$}
+\newunicodechar{μ}{$\mu$}
+\newunicodechar{ν}{$\nu$}
+\newunicodechar{ξ}{$\xi$}
+\newunicodechar{ο}{$o$}
+\newunicodechar{π}{$\pi$}
+\newunicodechar{ρ}{$\rho$}
+\newunicodechar{σ}{$\sigma$}
+\newunicodechar{ς}{$\varsigma$}
+\newunicodechar{τ}{$\tau$}
+\newunicodechar{υ}{$\upsilon$}
+\newunicodechar{φ}{$\varphi$}
+\newunicodechar{χ}{$\chi$}
+\newunicodechar{ψ}{$\psi$}
+\newunicodechar{ω}{$\omega$}
+% Uppercase Greek
+\newunicodechar{Α}{$A$}
+\newunicodechar{Β}{$B$}
+\newunicodechar{Γ}{$\Gamma$}
+\newunicodechar{Δ}{$\Delta$}
+\newunicodechar{Ε}{$E$}
+\newunicodechar{Ζ}{$Z$}
+\newunicodechar{Η}{$H$}
+\newunicodechar{Θ}{$\Theta$}
+\newunicodechar{Ι}{$I$}
+\newunicodechar{Κ}{$K$}
+\newunicodechar{Λ}{$\Lambda$}
+\newunicodechar{Μ}{$M$}
+\newunicodechar{Ν}{$N$}
+\newunicodechar{Ξ}{$\Xi$}
+\newunicodechar{Ο}{$O$}
+\newunicodechar{Π}{$\Pi$}
+\newunicodechar{Ρ}{$P$}
+\newunicodechar{Σ}{$\Sigma$}
+\newunicodechar{Τ}{$T$}
+\newunicodechar{Υ}{$\Upsilon$}
+\newunicodechar{Φ}{$\Phi$}
+\newunicodechar{Χ}{$X$}
+\newunicodechar{Ψ}{$\Psi$}
+\newunicodechar{Ω}{$\Omega$}
+% Math relations / operators used in body text
+\newunicodechar{≈}{$\approx$}
+\newunicodechar{≃}{$\simeq$}
+\newunicodechar{≅}{$\cong$}
+\newunicodechar{≤}{$\leq$}
+\newunicodechar{≥}{$\geq$}
+\newunicodechar{≠}{$\neq$}
+\newunicodechar{≡}{$\equiv$}
+\newunicodechar{≪}{$\ll$}
+\newunicodechar{≫}{$\gg$}
+\newunicodechar{∞}{$\infty$}
+\newunicodechar{∂}{$\partial$}
+\newunicodechar{∇}{$\nabla$}
+\newunicodechar{∈}{$\in$}
+\newunicodechar{∉}{$\notin$}
+\newunicodechar{∪}{$\cup$}
+\newunicodechar{∩}{$\cap$}
+\newunicodechar{⊂}{$\subset$}
+\newunicodechar{⊃}{$\supset$}
+\newunicodechar{⊆}{$\subseteq$}
+\newunicodechar{∑}{$\sum$}
+\newunicodechar{∏}{$\prod$}
+\newunicodechar{∫}{$\int$}
+\newunicodechar{√}{$\sqrt{}$}
+\newunicodechar{±}{$\pm$}
+\newunicodechar{∓}{$\mp$}
+\newunicodechar{×}{$\times$}
+\newunicodechar{÷}{$\div$}
+\newunicodechar{·}{$\cdot$}
+\newunicodechar{→}{$\rightarrow$}
+\newunicodechar{←}{$\leftarrow$}
+\newunicodechar{⇒}{$\Rightarrow$}
+\newunicodechar{⇐}{$\Leftarrow$}
+\newunicodechar{↔}{$\leftrightarrow$}
+\newunicodechar{⇔}{$\Leftrightarrow$}
+% Note: ŷ, π̃, ỹ etc. are combining-character sequences (multi-codepoint),
+% which newunicodechar cannot map.  pandoc generally renders them as accent
+% commands in math mode, so they're fine inside $...$ and inside displayed
+% math, but bare body-text occurrences will fall back to lmroman without
+% the accent (e.g. "y" instead of "ŷ").  If this matters, wrap the affected
+% words in math mode in the source markdown.
+\newunicodechar{Δ}{$\Delta$}
+\newunicodechar{ȳ}{$\bar{y}$}    % U+0233 y-with-macron, used in pv_yh discussion
+% Misc symbols that recur in this paper
+\newunicodechar{₀}{$_0$}
+\newunicodechar{₁}{$_1$}
+\newunicodechar{₂}{$_2$}
+\newunicodechar{₃}{$_3$}
+\newunicodechar{₄}{$_4$}
+\newunicodechar{₅}{$_5$}
+\newunicodechar{ₖ}{$_k$}
+\newunicodechar{·}{$\cdot$}
+\newunicodechar{−}{$-$}    % minus sign (different from hyphen)
+\newunicodechar{–}{--}     % en-dash
+\newunicodechar{—}{---}    % em-dash

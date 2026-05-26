@@ -139,7 +139,7 @@ The model can be solved under three expectation regimes (following wp736 Section
 | **Hybrid** | Forward (pv_i, pv_i_uip, pv_u_gap, pv_yh) | Backward (PAC h-vectors from var_model) | 4 | `au_pac.mod` |
 | **Full MCE** | Forward (all leads) | Forward (pac_expectation expands to leads) | 31 | `au_pac_mce.mod` |
 
-Under the baseline configuration, the five PAC expectations use closed-form policy-function formulas in lagged structural state variables (§4.4.0), while the term structure ($pv_i$, eq. 48), UIP NPV ($pv_{i,uip}$, §4.10.3 — forward NPV of the policy-rate gap), unemployment PV, and permanent-income PV all use forward-looking recursive forms. Under full model-consistent expectations (MCE), all expectations are forward-looking. The forward-NPV UIP is what produces the FR-BDF-style amplification of the exchange-rate channel documented in §6.2.
+Under the baseline configuration, the five PAC expectations use closed-form policy-function formulas in lagged structural state variables (§4.4.0), while the term structure ($pv_i$, eq. 48), UIP NPV ($pv_{i,uip}$, §4.10.3 — forward NPV of the policy-rate gap), unemployment PV, and permanent-income PV all use forward-looking recursive forms. Under full model-consistent expectations (MCE), all expectations are forward-looking. The forward-NPV UIP is what produces the FR-BDF-style amplification of the exchange-rate channel documented in §7.2.
 
 ### 2.3 Key transmission channels
 
@@ -441,6 +441,19 @@ The calibration follows Dubois et al. (2026, §3.1.2): $\gamma$ from the base-ye
 
 **Why the 2026 method replaced the 2019 grid search on AU data**. The 2019-method investment-FOC estimation of $\sigma$ failed for AU (see [`data/estimate_sigma_stage1.m`](../data/estimate_sigma_stage1.m): "level OLS, FD OLS, and FD without homogeneity all gave wrong-signed or implausible estimates due to mining-boom user-cost endogeneity"). Similarly, the 2019 grid-search calibration of $(\alpha, \gamma)$ over intercept cross-restrictions failed (see [`data/estimate_ces_stage23.m`](../data/estimate_ces_stage23.m): "AU min L1 >> FR-BDF tolerance, falling back to AU-economic calibration"). Both AU failures are exactly the problems Dubois et al. (2026) document for French data after the unconventional-monetary-policy era — the FR-BDF 2026 methodology innovations were motivated by precisely the data pathologies AUSPAC encountered.
 
+**L1.2 block-specific HP-filtered trends**. The Phase L2 data layer (`data/prepare_l2_data.m`) constructs HP-filtered trend objects for each PAC block's target variable. The trends feed both the structural targets (the wp1044 ECM regressors of §3.5 and §4.3–§4.7) and the growth-neutrality regressors (the derived-coefficient `(1−Σβ−ω)·Δȳ_{t-1}` term). Mean trend growth rates over the 1994Q1–2024Q4 sample, with first-eight-quarter and last-eight-quarter means for comparison (annualised %, computed by `data/make_paper_artifacts.py`):
+
+| block trend series | mean (% p.a.) | first 8q mean | last 8q mean |
+|---|---|---|---|
+| real GDP trend (y_bar) | 3.02 | 3.68 | 2.06 |
+| market VA trend (q_bar) | 3.07 | 3.87 | 1.87 |
+| employment trend (n_bar) | 1.87 | 0.51 | 2.87 |
+| housing inv trend (I_H_bar) | 3.94 | 6.74 | 3.64 |
+| user cost trend (r_KB_bar) | −0.96 | 1.07 | 26.34 |
+| VA-price inflation trend (pi_Q_bar) | 0.00 | 0.02 | −0.26 |
+
+Three structural observations. (1) Real GDP trend growth has decelerated from 3.7% p.a. in the early-1990s to 2.1% p.a. in the last eight quarters of the sample — consistent with the slowing potential-output debate in Australian macro (Cusbert 2017, Bishop and Cassidy 2018). (2) The user-cost trend (r_KB_bar) shows the biggest end-of-sample jump (+26% p.a. in the last 8 quarters) reflecting the 2022-23 RBA tightening cycle pushing the nominal user cost up. (3) The market-VA trend (q_bar, 3.07% p.a. mean) is close to but a touch above the real-GDP trend, consistent with market-VA (excluding non-market services like government and dwellings) being a slightly faster-growing aggregate. These trend numbers feed directly into the L1.1 trend-efficiency Ē_t calibration (Table 4.2.1) and the growth-neutrality regressors that the iterative-OLS pipeline (§3.5) imposes on every PAC equation.
+
 ### 4.3 Value-added price of market branches (FR-BDF Section 4.4)
 
 The VA price equation is central because this deflator enters all other price equations, enabling expectations to affect price setting economy-wide.
@@ -715,6 +728,10 @@ with FOUR PV terms (gap+trend decomposition for BOTH market VA AND user cost), T
 | σ_CES (AU labour-FOC) | (wp1044 uses 0.50) | 0.5366 | 0.5366 |
 | **R²** | **0.83 (wp1044 reported)** | **0.09** | 0.53 |
 
+![AU BI: 11 spec variants tested in Phase L2 P1c](paper_artifacts/chart_bi_exploration.png)
+
+*Figure 4.6.2: Eleven specification variants of wp1044 Eq 46 tested in Phase L2 P1c on AU data. Every strict-PAC variant delivers R² ≤ 0.11 (red bars); free-PV variant v3-A delivers R² = 0.53 but with PV(Δq̂) = −5.03 (wrong sign vs structural +1). Dashed blue line: wp1044's reported R² = 0.83 on French data. Full table in Appendix G.*
+
 **The headline diagnostic**: when PV regressors are free-estimated on AU data (v3-A column), the lead PV(Δq̂) coefficient comes out at **−5.03** — wrong sign and 5× wrong magnitude relative to the structural +1. This is the canonical signal that the wp1044 PAC FOC is rejected: the agent's forward-looking weight on market-VA-growth expectations on AU data is *negative*, not positive at unity. No amount of dummy expansion, terms-of-trade re-targeting, target-variable substitution, or trend-regime addition closes the wedge (see Appendix G for the 11-variant search). The deeper-structural diagnostic (why PV(Δq̂) is negative on AU BI data) is discussed in §5.3, where three non-exclusive hypotheses are catalogued: (A) different agent objective (heterogeneous mining vs non-mining capex); (B) mining-sector dominance; (C) sample-period contamination (GST, GFC, mining boom, COVID, multiple regime breaks in 1993–2024 — many more than France's smoother 1985–2024 sample).
 
 **Option 1 implementation**. The production simulation model `dynare/au_pac.mod` lines 1746–1771 set the BI block deep parameters to their wp1044 Table 3.5.13 values:
@@ -880,7 +897,7 @@ $$\Delta \ln M_t = b^m_0 \cdot m\_gap_{t-1} + b^m_1 \Delta \ln M_{t-1} + b^m_2 \
 
 Trade volumes use the ABS 5206 Seasonally-Adjusted chain volume measures (series A2304114F / A2304115J), aligned to a T=126 quarter sample (1993Q2–2024Q4) with COVID pulse dummies for 2020Q2 and 2020Q3 absorbing the trade-collapse-and-rebound outliers.
 
-The long-run elasticities (β_m, β_x, γ_m, γ_x) are calibrated at sensible AU values and given Normal priors centred there (Section 5.4, Table 5.6). A bivariate Engle-Granger style OLS of log volumes on log consumption (1959Q3–2025Q4) gives β_m ≈ +1.73 (t = +113) and β_x ≈ +1.56 (t = +119); the model priors at 1.50 and 1.20 sit within one standard deviation. The short-run coefficient `b1_m` is set to its OLS estimate on the SA sample (+0.232, s.e. 0.086, t=2.71); `b1_x`, `b2_x`, and `b2_m` are kept at calibrated values pending Asian-PMI / commodity-demand proxies that would help identify the SR foreign-demand channel for AU exports. The COVID-period dummies are sizeable for both exports (crash -10.14, bounce -7.11; tourism and education exports did not recover in 2020Q3) and imports (crash -14.39, bounce +6.27). Adding `Δln M` and `Δln X` to the set of Bayesian observables (Table 5.1) gives the long-run elasticities their own data identification — previously the trade block was econometrically inert because no observable mapped to it.
+The long-run elasticities (β_m, β_x, γ_m, γ_x) are calibrated at sensible AU values and given Normal priors centred there (§6.4, Table 5.6). A bivariate Engle-Granger style OLS of log volumes on log consumption (1959Q3–2025Q4) gives β_m ≈ +1.73 (t = +113) and β_x ≈ +1.56 (t = +119); the model priors at 1.50 and 1.20 sit within one standard deviation. The short-run coefficient `b1_m` is set to its OLS estimate on the SA sample (+0.232, s.e. 0.086, t=2.71); `b1_x`, `b2_x`, and `b2_m` are kept at calibrated values pending Asian-PMI / commodity-demand proxies that would help identify the SR foreign-demand channel for AU exports. The COVID-period dummies are sizeable for both exports (crash -10.14, bounce -7.11; tourism and education exports did not recover in 2020Q3) and imports (crash -14.39, bounce +6.27). Adding `Δln M` and `Δln X` to the set of Bayesian observables (Table 5.1) gives the long-run elasticities their own data identification — previously the trade block was econometrically inert because no observable mapped to it.
 
 ### 4.9 Demand deflators (FR-BDF Section 4.7) — AU reduced-form simplification
 
@@ -1036,7 +1053,7 @@ $$pv^{uip}_t = (i_{au,t} - \bar{\iota}_t) + \beta_{uip} \cdot pv^{uip}_{t-1} \qq
 
 $$s\_gap_t = \rho_s \cdot s\_gap_{t-1} - \alpha_s \cdot pv^{uip}_t + \alpha_s (\tilde{\pi}_t - \tilde{\pi}^{US}_t) + \varepsilon^s_t$$
 
-with $\rho_s = 0.775$, $\alpha_s = 0.15$, and $\beta_{uip} = 0.92$. The standard NPV form (coefficient 1 on the rate gap, β on the continuation) means `pv_i_uip` is *not* dampened on impact: under the forward recursion and a Taylor-rule persistence λ_i ≈ 0.85, the impact value is $pv^{uip}(0) \approx i_{gap}(0) / (1 - \beta_{uip} \lambda_i) \approx 4.55 \cdot i_{gap}(0)$, so the spot AUD internalises about 4.5× the contemporaneous policy-rate gap. Under the VAR regime the recursion is backward AR(1) — `pv_i_uip` accumulates only as past i_gap realisations roll in, and the peak AUD appreciation is delayed by 10–15 quarters relative to Hybrid/MCE. This forward-looking specification is what generates the FR-BDF-style Hybrid > VAR amplification documented in §6.2.
+with $\rho_s = 0.775$, $\alpha_s = 0.15$, and $\beta_{uip} = 0.92$. The standard NPV form (coefficient 1 on the rate gap, β on the continuation) means `pv_i_uip` is *not* dampened on impact: under the forward recursion and a Taylor-rule persistence λ_i ≈ 0.85, the impact value is $pv^{uip}(0) \approx i_{gap}(0) / (1 - \beta_{uip} \lambda_i) \approx 4.55 \cdot i_{gap}(0)$, so the spot AUD internalises about 4.5× the contemporaneous policy-rate gap. Under the VAR regime the recursion is backward AR(1) — `pv_i_uip` accumulates only as past i_gap realisations roll in, and the peak AUD appreciation is delayed by 10–15 quarters relative to Hybrid/MCE. This forward-looking specification is what generates the FR-BDF-style Hybrid > VAR amplification documented in §7.2.
 
 The sign convention is s_gap > 0 = AUD depreciation; higher AU rates appreciate the AUD. Steady state: $pv^{uip}_{SS} = 0$, $s\_gap_{SS} = 0$ (PPP holds in the long run).
 
@@ -1170,11 +1187,11 @@ Either follow-up would require a fresh MCMC under the expanded estimation surfac
 
 This subsection documents the modelling choices that shape AU-PAC. The headline monetary-transmission channels — cost of capital, exchange rate, mortgage rate, expectations, and the wage–price spiral — are all implemented and estimated on AU data. Several wp736 features are simplified or omitted; each is flagged below.
 
-**Trends specification.** Gap variables (`yhat_au`, `pi_au_gap`, etc.) are constructed *once* from the raw data by HP-filter detrending and fixed-anchor calibration for $\bar{i}_{ss}$, $\bar{\pi}_{ss,au}$, $\bar{\pi}_{ss,us}$ (matching the RBA and Fed inflation targets). This is data *transformation* — extracting cyclical components from observable levels — and is the AU-PAC analogue of wp736 §4.9 eqs 127–130, which performs the same trend/cycle decomposition using exponential-smoother trends. It is not data *smoothing* in the sense of the Kalman-smoothed-targets approach we evaluated in §5.3: the gap variables are observed inputs to the model, not unobserved targets reconstructed from a fitted model. Convergence to the balanced growth path is asserted via the linearised gap formulation; §6.1.1 validates BGP stability under off-SS impulses.
+**Trends specification.** Gap variables (`yhat_au`, `pi_au_gap`, etc.) are constructed *once* from the raw data by HP-filter detrending and fixed-anchor calibration for $\bar{i}_{ss}$, $\bar{\pi}_{ss,au}$, $\bar{\pi}_{ss,us}$ (matching the RBA and Fed inflation targets). This is data *transformation* — extracting cyclical components from observable levels — and is the AU-PAC analogue of wp736 §4.9 eqs 127–130, which performs the same trend/cycle decomposition using exponential-smoother trends. It is not data *smoothing* in the sense of the Kalman-smoothed-targets approach we evaluated in §5.3: the gap variables are observed inputs to the model, not unobserved targets reconstructed from a fitted model. Convergence to the balanced growth path is asserted via the linearised gap formulation; §7.1.1 validates BGP stability under off-SS impulses.
 
 **Sectoral net-financial-wealth dynamics.** AU-PAC includes the four sectoral wealth gap variables (`w_F, w_G, w_H, w_N`) with calibrated steady-state targets (Appendix A.6) and accumulation equations following wp736 eqs 116–126. Stabilisation transfer rules ($\tau_{TF}, \tau_{TN}, \tau_{TG}$ in wp736 §4.8.5 and §4.10) are not implemented. Long-run convergence of the four wealth ratios is validated empirically under off-SS perturbations — all four converge with 2–3 quarter half-lives — but no analytical proof of BGP convergence under arbitrary shocks is provided.
 
-**Conditional projection framework.** AU-PAC's conditional forecasting (Section 6.4) and pseudo-real-time recursive forecast (Section 5.5) take the US bloc, foreign demand, and commodity-price paths as external assumptions while letting domestic policy and demand respond endogenously. The exogenisable variables are `yhat_us`, `pi_us`, `dln_pcom`, and optionally `i_au` for RBA path-conditioning experiments. No analogue to the Eurosystem BMPE harmonisation (wp736 §4.11) is required.
+**Conditional projection framework.** AU-PAC's conditional forecasting (§7.5) and pseudo-real-time recursive forecast (§6.5) take the US bloc, foreign demand, and commodity-price paths as external assumptions while letting domestic policy and demand respond endogenously. The exogenisable variables are `yhat_us`, `pi_us`, `dln_pcom`, and optionally `i_au` for RBA path-conditioning experiments. No analogue to the Eurosystem BMPE harmonisation (wp736 §4.11) is required.
 
 **Single aggregate import deflator.** AU-PAC §4.9 uses a single aggregate import deflator with a commodity-price loading ($\beta_{pm,com} = 0.42$) rather than the separate energy / non-energy split of wp736 §4.7.5 (eqs 88–91). Australia is a net energy *exporter*, so cost-push from energy imports is less material than for France; the aggregate-deflator approach absorbs the channel implicitly via the commodity-price loading. A formal split is listed as remaining work in Section 7.
 
@@ -1218,7 +1235,7 @@ These are intentional model omissions, each motivated by AU data limitations or 
 
 **Forward-looking UIP**. The UIP equation (§4.10.3) uses the forward NPV $pv_{i,uip} = (i_{au} - \bar{i}) + \beta_{uip} \cdot pv_{i,uip}(+1)$ with $\beta_{uip} = 0.92$, replacing the wp736 contemporaneous-rate-gap specification. Under the AU calibration this delivers an impact AUD appreciation amplification factor of $1 / (1 - \beta_{uip} \cdot \lambda_i) \approx 4.55$ at $\lambda_i = 0.85$, broadly consistent with the empirical UIP literature (Engel 2014; Bishop and Tulip 2017).
 
-**Commodity-price channel** (audit §4.6.4, Stage 11b). AU's mining-driven export base — iron ore, coal, LNG — makes commodity prices a first-order driver of trade volumes and the AUD. AU-PAC adds an explicit commodity-price-loading `b4_x · pcom_gap` in the export equation and a smaller loading in the import deflator (`β_{pm,com} = 0.42`). No analogue is needed in wp736 because French exports are dominated by manufacturing and services. The commodity-price shock `eps_pcom` is treated as exogenous in AU-PAC and tracked as a first-order AU-specific propagation channel in §6.3.4.
+**Commodity-price channel** (audit §4.6.4, Stage 11b). AU's mining-driven export base — iron ore, coal, LNG — makes commodity prices a first-order driver of trade volumes and the AUD. AU-PAC adds an explicit commodity-price-loading `b4_x · pcom_gap` in the export equation and a smaller loading in the import deflator (`β_{pm,com} = 0.42`). No analogue is needed in wp736 because French exports are dominated by manufacturing and services. The commodity-price shock `eps_pcom` is treated as exogenous in AU-PAC and tracked as a first-order AU-specific propagation channel in §7.3.4.
 
 #### 4.13.4 Calibration imports from FR-BDF
 
@@ -1261,6 +1278,18 @@ In each case the imported parameter is held fixed during MCMC; the Bayesian esti
 ## 5. Cross-block findings
 
 This section consolidates the cross-block patterns that emerge from the Phase L2 wp1044-faithful partial-replication estimates of §4.3–§4.6. Each sub-section summarises a single finding visible only when the five blocks' coefficients are read against each other and against wp1044's French reference; the per-block tables in §4 carry the underlying numbers.
+
+![Cross-block β₀: AU L2 vs wp1044 FR](paper_artifacts/chart_beta0_cross_block.png)
+
+*Figure 5.1: Cross-block error-correction coefficient β₀ from the Phase L2 iterative-OLS estimates (§4.3–§4.7) against the wp1044 French reference. AU is 4–8× faster than France in four of five blocks; consumption is the exception (AU ≈ FR, the headline finding of §5.2). Business inv carries the wp1044 import (Option 1, §3.6).*
+
+![Consumption headline: AU/FR β₀ ratio across blocks](paper_artifacts/chart_consumption_headline.png)
+
+*Figure 5.2: AU/FR β₀ ratio across the four AU-estimated blocks. Consumption is the only block where the ratio is ≈ 1 (the others are 4-8×). Re-rendering of the same finding as Figure 5.1, oriented to highlight the consumption exception.*
+
+![Cross-block R²: 4 of 5 blocks fit wp1044 form on AU data](paper_artifacts/chart_r2_cross_block.png)
+
+*Figure 5.3: Cross-block R² of the Phase L2 fits. Four blocks deliver R² in [0.41, 0.81]; business inv with strict wp1044 PAC delivers R² = 0.09 (the structural rejection of §5.3 and §4.6.2). The wp1044 French R² range is [0.61, 0.95].*
 
 ### 5.1 AU ECM speeds are 4–8× faster than France in four of five blocks
 
@@ -1358,8 +1387,8 @@ Rates and inflation are in natural units (matching model SS). Growth rates are d
 
 The E-SAT core was estimated using Bayesian MCMC (Metropolis-Hastings, 50,000 draws, 2 chains). Results are reported in Table 3.1. Key posterior findings relative to calibration:
 
-- Wage persistence (lambda_w): 0.225 vs calibrated 0.55. The full-system Bayesian estimate (Section 5.4) refines this to 0.329, consistent with moderate own-lag persistence in a standard NK wage Phillips curve.
-- CPI passthrough (gamma_w): 0.770 in E-SAT, refined to 0.138 in the full-system Bayesian (Section 5.4) — moderate contemporaneous CPI passthrough.
+- Wage persistence (lambda_w): 0.225 vs calibrated 0.55. The full-system Bayesian estimate (§6.4) refines this to 0.329, consistent with moderate own-lag persistence in a standard NK wage Phillips curve.
+- CPI passthrough (gamma_w): 0.770 in E-SAT, refined to 0.138 in the full-system Bayesian (§6.4) — moderate contemporaneous CPI passthrough.
 - Demand bridge (lambda_dom): 0.399 vs calibrated 0.10 — demand feedback four times stronger than assumed.
 - Consumption persistence (b1_c): 0.047 vs calibrated 0.35 — less serial correlation than the prior implied.
 - Exchange rate (rho_s): 0.775 vs calibrated 0.95 — AUD half-life is approximately 3 quarters.
@@ -1539,7 +1568,7 @@ To verify that the model is well-behaved under no shocks — i.e., that the gap 
 
 Following the wp736 Section 6.2 protocol, we assess the impact of a 100 basis point annualised monetary policy tightening (= 0.25 quarterly percentage points). At order = 1, IRFs scale linearly: we compute them from Dynare's 1 s.d. responses multiplied by $0.25 / \sigma_{\varepsilon^i}$, where $\sigma_{\varepsilon^i} = 0.111$ is the posterior mean of the monetary-policy shock standard deviation.
 
-The walkthrough below describes the **Phase T single-regime architecture** documented in §3.4 — the current production model in `au_pac.mod`. Figures 6.1–6.2 below visualise three IRF traces (VAR / Hybrid / MCE) from the earlier three-regime workflow; they are kept as documentation of the architectural evolution. The numerical values in Table 6.3 below and the channel-by-channel walkthrough in §6.2.2 reflect the Phase T (formerly "Hybrid") trace — the regime that is closest to the current single-regime policy-function expectations.
+The walkthrough below describes the **Phase T single-regime architecture** documented in §3.4 — the current production model in `au_pac.mod`. Figures 7.1–7.2 below visualise three IRF traces (VAR / Hybrid / MCE) from the earlier three-regime workflow; they are kept as documentation of the architectural evolution. The numerical values in Table 6.3 below and the channel-by-channel walkthrough in §7.2.2 reflect the Phase T (formerly "Hybrid") trace — the regime that is closest to the current single-regime policy-function expectations.
 
 #### 7.2.1 Impulse responses
 
@@ -2224,6 +2253,14 @@ Brayton, F., Laubach, T., and Reifschneider, D. (2014). "The FRB/US Model: A Too
 
 Lemoine, M., Turunen, H., Chahad, M., Lepetit, A., Zhutova, A., Aldama, P., Clerc, P., and Laffargue, J.-P. (2019). "The FR-BDF Model and an Assessment of Monetary Policy Transmission to the French Economy." *Banque de France Working Paper* No. 736. (Cited throughout as "wp736" / "FR-BDF".)
 
+Dubois, É., Aldama, P., Bonnet, X., Lepetit, A., Lemoine, M., Mogliani, M., and Zhutova, A. (2026). "FR-BDF Reloaded: An Update of the FR-BDF Model after a Decade of Use." *Banque de France Working Paper* No. 1044. (Cited throughout as "wp1044". Provides the supply-block re-calibration method (§4.2.3), the full set of five PAC equation specifications (Eqs 16, 30, 35, 37, 46) that this paper replicates on AU data via the Phase L2 partial replication of §3.5, and the BI Table 3.5.13 calibration imported via Option 1 of §3.6 / §4.6.2.) Source PDF at [`references/FR-BDF-update.pdf`](../references/FR-BDF-update.pdf).
+
+Adjemian, S., Brayton, F., and Zimic, S. (2024). "Solving semi-structural models with Dynare." Dynare reference manual and workflow notes for the `pac_expectation` / `cherrypick` / `aggregate` pipeline used to build `dynare/au_pac.mod` from per-block auxiliary `.mod` files (§3.4).
+
+Dees, S., Henrot, M., and Vourc'h, A. (2022). "The financial accelerator in the non-financial corporate sector: Evidence and modelling for FR-BDF." *Banque de France Working Paper*. Referenced in §8 (Conclusion) as a candidate v3.0 extension for the cost-of-capital channel.
+
+Bové, M., Boutin-Dufresne, F., and Penalver, A. (2020). "Modelling household debt service in a semi-structural framework." *Banque de France*. Referenced in §8 as a candidate v3.0 extension for the mortgage-rate channel.
+
 Tinsley, P.A. (1993). "Fitting Both Data and Theories: Polynomial Adjustment Costs and Error-Correction Decision Rules." *FEDS Working Paper* No. 93-21, Board of Governors of the Federal Reserve System.
 
 Zimic, S. (2023). "SemiStructDynareBasics: A reference implementation of FRB/US-style PAC models in Dynare." ECB internal documentation and public GitLab repository. https://gitlab.com/srecko/SemiStructDynareBasics
@@ -2252,6 +2289,14 @@ Cusbert, T. and Kendall, E. (2018). "Meet MARTIN, the RBA's New Macroeconomic Mo
 
 Hambur, J., Cassidy, N., and Pugsley, B. (2024). "How Has Australian Monetary Policy Affected the Economy in Recent Years?" *RBA Research Discussion Paper*.
 
+Cassidy, N. and Doyle, M.-A. (2018). "Wage Growth Puzzles and the Phillips Curve in Australia." *RBA Bulletin*, March 2018. Source for the post-2015 RBA wage Phillips-curve discussion (§4.4.1, §8 finding 4).
+
+Bishop, J. and Cassidy, N. (2017). "Insights into Low Wage Growth in Australia." *RBA Bulletin*, March 2017. Companion to Cassidy and Doyle (2018) on AU wage non-responsiveness.
+
+Bishop, J. and Cassidy, N. (2018). "Trends in Potential Output Growth." *RBA Bulletin*. Referenced in §4.2.3 for the trend-GDP-deceleration discussion.
+
+Cusbert, T. (2017). "Estimating the NAIRU and the Unemployment Gap." *RBA Bulletin*, June 2017. Trend potential-output reference, §4.2.3.
+
 Ballantyne, A., Sharma, T., and Taylor, T. (2024). "Assessing Full Employment in Australia." *RBA Bulletin*.
 
 ### Data sources
@@ -2262,10 +2307,12 @@ Australian Bureau of Statistics (2024). "Australian National Accounts: Capital S
 
 Australian Bureau of Statistics (2024). "Residential Property Price Indexes: Eight Capital Cities." Cat. No. 6416.0. Used for the housing-price gap (`ph_gap`) from 2003Q3 onward; spliced back to 1959Q3 using a long-history Australian house-price series with chained growth rates anchored at the 2003Q3 overlap.
 
-Australian Bureau of Statistics (2024). "Wage Price Index, Australia." Cat. No. 6345.0. Quarterly index, SA Private+Public All industries — used as the wage-inflation observable in Section 5.4.
+Australian Bureau of Statistics (2024). "Wage Price Index, Australia." Cat. No. 6345.0. Quarterly index, SA Private+Public All industries — used as the wage-inflation observable in §6.4.
 
 Bank for International Settlements (2024). "Effective Exchange Rate Indices." BIS REER / NEER series for AUD.
 
 Fair Work Commission (2024). "Annual Wage Review." Final decisions 2010–2024. Institutional source for the CPI-indexation channel in AU wage-setting (affects approximately 15% of the workforce — award rates plus award-floor enterprise agreements).
 
 Reserve Bank of Australia (2024). "Statistical Tables: F1 (interest rates), F11 (mortgage rates), G3 (commodity prices)." Quarterly time series, 1976–2024.
+
+Australian Bureau of Statistics (2025). "Private New Capital Expenditure and Expected Expenditure, Australia." Cat. No. 5625.0. Quarterly chain-volume measures, seasonally adjusted, by industry. Mining vs non-mining split obtained via Series IDs A3515875V (mining buildings + structures) and A124798315W (non-mining); used to prepare the Phase L3 mining-vs-non-mining BI hypothesis test referenced in §5.3 and Appendix G. Downloaded artefacts in `data/abs_rba/abs_5625_*.xlsx`; documentation in `data/abs_rba/abs_5625_README.md`.

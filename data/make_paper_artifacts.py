@@ -343,14 +343,15 @@ def table_2_block_trend_regimes():
     for key, label in series_map.items():
         if key in r:
             v = np.asarray(r[key]).flatten()
-            if v.size:
-                # convert quarterly log-difference to annualised %
-                mean_q = float(np.mean(v))
-                # first/last 8-quarter mean
-                first8 = float(np.mean(v[:8])) if v.size >= 8 else float("nan")
-                last8 = float(np.mean(v[-8:])) if v.size >= 8 else float("nan")
+            v_valid = v[np.isfinite(v)]
+            if v_valid.size:
+                mean_q = float(np.nanmean(v))
+                first_valid = v_valid[:min(8, v_valid.size)]
+                last_valid = v_valid[-min(8, v_valid.size):]
+                first8 = float(np.mean(first_valid))
+                last8 = float(np.mean(last_valid))
                 rows.append([label,
-                             _fmt(mean_q * 400),  # annualised %
+                             _fmt(mean_q * 400),
                              _fmt(first8 * 400),
                              _fmt(last8 * 400)])
     if not rows:
