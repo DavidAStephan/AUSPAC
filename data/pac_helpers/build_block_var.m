@@ -91,8 +91,17 @@ switch block_name
         % State: [yhat, i_gap, pi_gap, yhat_EA, piEA_gap, r_KB_gap, q_hat]
         yhat_us  = align_base('us_ygap');
         pi_us    = align_base('us_pi');
-        % r_KB gap: AU proxy uses i_10y - pi_Q as real user cost; gap via HP
-        i_10y    = align_base('au_i10');
+        % i_10y is in extended_dataset (not base); read directly
+        projdir = fileparts(fileparts(mfilename('fullpath')));
+        T_ext = readtable(fullfile(projdir, 'extended_dataset.csv'));
+        ext_dates = datetime(T_ext.date);
+        i_10y_raw = nan(length(L2.dates), 1);
+        for ii = 1:length(L2.dates)
+            m = find(year(ext_dates) == year(L2.dates(ii)) & ...
+                     quarter(ext_dates) == quarter(L2.dates(ii)), 1);
+            if ~isempty(m), i_10y_raw(ii) = T_ext.au_i10(m); end
+        end
+        i_10y = i_10y_raw(sample_idx);
         r_KB     = i_10y - L2.pi_au_trend(sample_idx) * 4;
         r_KB_trend = hp_trend_local(r_KB, 1600);
         r_KB_gap = r_KB - r_KB_trend;
