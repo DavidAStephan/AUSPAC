@@ -35,8 +35,14 @@ fprintf('=== Phase L2-C5: Business inv PAC (wp1044 Eq 46 partial) ===\n\n');
 projectdir = fullfile(fileparts(mfilename('fullpath')), '..', '..');
 addpath(fullfile(projectdir, 'data', 'pac_helpers'));
 
-%% Load
-L2 = load(fullfile(projectdir, 'data', 'l2_data_layer.mat'));
+%% Load (use v2 data layer with exports + wacc-based r_KB)
+v2_path = fullfile(projectdir, 'data', 'l2_data_layer_v2.mat');
+if isfile(v2_path)
+    L2 = load(v2_path);
+    fprintf('Using l2_data_layer_v2.mat (with exports, wacc r_KB)\n');
+else
+    L2 = load(fullfile(projectdir, 'data', 'l2_data_layer.mat'));
+end
 S = load(fullfile(projectdir, 'dynare', 'supply_data.mat'));
 C_ces = load(fullfile(projectdir, 'dynare', 'ces_2026_calibration.mat'));
 base = readtable(fullfile(projectdir, 'dataset.csv'));
@@ -64,21 +70,32 @@ Delta_q = [NaN; diff(log_q)] * 100;
 Delta_q_bar = hp_trend_local(Delta_q, 1600);
 Delta_q_hat = Delta_q - Delta_q_bar;
 
-% r_KB user cost decomposition
-% AU proxy: r_KB,t = i_10y - pi_Q + delta_q
-delta_q = S.delta_q;
-i_10y_full = align_q(ext.au_i10, ext_dates, L2.dates);
-piQ = L2.piQ;
-r_KB = (i_10y_full / 4) + delta_q - piQ / 100;   % quarterly decimal
-log_r_KB = log(max(r_KB, 1e-6));
-log_r_KB_trend = hp_trend_local(log_r_KB, 1600);
-Delta_log_r_KB = [NaN; diff(log_r_KB)] * 100;
-Delta_log_r_KB_bar = hp_trend_local(Delta_log_r_KB, 1600);
+% r_KB user cost decomposition.  Prefer wacc-based version from v2 layer.
+if isfield(L2, 'r_KB_wacc')
+    r_KB = L2.r_KB_wacc;       % wacc-based, proper wp1044 form
+    Delta_log_r_KB = L2.Delta_log_r_KB_wacc;
+    Delta_log_r_KB_bar = L2.Delta_log_r_KB_wacc_bar;
+    fprintf('Using r_KB_wacc (0.55*i_10y + 0.45*i_au based)\n');
+else
+    % Fallback: simple i_10y-based r_KB
+    delta_q = S.delta_q;
+    i_10y_full = align_q(ext.au_i10, ext_dates, L2.dates);
+    piQ = L2.piQ;
+    r_KB = (i_10y_full / 4) + delta_q - piQ / 100;
+    Delta_log_r_KB = [NaN; diff(log(max(r_KB, 1e-6)))] * 100;
+    Delta_log_r_KB_bar = hp_trend_local(Delta_log_r_KB, 1600);
+end
 Delta_log_r_KB_hat = Delta_log_r_KB - Delta_log_r_KB_bar;
 
-% Delta df gap (contemp synthetic demand)
-Delta_df = L2.Delta_df;
-Delta_df_bar = L2.Delta_df_bar;
+% Delta df gap (contemp synthetic demand) -- prefer df_full (includes exports)
+if isfield(L2, 'Delta_df_full')
+    Delta_df = L2.Delta_df_full;
+    Delta_df_bar = L2.Delta_df_bar_full;
+    fprintf('Using df_full (c + ih + exports)\n');
+else
+    Delta_df = L2.Delta_df;
+    Delta_df_bar = L2.Delta_df_bar;
+end
 Delta_df_gap = Delta_df - Delta_df_bar;
 
 % Dummies
@@ -106,7 +123,7 @@ damping = 0.5;
 chi_max = 0.85;
 
 for iter = 1:max_iter
-    chi = solve_pac_chi(beta_lags, omega, depth);
+    chi = solve_pac_chi_exact(beta_lags, omega, depth);
     chi = max(0, min(chi_max, chi));
 
     PV_q_hat   = compute_pv_term(Phi, chi, idx_qhat, ZL_full, 1);

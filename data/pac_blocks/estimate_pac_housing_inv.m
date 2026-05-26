@@ -32,7 +32,13 @@ projectdir = fullfile(fileparts(mfilename('fullpath')), '..', '..');
 addpath(fullfile(projectdir, 'data', 'pac_helpers'));
 
 %% Load
-L2 = load(fullfile(projectdir, 'data', 'l2_data_layer.mat'));
+v2_path = fullfile(projectdir, 'data', 'l2_data_layer_v2.mat');
+if isfile(v2_path)
+    L2 = load(v2_path);
+    fprintf('Using l2_data_layer_v2.mat (with p_IH from ABS 5206 IPD)\n');
+else
+    L2 = load(fullfile(projectdir, 'data', 'l2_data_layer.mat'));
+end
 base = readtable(fullfile(projectdir, 'dataset.csv'));
 ext = readtable(fullfile(projectdir, 'data', 'extended_dataset.csv'));
 
@@ -83,7 +89,7 @@ damping = 0.5;
 chi_max = 0.85;
 
 for iter = 1:max_iter
-    chi = solve_pac_chi([beta_1], omega, depth);
+    chi = solve_pac_chi_exact([beta_1], omega, depth);
     chi = max(0, min(chi_max, chi));
 
     PV_IH_gap = compute_pv_term(Phi, chi, idx_IH, ZL_full, 1);
