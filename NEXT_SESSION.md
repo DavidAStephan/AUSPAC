@@ -4,19 +4,19 @@ The 2-week wp1044 partial-L2 replication rebuild is complete, plus the Phase L2-
 
 ## TL;DR
 
-- **`refactor/frbdf-replication-L2`** branch has 17 commits covering the audit, plan, Phase A→D rebuild, and P1+P1b gap-closure.
-- **All 5 PAC blocks have R² between 0.33 and 0.81** — no block is "catastrophic" anymore.
-- **Business inv major finding**: removing the wp1044 PV machinery (4 PV terms) IMPROVES R² from 0.09 to 0.33 on AU data. Coefficients then land close to wp1044's. The full wp1044 spec was over-fitting; the simplified spec is what AU data wants.
-- **Other findings hold**: consumption β_0 = 0.27 matches wp1044's 0.29; AU has uniformly faster ECM speeds.
-- **Full report**: `L2_REPLICATION_REPORT.md`.
+- **`refactor/frbdf-replication-L2`** branch has ~22 commits covering audit, plan, Phase A→D rebuild, P1 gap-closure, P1b VAR(2)/simplified specs, and P1c business inv exhaustive search.
+- **4 of 5 PAC blocks fit wp1044 structure** with AU data: VA-price (R²=0.41), Employment (0.81), Consumption (0.81, β_0=0.27 matches wp1044's 0.29), Housing inv (0.50).
+- **Business inv block REJECTS wp1044 strict PAC** structurally — tested 7+ specifications (dummies, trends, ToT-augmented target, terms-of-trade, etc.). Free-estimated PV(Δq̂) coefficient = −5 (wp1044 imposes +1); PV(Δq_AU)=−0.11 with ToT target. **No spec preserves coef=+1 on PV with positive raw R².** See `PAC_BI_AU_EXPLORATION.md` for the full 10-section writeup.
+- **Decision locked in (PAC_BI_AU_EXPLORATION.md §7)**: for AUSPAC's IRF/replication purposes, **import BI deep parameters from wp1044 Table 3.5.13** (Option 1). Other 4 blocks use AU L2 estimates.
+- **Full L2 report**: `L2_REPLICATION_REPORT.md`. **BI exploration**: `PAC_BI_AU_EXPLORATION.md`.
 
 ## Key files to read
 
-1. **`L2_REPLICATION_REPORT.md`** — complete per-block coefficient tables.
-2. **`PAC_EQUATIONS_AUDIT.md`** — audit that motivated this rebuild.
-3. **`PAC_REBUILD_PLAN.md`** — the execution plan used.
-4. **`BLOCK_LIMITATIONS.md`** — documented data gaps (most now closed).
-5. **`data/pac_blocks/estimate_pac_business_inv_simple.m`** — the spec-search script demonstrating PV-removal improvement.
+1. **`PAC_BI_AU_EXPLORATION.md`** — **READ THIS FIRST** if revisiting BI. Full saga of why strict PAC fails on AU BI, all 7+ variants tried, Option 1/2/3 paths, locked-in decision.
+2. **`L2_REPLICATION_REPORT.md`** — complete per-block coefficient tables.
+3. **`PAC_EQUATIONS_AUDIT.md`** — audit that motivated this rebuild.
+4. **`PAC_REBUILD_PLAN.md`** — the execution plan used.
+5. **`BLOCK_LIMITATIONS.md`** — documented data gaps (most now closed).
 
 ## Branch state
 
@@ -72,24 +72,30 @@ Range of R²: 0.33-0.81. Median: ~0.50.
 
 ## Three paths forward
 
-### Path 1c: Apply "simplified-spec" insight to other blocks (~1-2 days)
+### Path 2 (RECOMMENDED): Integrate hybrid L2/wp1044 estimates into Dynare (~3-5 days)
 
-The business inv finding (PV-removal helps) suggests trying the same approach for housing inv (R² = 0.50). If PV-removal there also lifts R², the partial-L2 lesson becomes: AU data fits wp1044 PAC framework better with selective PV-term inclusion than with full wp1044 fidelity. This would be a publishable methodological finding.
+Per `PAC_BI_AU_EXPLORATION.md` Section 9, the hybrid calibration is:
 
-### Path 2: Integrate L2 estimates into the AUSPAC Dynare model (~3-5 days)
+| Block | Source of coefficients |
+|---|---|
+| VA-price | AU L2 (β_0=0.26, β_1=0.30, R²=0.41) |
+| Employment | AU L2 (β_0=0.31, β_1=0.30, R²=0.81) |
+| Consumption | AU L2 (β_0=0.27 ≈ wp1044's 0.29, R²=0.81) |
+| Housing inv | AU L2 (β_0=0.60, β_1=0.35, R²=0.50) |
+| **Business inv** | **wp1044 calibration**: β_0=0.096, β_1=0.33, β_2=0.11, β_3=0.69, ω=0.35, σ=0.50 |
 
-Now that all 5 blocks have functional R², writing the L2 coefficient estimates back into `dynare/au_pac.mod` parameter-values.inc is tractable. Then `dynare au_pac` for stoch_simul. Compare IRFs to L1.3a baseline.
+Then `dynare au_pac` for stoch_simul. Compare IRFs to L1.3a baseline.
 
 ### Path 3: Write up (~2-3 days)
 
 Three publishable findings:
-- AU has faster ECM speeds than France across all blocks
-- Consumption β_0 matches France's exactly (0.27 vs 0.29)  
-- Business inv fits wp1044 framework better WITHOUT PV terms on AU data — simpler spec wins
+- AU has faster ECM speeds than France across 4 of 5 blocks
+- Consumption β_0 matches France's exactly (0.27 vs 0.29)
+- **Business inv structurally rejects wp1044 PAC**: PV(Δq̂) coefficient is structurally negative on AU; +1 wp1044 restriction fails for all targets tested (market VA, terms of trade). Implication: AU business inv has different deep structure than France's. Document Option 1 calibration as the practical path.
 
 ### Path 0: Pause
 
-Reasonable pause point. The rebuild is structurally complete, no block is broken.
+Reasonable pause point. The rebuild + exhaustive BI exploration are complete; the decision is locked in.
 
 ## How to pick up tomorrow
 
