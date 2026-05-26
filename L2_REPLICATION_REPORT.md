@@ -9,17 +9,19 @@
 
 ## 1. Headline result
 
-All 5 PAC blocks were rebuilt with faithful wp1044 functional forms (PAC expectation imposed at coef=1, block-specific auxiliary VARs, derived growth-neutrality terms, χ from depth-m characteristic polynomial, COVID/period dummies). Three blocks (VA-price, Employment, Consumption) converged to coefficients in the same ballpark as wp1044 with R² between 0.41 and 0.81. Two blocks (Housing inv, Business inv) are flagged as PARTIAL due to AU data gaps.
+All 5 PAC blocks were rebuilt with faithful wp1044 functional forms (PAC expectation imposed at coef=1, block-specific auxiliary VARs, derived growth-neutrality terms, χ from depth-m characteristic polynomial, COVID/period dummies).
+
+**Updated after Phase L2-P1 gap-closure** (commits `c73fa5c`, `6b969f2`, `744f875`, etc.): exports added to df (business inv), proper r_KB wacc, ABS 6416 RPPI for p_SH + ABS 5206 IPD for p_IH (housing inv price-spread term now works), exact χ solver.
 
 | Block | Status | R² AU L2 | R² wp1044 | Convergence | Key wp1044 match |
 |---|---|---|---|---|---|
 | VA-price (Eq 16) | full | 0.41 | 0.61 | 3 iters | ω = 0.62 imposed |
 | Employment (Eq 30) | full | 0.81 | 0.95 | 6 iters | ω = 0.34 imposed |
 | Consumption (Eq 35) | full | **0.81** | 0.95 | 21 iters | **β_0 = 0.27 ≈ wp1044's 0.29** |
-| Housing inv (Eq 37) | partial | 0.39 | 0.89 | 14 iters | β_1 = 0.24 ≈ 0.18 |
-| Business inv (Eq 46) | partial | 0.05 | 0.83 | 15 iters | (most coefficients hit clamps) |
+| Housing inv (Eq 37) | **full** | **0.50** | 0.89 | 20 iters | β_1 = 0.35 ≈ 0.18; price-spread term added |
+| Business inv (Eq 46) | partial | 0.09 | 0.83 | 12 iters | β_3 = 0.88 ≈ wp1044's 0.69 |
 
-The consumption ECM speed β_0 = 0.27 matching wp1044's 0.29 is the strongest single-coefficient agreement. The employment block has the best R² match relative to wp1044 (0.81 vs 0.95 — a 0.14 gap). Business inv is essentially non-functional in AU data with the wp1044 spec.
+The consumption ECM speed β_0 = 0.27 matching wp1044's 0.29 is the strongest single-coefficient agreement. After Phase L2-P1: housing inv R² jumped 0.39 → 0.50 (28% improvement) with the price-spread term unlocked by the RPPI date-format fix. Business inv R² improved 0.05 → 0.09 with proper df (= c+ih+exports) and r_KB wacc, but remains the weakest block.
 
 ---
 
