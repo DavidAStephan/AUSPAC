@@ -70,7 +70,18 @@ switch block_name
         yhat_us  = align_base('us_ygap');
         pi_us    = align_base('us_pi');
         % IH gap target -- AU proxy: HP-gap of log au_gfcf_dwelling × 100
-        log_ih   = log(align_base('au_gfcf_dwelling'));
+        % au_gfcf_dwelling is in extended_dataset (not base); read directly.
+        projdir = fileparts(fileparts(mfilename('fullpath')));
+        T_ext = readtable(fullfile(projdir, 'extended_dataset.csv'));
+        ext_dates = datetime(T_ext.date);
+        ih_target = nan(length(L2.dates), 1);
+        for ii = 1:length(L2.dates)
+            m = find(year(ext_dates) == year(L2.dates(ii)) & ...
+                     quarter(ext_dates) == quarter(L2.dates(ii)), 1);
+            if ~isempty(m), ih_target(ii) = T_ext.au_gfcf_dwelling(m); end
+        end
+        ih_target = ih_target(sample_idx);
+        log_ih   = log(ih_target);
         log_ih_trend = hp_trend_local(log_ih, 1600);
         IH_gap   = (log_ih - log_ih_trend) * 100;
         state_data = [yhat, i_gap, pi_gap, yhat_us, pi_us, IH_gap];
