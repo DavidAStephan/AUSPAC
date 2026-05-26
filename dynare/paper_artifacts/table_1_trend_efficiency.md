@@ -1,0 +1,19 @@
+### Table 1 — L1.1 trend efficiency E_t (Eq 7) AU L2 coefficients + 3-regime growth rates
+
+| coefficient | AU L2 estimate | se |
+|---|---|---|
+| z_1 | 0.812 | 0.049 |
+| z_2 | 1.102 | 0.037 |
+| z_3 | 0.089 | 0.045 |
+| z_4 | 0.034 | 0.004 |
+| z_5 | -0.032 | 0.010 |
+| z_6 | 0.004 | 0.008 |
+| z_7 | 0.000 | (omitted) |
+| z_8 | 0.033 | 0.016 |
+| z_9 | -0.048 | 0.022 |
+| g_E_pre_2002 (% p.a.) | 3.358 | — |
+| g_E_2002_08 (% p.a.) | 0.202 | — |
+| g_E_post_08 (% p.a.) | 0.570 | — |
+| loglik | 335.644 | — |
+| sigma_eps | 0.022 | — |
+| covid_E_loss | 0.020 | — |

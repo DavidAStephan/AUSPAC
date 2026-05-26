@@ -1,0 +1,14 @@
+### Table 5 — Consumption PAC (wp1044 Eq 35): AU L2 vs FR-BDF (beta_0 match: 0.27 vs 0.29)
+
+| coefficient | wp1044 FR Table 3.5.2 | AU L2 iterative OLS |
+|---|---|---|
+| beta_0 (ECM c* - c) | 0.290 | 0.257 |
+| beta_1 (Δc lag) | 0.170 | 0.010 |
+| alpha_1 (PV r_LH gap, free coef) | -1.150 | -85.472 |
+| alpha_1 * chi (reduced form) | -0.20 | -0.855 |
+| beta_PAC (Δybar lag) | n/a (FR free) | 1.675 |
+| beta_2 (HtM level-diff) | 0.320 | -0.017 |
+| beta_3 (impact Δr_LH) | -1.070 | -0.003 |
+| chi (depth-1) | ~0.17 | 0.010 |
+| R^2 | 0.950 | 0.811 |
+| N | FR sample | 102 |

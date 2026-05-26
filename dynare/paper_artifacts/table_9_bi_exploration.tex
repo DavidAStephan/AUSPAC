@@ -1,0 +1,21 @@
+\begin{table}[ht]
+\centering
+\caption{Table 9 — Business investment specification variants tested in Phase L2 P1c}
+\begin{tabular}{lrr}
+\toprule
+variant & results_file & R^2 (raw) \\
+\midrule
+baseline (strict wp1044) & results_business_inv.mat & 0.09 \\
+v1: + AU dummies & results_business_inv_au.mat & 0.11 \\
+v2: pre-residualize dummies & results_business_inv_au_v2.mat & -23.7 \\
+v3-A: PV free + dummies (PV(Δq̂)=-5.03) & (in v3.m, sub-variant A) & 0.53 \\
+v3-B: strict + dummies single-shot & (in v3.m, B) & -2.20 \\
+v3-C: strict + dummies loose clamps & (in v3.m, C) & -67.0 \\
+v4: combined PV coef=+1 + dummies & results_business_inv_au_v4.mat & -33.0 \\
+v5: + ToT + piecewise trends & results_business_inv_au_v5.mat & -10.7 \\
+v6: replace q with q_AU (ToT target) & results_business_inv_au_v6_tot.mat & -39.1 \\
+wp736 (2019 simpler form) + dummies & results_business_inv_wp736.mat & -0.75 \\
+simplified (drops PV) & (in business_inv_simple.m) & 0.33 \\
+\bottomrule
+\end{tabular}
+\end{table}

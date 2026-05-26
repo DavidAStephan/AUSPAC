@@ -1,0 +1,11 @@
+### Table 3 — VA-price PAC (wp1044 Eq 16): AU L2 vs FR-BDF
+
+| coefficient | wp1044 FR Table 3.3.3 | AU L2 iterative OLS |
+|---|---|---|
+| beta_0 (ECM p*_Q - p_Q) | 0.050 | 0.258 |
+| beta_1 (piQ lag) | 0.200 | 0.304 |
+| beta_2 (yhat_t contemp) | 0.090 | -0.076 |
+| omega (calibrated) | 0.620 | 0.620 |
+| chi (depth-1) | ~0.03 | 0.174 |
+| R^2 | 0.610 | 0.415 |
+| N | FR sample | 108 |
