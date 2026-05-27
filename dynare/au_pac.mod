@@ -1585,34 +1585,36 @@ end;
 
 
 // ===================================================================
-// Phase V MCMC posterior writeback (2026-05-17, Laplace LMD=-780.58, MHM=-781.71)
+// Phase L2 P1c hybrid MCMC posterior writeback (2026-05-27)
+// Laplace LMD = -696.06, MHM = -697.36 (+88.4 nats vs Round 1.2)
+// 25 estimated params (BI calibrated from wp1044 Table 3.5.13)
 // ===================================================================
-b0_pQ       = 0.0300;
-b1_pQ       = 0.2803;
-b2_pQ       = 0.0035;
-b0_c        = 0.0577;
-b1_c        = 0.0387;
-b2_c        = -0.3427;
-b3_c        = 0.0215;
-b0_ib       = 0.0181;
-b1_ib       = 0.0809;
-b3_ib       = 0.3120;
-b0_ih       = 0.0309;
-b1_ih       = 0.1111;
-b3_ih       = 0.2211;
-b0_n        = 0.0638;
-b1_n        = 0.3118;
-b5_n        = 0.0050;
-lambda_w    = 0.2112;
-gamma_w     = 0.3476;
-kappa_w     = -0.1111;
-// Phase U + V newly estimated parameters:
-alpha_pc     = 0.2013;   // VA -> CPI passthrough (vs Phase T calibrated 0.17, FR-BDF 0.71)
-kappa_pi     = 0.0057;   // Phillips slack (vs Phase T calibrated 0.0374)
-lambda_pi    = 0.1744;   // CPI persistence (vs Phase T calibrated 0.2902)
-a_pQ_w       = 0.4367;   // wage -> piQ_hat (Phase U addition; AU data strongly supports)
-alpha_pc_lag = 0.1135;   // lagged VA-price passthrough (Phase V addition)
-b_ECM_pc     = 0.0601;   // ECM speed in eq_au_phillips (Phase V addition)
+b0_pQ       = 0.0098;   // posterior [0.001, 0.022]
+b1_pQ       = 0.1115;   // posterior [0.036, 0.177]
+b2_pQ       = 0.0212;   // posterior [-0.042, 0.099]
+b0_c        = 0.0519;   // posterior [0.022, 0.081]
+b1_c        = 0.0397;   // posterior [0.005, 0.073]
+b2_c        = -0.5796;  // posterior [-0.885, -0.287]
+b3_c        = 0.0285;   // posterior [-0.054, 0.113]
+b0_ib       = 0.0181;   // (Phase V; BI not re-estimated — see line 1766)
+b1_ib       = 0.0809;   // (Phase V; overridden by wp1044 at line 1767)
+b3_ib       = 0.3120;   // (Phase V; overridden by wp1044 at line 1769)
+b0_ih       = 0.0290;   // posterior [0.008, 0.049]
+b1_ih       = 0.1074;   // posterior [0.034, 0.182]
+b3_ih       = 0.2104;   // posterior [0.041, 0.363]
+b0_n        = 0.0537;   // posterior [0.014, 0.088]
+b1_n        = 0.2890;   // posterior [0.118, 0.441]
+b5_n        = -0.0050;  // posterior [-0.089, 0.078]
+lambda_w    = 0.0801;    // hybrid MCMC posterior mean (was 0.2112)
+gamma_w     = 0.8090;    // hybrid MCMC posterior mean (was 0.3476)
+kappa_w     = -0.0622;   // hybrid MCMC posterior mean (was -0.1111)
+// Phase L2 P1c hybrid MCMC writeback (2026-05-27, mcmc_hybrid_r2026a.log):
+alpha_pc     = 0.8558;   // VA -> CPI passthrough; posterior [0.786, 0.933] (was 0.2013; FR-BDF 0.71)
+kappa_pi     = 0.0258;   // Phillips slope; posterior [-0.024, 0.084] (was 0.0057)
+lambda_pi    = 0.5913;   // CPI persistence; posterior [0.470, 0.716] (was 0.1744)
+a_pQ_w       = 0.4310;   // wage -> piQ_hat; posterior [0.091, 0.798] (was 0.4367)
+alpha_pc_lag = -0.0640;  // lagged VA passthrough; posterior [-0.203, 0.071] (was 0.1135; now ≈ 0)
+b_ECM_pc     = 0.0018;   // ECM speed; posterior [0.0004, 0.003] (was 0.0601; now ≈ 0)
 
 // ====================================================================
 // Phase W: calibration.inc Bayesian-posterior overrides for the
@@ -1740,7 +1742,7 @@ b_HtM             = 0.32;
 // HP-filtered trend GDP growth.  Initial value (1 - b1_c) at the round12
 // posterior mean.  Will be overwritten by the Bayesian posterior once
 // the L1.3a MCMC completes.
-b_PAC_c           = 0.95;
+b_PAC_c           = 0.8263;  // hybrid MCMC posterior [0.332, 1.360] (was 0.95)
 
 // ====================================================================
 // Phase L2 P1c Option 1 (2026-05-26): wp1044 BI calibration import
@@ -1770,22 +1772,23 @@ b3_ib       = 0.69;    // wp1044 Table 3.5.13 (overrides 0.3120; coef on Δdf ga
 // omega_ib already 0.35 (matches wp1044)
 // sigma_ces already 0.5366 (matches wp1044's 0.50 within calibration tolerance)
 
+// Phase L2 P1c hybrid MCMC posterior shock stds (2026-05-27)
 shocks;
-    var eps_q;          stderr 0.5356;
-    var eps_i;          stderr 0.1105;
-    var eps_pi;         stderr 0.4867;
-    var eps_q_us;       stderr 1.138;
-    var eps_pi_us;      stderr 0.319;
+    var eps_q;          stderr 0.5397;    // posterior [0.480, 0.597]
+    var eps_i;          stderr 0.0377;    // posterior [0.033, 0.042]
+    var eps_pi;         stderr 0.2195;    // posterior [0.135, 0.305]
+    var eps_q_us;       stderr 1.138;     // (not estimated)
+    var eps_pi_us;      stderr 0.319;     // (not estimated)
     var eps_ibar;       stderr 0.01;
     var eps_pibar_au;   stderr 0.01;
     var eps_pibar_us;   stderr 0.01;
-    var eps_pQ;         stderr 0.571;
-    var eps_w;          stderr 0.1397;
-    var eps_n;          stderr 0.4852;
-    var eps_c;          stderr 1.8362;
-    var eps_ib;         stderr 2.7211;
-    var eps_ih;         stderr 1.3938;
-    var eps_10y;        stderr 0.0656;
+    var eps_pQ;         stderr 0.571;     // (not estimated)
+    var eps_w;          stderr 0.7674;    // posterior [0.628, 0.890]
+    var eps_n;          stderr 0.3262;    // posterior [0.119, 0.525]
+    var eps_c;          stderr 2.0145;    // posterior [1.811, 2.252]
+    var eps_ib;         stderr 2.9177;    // posterior [2.611, 3.196]
+    var eps_ih;         stderr 1.8938;    // posterior [0.523, 3.365]
+    var eps_10y;        stderr 0.0745;    // posterior [0.061, 0.088]
     var eps_tp;         stderr 0.05;
     var eps_COE;        stderr 0.1;
     var eps_LB_firms;   stderr 0.1;
