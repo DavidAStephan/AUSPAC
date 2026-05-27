@@ -37,6 +37,7 @@ var
 	dln_ulc
 	dln_x
 	dln_y_star
+	dy_bar_gap
 	i_10y
 	i_BBB
 	i_COE
@@ -56,10 +57,8 @@ var
 	ih_hat
 	ln_C
 	ln_C_star
-	dln_C_obs
 	ln_IB
 	ln_IB_star
-	dln_IB_obs
 	ln_IH
 	ln_IH_star
 	ln_K
@@ -483,8 +482,7 @@ parameters
 	alpha_wtH_u
 	alpha_wtH_tau
 	b_HtM
-	g_bar_C
-	g_bar_IB
+	b_PAC_c
 ;
 
 a_pQ_GST = 0.05;
@@ -892,10 +890,23 @@ alpha_wtH_y       = 0.50;
 alpha_wtH_u       = 0.30;
 alpha_wtH_tau     = -0.40;
 b_HtM             = 0.32;
-// Option α (2026-05-23): BGP trend drift parameters (CES post-2008Q3 calibration).
-g_bar_C           = 0.498;
-g_bar_IB          = 0.498;
+// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality coefficient on
+// HP-filtered trend GDP growth.  Initial value (1 - b1_c) at the round12
+// posterior mean; promoted to estimated below.
+b_PAC_c           = 0.95;
 
+// ====================================================================
+// Phase L2 P1c Option 1 (2026-05-26): wp1044 BI calibration import
+// ====================================================================
+// See PAC_BI_AU_EXPLORATION.md for full rationale.  AU BI data
+// structurally rejects wp1044 PAC's coef=+1 PV restriction across
+// 7+ spec variants.  Import French Table 3.5.13 calibration here AND
+// remove b0_ib, b1_ib, b3_ib from the estimated_params block below
+// (lines ~1764-1766) so Bayesian estimation doesn't override.
+b0_ib       = 0.096;   // wp1044 Table 3.5.13
+b1_ib       = 0.33;    // wp1044 Table 3.5.13
+b2_ib       = 0.11;    // wp1044 Table 3.5.13 (depth-2 PAC)
+b3_ib       = 0.69;    // wp1044 Table 3.5.13 (coef on Δdf gap / yhat_au)
 
 varexo
 	eps_10y
@@ -948,6 +959,7 @@ varexo
 	eps_MAPI
 	eps_MAPU
 	eps_wtH
+	eps_dy_bar
 ;
 
 @#ifdef InvertModel
@@ -975,7 +987,10 @@ model;
 	// hand-to-mouth income channel (FR-BDF wp1044 §3.5.1 eq 35). Applied here
 	// rather than in aux_consumption.mod to avoid Dynare 6.5 pac.print() crash
 	// when a var_model state appears in the PAC equation RHS.
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+eps_c;
+	// Phase L1.3a (2026-05-25): + b_PAC_c*dy_bar_gap(-1) growth-neutrality
+	// term tying consumption growth to HP-filtered trend GDP growth (wp1044
+	// Eq 35).  dy_bar_gap is a varobs sourced from data/trend_series.mat.
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
@@ -1087,27 +1102,16 @@ model;
 	ln_Q =  ln_QN + yhat_au;
 
 	[blockname='',name='ln_C_star']
-	// Option α (2026-05-23): subtract trend g_bar_C so ln_C_star stays stationary.
-	ln_C_star =  ln_C_star(-1) + (dln_c_star_bar - g_bar_C);
+	ln_C_star =  ln_C_star(-1) + dln_c_star_bar;
 
 	[blockname='',name='ln_C']
 	ln_C =  ln_C_star + ln_c_level;
 
-	// Option α (2026-05-23): total consumption growth = trend + cycle.
-	// Direct definition (not via diff(ln_C)) to avoid non-stationarity SS issues.
-	[blockname='',name='dln_C_obs']
-	dln_C_obs =  dln_c + dln_c_star_bar;
-
 	[blockname='',name='ln_IB_star']
-	// Option α (2026-05-23): subtract trend g_bar_IB so ln_IB_star stays stationary.
-	ln_IB_star =  ln_IB_star(-1) + (dln_ib_star_bar - g_bar_IB);
+	ln_IB_star =  ln_IB_star(-1) + dln_ib_star_bar;
 
 	[blockname='',name='ln_IB']
 	ln_IB =  ln_IB_star + ln_ib_level;
-
-	// Option α (2026-05-23): total investment growth = trend + cycle.
-	[blockname='',name='dln_IB_obs']
-	dln_IB_obs =  dln_ib + dln_ib_star_bar;
 
 	[blockname='',name='ln_IH_star']
 	ln_IH_star =  ln_IH_star(-1) + dln_ih_star_bar;
@@ -1205,12 +1209,10 @@ model;
 
 	[blockname='',name='dln_c_star_bar']
 	// Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — income-tax drag.
-	// Option α (2026-05-23): + g_bar_C drift carries BGP consumption trend.
-	dln_c_star_bar =  g_bar_C + kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
+	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
 
 	[blockname='',name='c_gap']
-	// Option α (2026-05-23): subtract dln_c_star_bar so c_gap remains stationary.
-	c_gap =  c_gap(-1) + (dln_c_star - dln_c_star_bar) - dln_c;
+	c_gap =  c_gap(-1) + dln_c_star - dln_c;
 
 	[blockname='',name='dln_ib_star']
 	dln_ib_star =  rho_ib_star * dln_ib_star(-1) + (1 - rho_ib_star) * dln_ib_star_bar;
@@ -1223,11 +1225,10 @@ model;
 	dln_uc_k =  uc_k - uc_k(-1);
 
 	[blockname='',name='dln_ib_star_bar']
-	// Option α (2026-05-23): + g_bar_IB drift = g_bar_C (BGP).
-	dln_ib_star_bar =  g_bar_IB + kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
+	dln_ib_star_bar =  kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
 
 	[blockname='',name='ib_gap']
-	ib_gap =  ib_gap(-1) + (dln_ib_star - dln_ib_star_bar) - dln_ib;
+	ib_gap =  ib_gap(-1) + dln_ib_star - dln_ib;
 
 	[blockname='',name='dln_ib_1']
 	dln_ib_1 =  dln_ib(-1);
@@ -1475,6 +1476,14 @@ model;
 	[blockname='',name='MAPU_hat']
 	MAPU_hat = rho_MAPU * MAPU_hat(-1) + (1 - rho_MAPU) * dln_ih + eps_MAPU;
 
+	// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality trend.
+	// dy_bar_gap = demeaned HP-filtered trend GDP growth, declared as
+	// observable (varobs).  Modelled as random walk so the Kalman filter
+	// tracks the smooth data path; eps_dy_bar stderr is calibrated small
+	// so the observable dominates.
+	[blockname='',name='dy_bar_gap']
+	dy_bar_gap = dy_bar_gap(-1) + eps_dy_bar;
+
 end;
 
 steady_state_model;
@@ -1525,9 +1534,9 @@ steady_state_model;
     // Household consumption PAC
     pv_yh          = 0;       // permanent income PV = 0 at SS (gap model)
     pv_r_lh_gap    = 0;       // real lending rate PV = 0 at SS (audit #26, FR-BDF eq 61)
-    dln_c          = 0;       // cyclical consumption growth = 0 at SS
-    dln_c_star     = g_bar_C; // Option α: tracks dln_c_star_bar
-    dln_c_star_bar = g_bar_C; // Option α: trend BGP consumption growth
+    dln_c          = 0;       // zero consumption growth in stationary model
+    dln_c_star     = 0;
+    dln_c_star_bar = 0;
     c_gap          = 0;
 
     // User cost of capital: uc_k = wacc + delta_k at SS (pi_ib = piQ at SS)
@@ -1535,9 +1544,9 @@ steady_state_model;
     dln_uc_k       = 0;            // user cost constant at SS
 
     // Business investment PAC
-    dln_ib         = 0;       // cyclical investment growth = 0 at SS
-    dln_ib_star    = g_bar_IB; // Option α: tracks dln_ib_star_bar
-    dln_ib_star_bar = g_bar_IB;// Option α: trend BGP investment growth
+    dln_ib         = 0;       // zero investment growth in stationary model
+    dln_ib_star    = 0;
+    dln_ib_star_bar = 0;
     ib_gap         = 0;
     dln_ib_1       = 0;
 
@@ -1690,10 +1699,6 @@ steady_state_model;
     // Round 1.2 (2026-05-22): household wage+transfer income gap, zero at SS
     wt_H_real_gap  = 0;
 
-    // Option α (2026-05-23): total observable growth = cycle + trend.
-    dln_C_obs      = g_bar_C;
-    dln_IB_obs     = g_bar_IB;
-
     // Round 7 (branch decomposition, both = 0 at SS)
     yhat_market    = 0;
     yhat_nonmarket = 0;
@@ -1702,6 +1707,9 @@ steady_state_model;
     BLR_hat        = 0;
     MAPI_hat       = 0;
     MAPU_hat       = 0;
+
+    // Phase L1.3a (HP-filtered trend GDP growth, demeaned)
+    dy_bar_gap     = 0;
 end;
 
 shocks;
@@ -1749,18 +1757,13 @@ shocks;
     var eps_MAPI;       stderr 0.50;
     var eps_MAPU;       stderr 0.30;
     var eps_wtH;        stderr 0.012;  // Round 1.2: household wage+transfer income shock
+    // Phase L1.3a: random-walk innovation for HP-filtered trend GDP growth.
+    // Stderr calibrated small so the observable dominates the Kalman trajectory.
+    var eps_dy_bar;     stderr 0.05;
 end;
 
 
-// Round 1.2 follow-up (2026-05-22): wt_H_real_gap promoted to varobs so the
-// Kalman filter uses the empirical ABS 5206 Table 20 series directly rather
-// than predicting it as a latent state. b_HtM also promoted to estimated_params
-// below (was calibrated to 0.32 FR-BDF posterior; let data decide).
-// Option α (2026-05-23): swap dln_c → dln_C_obs and dln_ib → dln_IB_obs so the
-// observable equation captures total growth (trend + cycle) without demeaning.
-// pi_w stays as-is — its trend mismatch (data mean 1.16% vs model SS 0.625%
-// qoq) is a known Option α limitation, to be fixed in Option β.
-varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_C_obs dln_IB_obs i_10y wt_H_real_gap;
+varobs yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dy_bar_gap;
 
 estimated_params;
     b0_pQ,      beta_pdf,       0.03,   0.015;
@@ -1770,9 +1773,13 @@ estimated_params;
     b1_c,       beta_pdf,       0.05,   0.03;
     b2_c,       normal_pdf,    -0.55,   0.20;
     b3_c,       normal_pdf,     0.02,   0.05;
-    b0_ib,      beta_pdf,       0.02,   0.01;
-    b1_ib,      beta_pdf,       0.09,   0.05;
-    b3_ib,      normal_pdf,     0.34,   0.10;
+    // Business inv params PINNED at wp1044 calibration (Phase L2 P1c Option 1,
+    // 2026-05-26).  See PAC_BI_AU_EXPLORATION.md §7.  AU data structurally
+    // rejects strict PAC for BI; import wp1044 deep parameters so IRFs through
+    // the BI expectation channel are structurally correct.
+    //   b0_ib  = 0.096  (wp1044 Table 3.5.13; was beta_pdf 0.02, 0.01)
+    //   b1_ib  = 0.33   (wp1044; was beta_pdf 0.09, 0.05)
+    //   b3_ib  = 0.69   (wp1044; was normal_pdf 0.34, 0.10)
     b0_ih,      beta_pdf,       0.03,   0.015;
     b1_ih,      beta_pdf,       0.11,   0.05;
     b3_ih,      normal_pdf,     0.23,   0.10;
@@ -1798,13 +1805,10 @@ estimated_params;
     // omega_pc:     IAD weight on import-price in CPI target (calibrated, not estimated; see §4.13.2)
     alpha_pc_lag, normal_pdf,   0.16,   0.10;
     b_ECM_pc,     beta_pdf,     0.05,   0.025;
-    // Round 1.2 follow-up (2026-05-22): rule-of-thumb consumer income channel.
-    // b_HtM: prior N(0.30, 0.10) centred on FR-BDF wp1044 posterior mean (s.e. 0.10).
-    //        Previous 2026-05-22 MCMC with b_HtM CALIBRATED at 0.32 gave Laplace
-    //        -784.47 / MHM -785.80 (5.7 nats worse than baseline). Promoting to
-    //        estimated_params + adding wt_H_real_gap to varobs should let the
-    //        data either validate the FR-BDF value or pull b_HtM toward zero.
-    b_HtM,        normal_pdf,   0.30,   0.10;
+    // Phase L1.3a: wp1044 Eq 35 growth-neutrality coefficient.
+    // Wide-ish normal prior centered slightly below (1-b1_c) to allow data
+    // to update; positive bias since trend growth should pass through.
+    b_PAC_c,      normal_pdf,   0.85,   0.30;
     stderr eps_q,       inv_gamma_pdf,  0.80,  inf;
     stderr eps_i,       inv_gamma_pdf,  0.10,  inf;
     stderr eps_pi,      inv_gamma_pdf,  0.60,  inf;
@@ -1814,40 +1818,24 @@ estimated_params;
     stderr eps_n,       inv_gamma_pdf,  0.50,  inf;
     stderr eps_w,       inv_gamma_pdf,  0.30,  inf;
     stderr eps_10y,     inv_gamma_pdf,  0.10,  inf;
-    // Round 1.2 follow-up shock std: with wt_H_real_gap in varobs, eps_wtH
-    // is the residual that explains the observable not picked up by the
-    // calibrated AR(1) reduced-form (yhat_au, u_gap, tau_PAYG_gap channels).
-    stderr eps_wtH,     inv_gamma_pdf,  0.50,  inf;
 end;
 
-// MCMC caching pattern. The 2026-05-22 Round 1.2 follow-up first attempt
-// with mode_compute=4 (fresh csminwel) found a boundary-corner mode (gamma_w
-// near 0.81, alpha_pc near 0.86) that the data did not warrant — csminwel
-// jumped into a different basin under the expanded 10-observable likelihood
-// surface. The "option 2" remedy is to seed MCMC from a hybrid mode file
-// (build_round12_seed_mode.m): baseline values for the 34 old params + recent
-// posterior values for b_HtM (0.13) and stderr eps_wtH (1.18). With
-// mode_compute=0, csminwel is skipped; MCMC explores around this seed mode.
-//   - mode_compute=0 + mode_file=au_pac_bayesian_seed_mode + mh_replic=20000
-//   - run dynare au_pac_bayesian (≈ 50 min wall time on Apple Silicon)
-//   - after convergence, save resulting mode and flip to cheap reload:
-//     mode_compute=0 + mode_file=<new mode> + mh_replic=0 + load_mh_file.
-// Default: cheap reload of the Option α cached chain (2026-05-23) — the
-// au_pac_bayesian/metropolis/ directory contains the 20k×2 chain from the
-// jscale=0.15 run (MHM −1101.87, b_HtM posterior mean 0.114).
-// To re-run a fresh MCMC: set mh_replic=20000, remove load_mh_file. Note that
-// csminwel/newrat mode searches both fail (dsge_likelihood line 763 dimension
-// mismatch under partial-NaN wt_H_real_gap); use mode_compute=0 + low
-// mh_jscale (0.15) to avoid the gradient-computation crash.
+// Phase L1.3a (2026-05-25): structural change -- added dy_bar_gap RW
+// machinery + b_PAC_c estimated param + 10th observable.  The cached
+// round12 mode file (Laplace -779.30, MHM -780.36 on 9 obs) is now
+// incompatible.  Running fresh mode_compute=4 + mh_replic=20000.  Once
+// converged, snapshot the chain to au_pac_bayesian.cached_L1_3a_<date>/
+// and revert to mode_compute=0 + load_mh_file for cheap reload.
+//
+// Expected mechanical LMD penalty: ~112 nats from adding the 10th
+// observable; subtract before comparing to the round12 -785.80 MHM.
 estimation(datafile='estimation_data.mat',
            first_obs=1,
-           mode_compute=0,
-           mode_file='au_pac_bayesian_seed_mode',
+           mode_compute=4,
            presample=4,
-           mh_replic=0,
-           load_mh_file,
+           mh_replic=20000,
            mh_nblocks=2,
-           mh_jscale=0.15,
+           mh_jscale=0.25,
            diffuse_filter,
            nograph)
-           yhat_au pi_au i_au yhat_us pi_us pi_w dln_C_obs dln_IB_obs i_10y wt_H_real_gap;
+           yhat_au pi_au i_au yhat_us pi_us pi_w dln_c dln_ib i_10y dy_bar_gap;

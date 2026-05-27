@@ -1,214 +1,150 @@
-# NEXT_SESSION.md — pickup notes from 2026-05-23
+# NEXT_SESSION.md — post-Phase-L2 / post-paper-v2 plan
 
-You ended the 2026-05-23 session mid-way through the Round 1.2 follow-up exploration. This document captures **exactly where things stand** so you (or a future Claude session) can resume without re-deriving context.
+**Status at end of last session**: branch `refactor/frbdf-replication-L2`, latest commit `4a61002` (paper-polish: cross-refs, artefact figures, Greek glyph fix, L1.2 trends, ABS 5625 download, bibliography). Working paper v2 published at `dynare/AUSPAC_WORKING_PAPER.{md,tex,pdf,html}` — 175 endog vars, 49 shocks, 5 PAC blocks (4 AU-estimated + 1 wp1044-imported via Option 1 hybrid calibration).
 
----
-
-## TL;DR
-
-- The Round 1.2 hand-to-mouth (`b_HtM`) channel has been thoroughly explored across **5 trend-treatment specifications**.
-- **Empirical headline: AU's `b_HtM ∈ [0.08, 0.19]` across all specs, with HPDs touching or crossing zero in 3 of 5.** Well below France's wp1044 value of 0.32.
-- **Option α (FR-BDF-faithful: trend in model, not in data)** is now committed as the architecturally-correct specification. MHM = −1101.87, `b_HtM = 0.114` with 90% HPD [−0.10, +0.29].
-- **Two known limitations** of Option α:
-  1. `pi_w` trend mismatch (model SS 0.625 vs data mean 1.16% qoq, ~5–10 nats LMD penalty)
-  2. Constant trend `g_bar_C = 0.498` is the post-2008 BGP value; doesn't capture pre-2002 high-growth regime
-- **Option β** (time-varying trend with breaks at 2002Q2 + 2008Q3) is the next planned extension to fix both.
+**Headline locked in**: AU consumption β₀ = 0.27 ≈ wp1044's 0.29; AU BI structurally rejects wp1044 PAC (PV(Δq̂)=−5.03 across 11 variants); Option 1 hybrid calibration adopted; Octave mode-search Laplace LMD = −694.78 (+84 nats vs Round 1.2 baseline). Full MCMC pending native-ARM MATLAB.
 
 ---
 
-## What's in the code right now (post-merge state)
+## Primary track — finish items 3+4 from post-WP-D once new MATLAB arrives
 
-### Model files
-- `dynare/au_pac.mod` and `dynare/au_pac_bayesian.mod` both have Option α active:
-  - Two new parameters: `g_bar_C = 0.498`, `g_bar_IB = 0.498` (% qoq)
-  - `eq_dln_c_star_bar` has `+ g_bar_C` constant drift
-  - `eq_dln_ib_star_bar` has `+ g_bar_IB` constant drift
-  - `eq_c_gap` and `eq_ib_gap` subtract `dln_*_star_bar` to stay stationary
-  - `eq_ln_C_star` and `eq_ln_IB_star` evolve as `(dln_*_star_bar − g_bar_*)`
-  - Two new measurement variables: `dln_C_obs = dln_c + dln_c_star_bar` (SS = `g_bar_C`), same for IB
-  - `varobs`: `dln_c → dln_C_obs`, `dln_ib → dln_IB_obs`, `pi_w` stays
-  - `pi_w` model SS still `pi_ss = 0.625% qoq` (KNOWN LIMITATION)
-- `dynare/au_pac_bayesian.mod` estimation block is in **cheap-reload mode**:
-  ```
-  mode_compute=0, mode_file='au_pac_bayesian_seed_mode', mh_replic=0, load_mh_file, mh_jscale=0.15
-  ```
-  Running `dynare au_pac_bayesian` reads the Option α cached chain in `dynare/au_pac_bayesian/` and reports posteriors. **DO NOT** flip `mh_replic` to a positive number unless you intend to OVERWRITE the cache with a fresh MCMC.
+### A1. Set up new MATLAB + native-ARM Dynare
 
-### Data pipeline
-- `data/prepare_estimation_data.m` has `DEMEAN_MODE = 'none'` set. Don't change unless you're running a comparison spec.
-  - `'sample'` = legacy constant-mean demeaning
-  - `'hp_trend'` = HP-filter trend subtraction (TVD spec)
-  - `'frbdf'` = CES Ē two-break trend + employment HP-trend subtraction
-  - `'none'` = Option α (no demeaning of growth rates)
-- 10 observables in `estimation_data.mat`: standard 9 + `wt_H_real_gap`
-- 6 stimulus quarters (2008Q4-2009Q1, 2020Q1-Q4) NaN-d in `wt_H_real_gap` (Option 4)
-- `data/prepare_household_income.m` now also writes wages-only and transfers-only HP-gap columns (`au_wt_H_W_gap`, `au_wt_H_TG_gap`) to `extended_dataset.csv` — these are NOT used by Option α but are pre-built infrastructure for Option 2 (wages-vs-transfers decomposition).
+1. Install MATLAB R2024b (or R2023b+) with **Statistics & Machine Learning Toolbox** required and **Parallel Computing Toolbox** recommended (halves MCMC wall-clock).
+2. Install native-ARM Dynare. Either:
+   - Download `dynare-6.5-arm64.pkg` from dynare.org/download (preferred), OR
+   - Re-use the existing `/opt/homebrew/opt/dynare/` from brew (already installed in last session, octave-targeted but MATLAB-compatible).
+3. Verify with a one-liner:
+   ```bash
+   /Applications/MATLAB_R2024b.app/bin/matlab -batch \
+     "addpath('/Applications/Dynare-6.5-arm64/matlab'); dynare_version"
+   ```
+   (No `arch -x86_64` needed on R2024b native ARM.)
 
-### Cached MCMC chains (all in `dynare/`)
-| Directory | Content | When to reuse |
-|---|---|---|
-| `au_pac_bayesian/` | **Active Option α chain** (b_HtM=0.114, MHM −1101.87) | Default — current state |
-| `au_pac_bayesian.cached_pre_round12_2026-05-22/` | Pre-Round-1.2 baseline (9-obs, b_HtM CALIBRATED at 0) | Comparison vs the pre-channel state |
-| `au_pac_bayesian.cached_round12_calibrated_2026-05-22/` | Round 1.2 with `b_HtM` calibrated at 0.32 (the FR-BDF value) | Comparison vs first attempt at the channel |
-| `au_pac_bayesian.cached_opt4_2026-05-23/` | Option 4: NaN stim quarters + sample-mean demeaning, b_HtM=0.190 | Strongest case for non-zero b_HtM |
-| `au_pac_bayesian.cached_tvd_hp_2026-05-23/` | TVD: HP-filter trend, b_HtM=0.078, MHM=−1083.88 (best LMD) | Best statistical fit |
-| `au_pac_bayesian.cached_frbdf_2026-05-23/` | FR-BDF data demeaning, b_HtM=0.160 | Middle ground |
-| `au_pac_bayesian.cached_optalpha_2026-05-23/` | Option α with `mh_jscale=0.15` (the canonical Option α run) | Identical to active cache; explicit backup |
-
-### Mode-file artifacts
-- `dynare/au_pac_bayesian_seed_mode.mat` — hybrid seed mode (34 baseline params + b_HtM 0.13 + SE_eps_wtH 1.18). Built by `dynare/build_round12_seed_mode.m` from the pre-Round-1.2 baseline mode file. Used as the starting point for all Round 1.2 follow-up MCMCs.
-- `dynare/build_round12_seed_mode.m` — the constructor script for the seed mode file. Re-run if you change `estimated_params` (the param positions need to be updated).
-
----
-
-## How to reproduce the current state
+### A2. Run hybrid MCMC
 
 ```bash
-cd /Users/davidstephan/Documents/AUSPAC
-# 1. Re-prepare data (DEMEAN_MODE='none' for Option α)
-matlab -batch "cd data; prepare_estimation_data"
-# 2. Load Option α cached chain and print posterior summaries
-matlab -batch "cd dynare; setup_dynare_path; dynare au_pac_bayesian"
+cd ~/Documents/AUSPAC/dynare
+/Applications/MATLAB_R2024b.app/bin/matlab -batch \
+  "addpath('/Applications/Dynare-6.5-arm64/matlab'); dynare au_pac_bayesian.mod" \
+  2>&1 | tee mcmc_hybrid_v2.log
 ```
 
-This should reproduce: `MHM LMD = −1101.87`, `b_HtM posterior = 0.114`.
+Expected wall time **~30–60 min** on R2024b native ARM (vs ~50 min historical baseline on Intel hardware; the Octave attempt projected 4 hours, MATLAB-Rosetta 6+ hours). Outputs:
+- `dynare/au_pac_bayesian/metropolis/au_pac_bayesian_mean.mat` — posterior means + HPDs
+- `dynare/au_pac_bayesian/Output/au_pac_bayesian_results.mat` — full results struct
+- New Laplace LMD + **MHM LMD** in the log (the Octave mode-only run gave Laplace = −694.78; MHM not computed because MH never finished)
 
----
+### A3. Item 4 — populate Bayesian-posterior columns in §4 tables
 
-## What's next — three threads to pick up
+Read posterior means + 90% HPDs from `au_pac_bayesian_results.mat`. The five tables to update in `dynare/AUSPAC_WORKING_PAPER.md`:
 
-### Thread A — Option β (HIGHEST PRIORITY)
+| Section | Table | Block | Parameters to populate |
+|---|---|---|---|
+| §4.3.2 | Table 4.3.2 | VA-price | `b0_pQ`, `b1_pQ`, `b2_pQ` + std_eps_pQ |
+| §4.4.4 | Table 4.4.4 | Employment | `b0_n`, `b1_n`, `b5_n` + std_eps_n |
+| §4.5.2 | Table 4.5.2 | Consumption | `b0_c`, `b1_c`, `b2_c`, `b3_c` + std_eps_c |
+| §4.7.2 | Table 4.7.2 | Housing inv | `b0_ih`, `b1_ih`, `b3_ih` + std_eps_ih |
+| §6.4 (Bayesian) | Table 5.6 | full 25-param posterior | All non-BI estimated params |
 
-**Goal**: Replace the constant `g_bar_C` / `g_bar_IB` drift in Option α with a **time-varying trend** that has two breaks (2002Q2 and 2008Q3) matching the CES Ē regime structure. Also add a wage trend (`g_bar_W`) so `pi_w` SS adapts. This should:
-- Fix the pre-2002 trend under-prediction (CES Ē trend was 0.77% qoq, vs current Option α 0.123% qoq)
-- Fix the post-2008 trend mismatch in `pi_w` (currently 0.5% qoq below data)
-- Restore LMD competitiveness with TVD
+**Important**: Table 4.6.2 (Business inv) does *not* need a Bayesian column — BI is removed from `estimated_params` (calibrated from wp1044 Table 3.5.13 via Option 1, §3.6 + §4.6.2). Note this explicitly in the Table 4.6.2 caption.
 
-**Implementation sketch**:
+### A4. Re-render and commit
 
-1. **Add time-varying drift parameters**. Option: make `g_bar_C` / `g_bar_IB` / `g_bar_W` *functions of time* via a calibrated deterministic dummy series.
-   - Simplest: add a `regime_pre02`, `regime_mid`, `regime_post08` dummy time series to `estimation_data.mat`
-   - Add a model variable `g_bar_C_t` defined as `g_bar_C_pre02·d_pre02 + g_bar_C_mid·d_mid + g_bar_C_post08·d_post08`
-   - Replace `g_bar_C` in `eq_dln_c_star_bar` with `g_bar_C_t`
-
-2. **Calibrate the three regime values** from `dynare/ces_2026_calibration.txt`:
-   - `g_bar_C_pre02` = `dln_E_bar_pre02/(1-α_k) + dln_N_bar` ≈ 0.77 + 0.375 = 1.15% qoq
-   - `g_bar_C_mid` = 0.43/4/(1-0.45) + 0.375 ≈ 0.20 + 0.375 ≈ 0.57% qoq
-   - `g_bar_C_post08` = 0.49/4/(1-0.45) + 0.375 ≈ 0.22 + 0.375 ≈ 0.60% qoq
-   
-   (cross-check: sample mean of dln_c is 0.77% qoq, which is between the three regime values weighted by their durations)
-
-3. **Add wage trend `g_bar_W_t`** with same regime structure:
-   - `g_bar_W_pre02` = `pi_ss + dln_E_bar_pre02` = 0.625 + 0.77 = 1.40% qoq (matches data 1990s mean)
-   - `g_bar_W_mid` = 0.625 + 0.108 = 0.73% qoq
-   - `g_bar_W_post08` = 0.625 + 0.123 = 0.75% qoq
-   
-   This needs a modification to `eq_pi_w` or a separate `dln_w_trend` identity.
-
-4. **Update SS values** — `dln_c_star_bar` SS depends on which regime is "current". For SS computation use post-2008 values. For simulation, Dynare will use the time-varying values.
-
-5. **Re-run MCMC** — same as Option α, with the time-varying trends in place. Expected outcome: `b_HtM` somewhere between TVD and FR-BDF values (HPD probably still crosses zero), but LMD should match or beat TVD because the model now correctly handles the pre-2002 high-growth regime.
-
-**Tricky parts**:
-- Dynare doesn't natively support time-varying parameters. Workaround: declare the time-varying drift as an EXOGENOUS time-series (like an observed deterministic dummy) and treat it as a calibrated forcing variable.
-- The dummy regime indicators need to be in `estimation_data.mat` alongside the observables.
-
-**Files to touch**: `simulation/identities/parameters.inc`, `parameter-values.inc`, `model.inc`, `endogenous.inc`, `au_pac.mod`, `au_pac_bayesian.mod`, `data/prepare_estimation_data.m`. Probably 4-6 hours of careful surgery + a 60-90 min MCMC.
-
-### Thread B — Option 2 (wages-vs-transfers decomposition)
-
-**Goal**: Test whether the AU HtM channel is driven by wages or transfers separately, by decomposing `wt_H_real_gap` into two observables: `wt_H_W_gap` (compensation of employees only) and `wt_H_TG_gap` (social assistance only).
-
-**Status**: Data is already prepared. `data/prepare_household_income.m` writes both columns (`au_wt_H_W_gap`, `au_wt_H_TG_gap`) to `extended_dataset.csv`. The raw-data SDs we computed:
-- Wages-only: SD 1.79%, range [−4.5%, +7.3%] — cyclical
-- Transfers-only: **SD 5.61%, range [−10.5%, +31.0%]** — recession-spike dominated
-- Combined: SD 1.62% (wages signal dominates the SD)
-
-**Implementation sketch**:
-
-1. Add two new endogenous variables: `wt_H_W_gap`, `wt_H_TG_gap` (replacing `wt_H_real_gap`).
-2. Add two new AR(1) reduced forms in `aux_consumption.mod`'s `var_model`.
-3. Modify the consumption PAC equation: `+ b_HtM_W · (wt_H_W_gap − yhat_au) + b_HtM_TG · (wt_H_TG_gap − yhat_au)`.
-4. Add `b_HtM_W`, `b_HtM_TG` to `estimated_params`. Drop `b_HtM`.
-5. Add `wt_H_W_gap` and `wt_H_TG_gap` to `varobs`. Drop `wt_H_real_gap`.
-6. Rebuild seed mode file (parameter positions change).
-7. Re-run MCMC.
-
-**Expected outcome**:
-- `b_HtM_W` close to FR-BDF magnitude (~0.2-0.3) — wages drive the cyclical HtM response
-- `b_HtM_TG` near zero — transfers absorbed by saving/debt paydown (the user's original hypothesis)
-
-This would be the cleanest cross-country story: "AU and France have similar wage-HtM channels, but AU households save transfer windfalls more than French households do."
-
-**Files to touch**: `aux/aux_consumption.mod`, `simulation/identities/*.inc`, `au_pac.mod`, `au_pac_bayesian.mod`, `data/prepare_estimation_data.m`. About 3-4 hours of work + MCMC.
-
-### Thread C — Refresh stale FRED data
-
-**Discovery**: `au_consumption` in `extended_dataset.csv` is NaN from 2023Q4 onwards. The estimation sample currently ends at 2023Q3. Refreshing FRED `NAEXKP02AUQ189S` would extend the sample by 4-5 quarters and let us include the 2024 data.
-
-To refresh: run `data/download_extended_data.m` (it uses FRED's API; sample will extend automatically). Then re-run `prepare_estimation_data.m` and re-MCMC.
-
-Low-effort, possibly informative. Could be done independently of A or B.
-
----
-
-## Known gotchas and workarounds
-
-1. **`mode_compute=4` (csminwel) and `mode_compute=5` (newrat) BOTH CRASH** with Option α + Option 4 NaN-d observations. Error: `dsge_likelihood` line 763 dimension mismatch in numerical gradient. Workaround: `mode_compute=0 + mh_jscale=0.15`. This bypasses the gradient computation that triggers the crash.
-
-2. **The pre-Round-1.2 LMDs (−779 / −780) are NOT comparable to Round 1.2 follow-up LMDs (~−1100)** because the observable set changed (9 obs → 10 obs). Adding `wt_H_real_gap` to `varobs` mechanically reduces LMD by ~−138 nats just from the new likelihood term. Within-spec comparisons (Option 4 vs TVD vs FR-BDF vs Option α) ARE valid.
-
-3. **Laplace LMD reported by Dynare under `mode_compute=0`** is computed at the supplied seed mode, NOT at the actual posterior mode. It will be much worse than MHM. Use MHM as the LMD metric for these runs.
-
-4. **`pi_w` is the weakest equation** in the model right now. Posterior `stderr eps_w` is ~7× its prior mean across all Round 1.2 specs. The trend mismatch (model SS 0.625 vs data mean 1.16 % qoq) is the suspected cause. Option β should help.
-
-5. **`b1_pQ = 0.69`** in TVD and Option α (vs 0.28 in the seeded baseline) is anomalous. Not sure what's driving this — possibly model identification difficulty under the larger 10-obs setup. Could be worth investigating.
-
-6. **`alpha_pc` near boundary in FR-BDF** (0.58 vs prior mean 0.30). FR-BDF run had less stable mode. Don't read into that posterior.
-
----
-
-## Open questions worth thinking about
-
-1. **Is Option α's `g_bar_C = 0.498` the right post-2008 value?** Re-derive from latest CES calibration. Could be off by 0.05-0.10% qoq. Affects observable matching by similar order.
-
-2. **Should we also handle the `pi_w` trend?** If yes — how? Adding drift to `ln_tfp_LR` creates SS-consistency problems with `dln_n_star_bar`'s structural identity. May need a separate `g_bar_W` parameter with its own equation, not derived from `ln_tfp_LR`.
-
-3. **Stale FRED snapshot** — `au_consumption` only goes through 2023Q3. Refresh would extend the sample by 4-5 quarters and potentially improve identification.
-
-4. **The `kalman_filter_d: not enough information` warnings** in every Option 4+ run come from the diffuse filter struggling with the 6 NaN-d quarters. They're warnings not errors, but may indicate the partial-NaN handling is fragile. Consider whether to NaN entire rows instead of just `wt_H_real_gap` for those quarters.
-
----
-
-## Files modified in this session (uncommitted)
-
-```
-data/prepare_estimation_data.m        # DEMEAN_MODE toggle, dln_C_obs/dln_IB_obs save
-data/prepare_household_income.m       # wages+transfers split columns
-data/extended_dataset.csv             # added 3 columns: wt_H_real_gap, wt_H_W_gap, wt_H_TG_gap
-dynare/au_pac.mod                     # Option α: drifts, new vars, eqs, SS values
-dynare/au_pac_bayesian.mod            # mirror + varobs + estimated_params + cheap-reload config
-dynare/simulation/identities/         # parameters.inc, parameter-values.inc, endogenous.inc, model.inc
-dynare/build_round12_seed_mode.m      # new — constructs hybrid seed mode file
-dynare/aux/aux_consumption.mod        # Round 1.2 var_model state
-STATUS.md                             # v3.1.4 row added
-dynare/AUSPAC_WORKING_PAPER.md        # new §4.11.4
-NEXT_SESSION.md                       # THIS FILE
+```bash
+cd dynare
+pandoc AUSPAC_WORKING_PAPER.md -o AUSPAC_WORKING_PAPER.tex \
+  --standalone --mathjax --include-in-header=paper_header.tex
+tectonic AUSPAC_WORKING_PAPER.tex          # → PDF
+pandoc AUSPAC_WORKING_PAPER.md -o AUSPAC_WORKING_PAPER.html \
+  --standalone --mathjax --toc --toc-depth=3
 ```
 
-Plus all the auto-regenerated Dynare derivative files in `dynare/aux/+aux_consumption/` and the cherrypicked `dynare/simulation/estimation/consumption/`.
+Commit with the headline: "MCMC under hybrid calibration: Laplace LMD = X, MHM = Y (+Z nats vs Round 1.2)."
+
+### A5. Compare new MHM to STATUS.md baselines and update STATUS.md
+
+Phase trajectory baselines from STATUS.md:
+- Phase Y pre-L2: Laplace = −779.30, MHM = −780.36
+- Round 1.2 (current cache): Laplace = −784.47, MHM = −785.80
+- **Phase L2 P1c hybrid mode-search-only (Octave)**: Laplace = −694.78
+
+If MATLAB MHM confirms the +84 nats Laplace gain, that's the largest single-phase improvement in the project's history (prior max was Phase R at +11.55). Worth a §6.4 paragraph + STATUS.md bump to v3.3.
 
 ---
 
-## How to pick up
+## Parallel track — Phase L3 mining-vs-non-mining BI hypothesis test (no MATLAB needed initially)
 
-The cleanest entry points, in priority order:
+ABS Cat. 5625 Dec-2025 release downloaded to `data/abs_rba/abs_5625_*.xlsx` in the last session (see `data/abs_rba/abs_5625_README.md`). The Phase L3 BI test plan:
 
-1. **`STATUS.md`** — phase table including v3.1.4 row gives the timeline of what was done.
-2. **`dynare/AUSPAC_WORKING_PAPER.md` §4.11.4** — full economic and technical narrative of the 5-way comparison.
-3. **This file (`NEXT_SESSION.md`)** — operational details, file inventory, gotchas.
-4. **`CES_PRODUCTION_FUNCTION_APPROACH.md`** — separate write-up of the CES calibration that Option β will need to reference for the trend regime values.
+### L3.1 Build mining vs non-mining `dln_ib` series
 
-Then pick one of Thread A (Option β), Thread B (Option 2), or Thread C (FRED refresh) to work on.
+In MATLAB GUI or Python:
+1. Read `data/abs_rba/abs_5625_07_volume_measures_seasonally_adjusted_capex.xlsx` sheet `Data1`.
+2. Series IDs:
+   - `A3515875V` (Mining: Buildings & Structures)
+   - `A124798315W` (Non-Mining: Buildings & Structures, incl. Education + Health)
+   - + equivalent for Equipment, Plant & Machinery (cols 21 + 22)
+3. `dln_ib_mining = 100 * Δlog(mining_buildings + mining_E&P)`
+4. `dln_ib_nonmining = 100 * Δlog(nonmining_buildings + nonmining_E&P)`
+5. Quarterly, SA, 1987Q3–2025Q4 (T=154). Note: AUSPAC base sample starts 1993Q2 — consider extending back to 1987Q3 for sub-sample identification.
 
-Good luck.
+### L3.2 Re-estimate wp1044 Eq 46 on each sub-series
+
+Copy `data/pac_blocks/estimate_pac_business_inv.m` and `estimate_pac_business_inv_au_v3.m` (variant A, free-PV diagnostic) to `_mining.m` and `_nonmining.m` variants. Same wp1044 functional form, same block-specific VAR (Table 3.6 in the paper), same iterative-OLS pipeline.
+
+### L3.3 Read off the diagnostic and update §5.3 + Appendix G
+
+Decision tree (per §5.3 hypotheses A, B, C):
+
+| `dln_ib_nonmining` PV(Δq̂) | `dln_ib_mining` PV(Δq̂) | Interpretation |
+|---|---|---|
+| ≈ +1 (structural) | ≈ −5 (or worse) | **Hypothesis B confirmed**: mining drives the aggregate rejection. Consider two-block BI in production model. |
+| ≈ −5 | ≈ −5 | **Hypothesis A** (different agent objective globally) likely. Option 1 hybrid remains correct path. |
+| Both intermediate | — | **Hypothesis C** (sample-period contamination) possible; try splitting at 2003Q1 / 2015Q1. |
+
+Update `PAC_BI_AU_EXPLORATION.md` §6 with the L3 results; refresh Appendix G of the paper.
+
+---
+
+## Lower-priority research extensions (multi-day each, deferred)
+
+| ID | Item | Effort | Notes |
+|---|---|---|---|
+| EXT-1 | Add wp1044 Phillips Eq 18 + Okun Eq 19 as explicit AR(1) aux equations in VA-price block VAR; lift §4.3 R² from 0.41 toward wp1044's 0.61 | ~1 week | Source: `PAC_EQUATIONS_AUDIT.md` §1.3 gap #7 |
+| EXT-2 | Replace AU L2 VAR(1) with Bayesian Minnesota-prior VAR(p) per wp1044 §3.2 | ~1 week | Affects all 4 fitting blocks' R² |
+| EXT-3 | RBA OIS-surprise IV for `b_di_c` consumption rate-change coefficient | ~3 days | Bishop & Tulip 2017 methodology; replaces the Bayesian-regularised current value |
+| EXT-4 | Channel-decomposition exercise à la Mulqueeney et al. 2025 (turn off each channel in turn) | ~3 days | Quantifies exchange-rate vs asset-price vs savings vs cash-flow contributions to monetary IRF |
+| EXT-5 | Adopt FR-BDF 2026 financial-block extensions: Dees et al. 2022 NFC accelerator + Bové et al. 2020 household DSR block | ~2 weeks | Natural v3.0 direction noted in §8 conclusion |
+| EXT-6 | Bernanke-Gertler-Gilchrist financial-friction extension to BI block (Phase L3 follow-up) | ~1 week | Only if Hypothesis B from §L3.3 confirms |
+
+None of these is currently scheduled.
+
+---
+
+## Branch state at start
+
+```
+refactor/frbdf-replication-L2
+   4a61002   docs: paper-polish — items 1-5 + 8-9 (TODAY's latest)
+   c5586e9   docs: items 1+2 — paper_artifacts/ tables and charts, PDF re-rendered
+   703a2ee   docs: working paper v2 regeneration end-to-end (Phase WP-A..D)
+   43ed22c   Phase L2 P1c Option 1: import wp1044 BI calibration into Dynare model
+   c736f93   docs: update NEXT_SESSION with BI exploration decision
+   85f67db   Phase L2 P1c v6 + exhaustive documentation: Option 2 (ToT target) also fails
+   78d7c41   Phase L2 P1c v5: BI with ToT + piecewise trends + dummies; still fails strict PAC
+   ... 23 earlier L2 commits
+```
+
+Branch is clean. Working tree clean. Ready to merge to `main` once Item 3+4 (MCMC under hybrid + Bayesian column update) lands, or to begin Phase L3 mining-vs-non-mining BI test in parallel.
+
+---
+
+## How to pick up next time
+
+1. Read this file.
+2. If new MATLAB ready: run **Primary track A2** (~30–60 min wall-clock), then **A3 + A4 + A5**.
+3. If new MATLAB not yet ready: run **Parallel track L3** (mining-vs-non-mining BI; no MATLAB needed for the data prep + Python sketch).
+4. Either way, ping me with the result.
+
+**Workarounds documented in `WORKING_PAPER_BLOCKERS.md`** (R2020a + Rosetta `arch -x86_64` fix; tectonic LaTeX; Python `make_paper_artifacts.py` for table/chart generation) — kept as reference for future sessions on different hardware.

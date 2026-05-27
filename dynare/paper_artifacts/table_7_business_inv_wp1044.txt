@@ -1,0 +1,10 @@
+Table 7 — Business inv calibration: wp1044 Option 1 import (no AU estimates; see PAC_BI_AU_EXPLORATION.md)
+
+coefficient	value	source
+beta_0	0.096	wp1044 Table 3.5.13
+beta_1	0.330	wp1044 Table 3.5.13
+beta_2	0.110	wp1044 Table 3.5.13
+beta_3	0.690	wp1044 Table 3.5.13
+omega	0.350	AU = wp1044 (matched)
+sigma	0.5366	AU labour-FOC (≈ wp1044 0.50)
+R^2 (FR)	0.830	wp1044 reported on FR data

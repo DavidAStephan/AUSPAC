@@ -37,6 +37,7 @@ var
 	dln_ulc
 	dln_x
 	dln_y_star
+	dy_bar_gap
 	i_10y
 	i_BBB
 	i_COE
@@ -56,10 +57,8 @@ var
 	ih_hat
 	ln_C
 	ln_C_star
-	dln_C_obs
 	ln_IB
 	ln_IB_star
-	dln_IB_obs
 	ln_IH
 	ln_IH_star
 	ln_K
@@ -483,8 +482,7 @@ parameters
 	alpha_wtH_u
 	alpha_wtH_tau
 	b_HtM
-	g_bar_C
-	g_bar_IB
+	b_PAC_c
 ;
 
 a_pQ_GST = 0.05;
@@ -827,6 +825,7 @@ varexo
 	eps_MAPI
 	eps_MAPU
 	eps_wtH
+	eps_dy_bar
 ;
 
 @#ifdef InvertModel
@@ -857,7 +856,11 @@ model;
 	// pac.print() crashes when a var_model state appears on the RHS of the PAC
 	// equation. wt_H_real_gap is itself a var_model state (companion matrix is
 	// extended), so the AR(1)-side feedback to expectations is preserved.
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+eps_c;
+	// Phase L1.3a (2026-05-25): + b_PAC_c*dy_bar_gap(-1) growth-neutrality
+	// term tying consumption growth to HP-filtered trend GDP growth (wp1044
+	// Eq 35).  Production-model dy_bar_gap evolves as a RW around 0 (data
+	// path is loaded only by au_pac_bayesian.mod via varobs).
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
@@ -969,28 +972,16 @@ model;
 	ln_Q =  ln_QN + yhat_au;
 
 	[blockname='',name='ln_C_star']
-	// Option α (2026-05-23): subtract trend g_bar_C so ln_C_star stays stationary.
-	ln_C_star =  ln_C_star(-1) + (dln_c_star_bar - g_bar_C);
+	ln_C_star =  ln_C_star(-1) + dln_c_star_bar;
 
 	[blockname='',name='ln_C']
 	ln_C =  ln_C_star + ln_c_level;
 
-	// Option α (2026-05-23): total consumption growth = trend + cycle.
-	// Direct definition (not via diff(ln_C)) to avoid non-stationarity SS issues.
-	// SS = g_bar_C; matched directly to (non-demeaned) observed dln_c data.
-	[blockname='',name='dln_C_obs']
-	dln_C_obs =  dln_c + dln_c_star_bar;
-
 	[blockname='',name='ln_IB_star']
-	// Option α (2026-05-23): subtract trend g_bar_IB so ln_IB_star stays stationary.
-	ln_IB_star =  ln_IB_star(-1) + (dln_ib_star_bar - g_bar_IB);
+	ln_IB_star =  ln_IB_star(-1) + dln_ib_star_bar;
 
 	[blockname='',name='ln_IB']
 	ln_IB =  ln_IB_star + ln_ib_level;
-
-	// Option α (2026-05-23): total investment growth = trend + cycle.
-	[blockname='',name='dln_IB_obs']
-	dln_IB_obs =  dln_ib + dln_ib_star_bar;
 
 	[blockname='',name='ln_IH_star']
 	ln_IH_star =  ln_IH_star(-1) + dln_ih_star_bar;
@@ -1017,12 +1008,6 @@ model;
 	dln_y_star =  alpha_k * dln_k + (1 - alpha_k) * dln_n_star_bar + dln_tfp;
 
 	[blockname='',name='ln_tfp_LR']
-	// (Originally considered RW + drift here, but Dynare's gap-form SS pins
-	// ln_tfp_LR = 0 which would contradict any non-zero drift. Drift relocated
-	// to dln_c_star_bar / dln_ib_star_bar directly so the affected SS values
-	// are on stationary growth-rate variables. pi_w trend stays at pi_ss and
-	// the wage-trend mismatch is treated as a known limitation of Option α
-	// to be revisited in Option β with a proper time-varying trend.)
 	ln_tfp_LR =  ln_tfp_LR(-1) + eps_tfp_LR;
 
 	[blockname='',name='ln_tfp']
@@ -1094,12 +1079,10 @@ model;
 
 	[blockname='',name='dln_c_star_bar']
 	// Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — income-tax drag.
-	// Option α (2026-05-23): + g_bar_C drift carries BGP consumption trend.
-	dln_c_star_bar =  g_bar_C + kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
+	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
 
 	[blockname='',name='c_gap']
-	// Option α (2026-05-23): subtract dln_c_star_bar so c_gap remains stationary.
-	c_gap =  c_gap(-1) + (dln_c_star - dln_c_star_bar) - dln_c;
+	c_gap =  c_gap(-1) + dln_c_star - dln_c;
 
 	[blockname='',name='dln_ib_star']
 	dln_ib_star =  rho_ib_star * dln_ib_star(-1) + (1 - rho_ib_star) * dln_ib_star_bar;
@@ -1112,11 +1095,10 @@ model;
 	dln_uc_k =  uc_k - uc_k(-1);
 
 	[blockname='',name='dln_ib_star_bar']
-	// Option α (2026-05-23): + g_bar_IB drift = g_bar_C (BGP).
-	dln_ib_star_bar =  g_bar_IB + kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
+	dln_ib_star_bar =  kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
 
 	[blockname='',name='ib_gap']
-	ib_gap =  ib_gap(-1) + (dln_ib_star - dln_ib_star_bar) - dln_ib;
+	ib_gap =  ib_gap(-1) + dln_ib_star - dln_ib;
 
 	[blockname='',name='dln_ib_1']
 	dln_ib_1 =  dln_ib(-1);
@@ -1365,6 +1347,14 @@ model;
 	[blockname='',name='MAPU_hat']
 	MAPU_hat = rho_MAPU * MAPU_hat(-1) + (1 - rho_MAPU) * dln_ih + eps_MAPU;
 
+	// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality trend.
+	// In the production model dy_bar_gap follows a RW around zero with
+	// eps_dy_bar innovations; in au_pac_bayesian.mod the same variable is
+	// declared as varobs so the Kalman filter pulls it onto the HP-trend
+	// data path.
+	[blockname='',name='dy_bar_gap']
+	dy_bar_gap = dy_bar_gap(-1) + eps_dy_bar;
+
 end;
 
 steady_state_model;
@@ -1415,9 +1405,9 @@ steady_state_model;
     // Household consumption PAC
     pv_yh          = 0;       // permanent income PV = 0 at SS (gap model)
     pv_r_lh_gap    = 0;       // real lending rate PV = 0 at SS (audit #26, FR-BDF eq 61)
-    dln_c          = 0;       // cyclical consumption growth = 0 at SS
-    dln_c_star     = g_bar_C; // Option α: dln_c_star tracks dln_c_star_bar
-    dln_c_star_bar = g_bar_C; // Option α: trend BGP consumption growth
+    dln_c          = 0;       // zero consumption growth in stationary model
+    dln_c_star     = 0;
+    dln_c_star_bar = 0;
     c_gap          = 0;
 
     // User cost of capital: uc_k = wacc + delta_k at SS (pi_ib = piQ at SS)
@@ -1425,9 +1415,9 @@ steady_state_model;
     dln_uc_k       = 0;            // user cost constant at SS
 
     // Business investment PAC
-    dln_ib         = 0;       // cyclical investment growth = 0 at SS
-    dln_ib_star    = g_bar_IB; // Option α: tracks dln_ib_star_bar
-    dln_ib_star_bar = g_bar_IB;// Option α: trend BGP investment growth
+    dln_ib         = 0;       // zero investment growth in stationary model
+    dln_ib_star    = 0;
+    dln_ib_star_bar = 0;
     ib_gap         = 0;
     dln_ib_1       = 0;
 
@@ -1580,10 +1570,6 @@ steady_state_model;
     // Round 1.2 (2026-05-22): household wage+transfer income gap, zero at SS
     wt_H_real_gap  = 0;
 
-    // Option α (2026-05-23): total observable growth = cycle + trend.
-    dln_C_obs      = g_bar_C;
-    dln_IB_obs     = g_bar_IB;
-
     // Round 7 (branch decomposition, both = 0 at SS)
     yhat_market    = 0;
     yhat_nonmarket = 0;
@@ -1592,6 +1578,9 @@ steady_state_model;
     BLR_hat        = 0;
     MAPI_hat       = 0;
     MAPU_hat       = 0;
+
+    // Phase L1.3a (HP-filtered trend GDP growth, demeaned)
+    dy_bar_gap     = 0;
 end;
 
 
@@ -1747,12 +1736,39 @@ alpha_wtH_y       = 0.50;
 alpha_wtH_u       = 0.30;
 alpha_wtH_tau     = -0.40;
 b_HtM             = 0.32;
-// Option α (2026-05-23): BGP trend drift parameters, calibrated from CES 2026
-// post-2008Q3 regime (see CES_PRODUCTION_FUNCTION_APPROACH.md):
-//   g_bar_C  = dln_pop_bar + dln_E_bar/(1-α_k) = 0.375 + (0.49/4)/0.55 ≈ 0.498 % qoq
-//   g_bar_IB = g_bar_C (BGP: investment grows at output rate)
-g_bar_C           = 0.498;
-g_bar_IB          = 0.498;
+// Phase L1.3a (2026-05-25): wp1044 Eq 35 growth-neutrality coefficient on
+// HP-filtered trend GDP growth.  Initial value (1 - b1_c) at the round12
+// posterior mean.  Will be overwritten by the Bayesian posterior once
+// the L1.3a MCMC completes.
+b_PAC_c           = 0.95;
+
+// ====================================================================
+// Phase L2 P1c Option 1 (2026-05-26): wp1044 BI calibration import
+// ====================================================================
+// AU business investment data structurally rejects the wp1044 PAC
+// restriction (PV terms at coef=+1).  After ~7 spec variants tested in
+// Phase L2 P1c (commits 78d7c41, 85f67db, etc.), every strict-PAC
+// configuration on AU data gives R^2 < 0 on raw dln_ib.  Free-estimated
+// PV(Δq̂) coefficient comes out negative (~ -5) instead of structural +1.
+//
+// DECISION (see PAC_BI_AU_EXPLORATION.md §7): import wp1044 Table 3.5.13
+// French calibration for the BI block.  Other 4 PAC blocks remain on
+// AU-estimated values from Phase L2.  This is a standard small-open-
+// economy modelling approach where local data identification fails:
+// borrow deep parameters from a larger / better-identified economy
+// and let the AU-specific channels (E-SAT VAR, other blocks, AU shocks)
+// inject AU-specific dynamics through the simulation.
+//
+// IRFs through the BI expectations channel will then be structurally
+// correct (PAC FOC satisfied with coef=+1 on PV).  AU mining-cycle
+// dynamics enter through the E-SAT VAR's response to commodity-driven
+// trade shocks rather than through the BI block's own parameters.
+b0_ib       = 0.096;   // wp1044 Table 3.5.13 (overrides Phase V writeback 0.0181)
+b1_ib       = 0.33;    // wp1044 Table 3.5.13 (overrides 0.0809)
+b2_ib       = 0.11;    // wp1044 Table 3.5.13 (overrides 0; depth-2 PAC)
+b3_ib       = 0.69;    // wp1044 Table 3.5.13 (overrides 0.3120; coef on Δdf gap)
+// omega_ib already 0.35 (matches wp1044)
+// sigma_ces already 0.5366 (matches wp1044's 0.50 within calibration tolerance)
 
 shocks;
     var eps_q;          stderr 0.5356;
@@ -1799,6 +1815,8 @@ shocks;
     var eps_MAPI;       stderr 0.50;
     var eps_MAPU;       stderr 0.30;
     var eps_wtH;        stderr 0.012;  // Round 1.2: household wage+transfer income shock
+    // Phase L1.3a: random-walk innovation for HP-filtered trend GDP growth.
+    var eps_dy_bar;     stderr 0.05;
 end;
 
 stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap;
