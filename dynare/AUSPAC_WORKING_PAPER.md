@@ -478,11 +478,11 @@ where the ECM term pulls $pQ^{level}$ toward $\widehat{\pi Q}_{t-1}$ — the var
 
 ### Table 4.3.2: VA price short-run coefficients — Phase L2 wp1044-faithful iterative OLS vs FR-BDF
 
-| Parameter | wp1044 FR Table 3.3.3 | **AU L2 iterative OLS** (`results_va_price.mat`, N=108) | Earlier-AUSPAC OLS (hybrid+COVID, pre-L2) | Bayesian posterior mean (Phase Y, pre-L2) | 90% HPD |
-|-----------|-----------|-------------------|--------------------------|----------------------------------------|---------|
-| β₀ (EC speed on `p*_Q − p_Q`) | **0.05** | **0.258** (SE 0.057, t=4.55) | 0.027 | 0.0295 | [0.0067, 0.0513] |
-| β₁ (πQ lag) | 0.20 | **0.304** (SE 0.092, t=3.30) | 0.288 | 0.2728 | [0.1273, 0.4261] |
-| β₂ (contemp ŷ) | 0.09 | −0.076 (SE 0.107, t=−0.71) | −0.014 | 0.0036 | [−0.0812, 0.0820] |
+| Parameter | wp1044 FR Table 3.3.3 | **AU L2 iterative OLS** (`results_va_price.mat`, N=108) | Bayesian posterior mean (hybrid MCMC, 20k×2) | 90% HPD |
+|-----------|-----------|-------------------|--------------------------|---------|
+| β₀ (EC speed on `p*_Q − p_Q`) | **0.05** | **0.258** (SE 0.057, t=4.55) | **0.0098** | [0.0011, 0.0221] |
+| β₁ (πQ lag) | 0.20 | **0.304** (SE 0.092, t=3.30) | **0.1115** | [0.0355, 0.1770] |
+| β₂ (contemp ŷ) | 0.09 | −0.076 (SE 0.107, t=−0.71) | **0.0212** | [−0.0419, 0.0988] |
 | ω (calibrated per wp1044) | 0.62 | **0.62** | 0.46 (legacy) | — | — |
 | χ (derived from depth-1 polynomial) | ~0.03 | **0.174** | n/a | — | — |
 | Derived growth-neutrality coef (1−β₁−ω) | 0.18 | **0.076** | — | — | — |
@@ -578,20 +578,16 @@ $$\Delta n_{S,t} = \beta_0 (n^*_{S,t-1} - n_{S,t-1}) + \mathrm{PV}(\Delta \bar n
 
 ### Table 4.4.4: Employment short-run PAC coefficients — Phase L2 wp1044-faithful iterative OLS (depth 3) vs FR-BDF
 
-| Parameter | wp1044 FR Table 3.4.9 | **AU L2 iterative OLS** (`results_employment.mat`, depth 3, N=124) | Earlier-AUSPAC OLS (depth 4, pre-L2) | Bayesian posterior mean (Phase Y, pre-L2) | 90% HPD |
-|-----------|-----------|-------------------|--------------------------|----------------------------------------|---------|
-| β₀ (EC speed on `n*_S − n_S`) | 0.07 | **0.314** (SE 0.043, t=7.41) | 0.072 | 0.0616 | [0.0163, 0.1090] |
-| β₁ (Δn lag 1) | 0.44 | **0.295** (SE 0.065, t=4.57) | 0.323 | 0.3109 | [0.1459, 0.4808] |
-| β₂ (Δn lag 2) | 0.12 | −0.028 (SE 0.043, t=−0.64) | −0.177 (depth 4) | — | — |
-| β₃ (Δn lag 3) | 0.12 | 0.026 (SE 0.042, t=0.62) | −0.081 (depth 4) | — | — |
-| β₄ (Δn lag 4) | — | — (dropped per wp1044 depth-3) | −0.096 | — | — |
-| β₄_new (contemp Δq̂) | 0.13 | −0.026 (SE 0.026, t=−0.97) | n/a (regressor absent) | 0.0037 | [−0.0864, 0.0858] |
-| ω (calibrated per wp1044) | 0.34 | **0.34** | 0.30 (legacy) | — | — |
-| χ (derived from depth-3 polynomial) | ~0.43 | **0.205** | n/a | — | — |
-| Derived growth-neutrality coef (1−Σβ−ω) | 0.00 | **0.367** | — | — | — |
-| **R²** | **0.95** | **0.81** | n/a | — | — |
-| stderr eps_n | — | — | — | 0.3917 | [0.1221, 0.7059] |
-| Significant COVID dummies | — | d_20Q2=−5.45 (t=−17.0), d_20Q3=+2.47 (t=+4.5) | crash −6.60, bounce +3.86 | — | — |
+| Parameter | wp1044 FR Table 3.4.9 | **AU L2 iterative OLS** (`results_employment.mat`, depth 3, N=124) | Bayesian posterior mean (hybrid MCMC, 20k×2) | 90% HPD |
+|-----------|-----------|-------------------|--------------------------|---------|
+| β₀ (EC speed on `n*_S − n_S`) | 0.07 | **0.314** (SE 0.043, t=7.41) | **0.0537** | [0.0142, 0.0883] |
+| β₁ (Δn lag 1) | 0.44 | **0.295** (SE 0.065, t=4.57) | **0.2890** | [0.1181, 0.4411] |
+| β₅ (contemp Δq̂ / output gap) | 0.13 | −0.026 (SE 0.026, t=−0.97) | **−0.0050** | [−0.0890, 0.0775] |
+| ω (calibrated per wp1044) | 0.34 | **0.34** | — | — |
+| χ (derived from depth-3 polynomial) | ~0.43 | **0.205** | — | — |
+| **R²** | **0.95** | **0.81** | — | — |
+| stderr eps_n | — | — | **0.3262** | [0.1186, 0.5248] |
+| Significant COVID dummies | — | d_20Q2=−5.45 (t=−17.0), d_20Q3=+2.47 (t=+4.5) | — | — |
 
 The Phase L2 employment block delivers the **second-best fit of the five blocks** (R² = 0.81), after consumption. Three findings stand out:
 
@@ -644,18 +640,19 @@ The coefficient `α_c_r = -0.95` (calibrated, wp736 Table 4.6.14) carries the fo
 
 **Headline finding**: AU's consumption-block ECM speed β₀ = 0.266 is essentially identical to FR-BDF's β₀ = 0.29 — the single closest cross-country agreement among all 22 PAC coefficients tested in Phase L2. Consumption is also the only block where AU's ECM speed is **not** 4–8× faster than France's (cf. §5.1).
 
-| Parameter | wp1044 FR Table 3.5.2 | **AU L2 iterative OLS** (`results_consumption.mat`, N=102, 21 iters) | Earlier-AUSPAC OLS (hybrid+COVID, pre-L2) | Bayesian posterior mode (Phase Y, pre-L2) |
-|-----------|-----------|-------------------|--------------------------|----------------------------------------|
-| β₀ (EC speed on `c* − c`) | **0.29** | **0.266** (SE 0.079, t=3.27) | 0.069 | 0.0720 [0.0321, 0.1119] |
-| β₁ (Δc lag 1) | 0.17 | −0.159 (SE 0.087, t=−1.83) hit clamp | 0.046 | 0.0345 [0.0049, 0.0650] |
-| α₁ (PV(r_LH gap), reduced-form coef) | −1.15 (from LR Eq 33) | **−85.5** (SE 31.1, t=−2.75); reduced form **α₁·χ = −0.85 ≈ wp1044's −1.15·0.17 = −0.20** rescaled to AU sample as **α₁·χ_AU = −0.81** | n/a | n/a |
-| β_PAC (free coef on Δȳ lag — non-stationary part) | (free, not tabled) | **+1.47** (SE 0.70, t=2.12) | n/a | n/a |
-| β₂ (HtM level-diff) | 0.32 | −0.018 (SE 0.076, t=−0.23) | 0.018 | 0.0202 [−0.0651, 0.1011] |
-| β₃ (impact rate Δr_LH) | −1.07 | −0.003 (SE 0.038, t=−0.08) | −0.553 | −0.3570 [−0.6366, −0.0657] |
+| Parameter | wp1044 FR Table 3.5.2 | **AU L2 iterative OLS** (`results_consumption.mat`, N=102, 21 iters) | Bayesian posterior mean (hybrid MCMC, 20k×2) | 90% HPD |
+|-----------|-----------|-------------------|--------------------------|---------|
+| β₀ (EC speed on `c* − c`) | **0.29** | **0.266** (SE 0.079, t=3.27) | **0.0519** | [0.0215, 0.0805] |
+| β₁ (Δc lag 1) | 0.17 | −0.159 (SE 0.087, t=−1.83) hit clamp | **0.0397** | [0.0051, 0.0731] |
+| β₂ (rate gap) | — | — | **−0.5796** | [−0.8848, −0.2866] |
+| β₃ (HtM / output gap) | 0.32 | −0.018 (SE 0.076, t=−0.23) | **0.0285** | [−0.0543, 0.1134] |
+| α₁ (PV(r_LH gap), reduced-form coef) | −1.15 (from LR Eq 33) | **−85.5** (SE 31.1, t=−2.75); reduced form α₁·χ_AU = −0.81 | — (calibrated α_c_r = −0.95) | — |
+| β_PAC (free coef on Δȳ lag) | (free, not tabled) | **+1.47** (SE 0.70, t=2.12) | **0.8263** | [0.3315, 1.3595] |
 | ω (calibrated per wp1044) | 0.00 (gap terms) | **0.00** | — | — |
-| χ (derived from depth-1 polynomial) | ~0.17 | **0.010** (near zero because β₁ near zero) | n/a | — |
-| **R²** | **0.95** | **0.81** | n/a | — |
-| Significant COVID dummies | — | d_20Q2=−13.6 (t=−13.7), d_20Q4=+2.81 (t=+2.19) | crash −14.9, bounce +6.39 | — |
+| χ (derived from depth-1 polynomial) | ~0.17 | **0.010** | — | — |
+| **R²** | **0.95** | **0.81** | — | — |
+| stderr eps_c | — | — | **2.0145** | [1.8112, 2.2523] |
+| Significant COVID dummies | — | d_20Q2=−13.6 (t=−13.7), d_20Q4=+2.81 (t=+2.19) | — | — |
 
 **Three quantitative findings**:
 
@@ -793,17 +790,18 @@ The direct interest rate term $b^{ih}_4 \tilde{i}_{t-1}$ is dropped, as F-test d
 
 ### Table 4.7.2: Housing investment short-run PAC coefficients — Phase L2 wp1044-faithful iterative OLS vs FR-BDF
 
-| Parameter | wp1044 FR Table 3.5.7 | **AU L2 iterative OLS** (`results_housing_inv.mat`, N=70, 14 iters) | Earlier-AUSPAC OLS (hybrid+COVID, pre-L2) | Bayesian posterior mean (Phase Y, pre-L2) | 90% HPD |
-|-----------|-----------|-------------------|--------------------------|----------------------------------------|---------|
-| β₀ (EC speed on `I*_H/I_H`) | 0.12 | **0.496** (SE 0.085, t=5.86) | 0.028 | 0.0298 | [0.0064, 0.0514] |
-| β₁ (Δlog I_H lag 1) | 0.18 | **0.293** (SE 0.129, t=2.28) | 0.111 | 0.1065 | [0.0326, 0.1753] |
-| β₂ (contemp Δy − ỹ) | 0.50 | −0.073 (SE 0.247, t=−0.30) | (regressor absent) | — | — |
-| β₃ (price spread `(p_SH − p_IH)_{-1} − _{-5}`) | 0.05 | −3.22 (SE 4.51, t=−0.71) | (regressor absent prev.; now constructed from ABS 6416 RPPI + IPD dwelling inv) | — | — |
-| ω (calibrated per wp1044) | 0.05 | 0.05 | 0.30 (legacy) | — | — |
-| χ (derived from depth-1 polynomial) | ~0.18 | **0.275** | n/a | — | — |
-| **R²** | **0.89** | **0.43** | n/a | — | — |
-| Significant COVID dummies | — | d_20Q2=−6.80 (t=−3.18) | crash −5.56 | — | — |
-| b_ph_ih (Tobin's Q, separate IV) | (not directly comparable) | 0.0099 (IV F=432, T=115, separate procedure) | — | — | — |
+| Parameter | wp1044 FR Table 3.5.7 | **AU L2 iterative OLS** (`results_housing_inv.mat`, N=70, 14 iters) | Bayesian posterior mean (hybrid MCMC, 20k×2) | 90% HPD |
+|-----------|-----------|-------------------|--------------------------|---------|
+| β₀ (EC speed on `I*_H/I_H`) | 0.12 | **0.496** (SE 0.085, t=5.86) | **0.0290** | [0.0080, 0.0493] |
+| β₁ (Δlog I_H lag 1) | 0.18 | **0.293** (SE 0.129, t=2.28) | **0.1074** | [0.0337, 0.1815] |
+| β₃ (output gap accelerator) | — | — | **0.2104** | [0.0409, 0.3632] |
+| β₂ (contemp Δy − ỹ) | 0.50 | −0.073 (SE 0.247, t=−0.30) | — | — |
+| Price spread `(p_SH − p_IH)_{-1} − _{-5}` | 0.05 | −3.22 (SE 4.51, t=−0.71) | — | — |
+| ω (calibrated per wp1044) | 0.05 | 0.05 | — | — |
+| χ (derived from depth-1 polynomial) | ~0.18 | **0.275** | — | — |
+| **R²** | **0.89** | **0.43** | — | — |
+| stderr eps_ih | — | — | **1.8938** | [0.5232, 3.3645] |
+| Significant COVID dummies | — | d_20Q2=−6.80 (t=−3.18) | — | — |
 
 The Phase L2 housing-inv block partially replicates wp1044 Eq 37 on AU data. Three findings:
 
@@ -1461,7 +1459,11 @@ The authoritative AUSPAC calibration (Table 5.6) is produced by joint Bayesian e
 
 
 
-### Table 5.6: Bayesian posterior (28 parameters)
+### Table 5.6: Bayesian posterior (25 estimated parameters — hybrid calibration, BI block calibrated from wp1044)
+
+**Log marginal data density**: Laplace = **−696.06**, MHM = **−697.36**. Improvement vs Round 1.2 baseline: **+88.4 nats MHM** (−785.80 → −697.36). The largest single-phase gain in the project's Phase Q–L2 trajectory. Estimated on 20k×2-chain MH, MATLAB R2026a + Dynare 7.0 (native ARM, parallel pool with 6 workers), total wall time 15 min. Three BI parameters (b0_ib, b1_ib, b3_ib) are removed from `estimated_params` per the Option 1 hybrid calibration of §3.6 + §4.6.2.
+
+> **Note**: the pre-Phase-L2 MCMC (Phase Y) estimated 28 parameters including 3 BI params. The current hybrid MCMC estimates 25 (BI calibrated). The +88 nats LMD improvement comes from both the dimension reduction (~4.5 nats mechanical from losing 3 free params) and the genuinely better BI block dynamics under wp1044 imported coefficients (~84 nats genuine fit improvement).
 
 The full-system Bayesian estimation jointly identifies 19 PAC and wage-block parameters together with 9 shock standard deviations, conditional on the calibrated supply, deflator, financial, trade, and UIP-NPV parameters quoted elsewhere in §4. The estimation is two-stage: csminwel mode search followed by Metropolis-Hastings MCMC (20,000 draws across two chains, ~51 min wall time). Posterior modes are within ±5% of posterior means for all coefficients, indicating well-shaped log-likelihood surfaces.
 
