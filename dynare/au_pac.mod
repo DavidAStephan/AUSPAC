@@ -230,6 +230,8 @@ parameters
 	b2_n
 	b2_pQ
 	b2_x
+	gamma_ulc
+	gamma_uck
 	b3_c
 	b3_ib
 	b3_ih
@@ -494,6 +496,12 @@ a_pQ_y = 0.05;
 b0_pQ = 0.0294;
 b1_pQ = 0.2784;
 b2_pQ = 0.0022;
+// CES dual cost-function structural coefficients (§4.3.1):
+//   γ_ULC = (1-α)σ = (1-0.45)*0.5366 = 0.295
+//   γ_UCK = ασ     = 0.45*0.5366      = 0.241
+// These are NOT free parameters — they're pinned by the CES calibration.
+gamma_ulc = 0.2951;   // (1-alpha_k)*sigma_ces: ULC passthrough into VA price
+gamma_uck = 0.2415;   // alpha_k*sigma_ces: user-cost passthrough into VA price
 h_pac_pQ_constant = 0.0005236870666278106;
 h_pac_pQ_var_dln_pcom_lag_1 = 3.553534636190619e-05;
 h_pac_pQ_var_i_gap_lag_1 = -0.001354039809492274;
@@ -840,7 +848,10 @@ model;
 	pac_expectation_pac_pQ =  h_pac_pQ_constant + h_pac_pQ_var_yhat_au_lag_1*yhat_au(-1) + h_pac_pQ_var_i_gap_lag_1*i_gap(-1) + h_pac_pQ_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_pQ_var_u_gap_lag_1*u_gap(-1) + h_pac_pQ_var_yhat_us_lag_1*yhat_us(-1) + h_pac_pQ_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_pQ_var_ibar_lag_1*ibar(-1) + h_pac_pQ_var_pibar_au_lag_1*pibar_au(-1) + h_pac_pQ_var_pibar_us_lag_1*pibar_us(-1) + h_pac_pQ_var_piQ_lag_1*piQ(-1) + h_pac_pQ_var_pi_m_lag_1*pi_m(-1) + h_pac_pQ_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_pQ_var_pi_w_gap_lag_1*pi_w_gap(-1) + h_pac_pQ_var_tau_GST_gap_lag_1*tau_GST_gap(-1) + h_pac_pQ_var_piQ_hat_lag_1*piQ_hat(-1);
 
 	[blockname='',name='pQ_level']
-	diff(pQ_level) =  b0_pQ*(piQ_hat(-1)-pQ_level(-1))+b1_pQ*diff(pQ_level(-1))+pac_expectation_pac_pQ+yhat_au*b2_pQ+eps_pQ;
+	// CES dual cost-function channels: γ_ULC·(dln_ulc - π̄) + γ_UCK·dln_uc_k
+	// Gap forms ensure SS neutrality: dln_ulc = π̄ and dln_uc_k = 0 at SS.
+	// wp1044 §4.3.1 factor-price-frontier; γ_ULC=(1-α)σ=0.295, γ_UCK=ασ=0.241.
+	diff(pQ_level) =  b0_pQ*(piQ_hat(-1)-pQ_level(-1))+b1_pQ*diff(pQ_level(-1))+pac_expectation_pac_pQ+yhat_au*b2_pQ+gamma_ulc*(dln_ulc-pibar_au)+gamma_uck*dln_uc_k+eps_pQ;
 
 	[blockname='',name='piQ_hat']
 	piQ_hat =  rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+pi_w_gap(-1)*a_pQ_w+tau_GST_gap(-1)*a_pQ_GST+eps_var_pQ;
