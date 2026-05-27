@@ -52,7 +52,15 @@ fprintf('Loaded supply_data.mat: %d quarters, %s to %s\n', ...
 
 % Series are log-levels (the *_lvl suffix in supply_data.mat)
 log_Q = S.q_market_lvl;        % market-sector real GVA, log
-log_K = S.k_total_lvl;         % total capital stock, log
+% Use market-sector K (matched to Q_market) if available; fall back to total
+if isfield(S, 'k_market_lvl')
+    log_K = S.k_market_lvl;    % market-sector capital stock, log (matched to Q_market)
+    fprintf('Using K_MARKET (matched to Q_market) — corrected aggregation.\n');
+else
+    log_K = S.k_total_lvl;     % fallback: total capital stock (pre-fix supply_data.mat)
+    fprintf('WARNING: using K_TOTAL (includes dwellings + govt) — gamma will be too small.\n');
+    fprintf('  Re-run prepare_supply_data.m to get k_market_lvl.\n');
+end
 log_N = S.n_total_lvl;         % total employment, log (proxy for N_S since
                                %   ABS 6202 doesn't split salaried/non-salaried)
 log_H = S.h_lvl;               % hours per worker, log
@@ -374,6 +382,11 @@ end
 gamma_hat = exp(mean(log_Q(base_mask) - log_K(base_mask)));
 fprintf('  Base year:    %d (%d quarters)\n', base_year, n_base);
 fprintf('  γ = exp(mean log Q - mean log K) = %.4f\n', gamma_hat);
+if isfield(S, 'k_market_lvl')
+    fprintf('  (using K_market — matched to Q_market; corrected aggregation)\n');
+else
+    fprintf('  (using K_total — includes dwellings + govt; gamma is too small)\n');
+end
 fprintf('  (FR-BDF 2026 reports γ = 0.2561 for France, 2019 base year)\n\n');
 
 %% ------------------------------------------------------------

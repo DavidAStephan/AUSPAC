@@ -179,28 +179,69 @@ fprintf('  AWE Persons Total (TREND — see comment): %d valid obs (col %d: %s)\
 
 %% 6. ABS 5204 Tab 63: Net capital stock annual
 % Col layout: chain-volumes block first (~112 cols), then current-prices block.
-% "ALL INDUSTRIES ; Net capital stock: Chain volume measures" is the total
-% across all industries × all assets (chain volume); located by header search.
 fprintf('\nReading abs_5204_net_capital_stock.xlsx ... ');
 [d, v, h] = read_abs(fullfile(datadir, 'abs_5204_net_capital_stock.xlsx'));
 fprintf('%d obs, %d series\n', length(d), size(v, 2));
-% Search for the total chain-volume "ALL INDUSTRIES ; Net capital stock"
-% (the asset-aggregate total — last entry of the chain-volume block)
-% Col 113 = ALL INDUSTRIES Net capital stock Chain volume measures (total)
-% Col 226 = ALL INDUSTRIES Net capital stock Current prices (total)
-idx_k_chain = 113;
-idx_k_cp = 226;
-% Verify
+
+% Column indices (chain-volume block):
+%   6   = Agriculture, forestry and fishing
+%   12  = Mining (B)
+%   79  = Public administration and safety
+%   84  = Education and training
+%   89  = Health care and social assistance
+%   103 = ALL INDUSTRIES ; Dwellings (asset type)
+%   113 = ALL INDUSTRIES total (all assets, all industries)
+% Current-prices block:
+%   226 = ALL INDUSTRIES total current prices
+idx_k_chain   = 113;
+idx_k_cp      = 226;
+idx_k_dwell   = 103;   % dwellings asset — not part of market-sector production
+idx_k_pubadm  = 79;    % non-market industry
+idx_k_edu     = 84;    % non-market industry
+idx_k_health  = 89;    % non-market industry
+idx_k_mining  = 12;    % mining (B) — for Phase L3 mining/non-mining split
+
+% Verify key columns
 assert(contains(h{idx_k_chain}, 'ALL INDUSTRIES') && contains(h{idx_k_chain}, 'Chain volume'), ...
     'Col 113 header is "%s" — expected ALL INDUSTRIES chain volume', h{idx_k_chain});
 assert(contains(h{idx_k_cp}, 'ALL INDUSTRIES') && contains(h{idx_k_cp}, 'Current prices'), ...
     'Col 226 header is "%s" — expected ALL INDUSTRIES current prices', h{idx_k_cp});
+assert(contains(h{idx_k_dwell}, 'Dwellings'), ...
+    'Col 103 header is "%s" — expected Dwellings', h{idx_k_dwell});
+assert(contains(h{idx_k_mining}, 'Mining'), ...
+    'Col 12 header is "%s" — expected Mining', h{idx_k_mining});
 
-k_total_annual = v(:, idx_k_chain);
+k_total_annual    = v(:, idx_k_chain);
 k_total_cp_annual = v(:, idx_k_cp);
-k_total_dates = d;
-fprintf('  K chain vol annual:      %d valid obs (col %d)\n', sum(~isnan(k_total_annual)), idx_k_chain);
+k_dwell_annual    = v(:, idx_k_dwell);
+k_pubadm_annual   = v(:, idx_k_pubadm);
+k_edu_annual      = v(:, idx_k_edu);
+k_health_annual   = v(:, idx_k_health);
+k_mining_annual   = v(:, idx_k_mining);
+k_total_dates     = d;
+
+% Market-sector capital = total − dwellings − non-market industries
+% Matches the Q_market definition: total GVA − pub admin − education − health − dwellings
+k_market_annual = k_total_annual - k_dwell_annual - k_pubadm_annual - k_edu_annual - k_health_annual;
+k_nonmining_market_annual = k_market_annual - k_mining_annual;
+
+fprintf('  K_total chain vol:       %d valid obs (col %d)\n', sum(~isnan(k_total_annual)), idx_k_chain);
+fprintf('  K_dwellings:             %d valid obs (col %d)\n', sum(~isnan(k_dwell_annual)), idx_k_dwell);
+fprintf('  K_pubadm:                %d valid obs\n', sum(~isnan(k_pubadm_annual)));
+fprintf('  K_edu:                   %d valid obs\n', sum(~isnan(k_edu_annual)));
+fprintf('  K_health:                %d valid obs\n', sum(~isnan(k_health_annual)));
+fprintf('  K_mining:                %d valid obs (col %d)\n', sum(~isnan(k_mining_annual)), idx_k_mining);
+fprintf('  K_market (derived):      %d valid obs\n', sum(~isnan(k_market_annual)));
 fprintf('  K current prices annual: %d valid obs (col %d)\n', sum(~isnan(k_total_cp_annual)), idx_k_cp);
+% Diagnostic: compare 2019 values
+idx_2019 = find(year(d) == 2019, 1);
+if ~isempty(idx_2019)
+    fprintf('  2019 K_total=$%.0fM, K_market=$%.0fM (%.1f%% of total), K_mining=$%.0fM (%.1f%% of market)\n', ...
+        k_total_annual(idx_2019), k_market_annual(idx_2019), ...
+        100*k_market_annual(idx_2019)/k_total_annual(idx_2019), ...
+        k_mining_annual(idx_2019), ...
+        100*k_mining_annual(idx_2019)/k_market_annual(idx_2019));
+end
 
 %% 7. ABS 5204 Tab 47: Depreciation annual
 % Col 23 = "ALL INDUSTRIES" (total consumption of fixed capital, current prices)
@@ -231,19 +272,29 @@ end
 
 %% Interpolate annual K and depreciation to quarterly
 fprintf('\nInterpolating K and depreciation to quarterly...\n');
-k_total_q = nan(nQ, 1);
-for i = 1:length(k_total_dates)
-    if isnat(k_total_dates(i)), continue; end
-    yr = year(k_total_dates(i));
-    idx = find(year(dates_q) == yr & quarter(dates_q) == 2, 1);  % Aussie FY ends Q2
-    if ~isempty(idx) && ~isnan(k_total_annual(i)), k_total_q(idx) = k_total_annual(i); end
+
+% Helper: interpolate an annual series aligned at Q2 to quarterly
+interp_annual_to_q = @(k_ann) interp_annual_q2(k_ann, k_total_dates, dates_q, nQ);
+
+k_total_q    = interp_annual_to_q(k_total_annual);
+k_market_q   = interp_annual_to_q(k_market_annual);
+k_mining_q   = interp_annual_to_q(k_mining_annual);
+k_nonmin_q   = interp_annual_to_q(k_nonmining_market_annual);
+
+fprintf('  K_total quarterly:       %d valid obs\n', sum(~isnan(k_total_q)));
+fprintf('  K_market quarterly:      %d valid obs\n', sum(~isnan(k_market_q)));
+fprintf('  K_mining quarterly:      %d valid obs\n', sum(~isnan(k_mining_q)));
+fprintf('  K_nonmining quarterly:   %d valid obs\n', sum(~isnan(k_nonmin_q)));
+
+% Diagnostic: gamma at 2019
+idx_2019q = find(year(dates_q) == 2019 & quarter(dates_q) == 1, 1);
+if ~isempty(idx_2019q) && ~isnan(k_market_q(idx_2019q))
+    gamma_old = exp(log(q_market_vol(idx_2019q)) - log(k_total_q(idx_2019q)));
+    gamma_new = exp(log(q_market_vol(idx_2019q)) - log(k_market_q(idx_2019q)));
+    fprintf('  gamma_old (Q_mkt/K_total) at 2019Q1: %.4f\n', gamma_old);
+    fprintf('  gamma_new (Q_mkt/K_market) at 2019Q1: %.4f\n', gamma_new);
+    fprintf('  FR-BDF 2026 gamma = 0.2561\n');
 end
-nan_idx = isnan(k_total_q);
-v_idx = find(~nan_idx);
-if length(v_idx) >= 2
-    k_total_q(nan_idx) = interp1(v_idx, k_total_q(v_idx), find(nan_idx), 'linear', 'extrap');
-end
-fprintf('  K quarterly:             %d valid obs\n', sum(~isnan(k_total_q)));
 
 dep_q = nan(nQ, 1);
 for i = 1:length(dep_dates)
@@ -294,7 +345,10 @@ out.q_total_lvl = log(q_total_vol);
 out.q_market_lvl = log(q_market_vol);
 out.p_q_total_lvl = log(p_q_total);
 out.p_q_market_lvl = log(p_q_market);
-out.k_total_lvl = log(k_total_q);
+out.k_total_lvl = log(k_total_q);       % ALL-INDUSTRIES total (includes dwellings + govt) — kept for depreciation calc
+out.k_market_lvl = log(k_market_q);     % market-sector K (matched to Q_market) — USE THIS for CES γ
+out.k_mining_lvl = log(k_mining_q);     % mining (B) — for Phase L3 mining/non-mining split
+out.k_nonmining_market_lvl = log(k_nonmin_q);  % non-mining market-sector K
 out.delta_q = delta_q;
 out.n_total_lvl = log(n_total_raw);
 out.h_lvl = log(h_per_worker);
@@ -424,6 +478,22 @@ function v_q = align_to_q(d_in, v_in, dates_q)
         if qq == 4 && any(year(d_in) == yr)
             v_q(i) = mean(v_in(year(d_in) == yr), 'omitnan');
         end
+    end
+end
+
+function k_q = interp_annual_q2(k_annual, k_dates, dates_q, nQ)
+    % Interpolate an annual series (aligned at fiscal-year Q2) to quarterly.
+    k_q = nan(nQ, 1);
+    for i = 1:length(k_dates)
+        if isnat(k_dates(i)), continue; end
+        yr = year(k_dates(i));
+        idx = find(year(dates_q) == yr & quarter(dates_q) == 2, 1);
+        if ~isempty(idx) && ~isnan(k_annual(i)), k_q(idx) = k_annual(i); end
+    end
+    nan_idx = isnan(k_q);
+    v_idx = find(~nan_idx);
+    if length(v_idx) >= 2
+        k_q(nan_idx) = interp1(v_idx, k_q(v_idx), find(nan_idx), 'linear', 'extrap');
     end
 end
 
