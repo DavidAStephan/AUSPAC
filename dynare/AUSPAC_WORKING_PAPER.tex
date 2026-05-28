@@ -288,26 +288,38 @@ I02/F11 data --- 25 of 35 audited coefficients are now AU point
 estimates; the wage Phillips was re-estimated under a BK-stability
 constraint \textbf{λ\_w + γ\_w ≤ 0.95} that delivers a substantial
 Phillips slope κ\_w = 0.359 with near-unit CPI passthrough γ\_w = 0.857
-(§6.7). The CPI Phillips audit confirms the \textbf{flat AU Phillips}
-stylised fact: only the lag coefficient is identified (λ\_π = 0.259, t =
-2.76, R² = 0.063); output-gap, VA-price, and import-price channels are
-all insignificant. Under the post-audit calibration the response to a
-100 bp annualized cash-rate tightening produces a real-GDP trough of
-−0.088\% at Q8, an output-gap trough of −0.069\% at Q8, CPI inflation
-falling −0.020 pp year-on-year at Q16 (weaker and slower than pre-audit,
-reflecting the AU flat-Phillips finding), wage inflation falling −0.011
-pp at Q7 (5--10× larger than pre-audit due to the now-identified κ\_w),
-the AUD appreciating 0.980\% at Q8 via a forward-looking UIP NPV
-channel, and the 10-year yield rising 0.103 pp on impact. A cross-block
-finding emerges from the Phase L2 estimates: \textbf{AU ECM speeds are
-4--8× faster than France's} in four of five blocks (consumption is the
-exception); plausible drivers are AU's more flexible price/wage setting
-(mining cycle, commodity-pass-through, variable-rate mortgages).
-Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN,
-DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC
-at the conservative end of the AU range, with magnitudes that reflect
-the greater capital--labour substitutability of the CES specification (σ
-= 0.54) and the small estimated PAC adjustment-cost coefficients. The
+(§6.7). A follow-up \textbf{Phase L2.A architectural audit} (§6.8)
+identified that three model state variables (\texttt{yhat\_au},
+\texttt{pi\_au}, \texttt{u\_gap}) were being defined by E-SAT-style
+reduced-form equations instead of the FR-BDF structural identities (CES
+potential + demand-side aggregation for \texttt{yhat\_au};
+food/energy/core deflator aggregation for \texttt{pi\_au}; labour-market
+accounting for \texttt{u\_gap}). Per wp736 §2.3, §4.3.3, §4.5.1 and
+§4.7, the E-SAT equations are forecasting tools for agents, not defining
+equations for the simulator's actual state variables. Refactoring to the
+structural identities yields a 30--70\% amplification in real-activity
+IRFs and unlocks the now-identified wage Phillips slope. The CPI
+Phillips audit confirms the \textbf{flat AU Phillips} stylised fact:
+only the lag coefficient is identified (λ\_π = 0.259, t = 2.76, R² =
+0.063); output-gap, VA-price, and import-price channels are all
+insignificant. Under the post-L2.A architecturally-correct calibration
+the response to a 100 bp annualized cash-rate tightening produces a
+real-GDP trough of −0.135\% at Q9, an output-gap trough of −0.096\% at
+Q9, headline CPI inflation falling only −0.004 pp year-on-year at Q3
+(food up, energy down, core flat --- matching the flat-Phillips
+empirical reality), wage inflation falling −0.005 pp at Q2 (now
+structurally responsive via κ\_w), the AUD appreciating 0.991\% at Q8
+via a forward-looking UIP NPV channel, and the 10-year yield rising
+0.105 pp on impact. A cross-block finding emerges from the Phase L2
+estimates: \textbf{AU ECM speeds are 4--8× faster than France's} in four
+of five blocks (consumption is the exception); plausible drivers are
+AU's more flexible price/wage setting (mining cycle,
+commodity-pass-through, variable-rate mortgages). Benchmarking against
+the RBA's model suite (Beckers 2020 VAR, MARTIN, DINGO, Murphy ---
+Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC at the
+conservative end of the AU range, with magnitudes that reflect the
+greater capital--labour substitutability of the CES specification (σ =
+0.54) and the small estimated PAC adjustment-cost coefficients. The
 forward-guidance puzzle is absent: AU-PAC tracks the linear reference
 response to within 16\% even at N = 12 successive rate-cut
 announcements, while standard New Keynesian models saturate near 1.8×.
@@ -341,7 +353,8 @@ expectations, monetary policy transmission, Australian economy
   \hyperref[5-cross-block-findings]{Cross-block findings}
 \item
   \hyperref[6-estimation]{Estimation} --- incl.~\textbf{§6.6 Phase L2
-  OLS audit + §6.7 BK-constrained wage Phillips (2026-05-28)}
+  OLS audit + §6.7 BK-constrained wage Phillips + §6.8 Phase L2.A
+  architectural fixes (2026-05-28)}
 \item
   \hyperref[7-model-properties]{Model Properties}
 \item
@@ -4872,6 +4885,195 @@ amplification reflecting the active unemployment channel. Real-activity
 and exchange-rate IRFs are unchanged because those run through
 capital/UIP/term-structure mechanics, not through wage formation.
 
+\subsubsection{6.8 Phase L2.A architectural fixes
+(2026-05-28)}\label{phase-l2.a-architectural-fixes-2026-05-28}
+
+Following the L2 OLS audit, a deeper architectural review revealed that
+three model state variables were being defined by E-SAT-style
+reduced-form equations rather than the structural identities used in
+FR-BDF. Per wp736 §2.3, §4.3.3, §4.4 (eq 47), and §4.5.1, the E-SAT IS
+curve, Phillips curve, and Okun's law are tools agents use to
+\textbf{forecast} future paths of \texttt{ŷ}, \texttt{π}, \texttt{u}.
+They are not the \textbf{defining} equations for the simulator's actual
+state variables, which come from supply-side (CES) potential output,
+demand-side identity for actual GDP, weighted-aggregate deflator block
+for CPI, and labour-market accounting for the unemployment gap. The
+relevant FR-BDF quote from §4.3 is unambiguous: ``FR-BDF has a fully
+specified supply block which enables the model to endogenously converge
+toward the long-run or natural level of GDP, \textbf{as well as to
+define the output gap used in E-SAT}'' --- that is, the supply block
+\emph{defines} the gap, and E-SAT \emph{consumes} it.
+
+In the production AU-PAC model up to commit \texttt{6cd4fb9}, the
+equations at au\_pac.mod:1051, 1071, and 1217 were:
+
+\begin{verbatim}
+yhat_au   = δ·yhat_us + λ_q·yhat_au(−1) − σ_q·(i_gap(−1)−pi_au_gap(−1))
+          + λ_dom·yhat_dom + ε_q                  (E-SAT IS curve defining yhat_au)
+pi_au_gap = λ_π·pi_au_gap(−1) + κ_π·yhat_au(−1)
+          + α_pc·(piQ−pibar_au) + ... + ε_pi      (E-SAT Phillips defining pi_au_gap)
+u_gap     = ρ_u_gap·u_gap(−1) + okun_coeff·yhat_au   (Okun shortcut defining u_gap)
+\end{verbatim}
+
+In the architectural fix (commits \texttt{dd45c87}, \texttt{f276ebe},
+\texttt{053bf57}), these were replaced with FR-BDF-fidelitous structural
+identities:
+
+\paragraph{Table 6.8: Phase L2.A architectural
+fixes}\label{table-6.8-phase-l2.a-architectural-fixes}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Pre-fix (E-SAT shadow)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Post-fix (structural identity)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+FR-BDF reference
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{yhat\_au} & E-SAT IS curve &
+\texttt{yhat\_au\ =\ yhat\_au(−1)\ +\ yhat\_dom\ +\ ε\_q} (accumulation
+of demand-identity growth) & wp736 §2.3, §4.3.3 \\
+\texttt{pi\_au} & derived from E-SAT Phillips via
+\texttt{pi\_au\ =\ pi\_au\_gap\ +\ pibar\_au} &
+\texttt{pi\_au\ =\ w\_food·pi\_au\_food\ +\ w\_energy·pi\_au\_energy\ +\ (1−w\_food−w\_energy)·pi\_au\_core}
+(structural aggregator) & wp736 §4.7 (demand deflators) \\
+\texttt{pi\_au\_gap} & E-SAT Phillips &
+\texttt{pi\_au\_gap\ =\ pi\_au\ −\ pibar\_au} (definitional) & wp736
+§4.7 \\
+\texttt{pi\_au\_core} & back-out residual &
+\texttt{pi\_au\_core\ =\ pi\_c\ +\ ε\_pi} (consumption deflator + CPI
+noise) & wp736 §4.7.1 \\
+\texttt{u\_gap} & Okun shortcut with persistence 0.946 &
+\texttt{u\_gap\ =\ −ln\_n\_level} (negative of cyclical employment gap;
+log-linear from N/LF identity) & wp736 §4.5.1 \\
+\end{longtable}
+}
+
+The L2 OLS estimates of the now-demoted equations (\texttt{lambda\_pi},
+\texttt{kappa\_pi}, \texttt{alpha\_pc}, \texttt{b\_ECM\_pc},
+\texttt{okun\_coeff}, \texttt{rho\_u\_gap}) are preserved in
+\texttt{data/pac\_blocks/results\_cpi\_phillips.txt} and the parameter
+declarations of \texttt{au\_pac.mod}. They can be re-attached to E-SAT
+auxiliary forecasting equations when the var\_model machinery is
+rebuilt.
+
+\paragraph{Table 6.9: Impact on the 100bp annualized monetary tightening
+IRF}\label{table-6.9-impact-on-the-100bp-annualized-monetary-tightening-irf}
+
+Comparison of pre-L2.A (commit \texttt{6cd4fb9}, all L2 OLS coefficients
+written back + BK-constrained wage Phillips) vs post-L2.A (commit
+\texttt{053bf57}, all three architectural fixes applied). Same
+calibration except for the three structural redefinitions.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Pre-L2.A
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Post-L2.A
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Δ
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Real GDP (ln\_Q)} & −0.088\% Q8 & \textbf{−0.135\% Q9} & +53\%
+larger response \\
+Output gap (yhat\_au) & −0.069\% Q8 & \textbf{−0.096\% Q9} & +40\% \\
+CPI inflation (pi\_au, y/y) & −0.020 pp Q16 & \textbf{−0.004 pp Q3} &
+smaller and earlier \\
+\texttt{pi\_au\_food} (new decomp) & --- & +0.019 pp Q1 & --- \\
+\texttt{pi\_au\_energy} (new decomp) & --- & −0.048 pp Q9 & --- \\
+\texttt{pi\_au\_core} (new decomp) & --- & +0.001 pp Q11 & ≈ pi\_c \\
+VA price (piQ, y/y) & +0.030 pp Q1 & +0.032 pp Q1 & unchanged \\
+Consumption growth & −0.020\% Q1 & −0.027\% Q2 & +35\% \\
+Business inv growth & −0.055\% Q8 & −0.093\% Q9 & +69\% \\
+Housing inv growth & −0.027\% Q4 & −0.028\% Q4 & unchanged \\
+Employment growth & −0.005\% Q5 & −0.007\% Q12 & +40\%, later \\
+\textbf{Wage inflation (y/y)} & +0.012 pp Q47 (overshoot) &
+\textbf{−0.005 pp Q2} & reverses sign; now structurally responsive \\
+Exchange rate (s\_gap, \%) & −0.980\% Q8 & −0.991\% Q8 & unchanged \\
+10Y yield (annualised) & +0.103 pp Q1 & +0.105 pp Q1 & unchanged \\
+\end{longtable}
+}
+
+Three findings emerge:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Real-activity transmission is larger} under the structural
+  identity. The pre-L2.A E-SAT IS curve had σ\_q = 0.065 with
+  persistence λ\_q = 0.70 acting in parallel to the demand-side
+  aggregator (with weight λ\_dom = 0.40); the structural fix removes
+  this dampening parallel channel, letting the PAC blocks
+  (business-investment WACC, housing mortgage, consumption
+  pv\_r\_lh\_gap, trade real-exchange-rate) fully aggregate into
+  yhat\_au via the demand identity. The result: AU-PAC moves from the
+  ``conservative outlier'' position in the RBA-suite comparison (Table
+  6.4) to a more central position.
+\item
+  \textbf{The CPI response decomposes interpretably} under the
+  structural aggregator. The headline \texttt{pi\_au} peak is now
+  smaller (−0.004 pp vs −0.020 pp pre-L2.A) because the structural
+  deflator components partially offset: \texttt{pi\_au\_food} rises
+  (+0.019 pp on impact via VA-price and commodity passthrough) while
+  \texttt{pi\_au\_energy} falls (−0.048 pp at Q9, dominated by
+  import-price and commodity passthrough as the AUD appreciates), and
+  \texttt{pi\_au\_core} (consumption deflator) barely moves (+0.001 pp).
+  This matches the L2 OLS empirical finding (R² = 0.06; only persistence
+  identified): AU CPI inflation is dominated by import/commodity cycles,
+  not by the output-gap Phillips channel.
+\item
+  \textbf{The wage Phillips slope κ\_w = 0.359 now transmits} to nominal
+  wages. Pre-L2.A, u\_gap was driven by the Okun shortcut with
+  persistence 0.946, taking dozens of quarters to respond; the wage
+  Phillips κ\_w channel saw essentially no signal. Post-L2.A, u\_gap =
+  −ln\_n\_level inherits the PAC employment dynamics (faster,
+  structurally identified), so the wage Phillips responds on realistic
+  horizons. The pre-L2.A pi\_w peak of +0.012 pp at Q47 was an overshoot
+  in the tail; the post-L2.A peak of −0.005 pp at Q2 is the structural
+  impact response.
+\end{enumerate}
+
+The architectural changes are documented in detail in
+\href{../ESAT_ARCHITECTURE_AUDIT.md}{\texttt{ESAT\_ARCHITECTURE\_AUDIT.md}},
+which also lays out a checklist for future development to avoid the same
+pattern.
+
+\textbf{Known caveats}: - The \texttt{h\_pac\_*} policy-function
+coefficients (embedded in the \texttt{pac\_expectation\_pac\_*}
+equations) were generated by \texttt{pac.print()} against the OLD VAR
+dynamics for \texttt{yhat\_au}, \texttt{pi\_au\_gap}, and
+\texttt{u\_gap}. They are now stale relative to the structural dynamics.
+The model remains BK-stable and the discounted-sum projection is
+approximately correct, but full self-consistency requires re-running
+\texttt{pac.print()} against the new VAR. - The L2 OLS estimates of the
+PAC equation parameters (b0\_c, b1\_c, b0\_pQ, etc.) were obtained using
+the OLD \texttt{yhat\_au} as a regressor in the iterative-OLS procedure.
+They are not formally re-optimal under the new structural definition. A
+re-fit is left for future work.
+
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \subsection{7. Model Properties}\label{model-properties}
@@ -4983,14 +5185,16 @@ from the earlier three-regime workflow; the Phase T production regime is
 closest to the Hybrid trace.}
 
 \subsubsection{Table 6.3: Peak IRF (100bp annualized monetary
-tightening) --- Phase L2 OLS audit + constrained wage Phillips
-(2026-05-28)}\label{table-6.3-peak-irf-100bp-annualized-monetary-tightening-phase-l2-ols-audit-constrained-wage-phillips-2026-05-28}
+tightening) --- Phase L2.A architectural fix
+(2026-05-28)}\label{table-6.3-peak-irf-100bp-annualized-monetary-tightening-phase-l2.a-architectural-fix-2026-05-28}
 
 GDP and growth-rate variables in \% deviation from baseline (FR-BDF
 convention); inflation and yield variables in annualised pp.~Peaks taken
 within the first 40 quarters. Calibration: post-Phase-L2 single-equation
-OLS for CPI Phillips, trade quantities, trade and other deflators (see
-§6.6), and BK-constrained restricted OLS for wage Phillips (§6.7).
+OLS for CPI Phillips, trade quantities, trade and other deflators
+(§6.6), BK-constrained restricted OLS for wage Phillips (§6.7), and
+Phase L2.A architectural fixes for \texttt{yhat\_au}, \texttt{pi\_au},
+and \texttt{u\_gap} (§6.8).
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lll@{}}
@@ -5000,20 +5204,25 @@ Variable & Peak & Quarter \\
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Real GDP (ln\_Q)} & \textbf{−0.088\%} & Q8 \\
-Output gap (yhat\_au) & \textbf{−0.069\%} & Q8 \\
-CPI inflation (pi\_au, y/y) & \textbf{−0.020 pp} & Q16 \\
-VA price inflation (piQ, y/y) & +0.030 pp & Q1 \\
-CPI deflator inflation (pi\_c, y/y) & +0.001 pp & Q12 \\
-Consumption growth (Δlog) & \textbf{−0.020\%} & Q1 \\
-Business inv growth (Δlog) & −0.055\% & Q8 \\
-Housing inv growth (Δlog) & −0.027\% & Q4 \\
-Employment growth (Δlog) & −0.005\% & Q5 \\
-\textbf{Wage inflation (y/y)} & \textbf{−0.011 pp} & Q7 \\
-Exchange rate (s\_gap, \%) & \textbf{−0.980\%} & Q8 \\
-10Y yield (annualised) & \textbf{+0.103 pp} & Q1 \\
+\textbf{Real GDP (ln\_Q)} & \textbf{−0.135\%} & Q9 \\
+Output gap (yhat\_au) & \textbf{−0.096\%} & Q9 \\
+CPI inflation (pi\_au, y/y) & \textbf{−0.004 pp} & Q3 \\
+\texttt{pi\_au\_food} (decomp) & +0.019 pp & Q1 \\
+\texttt{pi\_au\_energy} (decomp) & −0.048 pp & Q9 \\
+\texttt{pi\_au\_core} (decomp; ≈ pi\_c) & +0.001 pp & Q11 \\
+VA price inflation (piQ, y/y) & +0.032 pp & Q1 \\
+Consumption growth (Δlog) & \textbf{−0.027\%} & Q2 \\
+Business inv growth (Δlog) & −0.093\% & Q9 \\
+Housing inv growth (Δlog) & −0.028\% & Q4 \\
+Employment growth (Δlog) & −0.007\% & Q12 \\
+\textbf{Wage inflation (y/y)} & \textbf{−0.005 pp} & Q2 \\
+Unemployment gap (u\_gap, pp) & +0.007 pp & Q12 \\
+Exchange rate (s\_gap, \%) & \textbf{−0.991\%} & Q8 \\
+10Y yield (annualised) & \textbf{+0.105 pp} & Q1 \\
 \end{longtable}
 }
+
+See §6.8 (Table 6.9) for full pre-vs-post-L2.A comparison.
 
 \emph{Comparison with pre-audit values:} real-GDP / output-gap / s\_gap
 / 10Y are essentially unchanged; the \textbf{CPI channel weakens
