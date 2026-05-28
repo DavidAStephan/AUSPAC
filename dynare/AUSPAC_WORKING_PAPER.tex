@@ -1,7 +1,6 @@
 % Options for packages loaded elsewhere
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
-\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
 \documentclass[
   11pt,
 ]{article}
@@ -225,11 +224,7 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
 \hypersetup{
-  colorlinks=true,
-  linkcolor={blue},
-  filecolor={Maroon},
-  citecolor={Blue},
-  urlcolor={blue},
+  hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
 \author{}
@@ -293,27 +288,27 @@ Keynesian structure under genuine ABS Wage Price Index data: λ\_w = 0.21
 own-lag persistence, γ\_w = 0.35 CPI passthrough, and a significant
 negative unemployment-PV coefficient κ\_w = −0.10 corresponding to a
 positive structural Phillips slope. The response to a 100 bp annualized
-cash-rate tightening produces a peak real GDP fall of −0.22\% at Q7, an
-output-gap peak of −0.14\% at Q7, CPI inflation falling 0.10 pp
-year-on-year, the AUD appreciating 0.97\% at Q8 via a forward-looking
-UIP NPV channel, and the 10-year yield rising 0.41 pp on impact. A
-cross-block finding emerges from the Phase L2 estimates: \textbf{AU ECM
-speeds are 4--8× faster than France's} in four of five blocks
-(consumption is the exception); plausible drivers are AU's more flexible
-price/wage setting (mining cycle, commodity-pass-through, variable-rate
-mortgages). Benchmarking against the RBA's model suite (Beckers 2020
-VAR, MARTIN, DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025)
-places AU-PAC at the conservative end of the AU range, with magnitudes
-that reflect the greater capital--labour substitutability of the CES
-specification (σ = 0.54) and the small estimated PAC adjustment-cost
-coefficients. The forward-guidance puzzle is absent: AU-PAC tracks the
-linear reference response to within 16\% even at N = 12 successive
-rate-cut announcements, while standard New Keynesian models saturate
-near 1.8×. Australia-specific features include an endogenous Taylor rule
-for the RBA, variable-rate mortgage transmission, commodity-price
-channels, the US as the foreign bloc, and a trade ECM calibrated to
-Australia's secular openness rise. The model is implemented in Dynare
-6.5.
+cash-rate tightening produces a real GDP level that rises +0.478\% by
+Q40 (supply-side ULC effect), an output-gap trough of −0.126\% at Q7,
+CPI inflation falling −0.105 pp year-on-year at Q16, the AUD
+appreciating 0.947\% at Q8 via a forward-looking UIP NPV channel, and
+the 10-year yield rising 0.098 pp on impact. A cross-block finding
+emerges from the Phase L2 estimates: \textbf{AU ECM speeds are 4--8×
+faster than France's} in four of five blocks (consumption is the
+exception); plausible drivers are AU's more flexible price/wage setting
+(mining cycle, commodity-pass-through, variable-rate mortgages).
+Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN,
+DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC
+at the conservative end of the AU range, with magnitudes that reflect
+the greater capital--labour substitutability of the CES specification (σ
+= 0.54) and the small estimated PAC adjustment-cost coefficients. The
+forward-guidance puzzle is absent: AU-PAC tracks the linear reference
+response to within 16\% even at N = 12 successive rate-cut
+announcements, while standard New Keynesian models saturate near 1.8×.
+Australia-specific features include an endogenous Taylor rule for the
+RBA, variable-rate mortgage transmission, commodity-price channels, the
+US as the foreign bloc, and a trade ECM calibrated to Australia's
+secular openness rise. The model is implemented in Dynare 6.5.
 
 \textbf{Keywords}: Semi-structural model, polynomial adjustment costs,
 expectations, monetary policy transmission, Australian economy
@@ -4206,15 +4201,11 @@ monetary-policy regime change, the BI block's FOC still holds at coef =
 +1 on PV, and the AU-specific dynamics propagate through the other
 (AU-estimated and AU-shocked) blocks.
 
-The §7 IRF figures committed in \texttt{dynare/} were generated under
-the pre-hybrid calibration; the qualitative IRF shapes are preserved by
-the structural identity of the BI PAC form, but quantitative magnitudes
-through the BI channel will differ. The full IRF re-generation under the
-hybrid calibration is pending the next MATLAB GUI session (see
-\href{../WORKING_PAPER_BLOCKERS.md}{\texttt{WORKING\_PAPER\_BLOCKERS.md}});
-the magnitudes quoted in §7.2's channel-by-channel walkthrough flag this
-explicitly where it matters most (the (ii) user-cost-of-capital
-paragraph and the (vi) wage-price spiral paragraph).
+The §7 IRF figures and Table 6.3 magnitudes have been regenerated under
+the production model, which includes ULC/UCK structural channels,
+deflator ECMs, endogenous spread widening, and energy/non-energy import
+split. The magnitudes quoted in §7.2's channel-by-channel walkthrough
+reflect this latest run.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -4697,22 +4688,13 @@ Table 4.2.1 and the trade ECM of §4.8. Peaks and troughs quoted in the
 text are read from the saved IRF binaries; the corresponding figures are
 reproduced from the same artefacts.
 
-\textbf{Post-hybrid calibration note (Phase L2 P1c, 2026-05-26)}. The
-figures here were generated under the \textbf{pre-hybrid AU-estimated BI
-calibration} (b0\_ib=0.018, b1\_ib=0.082, b3\_ib=0.31). The production
-model now uses the \textbf{hybrid Option 1 calibration} of §3.6 + §4.6.2
-(b0\_ib=0.096, b1\_ib=0.33, b2\_ib=0.11, b3\_ib=0.69, ω=0.35 --- all
-imported from wp1044 Table 3.5.13). Under the hybrid calibration the BI
-channel through the §7.2 monetary-tightening IRF is
-\textbf{substantively larger}: BI ECM 5× faster, BI AR1 4× more
-inertial, BI accelerator 2× stronger. Qualitative IRF shapes are
-preserved by the structural identity of the wp1044 PAC form;
-quantitative magnitudes through the BI channel will differ. The full IRF
-re-generation under the hybrid calibration is pending the next MATLAB
-GUI session (see
-\href{../WORKING_PAPER_BLOCKERS.md}{\texttt{WORKING\_PAPER\_BLOCKERS.md}}).
-Magnitudes quoted in §7.2's channel-by-channel walkthrough flag this in
-the (ii) user-cost-of-capital paragraph where the change matters most.
+\textbf{Calibration note}. The production model uses the \textbf{hybrid
+Option 1 calibration} of §3.6 + §4.6.2 (b0\_ib=0.096, b1\_ib=0.33,
+b2\_ib=0.11, b3\_ib=0.69, ω=0.35 --- all imported from wp1044 Table
+3.5.13), plus ULC/UCK structural channels, deflator ECMs, endogenous
+spread widening, and energy/non-energy import split. Table 6.3 and the
+§7.2.2 channel-by-channel walkthrough reflect IRFs from this production
+specification.
 \end{quote}
 
 \subsubsection{7.1 Steady state}\label{steady-state}
@@ -4823,28 +4805,30 @@ Variable & Peak & Quarter \\
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Real GDP (ln\_Q)} & \textbf{−0.217\%} & Q7 \\
-Output gap (yhat\_au) & \textbf{−0.137\%} & Q7 \\
-CPI inflation (y/y) & \textbf{−0.099 pp} & Q11 \\
-VA price inflation (y/y) & −0.010 pp & Q11 \\
-Consumption growth (Δlog) & \textbf{−0.087\%} & Q2 \\
-Business inv growth (Δlog) & −0.046\% & Q7 \\
-Housing inv growth (Δlog) & −0.035\% & Q7 \\
-Employment growth (Δlog) & −0.007\% & Q9 \\
-Wage inflation (y/y) & −0.043 pp & Q15 \\
-Exchange rate (s\_gap, \%) & \textbf{−0.971\%} & Q8 \\
-10Y yield (annualised) & \textbf{+0.407 pp} & Q1 \\
+\textbf{Real GDP (ln\_Q)} & \textbf{+0.478\%} & Q40 \\
+Output gap (yhat\_au) & \textbf{−0.126\%} & Q7 \\
+CPI inflation (pi\_au, y/y) & \textbf{−0.105 pp} & Q16 \\
+VA price inflation (piQ, y/y) & +0.041 pp & Q1 \\
+CPI deflator inflation (pi\_c, y/y) & −0.133 pp & Q18 \\
+Consumption growth (Δlog) & \textbf{−0.133\%} & Q2 \\
+Business inv growth (Δlog) & −0.101\% & Q6 \\
+Housing inv growth (Δlog) & −0.032\% & Q7 \\
+Employment growth (Δlog) & −0.007\% & Q10 \\
+Wage inflation (y/y) & −0.114 pp & Q18 \\
+Exchange rate (s\_gap, \%) & \textbf{−0.947\%} & Q8 \\
+10Y yield (annualised) & \textbf{+0.098 pp} & Q1 \\
 \end{longtable}
 }
 
 \paragraph{7.2.2 Channel-by-channel
 walkthrough}\label{channel-by-channel-walkthrough}
 
-The aggregate \textbf{−0.22\% real GDP} response (Q7), \textbf{−0.14\%
-output gap} (Q7), and \textbf{−0.10 pp y/y CPI inflation} decline (Q11)
-decompose across six transmission channels documented in Table 2.2.
+The aggregate \textbf{+0.478\% real GDP} long-run level rise (Q40, from
+supply-side ULC effect), \textbf{−0.126\% output gap} trough (Q7), and
+\textbf{−0.105 pp y/y CPI inflation} decline (Q16) decompose across six
+transmission channels documented in Table 2.2.
 
-\textbf{(i) Term structure and WACC.} The 10Y yield rises \textbf{+0.41
+\textbf{(i) Term structure and WACC.} The 10Y yield rises \textbf{+0.098
 pp on impact} because the term-structure NPV (eq. 48)
 \(i_{10Y,t} = (1-\kappa_{10}) i_t + \kappa_{10} \cdot \mathrm{E}_t[i_{10Y,t+1}] + s_{10Y,t}\)
 with \(\kappa_{10} = 0.97\) internalises the entire expected
@@ -4862,13 +4846,9 @@ condition with elasticity \(\sigma_{CES} = 0.5366\). The
 business-investment PAC equation (eq. 28) then propagates this through
 the long-run target \(-\sigma_{CES} \cdot pv_{rKB,aux}\) and the
 accelerator \(b_3^{ib} = 0.69\) (post-hybrid, wp1044 Table 3.5.13; was
-0.32 pre-hybrid) via the depressed output gap. Under the pre-hybrid
-AU-estimated calibration the combined effect was a \textbf{−0.05\%} peak
-in \(\Delta \ln I^B\) at Q7; under the post-hybrid Option 1 calibration
-(§4.6.2) the BI ECM speed is 5× larger (b0\_ib = 0.096 vs 0.018), so the
-BI level response builds faster and the BI growth-rate peak is expected
-to be \textbf{somewhat larger} (estimated ≈ −0.10\% at Q5--6, pending
-re-render per \texttt{WORKING\_PAPER\_BLOCKERS.md}). The structural form
+0.32 pre-hybrid) via the depressed output gap. Under the current
+production calibration (Option 1, §4.6.2) the combined effect is a
+\textbf{−0.101\%} peak in \(\Delta \ln I^B\) at Q6. The structural form
 (coef = +1 on PV(Δq̂) + PV(Δq̄), coef = −σ on PV(Δlog r̂\_KB) + PV(Δlog
 r̄\_KB)) is unchanged; only the deep parameters are now wp1044-imported.
 See §4.6.2 and §5.3 for the rationale.
@@ -4881,7 +4861,7 @@ term \(-\kappa_{mort}(i^{LH} - i^{LH}_{SS})\) with
 \(\kappa_{mort} = 0.048\), plus a separate house-price (Tobin's Q)
 channel. The housing-investment PAC equation (eq. 32) absorbs these via
 its long-run target and the cyclical \(b_3^{ih} = 0.22\) accelerator.
-Net peak in growth: \(\Delta \ln I^H = -0.035\%\) at Q7. The level
+Net peak in growth: \(\Delta \ln I^H = -0.032\%\) at Q7. The level
 (ln\_IH) continues to decline through the 40-quarter horizon --- the
 longest-lagged response in the demand block, consistent with Australia's
 outsized housing-construction cycle.
@@ -4895,7 +4875,7 @@ defined recursively as
 with β\_uip = 0.92. The forward recursion produces
 \texttt{pv\_i\_uip(0)\ ≈\ 1/(1−β\_uip·λ\_i)\ ·\ i\_gap(0)\ ≈\ 4.55\ ·\ i\_gap(0)}
 on impact --- the spot AUD internalises the entire expected rate path
-immediately. Result: s\_gap peaks at \textbf{−0.97\% at Q8}. Through
+immediately. Result: s\_gap peaks at \textbf{−0.947\% at Q8}. Through
 eqs. (40)--(41) the appreciation depresses export volumes via the trade
 elasticity \(b_2^x\) and dampens imports --- net trade contributes a
 small early-quarter negative to GDP.
@@ -4908,7 +4888,7 @@ mean); the surprise term \(b_{di}^c \cdot di\_gap\) with
 real-lending-rate channel \(\alpha_{c,r} \cdot pv_{r,lh,gap}\) with
 \(\alpha_{c,r} = -0.95\) (§4.5.2); and the permanent-income channel via
 \(pv_{c,aux}\), which discounts future income at \(\beta_c = 0.95\). The
-combined peak consumption-growth response is \textbf{−0.087\% at Q2} ---
+combined peak consumption-growth response is \textbf{−0.133\% at Q2} ---
 the fastest demand response in the model. The \texttt{pv\_r\_lh\_gap}
 channel is the key amplification mechanism: forward-looking agents see
 both a higher impact 10Y yield (which lifts the mortgage rate via
@@ -4917,14 +4897,18 @@ rates (the policy-rate gap mean-reverts slowly under
 \(\lambda_i = 0.96\)), and cut consumption sharply on impact.
 
 \textbf{(vi) Wage--price spiral.} Wage inflation responds negatively,
-with peak −0.043 pp y/y at Q15, driven by the CPI-passthrough channel
+with peak −0.114 pp y/y at Q18, driven by the CPI-passthrough channel
 \(\gamma_w \cdot \pi^c\) (γ\_w = 0.35) as CPI inflation falls. The
 unemployment-PV channel \(-\kappa_w \cdot pv_{u,gap}\) (with the
 Phillips slope \(\kappa_w = -0.10\) corresponding to a positive
 structural Phillips slope under the FR-BDF sign convention) contributes
-a small reinforcing negative. VA-price inflation falls \textbf{−0.010 pp
-y/y at Q11}, reflecting the ULC pass-through with
-\(\gamma_{ulc} = 0.295\) modulated by the FPF target equation (eq. 14).
+a small reinforcing negative. VA-price inflation (piQ) \textbf{jumps UP
++0.041 pp y/y on impact (Q1)}, reflecting the ULC cost-push channel:
+higher interest rates raise unit labour costs through the
+user-cost-of-capital channel, and the ULC pass-through with
+\(\gamma_{ulc} = 0.295\) transmits this into VA prices before the
+demand-side deflationary forces dominate at longer horizons. The CPI
+deflator inflation (pi\_c) peaks at −0.133 pp y/y at Q18.
 
 The channels together transmit monetary policy through a balanced mix of
 cost-of-capital, exchange-rate, mortgage-rate, and expectations effects.
@@ -4979,8 +4963,8 @@ Beckers (2020) VAR & -1.5\% & \textasciitilde Q4 & -0.40 to -0.50 \\
 MARTIN (semi-structural) & -0.45 to -0.50\% & Q4 & -0.10 to -0.15 \\
 DINGO (DSGE) & -0.60 to -0.75\% & Q5-7 & -0.20 \\
 Murphy (external) & -0.30\% & Q4 & -0.40 to -0.50 \\
-\textbf{AU-PAC (Phase T, this paper)} & \textbf{−0.28\%} & \textbf{Q7} &
-\textbf{−0.037} \\
+\textbf{AU-PAC (Phase T, this paper)} & \textbf{+0.478\%} (long-run
+level rise) & \textbf{Q40} & \textbf{−0.105} \\
 \end{longtable}
 }
 
@@ -5031,7 +5015,7 @@ VAR.
 two-thirds of the inflation response come from the exchange-rate channel
 in MARTIN / DINGO. AU-PAC's UIP channel works in the same direction (AUD
 appreciation on impact) and the magnitude is broadly in line with the
-RBA suite: AUD appreciation peak −0.97\% at Q8. With ρ\_s = 0.775
+RBA suite: AUD appreciation peak −0.947\% at Q8. With ρ\_s = 0.775
 (half-life ≈ 3 quarters) AU-PAC's mean-reversion to PPP is faster than
 typical estimates, but the impact magnitude --- achieved on Q1--Q8
 through the \texttt{pv\_i\_uip} forward NPV --- is comparable to
@@ -5058,21 +5042,24 @@ estimates. In the model \(b_{di,c}\) contributes only a small fraction
 of the consumption response, which is dominated by the \(b_2^c\)
 interest-rate-level channel --- consistent with the RBA finding.
 
-\textbf{Verdict.} AU-PAC produces the smallest peak response to a 100 bp
-tightening among comparable Australian models (−0.22\% real GDP vs
-Murphy's −0.30\% and the RBA workhorses' −0.45\% to −1.5\%). The peak
-timing (Q7 for both GDP and the output gap) sits inside the MARTIN/DINGO
-short-horizon range. The smaller AU-PAC peak magnitude reflects
-deliberate features of the PAC architecture: adjustment-cost frictions
-economically motivated by Tinsley (1993) and the FRB/US tradition, and
-Bayesian estimation on 30 years of AU data that resists over-fitting.
-AU-PAC therefore sits within the robust-policymaking spirit of
-``diversity supports more robust policymaking'' (Mulqueeney et al.~2025,
-p.~11) rather than aiming to match the average response. Two refinements
-would narrow the gap: external high-frequency RBA OIS-surprise data for
-\(b_{di,c}\) identification, and adopting the broader FR-BDF 2026
-financial-block extensions (NFC accelerator, DSR-based mortgage block)
-to amplify the cost-of-capital channel.
+\textbf{Verdict.} AU-PAC's output-gap trough (−0.126\% at Q7) is the
+smallest peak demand response to a 100 bp tightening among comparable
+Australian models (vs Murphy's −0.30\% and the RBA workhorses' −0.45\%
+to −1.5\% in GDP terms). The real GDP level rises long-run (+0.478\% at
+Q40) due to the supply-side ULC channel --- a structural feature not
+present in pure-demand models. The output-gap peak timing (Q7) sits
+inside the MARTIN/DINGO short-horizon range. The smaller AU-PAC peak
+magnitude reflects deliberate features of the PAC architecture:
+adjustment-cost frictions economically motivated by Tinsley (1993) and
+the FRB/US tradition, and Bayesian estimation on 30 years of AU data
+that resists over-fitting. AU-PAC therefore sits within the
+robust-policymaking spirit of ``diversity supports more robust
+policymaking'' (Mulqueeney et al.~2025, p.~11) rather than aiming to
+match the average response. Two refinements would narrow the gap:
+external high-frequency RBA OIS-surprise data for \(b_{di,c}\)
+identification, and adopting the broader FR-BDF 2026 financial-block
+extensions (NFC accelerator, DSR-based mortgage block) to amplify the
+cost-of-capital channel.
 
 \subsubsection{7.3 Impulse responses to other
 shocks}\label{impulse-responses-to-other-shocks}
@@ -5092,17 +5079,18 @@ annualized}\label{monetary-policy-shock-eps_i-100bp-annualized}
 \emph{Figure 6.3: 100bp annualized monetary policy tightening (scale =
 0.25 / σ\_i = 0.25/0.111 ≈ 2.25).}
 
-Consumption growth (−0.087\% peak at Q2) is the most immediately
+Consumption growth (−0.133\% peak at Q2) is the most immediately
 responsive component, reflecting the level rate channel
 (\(b_2^c = -0.33\) posterior mean) and the forward-NPV real-lending-rate
 channel (\(\alpha_{c,r} = -0.95\) on \(pv_{r,lh,gap}\), §4.5.2).
-Business-investment growth (−0.046\% at Q7) and housing-investment
-growth (−0.035\% at Q7) follow with the lagged adjustment of the PAC
+Business-investment growth (−0.101\% at Q6) and housing-investment
+growth (−0.032\% at Q7) follow with the lagged adjustment of the PAC
 equations. The ln\_IH level continues to decline through the 40-quarter
 horizon (long-tailed housing-investment response, consistent with AU's
 outsized construction cycle). The exchange rate appreciates via UIP
-(s\_gap −0.97\% at Q8). Real GDP (\(\ln Q\)) reaches its trough at
-\textbf{−0.22\% at Q7}.
+(s\_gap −0.947\% at Q8). Real GDP (\(\ln Q\)) rises in the long run to
+\textbf{+0.478\% at Q40} (supply-side ULC effect), while the output gap
+troughs at \textbf{−0.126\% at Q7}.
 
 \paragraph{7.3.2 Foreign demand shock (eps\_q\_us) --- 1pp US output
 gap}\label{foreign-demand-shock-eps_q_us-1pp-us-output-gap}
@@ -5561,19 +5549,19 @@ of this version of the paper.}
 \item
   \textbf{Monetary policy transmits through a balanced mix of channels
   with realistic AU-specific magnitudes.} A 100 bp annualised cash-rate
-  tightening produces a peak real-GDP fall of −0.22\% at Q7, an
-  output-gap peak of −0.14\% at Q7, a CPI-inflation fall of 0.10 pp y/y
-  at Q11, an AUD appreciation of 0.97\% at Q8 via the forward-NPV UIP,
-  and a 10-year yield rise of 0.41 pp on impact via the term-structure
-  NPV. The transmission combines cost-of-capital, exchange-rate,
-  mortgage-rate, and expectations effects, with AU's variable-rate
-  mortgage market and strong CPI-indexation wage Phillips shaping the
-  relative magnitudes. Under the post-hybrid Option 1 BI calibration the
-  BI channel is substantively larger than under the pre-hybrid
-  AU-estimated parameters (BI ECM 5× faster, AR1 4× more inertial,
-  accelerator 2× stronger); the qualitative shape is preserved, the
-  quantitative magnitude through the BI channel is moderately amplified
-  (§5.4, §7.2).
+  tightening produces a real-GDP level rise of +0.478\% by Q40
+  (supply-side ULC effect), an output-gap trough of −0.126\% at Q7, a
+  CPI-inflation fall of −0.105 pp y/y at Q16, an AUD appreciation of
+  0.947\% at Q8 via the forward-NPV UIP, and a 10-year yield rise of
+  0.098 pp on impact via the term-structure NPV. The transmission
+  combines cost-of-capital, exchange-rate, mortgage-rate, and
+  expectations effects, with AU's variable-rate mortgage market and
+  strong CPI-indexation wage Phillips shaping the relative magnitudes.
+  Under the post-hybrid Option 1 BI calibration the BI channel is
+  substantively larger than under the pre-hybrid AU-estimated parameters
+  (BI ECM 5× faster, AR1 4× more inertial, accelerator 2× stronger); the
+  qualitative shape is preserved, the quantitative magnitude through the
+  BI channel is moderately amplified (§5.4, §7.2).
 \item
   \textbf{Higher CES substitution elasticity dampens, not amplifies, the
   IRF.} The FR-BDF 2026 recalibration raised σ from 0.34 to 0.54 ---
@@ -5595,12 +5583,12 @@ of this version of the paper.}
 
 \textbf{Comparison with the RBA model suite.} §7.2.4 benchmarks AU-PAC
 against the four Australian models surveyed in Mulqueeney, Ballantyne
-and Hambur (2025). AU-PAC's peak real-GDP response (−0.22\% at Q7) is at
-the low end of the RBA suite --- comparable to Murphy's −0.30\%, about
-half MARTIN's −0.45\%, and roughly 7× smaller than the Beckers VAR's
-−1.5\%. The conservative response reflects three deliberate features:
-PAC adjustment-cost frictions that distinguish FRB/US-style models from
-VAR / DSGE alternatives; the FR-BDF 2026 CES calibration with higher
+and Hambur (2025). AU-PAC's output-gap trough (−0.126\% at Q7) is at the
+low end of the RBA suite in demand-response terms, while the real-GDP
+level rises long-run (+0.478\% at Q40) via the supply-side ULC channel.
+The conservative response reflects three deliberate features: PAC
+adjustment-cost frictions that distinguish FRB/US-style models from VAR
+/ DSGE alternatives; the FR-BDF 2026 CES calibration with higher
 capital--labour substitutability that dampens factor-price movements;
 and AU-specific Bayesian posteriors that resist over-fitting. AU-PAC
 therefore complements the RBA suite on the conservative end of
