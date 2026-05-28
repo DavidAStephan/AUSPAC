@@ -214,6 +214,30 @@ When `h_pac_*` regeneration becomes necessary (e.g., for an MCE-consistent paper
 
 Deferred. The same `h_*` staleness existed throughout the entire AU-PAC development cycle (since the original FR-BDF transcription); the L2.A architectural fixes do not qualitatively worsen the approximation. Regeneration is a substantial multi-day project best done as a dedicated PR rather than tacked onto the architectural-fix work.
 
+---
+
+## Follow-up: L2 OLS refit — coefficients are data-identified, no refit required
+
+The L2 OLS scripts in `data/pac_blocks/estimate_pac_*.m` estimated PAC equation parameters (`b0_pQ`, `b1_pQ`, `b0_c`, `b1_c`, `b0_n`, etc.) by regressing observed time series against observed regressors:
+
+```matlab
+yhat_au_full = align_q(base.au_ygap, base_dates, L2.dates);
+X = [ones(L2.nQ, 1), lag1(p_Q_gap), lag1(piQ), yhat_au_full, dums];
+b = X \ y;
+```
+
+The `yhat_au` in these regressions is the **observed/measured output gap** from source data (`base.au_ygap`, derived from real GDP minus HP-filtered trend or CES-implied potential), not a model-internal variable. The L2 OLS coefficients therefore identify **historical empirical relationships**, independent of the simulator's structural definition.
+
+The L2.A architectural fix changed how the simulator's `yhat_au` is computed (from E-SAT IS curve to demand-identity accumulation), but the **historical au_ygap series used in L2 OLS is unchanged**. The b-coefficients therefore remain valid identifications.
+
+Where the architectural fix *could* matter: if the simulator's model-generated `yhat_au` time series under the new structural identity drifts substantially from the historical au_ygap, the b-coefficients (calibrated to historical data) may not produce the same dynamics inside the simulator as they did empirically. This is a **forecast-validation** concern, not an estimation concern.
+
+**Decision (2026-05-28)**: no L2 OLS refit required. The data-identified coefficients remain the AU empirical truth.
+
+**Future validation step** (deferred): run a pseudo-real-time recursive simulation, compare model-generated `yhat_au` to historical au_ygap series, and assess fit. If divergence is large, consider re-estimating PAC equations against model-generated regressors (a structural-VAR approach). This is a separate project worthy of its own paper.
+
+The L2 OLS scripts also have stale dependencies on `dataset.csv` (removed in the Phase L2.A cleanup) — running them requires either restoring `dataset.csv` from git history or rewriting against `extended_dataset.csv`. This dependency repair is a separate housekeeping task.
+
 ## Plan to execute the audit
 
 ### Step 1 (NOW — done in this session)
