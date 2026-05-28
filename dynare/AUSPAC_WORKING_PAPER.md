@@ -1653,7 +1653,7 @@ All shocks are sized at policy-relevant magnitudes rather than 1 s.d. At order =
 
 #### 7.3.1 Monetary policy shock (eps_i) — 100bp annualized
 
-![Monetary policy shock](irf_eps_i.png)
+![Monetary policy shock](paper_artifacts/irf_eps_i_v3.png)
 
 *Figure 6.3: 100bp annualized monetary policy tightening (scale = 0.25 / σ_i = 0.25/0.111 ≈ 2.25).*
 
@@ -1661,25 +1661,25 @@ Consumption growth (−0.133% peak at Q2) is the most immediately responsive com
 
 #### 7.3.2 Foreign demand shock (eps_q_us) — 1pp US output gap
 
-![Foreign demand shock](irf_eps_q_us.png)
+![Foreign demand shock](paper_artifacts/irf_eps_q_us_v3.png)
 
 *Figure 6.4: 1pp US output-gap shock (scale = 1.0 / σ_q_us = 1.0/1.138 = 0.879). Peak AU output gap +0.42% at Q4, peak housing-investment growth +0.19% at Q5, peak export growth +0.35% at Q2 (foreign-demand channel now identified through the proper trade ECM). The new specification routes more of the foreign-demand impulse through direct trade (β_x = 1.2 LR pull) and less through the housing channel than the previous degenerate-trade calibration suggested.*
 
 #### 7.3.3 Government spending shock (eps_g) — 1% of GDP
 
-![Government spending shock](irf_eps_g.png)
+![Government spending shock](paper_artifacts/irf_eps_g_v3.png)
 
 *Figure 6.5: 1% of GDP government spending shock (scale = 1.0 / σ_g = 1.0/0.3 = 3.333). Output-gap multiplier peaks at +0.18% at Q4 — well below 1 — consistent with substantial crowding-out via the exchange-rate channel under floating regime and forward-looking financial agents in the hybrid setup. Imports rise +0.06% at Q6 as domestic demand pulls in foreign goods through the proper-ECM income-elasticity channel (β_m = 1.5).*
 
 #### 7.3.4 Commodity price shock (eps_pcom) — 10% increase
 
-![Commodity price shock](irf_eps_pcom.png)
+![Commodity price shock](paper_artifacts/irf_eps_pcom_v3.png)
 
 *Figure 6.6: 10% commodity-price increase (scale = 10.0 / σ_pcom = 10.0/3.0 = 3.333). AU-specific propagation: peak output gap +0.18% at Q2, housing-investment growth +0.07% at Q3, export growth +1.50% at Q1 (commodity-price loading in `b4_x`), import growth +0.19% at Q2 via the income channel. The commodity-export economy benefits in real terms; with the proper trade ECM, more of the impulse is now visible directly in `dln_x` rather than indirectly through the GDP identity.*
 
 #### 7.3.5 Cost-push shock (eps_pQ) — 1pp VA-price inflation
 
-![Cost-push shock](irf_eps_pQ.png)
+![Cost-push shock](paper_artifacts/irf_eps_pQ_v3.png)
 
 *Figure 6.7: 1pp VA-price inflation cost-push shock (scale = 1.0 / σ_pQ ≈ 1.75). Cost-push transmission operates through both the structural deflator channels in the E-SAT inflation equation (§4.4.0) and the level price-block dynamics. The VA-price PAC equation (eq_piQ_pac) absorbs ε_pQ directly into π_Q on impact (+0.57 qpp). Through the structural channels in eq_au_phillips, π_Q propagates into the CPI inflation gap immediately (+0.12 qpp impact), the Taylor rule begins tightening by Q5, and the output gap turns negative around Q8.*
 
@@ -1692,19 +1692,19 @@ Together these institutional features produce a real-GDP response to a +1pp cost
 
 #### 7.3.6 TFP shock (eps_tfp) — 1% level shift
 
-![TFP shock](irf_eps_tfp.png)
+![TFP shock](paper_artifacts/irf_eps_tfp_v3.png)
 
 *Figure 6.8: 1 s.d. TFP shock (σ_tfp = 0.2; scale = 1.0; hybrid regime). Plotted at 1 s.d. rather than 1% because rho_tfp = 0.99 (near unit root) makes the level response near-permanent and growing over the IRF window — scaling to 1% would produce implausibly large level shifts (50%+ in ln_N). At 1 s.d., output level (ln_Q) rises +13% over 40 quarters; potential output (ln_QN) tracks one-for-one (the supply shock raises both by construction in the gap model), so the output gap yhat_au = ln_Q − ln_QN stays at zero. Employment level rises ~+10% as the CES production function reallocates inputs. Wage inflation picks up TFP via the productivity term $(1-\lambda_w) \Delta \ln Prod$ in eq_pi_w with peak +0.3 qpp — the only structural channel from supply-side TFP into nominal dynamics. Gap-variable panels (yhat_au, dln_n) and unrelated variables (piQ, i_10y) stay at floating-point-noise level by construction.*
 
 #### 7.3.7 Term premium shock (eps_tp) — 100bp annualized
 
-![Term premium shock](irf_eps_tp.png)
+![Term premium shock](paper_artifacts/irf_eps_tp_v3.png)
 
 *Figure 6.9: 100bp annualized term-premium shock (scale = 0.25 / σ_tp = 0.25/0.05 = 5.0; hybrid regime). Raises long rates by 0.25 pp without short-rate movement. As with the cost-push shock (Figure 6.7), the term-premium channel in AU-PAC works through level variables rather than short-run gaps — the demand block absorbs the financing-cost effect via permanent-income / target-level adjustments. Consumption level falls -0.10%, business investment level -0.08%, housing investment level -0.16% over 40 quarters; consumption permanent income (ln_C_star) tracks the consumption level closely. Output gap (yhat_au) and VA price inflation (piQ) stay at floating-point noise — the term-premium shock has no direct flow to the output-gap or short-run inflation dynamics in this architecture. This is the same architectural pattern that makes the APP-style experiment (Figure 6.14) deliver modest level effects rather than dramatic gap responses.*
 
 #### 7.3.8 Output gap overview — all shocks (policy-relevant sizes)
 
-![Output gap overview](irf_overview_output.png)
+![Output gap overview](paper_artifacts/irf_overview_output_v3.png)
 
 *Figure 6.10: Output gap responses to all shocks at policy-relevant sizes. Shock sizes: monetary 100bp, foreign demand 1pp, govt spending 1pp, commodity 10%, TFP 1 s.d., term premium 50bp.*
 
