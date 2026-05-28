@@ -1,150 +1,248 @@
-# NEXT_SESSION.md — post-Phase-L2 / post-paper-v2 plan
+# NEXT_SESSION.md — h_pac_* policy-function regeneration
 
-**Status at end of last session**: branch `refactor/frbdf-replication-L2`, latest commit `4a61002` (paper-polish: cross-refs, artefact figures, Greek glyph fix, L1.2 trends, ABS 5625 download, bibliography). Working paper v2 published at `dynare/AUSPAC_WORKING_PAPER.{md,tex,pdf,html}` — 175 endog vars, 49 shocks, 5 PAC blocks (4 AU-estimated + 1 wp1044-imported via Option 1 hybrid calibration).
+**Status at end of last session** (2026-05-28): all four architectural follow-ups (working paper update, Tier 4 verification, h_pac_* recipe, L2 OLS validation) complete and pushed to `origin/main` (latest commit `45b9f8a`). The model is structurally clean per FR-BDF — `yhat_au`, `pi_au`, `u_gap` all defined by structural identities (commits `dd45c87`, `f276ebe`, `053bf57`). Dynare BK-stable (`sdim=126, edim=5`), 100bp MP IRF peaks: `ln_Q −0.135% Q9`, `yhat_au −0.096% Q9`, `pi_au −0.004 pp Q3`, `pi_w −0.005 pp Q2`, `s_gap −0.991% Q8`.
 
-**Headline locked in**: AU consumption β₀ = 0.27 ≈ wp1044's 0.29; AU BI structurally rejects wp1044 PAC (PV(Δq̂)=−5.03 across 11 variants); Option 1 hybrid calibration adopted; Octave mode-search Laplace LMD = −694.78 (+84 nats vs Round 1.2 baseline). Full MCMC pending native-ARM MATLAB.
+**This session's goal**: regenerate the `h_pac_*` policy-function coefficients so they're internally consistent with the post-L2.A simulator dynamics. These coefficients embed agents' VAR-based discounted-sum forecasts of the PAC long-run targets; they currently embed an OLD VAR specification that no longer matches the runtime simulator.
 
 ---
 
-## Primary track — finish items 3+4 from post-WP-D once new MATLAB arrives
+## Why this matters
 
-### A1. Set up new MATLAB + native-ARM Dynare
+In FR-BDF (wp736 §3.1), agents form expectations of future PAC targets via a closed-form policy function obtained by inverting an assumed VAR companion matrix Φ. The result for each PAC block is a linear combination of current state variables:
 
-1. Install MATLAB R2024b (or R2023b+) with **Statistics & Machine Learning Toolbox** required and **Parallel Computing Toolbox** recommended (halves MCMC wall-clock).
-2. Install native-ARM Dynare. Either:
-   - Download `dynare-6.5-arm64.pkg` from dynare.org/download (preferred), OR
-   - Re-use the existing `/opt/homebrew/opt/dynare/` from brew (already installed in last session, octave-targeted but MATLAB-compatible).
-3. Verify with a one-liner:
-   ```bash
-   /Applications/MATLAB_R2024b.app/bin/matlab -batch \
-     "addpath('/Applications/Dynare-6.5-arm64/matlab'); dynare_version"
-   ```
-   (No `arch -x86_64` needed on R2024b native ARM.)
-
-### A2. Run hybrid MCMC
-
-```bash
-cd ~/Documents/AUSPAC/dynare
-/Applications/MATLAB_R2024b.app/bin/matlab -batch \
-  "addpath('/Applications/Dynare-6.5-arm64/matlab'); dynare au_pac_bayesian.mod" \
-  2>&1 | tee mcmc_hybrid_v2.log
+```
+pac_expectation_pac_X = h_pac_X_constant
+                      + Σ_k h_pac_X_var_S_k_lag_1 · S_k(−1)
 ```
 
-Expected wall time **~30–60 min** on R2024b native ARM (vs ~50 min historical baseline on Intel hardware; the Octave attempt projected 4 hours, MATLAB-Rosetta 6+ hours). Outputs:
-- `dynare/au_pac_bayesian/metropolis/au_pac_bayesian_mean.mat` — posterior means + HPDs
-- `dynare/au_pac_bayesian/Output/au_pac_bayesian_results.mat` — full results struct
-- New Laplace LMD + **MHM LMD** in the log (the Octave mode-only run gave Laplace = −694.78; MHM not computed because MH never finished)
+where `S_k` are the VAR state variables (yhat_au, i_gap, pi_au_gap, u_gap, piQ, pi_m, etc., plus the block's own `_hat` auxiliary regressor).
 
-### A3. Item 4 — populate Bayesian-posterior columns in §4 tables
+The coefficients `h_pac_X_*` are computed by Dynare's `pac.print()` macro against an aux *.mod file that specifies the VAR. **The aux *.mod files were deleted in the Phase L2.A cleanup** (`dynare/aux/aux_*.mod`), and the h-coefficients hardcoded in `au_pac.mod` (lines ~555–684) were generated against an even earlier VAR specification (pre-L2 OLS, pre-L2.A architectural). They are now stale in three ways:
 
-Read posterior means + 90% HPDs from `au_pac_bayesian_results.mat`. The five tables to update in `dynare/AUSPAC_WORKING_PAPER.md`:
+1. **L2 OLS replaced 25+ structural calibrations** with AU point estimates (CPI Phillips, trade, deflators)
+2. **L2.A architectural fixes** redefined `yhat_au`, `pi_au_gap`, `u_gap` as structural identities — the VAR dynamics those state variables follow are different
+3. **Constrained wage Phillips** redefined `λ_w`, `γ_w`, `κ_w`
 
-| Section | Table | Block | Parameters to populate |
-|---|---|---|---|
-| §4.3.2 | Table 4.3.2 | VA-price | `b0_pQ`, `b1_pQ`, `b2_pQ` + std_eps_pQ |
-| §4.4.4 | Table 4.4.4 | Employment | `b0_n`, `b1_n`, `b5_n` + std_eps_n |
-| §4.5.2 | Table 4.5.2 | Consumption | `b0_c`, `b1_c`, `b2_c`, `b3_c` + std_eps_c |
-| §4.7.2 | Table 4.7.2 | Housing inv | `b0_ih`, `b1_ih`, `b3_ih` + std_eps_ih |
-| §6.4 (Bayesian) | Table 5.6 | full 25-param posterior | All non-BI estimated params |
+The model currently works because the h-coefficients are calibrated approximations of agents' bounded-rational forecasts — they don't need to be exactly model-consistent for the simulator to be BK-stable. But for IRF accuracy and full FR-BDF fidelity, they should be regenerated.
 
-**Important**: Table 4.6.2 (Business inv) does *not* need a Bayesian column — BI is removed from `estimated_params` (calibrated from wp1044 Table 3.5.13 via Option 1, §3.6 + §4.6.2). Note this explicitly in the Table 4.6.2 caption.
+---
 
-### A4. Re-render and commit
+## Files affected
+
+**Will need to be created** (reconstructed):
+- `dynare/aux/aux_pQ.mod` — VA-price block aux VAR + pac_model
+- `dynare/aux/aux_consumption.mod` — consumption block
+- `dynare/aux/aux_business_inv.mod` — business investment block
+- `dynare/aux/aux_housing_inv.mod` — housing investment block
+- `dynare/aux/aux_employment.mod` — employment block
+
+**Will be modified**:
+- `dynare/au_pac.mod` — replace hardcoded `h_pac_*_constant`, `h_pac_*_var_*_lag_1` parameter assignments (lines ~555–684) with values from `pac.print()`. Update the parameter declaration block (lines ~325–410) if new VAR state variables are added or removed.
+
+**May need to be created**:
+- `dynare/regen_h_pac.m` — top-level MATLAB script that loops over the 5 blocks, runs Dynare on each aux *.mod, extracts the h-coefficients, and writes them out
+- `dynare/tools/cherry_pick_h_pac.py` — Python utility to parse Dynare output and patch `au_pac.mod`
+
+**Reference**:
+- `ESAT_ARCHITECTURE_AUDIT.md` — has the regeneration recipe in the "Follow-up: h_pac_* regeneration" section
+- `references/wp736.pdf` §3.1 (E-SAT), §A.0.2 (auxiliary regressions), Appendix A.1–A.3 (stability conditions, h-vector decomposition)
+- `dynare/AUSPAC_WORKING_PAPER.md` §3 (Expectation Formation, PAC Framework), §6.8 (architectural fixes)
+
+---
+
+## Step-by-step plan
+
+### Step 1: Estimate the VAR companion matrix Φ from current data
+
+The L2 data layer (`data/l2_data_layer_v2.mat`) has the empirical regressors needed. The E-SAT core VAR per wp736 §3.1.1 is:
+
+```
+(1 − λ_q L) ŷ_t  = −σ_q · (i_{t−1} − π_{Q,t−1} − ī_{t−1} + π̄_{t−1}) + δ_q · ŷ_{us,t} + ε_q
+(1 − λ_π L) (π_Q,t − π̄_t) = κ_π · ŷ_{t−1} + ε_π
+(1 − λ_i L) (i_t − ī_t)   = (1 − λ_i) · (α_i · (π_{us,t−1} − π̄_{t−1}) + β_i · ŷ_{us,t−1}) + ε_i
+... (foreign and trend equations)
+```
+
+In AU-PAC, the equivalent variables (with the L2.A architectural fix in mind) are:
+- `yhat_au` — **now** the structural accumulation of yhat_dom; for the **agents' E-SAT VAR**, use the original IS-curve form (pre-L2.A) since agents are assumed to forecast via the reduced-form VAR
+- `i_gap` — the Taylor rule (already structural; OK for agents)
+- `pi_au_gap` — **now** definitional from structural pi_au aggregator; for **agents' E-SAT**, use the L2-OLS-estimated Phillips: `pi_au_gap = λ_π·pi_au_gap(−1) + κ_π·yhat_au(−1) + α_pc·(piQ−pibar) + ... + ε_pi` (the equation we DEMOTED at line 1071)
+- `u_gap` — **now** = −ln_n_level; for agents' E-SAT, use the L2-OLS-estimated Okun (line 1217 pre-fix)
+
+**Key insight**: the regenerated h-coefficients should be based on agents' belief structure, which can legitimately differ from the simulator's structural identities. The two design choices are:
+
+- **(A) Pure VAR-based agents** (FR-BDF baseline): agents believe E-SAT, simulator uses structural identities. h-coefficients derived against agents' VAR. Simpler.
+- **(B) MCE agents**: agents believe the structural model, h-coefficients derived against the actual model dynamics. Requires iteration. More accurate.
+
+**Recommended starting point**: pure VAR-based agents (option A). Estimate the 8×8 E-SAT core VAR by OLS on `data/l2_data_layer_v2.mat` series, plus the block-specific aux regressors (piQ_hat for VA price, c_hat for consumption, etc., already in `au_pac.mod`).
+
+### Step 2: Reconstruct one aux *.mod file as a template
+
+Build `dynare/aux/aux_pQ.mod` first as the test case. Template structure:
+
+```matlab
+// dynare/aux/aux_pQ.mod
+// Auxiliary VAR + PAC model for VA-price block expectation policy function
+
+var yhat_au i_gap pi_au_gap u_gap yhat_us pi_us_gap ibar pibar_au pibar_us
+    piQ pi_m dln_pcom pi_w_gap tau_GST_gap piQ_hat pQ_level;
+
+varexo eps_var_yhat eps_var_i eps_var_pi eps_var_u eps_var_yhat_us
+       eps_var_pi_us eps_var_piQ eps_var_pi_m eps_var_dln_pcom
+       eps_var_pi_w eps_var_tau_GST eps_var_pQ;
+
+parameters lambda_q sigma_q delta_q lambda_i alpha_i beta_i lambda_pi kappa_pi
+           rho_pQ_aux a_pQ_y a_pQ_i a_pQ_pi a_pQ_u a_pQ_w a_pQ_GST
+           b0_pQ b1_pQ beta_pac;
+
+// === parameter values: import from au_pac.mod ===
+// (use the L2-OLS-estimated values that match agents' beliefs)
+
+model;
+    // E-SAT VAR core (wp736 §3.1.1)
+    [name='var_yhat']    yhat_au = lambda_q*yhat_au(-1) - sigma_q*(i_gap(-1) - pi_au_gap(-1)) + delta_q*yhat_us + eps_var_yhat;
+    [name='var_i']       i_gap = lambda_i*i_gap(-1) + (1-lambda_i)*(alpha_i*pi_au_gap(-1) + beta_i*yhat_au(-1)) + eps_var_i;
+    [name='var_pi']      pi_au_gap = lambda_pi*pi_au_gap(-1) + kappa_pi*yhat_au(-1) + eps_var_pi;
+    // ... (other VAR equations: u_gap Okun, yhat_us AR, pi_us_gap, ibar, pibar_au, pibar_us, piQ, pi_m, dln_pcom, pi_w_gap, tau_GST_gap)
+
+    // Block-specific auxiliary regression
+    [name='var_piQ_hat'] piQ_hat = rho_pQ_aux*piQ_hat(-1) + a_pQ_y*yhat_au(-1) + a_pQ_i*i_gap(-1) + a_pQ_pi*pi_au_gap(-1) + a_pQ_u*u_gap(-1) + a_pQ_w*pi_w_gap(-1) + a_pQ_GST*tau_GST_gap(-1);
+
+    // pQ_level placeholder (target variable; not used in VAR; needed for pac_target_info)
+    [name='var_pQ_lvl']  pQ_level = pQ_level(-1) + piQ_hat - pibar_au;  // approximate
+end;
+
+var_model(model_name=var_pQ, eqtags=['var_yhat','var_i','var_pi', 'var_u', 'var_yhat_us', 'var_pi_us', 'var_ibar', 'var_pibar_au', 'var_pibar_us', 'var_piQ', 'var_pi_m', 'var_dln_pcom', 'var_pi_w', 'var_tau_GST', 'var_piQ_hat']);
+
+pac_model(name=pac_pQ, var_model_name=var_pQ, discount=beta_pac);
+
+pac_target_info(pac_pQ);
+    target piQ_hat - pQ_level;
+    auxname pac_target_pQ;
+end;
+
+pac.print(pac_pQ);
+```
+
+Run this with `dynare aux_pQ.mod`. It will produce a `+aux_pQ/+pac_expectations/+pac_pQ/evaluate.m` file (Dynare 7 layout) containing the h-coefficient expressions.
+
+### Step 3: Extract h-coefficients from Dynare output
+
+After `dynare aux_pQ.mod`, the policy-function expression is in `+aux_pQ/+pac_expectations/+pac_pQ/evaluate.m`. Parse this file to extract:
+
+- `h_pac_pQ_constant` (the intercept)
+- `h_pac_pQ_var_yhat_au_lag_1`, `h_pac_pQ_var_i_gap_lag_1`, ... (the lag coefficients)
+
+There may be sparse/block variants too. Inspect the directory structure and use the one matching `au_pac.mod`'s state-variable ordering.
+
+### Step 4: Patch au_pac.mod with the new h-coefficients
+
+Replace the parameter assignment block at `au_pac.mod` lines ~555–684 with the new values. Format:
+
+```matlab
+// === PAC pQ block policy function (regenerated 2026-XX-XX) ===
+h_pac_pQ_constant = X.XXXXXXX;
+h_pac_pQ_var_yhat_au_lag_1 = X.XXXXXXX;
+h_pac_pQ_var_i_gap_lag_1 = X.XXXXXXX;
+// ... (one line per VAR state variable)
+```
+
+### Step 5: Repeat for the other 4 blocks
+
+Build `aux_consumption.mod`, `aux_business_inv.mod`, `aux_housing_inv.mod`, `aux_employment.mod` following the same template. Each has a different block-specific auxiliary regressor:
+- consumption: `c_hat`, `yh_ratio_hat` (note: two aux regressors)
+- business_inv: `ib_hat`, `rKB_hat`
+- housing_inv: `ih_hat`
+- employment: `n_hat`
+
+Run Dynare on each, extract h-coefficients, patch `au_pac.mod`.
+
+### Step 6: Verify the regenerated model
 
 ```bash
 cd dynare
-pandoc AUSPAC_WORKING_PAPER.md -o AUSPAC_WORKING_PAPER.tex \
-  --standalone --mathjax --include-in-header=paper_header.tex
-tectonic AUSPAC_WORKING_PAPER.tex          # → PDF
-pandoc AUSPAC_WORKING_PAPER.md -o AUSPAC_WORKING_PAPER.html \
-  --standalone --mathjax --toc --toc-depth=3
+/Applications/MATLAB_R2026a.app/bin/matlab -batch \
+  "addpath('/Users/davidstephan/Applications/Dynare/7.0-arm64/matlab'); \
+   dynare au_pac.mod; \
+   fprintf('sdim=%d edim=%d irfs=%d\n', oo_.dr.sdim, oo_.dr.edim, isfield(oo_,'irfs'));"
 ```
 
-Commit with the headline: "MCMC under hybrid calibration: Laplace LMD = X, MHM = Y (+Z nats vs Round 1.2)."
-
-### A5. Compare new MHM to STATUS.md baselines and update STATUS.md
-
-Phase trajectory baselines from STATUS.md:
-- Phase Y pre-L2: Laplace = −779.30, MHM = −780.36
-- Round 1.2 (current cache): Laplace = −784.47, MHM = −785.80
-- **Phase L2 P1c hybrid mode-search-only (Octave)**: Laplace = −694.78
-
-If MATLAB MHM confirms the +84 nats Laplace gain, that's the largest single-phase improvement in the project's history (prior max was Phase R at +11.55). Worth a §6.4 paragraph + STATUS.md bump to v3.3.
-
----
-
-## Parallel track — Phase L3 mining-vs-non-mining BI hypothesis test (no MATLAB needed initially)
-
-ABS Cat. 5625 Dec-2025 release downloaded to `data/abs_rba/abs_5625_*.xlsx` in the last session (see `data/abs_rba/abs_5625_README.md`). The Phase L3 BI test plan:
-
-### L3.1 Build mining vs non-mining `dln_ib` series
-
-In MATLAB GUI or Python:
-1. Read `data/abs_rba/abs_5625_07_volume_measures_seasonally_adjusted_capex.xlsx` sheet `Data1`.
-2. Series IDs:
-   - `A3515875V` (Mining: Buildings & Structures)
-   - `A124798315W` (Non-Mining: Buildings & Structures, incl. Education + Health)
-   - + equivalent for Equipment, Plant & Machinery (cols 21 + 22)
-3. `dln_ib_mining = 100 * Δlog(mining_buildings + mining_E&P)`
-4. `dln_ib_nonmining = 100 * Δlog(nonmining_buildings + nonmining_E&P)`
-5. Quarterly, SA, 1987Q3–2025Q4 (T=154). Note: AUSPAC base sample starts 1993Q2 — consider extending back to 1987Q3 for sub-sample identification.
-
-### L3.2 Re-estimate wp1044 Eq 46 on each sub-series
-
-Copy `data/pac_blocks/estimate_pac_business_inv.m` and `estimate_pac_business_inv_au_v3.m` (variant A, free-PV diagnostic) to `_mining.m` and `_nonmining.m` variants. Same wp1044 functional form, same block-specific VAR (Table 3.6 in the paper), same iterative-OLS pipeline.
-
-### L3.3 Read off the diagnostic and update §5.3 + Appendix G
-
-Decision tree (per §5.3 hypotheses A, B, C):
-
-| `dln_ib_nonmining` PV(Δq̂) | `dln_ib_mining` PV(Δq̂) | Interpretation |
-|---|---|---|
-| ≈ +1 (structural) | ≈ −5 (or worse) | **Hypothesis B confirmed**: mining drives the aggregate rejection. Consider two-block BI in production model. |
-| ≈ −5 | ≈ −5 | **Hypothesis A** (different agent objective globally) likely. Option 1 hybrid remains correct path. |
-| Both intermediate | — | **Hypothesis C** (sample-period contamination) possible; try splitting at 2003Q1 / 2015Q1. |
-
-Update `PAC_BI_AU_EXPLORATION.md` §6 with the L3 results; refresh Appendix G of the paper.
-
----
-
-## Lower-priority research extensions (multi-day each, deferred)
-
-| ID | Item | Effort | Notes |
-|---|---|---|---|
-| EXT-1 | Add wp1044 Phillips Eq 18 + Okun Eq 19 as explicit AR(1) aux equations in VA-price block VAR; lift §4.3 R² from 0.41 toward wp1044's 0.61 | ~1 week | Source: `PAC_EQUATIONS_AUDIT.md` §1.3 gap #7 |
-| EXT-2 | Replace AU L2 VAR(1) with Bayesian Minnesota-prior VAR(p) per wp1044 §3.2 | ~1 week | Affects all 4 fitting blocks' R² |
-| EXT-3 | RBA OIS-surprise IV for `b_di_c` consumption rate-change coefficient | ~3 days | Bishop & Tulip 2017 methodology; replaces the Bayesian-regularised current value |
-| EXT-4 | Channel-decomposition exercise à la Mulqueeney et al. 2025 (turn off each channel in turn) | ~3 days | Quantifies exchange-rate vs asset-price vs savings vs cash-flow contributions to monetary IRF |
-| EXT-5 | Adopt FR-BDF 2026 financial-block extensions: Dees et al. 2022 NFC accelerator + Bové et al. 2020 household DSR block | ~2 weeks | Natural v3.0 direction noted in §8 conclusion |
-| EXT-6 | Bernanke-Gertler-Gilchrist financial-friction extension to BI block (Phase L3 follow-up) | ~1 week | Only if Hypothesis B from §L3.3 confirms |
-
-None of these is currently scheduled.
-
----
-
-## Branch state at start
-
-```
-refactor/frbdf-replication-L2
-   4a61002   docs: paper-polish — items 1-5 + 8-9 (TODAY's latest)
-   c5586e9   docs: items 1+2 — paper_artifacts/ tables and charts, PDF re-rendered
-   703a2ee   docs: working paper v2 regeneration end-to-end (Phase WP-A..D)
-   43ed22c   Phase L2 P1c Option 1: import wp1044 BI calibration into Dynare model
-   c736f93   docs: update NEXT_SESSION with BI exploration decision
-   85f67db   Phase L2 P1c v6 + exhaustive documentation: Option 2 (ToT target) also fails
-   78d7c41   Phase L2 P1c v5: BI with ToT + piecewise trends + dummies; still fails strict PAC
-   ... 23 earlier L2 commits
+Then run the paper IRF generation:
+```bash
+/Applications/MATLAB_R2026a.app/bin/matlab -batch \
+  "run('gen_paper_irfs.m'); run('gen_paper_irf_charts.m')"
 ```
 
-Branch is clean. Working tree clean. Ready to merge to `main` once Item 3+4 (MCMC under hybrid + Bayesian column update) lands, or to begin Phase L3 mining-vs-non-mining BI test in parallel.
+Compare IRF peaks against current Table 6.3 in the working paper. Differences should be **small** (a few percent on each peak) — if they're large (>20%), something is wrong with the VAR specification or the parameter import.
+
+### Step 7: Iterate if pursuing MCE consistency (optional)
+
+If you want full MCE: re-estimate the VAR coefficients against the simulator's actual dynamics (run a long simulation, fit VAR to model-generated series, regenerate h-coefficients). Typically converges in 2–3 iterations.
+
+### Step 8: Update the working paper
+
+Add a brief note in §6.8 or as a new §6.9 documenting the h-coefficient regeneration date and which blocks were updated. Update Table 6.3 if IRF peaks shifted meaningfully.
+
+### Step 9: Commit + push
+
+Commit message template:
+```
+feat: regenerate h_pac_* policy-function coefficients post-L2.A
+
+- Reconstructed dynare/aux/aux_*.mod for 5 PAC blocks
+- Ran Dynare pac.print() against L2-OLS-estimated VAR
+- Replaced hardcoded h_pac_* parameter values in au_pac.mod
+- IRF peaks vs pre-regen: ln_Q X% → Y%, ...
+- Dynare BK satisfied (sdim=N, edim=M)
+```
 
 ---
 
-## How to pick up next time
+## Potential gotchas
 
-1. Read this file.
-2. If new MATLAB ready: run **Primary track A2** (~30–60 min wall-clock), then **A3 + A4 + A5**.
-3. If new MATLAB not yet ready: run **Parallel track L3** (mining-vs-non-mining BI; no MATLAB needed for the data prep + Python sketch).
-4. Either way, ping me with the result.
+1. **VAR ordering matters**: the h-coefficients are indexed by VAR state. If you put variables in a different order than the existing `au_pac.mod` expects (e.g., `var_yhat_au_lag_1` vs `var_yhat_us_lag_1`), the parameter lookup will silently use the wrong coefficient. Check the existing parameter declaration block (lines ~325–410) for the canonical order.
 
-**Workarounds documented in `WORKING_PAPER_BLOCKERS.md`** (R2020a + Rosetta `arch -x86_64` fix; tectonic LaTeX; Python `make_paper_artifacts.py` for table/chart generation) — kept as reference for future sessions on different hardware.
+2. **Dynare 7 vs 6 differences**: `pac.print()` output format and file layout changed between Dynare versions. We use Dynare 7.0 ARM64 at `/Users/davidstephan/Applications/Dynare/7.0-arm64/matlab`. Inspect actual generated files; don't trust documentation that may be for Dynare 6.
+
+3. **var_model state ordering**: The `var_model` block has a specific equation order. The companion-matrix Φ rows/columns follow this order. If the `pac_target_info` references `piQ_hat`, ensure piQ_hat is in the VAR.
+
+4. **Discount factor `beta_pac`**: this is the PAC subjective discount factor (≈0.99 typically). Should match what's in `au_pac.mod`. Check the existing `beta_pac` parameter declaration.
+
+5. **Stationarity of the VAR**: the estimated VAR Φ must have all eigenvalues inside the unit circle. The wp736 §A.1 stability conditions detail this. If the VAR is non-stationary, `pac.print()` will fail or produce garbage. The L2 OLS regressors are HP-detrended cyclical components, so should be stationary, but verify.
+
+6. **Aux regressor for consumption has TWO `_hat` variables**: `c_hat` AND `yh_ratio_hat`. The aux *.mod file needs both in the VAR. The block's PAC equation uses `c_hat` as the target but `yh_ratio_hat` enters as a regressor of `c_hat`.
+
+7. **Steady-state file may need updating**: if the new VAR introduces variables not in the current steady-state block (lines ~1576–1832), Dynare will error out on `steady`.
+
+8. **Existing `wt_H_real_gap` exception**: per the comment at au_pac.mod:597, `wt_H_real_gap` is in the var_model state but `c_hat` doesn't load on it directly. This was a workaround for a `pac.print()` crash. Test whether the same crash happens with the new VAR; if so, replicate the workaround.
+
+---
+
+## Success criteria
+
+- [ ] All 5 aux *.mod files exist and run cleanly under Dynare 7.0
+- [ ] h-coefficient extraction script works (manual is OK, automated is nicer)
+- [ ] `au_pac.mod` recompiles BK-stable (sdim+edim accounts for all forward-looking variables)
+- [ ] IRF peaks in Table 6.3 shift by less than ~20% (small shifts indicate the L2.A architectural fix was already approximately consistent with the existing h_*)
+- [ ] Working paper §6.8 mentions the regeneration date
+
+If IRF peaks shift dramatically (>20%), something is wrong — investigate before committing. Likely culprit: VAR specification difference or parameter import bug.
+
+---
+
+## Time estimate
+
+- **Step 1–4 (one block, VA-price as proof-of-concept)**: 3–4 hours
+- **Step 5 (other 4 blocks)**: 2–3 hours per block ≈ 8–12 hours
+- **Step 6–9 (verification, paper update, commit)**: 1–2 hours
+- **Total**: 12–18 hours, 2 working days
+
+If MCE iteration is also pursued (Step 7), add 1–2 more iterations × 4 hours = 4–8 hours.
+
+---
+
+## Bail-out plan
+
+If the regeneration proves intractable (e.g., Dynare's `pac.print()` doesn't work with the new VAR specification, or the resulting h_pac_* produce a BK-unstable model), the fallback is to **leave the current calibrated h-coefficients in place** with a clearer documentation note. The model is currently BK-stable and produces sensible IRFs — perfection here is not strictly required.
+
+A middle ground: regenerate **just the VA-price block** as a proof-of-concept, document the procedure that worked, and defer the other 4 blocks to a follow-up session.
