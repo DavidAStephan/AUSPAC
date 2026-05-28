@@ -706,16 +706,19 @@ rho_tfp = 0.95;
 rho_pcom = 0.42;
 b4_x = 0.15;
 alpha_pcom = 0.1;
-lambda_w = 0.2017;
-kappa_w = 0.0544;
-gamma_w = 0.4579;
+// Wage Phillips: AU OLS Phase L2 produced gamma_w=1.59 (>1, creates wage-
+// price spiral) violating BK conditions. Reverted to AU pre-MCMC values.
+// Unconstrained OLS estimates archived in data/pac_blocks/results_wage_phillips.txt.
+lambda_w = 0.2017;   // AU pre-MCMC OLS estimate (Phase B); OLS Phase L2 gave -0.082 but unstable
+kappa_w  = 0.0544;   // AU pre-MCMC OLS estimate; OLS Phase L2 gave +0.371 (stable but combined with gamma_w=1.59 unstable)
+gamma_w  = 0.4579;   // AU pre-MCMC OLS estimate; OLS Phase L2 gave 1.59 (BK fail — wage-price spiral)
 okun_coeff = -0.13;
 rho_u_gap = 0.946;
 beta_w = 0.98;
 omega_n = 0.3;
 rho_n_star = 0.95;
 omega_c = 0.369;
-b_di_c = -0.701;
+b_di_c = 0;        // Phase L2 audit: orphan calibration removed. wp1044 Eq 35 has no di_gap channel; L2 OLS did not estimate this. Was -0.701 (calibrated).
 rho_c_star = 0.95;
 kappa_inc = 0.05;
 beta_c = 0.95;
@@ -727,7 +730,7 @@ kappa_wacc = 0.038;
 delta_k = 0.0134;
 omega_ih = 0.3;
 b4_ih = 0;
-b_ph_ih = 0.009900000000000001;
+b_ph_ih = 0;       // Phase L2 audit: orphan calibration removed. L2 OLS skipped (no AU pSH/pIH data). Was 0.0099 (calibrated).
 rho_ih_star = 0.95;
 kappa_mort = 0.048;
 rho_L = 0.9;
@@ -748,51 +751,59 @@ s_BBB_ss = 0.05;
 rho_s = 0.775;
 alpha_s = 0.15;
 beta_uip = 0.92;
-b0_x = 0.05;
-b1_x = 0.3;
-b2_x = 0.25;
-b3_x = 0.1;
-beta_x = 1.2;
-gamma_x = 0.4;
-b0_m = 0.06;
-b1_m = 0.2316;
-b2_m = 0.3591;
-b3_m = -0.08;
-beta_m = 1.5;
-gamma_m = -0.4;
+// --- Trade quantity coefficients (Phase L2 OLS 2026-05-28) ---
+// Exports OLS: N=103, R²=0.73 (sample 1993Q3..2019Q1)
+// One-step ECM on ABS 5206 exports vol + FRED yhat_us + RBA F11 TWI gap + RBA I02 dln_pcom
+b0_x   =  0.2990;   // ECM speed (AU OLS; wp1044 0.05)
+b1_x   =  0.8673;   // dln_x AR(1) (AU OLS; wp1044 0.30)
+b2_x   =  0.0220;   // yhat_us contemp (AU OLS, insig; wp1044 0.25)
+b3_x   = -0.3610;   // s_gap contemp (AU OLS, insig; wp1044 0.10)
+beta_x =  1.2;      // AU OLS gave ~0 (insig) — reverted to wp1044
+gamma_x =  0.4;     // AU OLS gave -9.5 (excessive magnitude) — reverted to wp1044
+// Imports OLS: N=103, R²=0.64 (assigned to non-energy block, 95% of imports)
+b0_m   =  0.1580;   // ECM speed (AU OLS; wp1044 0.06) — kept for legacy uses
+b1_m   =  0.7427;   // AR(1) (AU OLS; wp1044 0.23)
+b2_m   =  0.3591;   // unused in current model (energy/non-energy split)
+b3_m   = -0.08;     // unused in current model
+beta_m =  0.0727;   // LR income elasticity (AU OLS; wp1044 1.5)
+gamma_m = 23.3798;  // LR RER elasticity (AU OLS, insig; wp1044 -0.4)
 rho_pc = 0.67;
-alpha_pc = 0.17;
+alpha_pc = 0.17;     // overridden in CPI Phillips OLS block below
 // Phase V: FR-BDF eq (80) ECM-style additions to eq_au_phillips
-alpha_pc_lag = 0.16;   // FR-BDF eq (80) β1 lagged-VA-price passthrough
-b_ECM_pc     = 0.05;   // FR-BDF eq (80) |β3| error-correction speed
+alpha_pc_lag = 0.16;   // overridden below
+b_ECM_pc     = 0.05;   // overridden below
 omega_pc     = 0.23;   // FR-BDF eq (79) β0_LR import weight in CPI target
-rho_pib = 0.7;
-alpha_pib = 0.19;
-beta_pib_m = 0.12;   // import-price passthrough into BI deflator
-// Deflator ECM parameters (wp1044 §3.6 structural deflator targets):
-b_ECM_pib    = 0.07;    // ECM speed for BI deflator (wp1044 eq 55: β₃ ≈ -0.13)
-omega_pib    = 0.72;    // VA-price weight in BI deflator LR target (wp1044: d₁=0.72)
-b_ECM_pih    = 0.07;    // ECM speed for housing-inv deflator
-omega_pih    = 0.17;    // VA-price weight in housing-inv deflator LR target (wp1044: d₀=0.17)
-// Endogenous spread widening (wp1044 §3.5.3 Eq 50, simplified):
-//   s_{j,t} responds to the output gap as a proxy for leverage/credit risk.
-//   In wp1044 the channel runs through D/E (debt leverage); here we proxy
-//   with yhat_au since (a) falling output → rising defaults/leverage →
-//   wider spreads, and (b) we don't have the full NFC balance-sheet block.
-kappa_spread_LB  = -0.05;   // BLR spread sensitivity to output gap
-kappa_spread_BBB = -0.03;   // BBB spread sensitivity to output gap
-rho_pih = 0.49;
-alpha_pih = 0.4;
-rho_px = 0.21;
-alpha_px = 0.2;
-beta_px = -0.05;
-rho_pm = 0.28;
-alpha_pm = 0.38;
-beta_pm = 0.09;
+// --- Other deflator OLS (Phase L2 2026-05-28; N=139, AU sample) ---
+// pi_ib OLS R²=0.39:
+rho_pib   =  0.4742;   // AU OLS (was 0.70)
+alpha_pib = -0.0861;   // AU OLS, insig + wrong-signed (was 0.19)
+beta_pib_m = 0.0971;   // AU OLS (was 0.12)
+b_ECM_pib  = 0.07;     // wp1044 (no AU p*_IB regressor)
+omega_pib  = 0.72;     // wp1044
+// pi_ih OLS R²=0.10:
+rho_pih   =  0.3663;   // AU OLS (was 0.49)
+alpha_pih = -0.0554;   // AU OLS, insig (was 0.40)
+beta_pih_m = -0.0194;  // AU OLS, insig (was 0.08)
+b_ECM_pih  = 0.07;     // wp1044
+omega_pih  = 0.17;     // wp1044
+// pi_x OLS R²=0.89 (commodity-driven):
+rho_px    =  0.0430;   // AU OLS, insig (was 0.21)
+alpha_px  = -0.0333;   // AU OLS, insig + wrong-signed (was 0.20)
+beta_px   = -0.2439;   // AU OLS, insig (was -0.05)
+alpha_pcom = 0.5843;   // AU OLS, t=30.3 — commodity prices dominate (was 0.10)
+// pi_m OLS R²=0.34 (assigned to pi_m, beta_pm_com etc carry through to pi_m_ne):
+rho_pm    =  0.2230;   // AU OLS (was 0.28)
+alpha_pm  =  0.0568;   // AU OLS, insig (was 0.38)
+beta_pm   = -8.5918;   // AU OLS, t=-2.16 (was 0.09; sign flip)
+// beta_pm_com (OLS 0.2207) assigned at line ~818 (single canonical assignment)
+// Spread widening (calibrated; no spreads OLS yet):
+kappa_spread_LB  = -0.05;
+kappa_spread_BBB = -0.03;
+// pi_g OLS R²=0.23 (negative rho — AU govt deflator is mean-reverting fast):
+rho_pg    = -0.4711;   // AU OLS, sig (was 0.13)
+alpha_pg  =  0.0355;   // AU OLS, insig (was 0.37)
 rho_g = 0.85;
 phi_g = -0.1;
-rho_pg = 0.13;
-alpha_pg = 0.37;
 w_c = 0.55;
 w_ib = 0.13;
 w_ih = 0.06;
@@ -800,11 +811,11 @@ w_g = 0.24;
 w_x = 0.25;
 w_m = 0.23;
 sigma_ces = 0.5366;
-beta_pc_m = 0.1;
-beta_pib_m = 0.12;
-beta_pih_m = 0.08;
-gamma_oil = 0.03;
-beta_pm_com = 0.42;
+// beta_pc_m and gamma_oil moved to CPI Phillips OLS block (line ~1862) where
+// AU single-equation OLS values are assigned. Keeping the duplicate here
+// would shadow the OLS values if reordered.
+// beta_pib_m and beta_pih_m assigned in the deflator-OLS block above.
+beta_pm_com = 0.2207;   // AU OLS from pi_m equation (was 0.42 wp1044)
 w_iad_c = 0.12;
 w_iad_ib = 0.25;
 w_iad_ih = 0.15;
@@ -826,20 +837,20 @@ w_iad_e_ib  = 0.007;
 w_iad_e_ih  = 0.001;
 w_iad_e_g   = 0.009;
 w_iad_e_x   = 0.014;
-// Non-energy import ECM parameters
-beta_m_ne  = 1.50;      // LR income elasticity (non-energy) — same as beta_m
-gamma_m_ne = -0.40;     // LR RER elasticity — same as gamma_m
-b0_m_ne    = 0.06;      // ECM speed — same as b0_m
-b1_m_ne    = 0.23;      // AR(1) persistence
-// Energy import ECM parameters
-beta_m_e   = 1.00;      // LR income elasticity (energy) — unit elastic
-gamma_m_e  = -0.19;     // LR RER elasticity (less price-elastic than non-energy)
-b0_m_e     = 0.11;      // ECM speed (faster than non-energy; wp1044: β₂=-0.11)
-b1_m_e     = 0.38;      // AR(1) persistence
-// Non-energy import deflator
-rho_pm_ne  = 0.28;      // same as rho_pm (inherit)
-alpha_pm_ne = 0.38;     // VA-price passthrough
-beta_pm_ne = 0.09;      // exchange-rate passthrough
+// Non-energy import ECM parameters (AU OLS Phase L2 2026-05-28; 95% of imports)
+beta_m_ne  =  1.50;     // AU OLS gave 0.073 (income elasticity dead) — reverted to wp1044
+gamma_m_ne = -0.40;     // AU OLS gave +23.4 (wrong sign + insig) — reverted to wp1044
+b0_m_ne    =  0.1580;   // AU OLS ECM speed (was 0.06)
+b1_m_ne    =  0.7427;   // AU OLS AR(1) (was 0.23)
+// Energy import ECM parameters (5% of imports — kept at wp1044 calibration; no AU split)
+beta_m_e   = 1.00;
+gamma_m_e  = -0.19;
+b0_m_e     = 0.11;
+b1_m_e     = 0.38;
+// Non-energy import deflator (AU OLS from aggregate pi_m, 95% share)
+rho_pm_ne  =  0.2230;   // AU OLS (was 0.28)
+alpha_pm_ne =  0.0568;  // AU OLS, insig (was 0.38)
+beta_pm_ne =  0.09;     // AU OLS gave -8.59 (wrong sign) — reverted to wp1044
 // Energy import deflator
 rho_pm_e   = 0.10;      // less persistent (energy prices move fast)
 alpha_pm_e = 0.05;      // small VA-price passthrough (energy is a global price)
@@ -1838,23 +1849,31 @@ b0_n        = 0.3145;   // ECM speed on n*_S-n_S (L2 OLS; wp1044: 0.07)
 b1_n        = 0.2950;   // Δn lag 1 (L2 OLS; wp1044: 0.44)
 b5_n        = -0.0257;  // contemp Δq̂ (L2 OLS; wp1044: 0.13; AU wrong-signed, insig)
 
-// --- Wage Phillips curve (OLS on AU WPI data; wp1044 Eq 24) ---
-// FR-BDF estimates by single-equation OLS. AU estimates from
-// E-SAT OLS (Table 3.1) + calibration from wp736 Table 4.5.7.
-lambda_w    = 0.2500;    // wage persistence (wp736 calibration centre)
-gamma_w     = 0.4500;    // CPI passthrough (wp736 calibration centre)
-kappa_w     = -0.0800;   // unemployment-PV slope (wp736 calibration centre)
+// --- Wage Phillips curve (wp1044 Eq 24) ---
+// Phase L2 audit (2026-05-28): removed wp736 calibration override.
+// The wp736 override here had kappa_w = -0.08 which gave the wrong sign in
+// the equation `pi_w = ... - kappa_w * pv_u_gap`: with u_gap > 0 = slack
+// (Okun: u_gap = rho * u_gap(-1) + okun*yhat_au, okun = -0.13), Phillips
+// requires kappa_w > 0 so wages fall with slack.
+// Earlier values lambda_w=0.2017, gamma_w=0.4579, kappa_w=+0.0544
+// (declared at lines 709-711) are retained. Pending: single-equation OLS
+// on AU WPI to formally identify these.
 
-// --- CPI Phillips / deflator channel (OLS on AU data; wp1044 Eq 51) ---
-// FR-BDF estimates the consumption deflator by one-step ECM (OLS).
-// AU values calibrated from wp1044 Table 3.6.2 + AU structural adaptation.
-alpha_pc     = 0.3850;   // contemp VA→CPI passthrough (wp1044 β₁=0.385)
-kappa_pi     = 0.0979;   // Phillips slope (wp1044 E-SAT κ_π = 0.098)
-lambda_pi    = 0.4018;   // CPI persistence (wp1044 E-SAT λ_π = 0.402)
-a_pQ_w       = 0.4367;   // wage→piQ_hat aux (AU OLS from Phase U)
-alpha_pc_lag = 0.0230;   // lagged VA passthrough (wp1044 β₀=0.224 × correction)
-b_ECM_pc     = 0.0700;   // ECM speed (wp1044 β₄=-0.072)
-b_PAC_c      = 1.4663;   // PAC growth-neutrality (L2 OLS re-run β_PAC)
+// --- CPI Phillips / deflator channel (single-equation OLS on AU CPI gap;
+//     Phase L2 audit 2026-05-28; wp1044 Eq 51 spec). ---
+// Estimated from estimation_data.mat (pi_au gap, yhat_au) + L2 piQ +
+// ABS 5206 IPD col 76 (Imports IPD % chg). N=121, R^2=0.063.
+// AU "flat Phillips" finding: only persistence is identified; output-gap,
+// VA-price, and import-price channels are not separable from AU sample noise.
+alpha_pc     =  0.0006;  // contemp VA→CPI (AU OLS; was wp1044 0.385)
+kappa_pi     = -0.0336;  // Phillips slope (AU OLS, insig + wrong-signed; was 0.098)
+lambda_pi    =  0.2588;  // CPI persistence (AU OLS, t=2.76; was 0.402)
+a_pQ_w       =  0.4367;  // wage→piQ_hat aux (AU OLS from Phase U) — unchanged
+alpha_pc_lag =  0;       // dropped: corr(piQ_gap_lag, pi_m_gap) = 0.9998 (was 0.023)
+beta_pc_m    = -0.0042;  // import→CPI passthrough (AU OLS; was wp1044 0.10)
+b_ECM_pc     =  0.0700;  // ECM speed (wp1044; no AU p_C_star series yet)
+gamma_oil    =  0.03;    // (wp1044; no AU dln_pcom regressor in this OLS) — unchanged
+b_PAC_c      =  1.4663;  // PAC growth-neutrality (L2 OLS re-run β_PAC)
 
 // ====================================================================
 // Phase W: calibration.inc Bayesian-posterior overrides for the
