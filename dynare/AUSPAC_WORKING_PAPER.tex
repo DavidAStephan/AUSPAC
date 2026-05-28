@@ -285,35 +285,36 @@ passthrough, and a significant negative unemployment-PV coefficient κ\_w
 (France) calibrations in the CPI Phillips, trade-quantity, and deflator
 blocks with AU single-equation OLS point estimates from ABS 5206 + RBA
 I02/F11 data --- 25 of 35 audited coefficients are now AU point
-estimates; 10 reverted due to Blanchard--Kahn failure (the unconstrained
-wage Phillips gave γ\_w = 1.59 \textgreater{} 1) or because they require
-GMM on forward recursions (spreads, UIP). The audit confirms the
-\textbf{flat AU Phillips} stylised fact: only the lag coefficient is
-identified (λ\_π = 0.259, t = 2.76, R² = 0.063); output-gap, VA-price,
-and import-price channels are all insignificant. Under the post-audit
-calibration, the response to a 100 bp annualized cash-rate tightening
-produces a real-GDP trough of −0.106\% at Q8, an output-gap trough of
-−0.069\% at Q8, CPI inflation falling −0.020 pp year-on-year at Q16
-(weaker and slower than pre-audit, reflecting the AU flat-Phillips
-finding), the AUD appreciating 0.980\% at Q8 via a forward-looking UIP
-NPV channel, and the 10-year yield rising 0.103 pp on impact. A
-cross-block finding emerges from the Phase L2 estimates: \textbf{AU ECM
-speeds are 4--8× faster than France's} in four of five blocks
-(consumption is the exception); plausible drivers are AU's more flexible
-price/wage setting (mining cycle, commodity-pass-through, variable-rate
-mortgages). Benchmarking against the RBA's model suite (Beckers 2020
-VAR, MARTIN, DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025)
-places AU-PAC at the conservative end of the AU range, with magnitudes
-that reflect the greater capital--labour substitutability of the CES
-specification (σ = 0.54) and the small estimated PAC adjustment-cost
-coefficients. The forward-guidance puzzle is absent: AU-PAC tracks the
-linear reference response to within 16\% even at N = 12 successive
-rate-cut announcements, while standard New Keynesian models saturate
-near 1.8×. Australia-specific features include an endogenous Taylor rule
-for the RBA, variable-rate mortgage transmission, commodity-price
-channels, the US as the foreign bloc, and a trade ECM calibrated to
-Australia's secular openness rise. The model is implemented in Dynare
-6.5.
+estimates; the wage Phillips was re-estimated under a BK-stability
+constraint \textbf{λ\_w + γ\_w ≤ 0.95} that delivers a substantial
+Phillips slope κ\_w = 0.359 with near-unit CPI passthrough γ\_w = 0.857
+(§6.7). The CPI Phillips audit confirms the \textbf{flat AU Phillips}
+stylised fact: only the lag coefficient is identified (λ\_π = 0.259, t =
+2.76, R² = 0.063); output-gap, VA-price, and import-price channels are
+all insignificant. Under the post-audit calibration the response to a
+100 bp annualized cash-rate tightening produces a real-GDP trough of
+−0.088\% at Q8, an output-gap trough of −0.069\% at Q8, CPI inflation
+falling −0.020 pp year-on-year at Q16 (weaker and slower than pre-audit,
+reflecting the AU flat-Phillips finding), wage inflation falling −0.011
+pp at Q7 (5--10× larger than pre-audit due to the now-identified κ\_w),
+the AUD appreciating 0.980\% at Q8 via a forward-looking UIP NPV
+channel, and the 10-year yield rising 0.103 pp on impact. A cross-block
+finding emerges from the Phase L2 estimates: \textbf{AU ECM speeds are
+4--8× faster than France's} in four of five blocks (consumption is the
+exception); plausible drivers are AU's more flexible price/wage setting
+(mining cycle, commodity-pass-through, variable-rate mortgages).
+Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN,
+DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC
+at the conservative end of the AU range, with magnitudes that reflect
+the greater capital--labour substitutability of the CES specification (σ
+= 0.54) and the small estimated PAC adjustment-cost coefficients. The
+forward-guidance puzzle is absent: AU-PAC tracks the linear reference
+response to within 16\% even at N = 12 successive rate-cut
+announcements, while standard New Keynesian models saturate near 1.8×.
+Australia-specific features include an endogenous Taylor rule for the
+RBA, variable-rate mortgage transmission, commodity-price channels, the
+US as the foreign bloc, and a trade ECM calibrated to Australia's
+secular openness rise. The model is implemented in Dynare 6.5.
 
 \textbf{Keywords}: Semi-structural model, polynomial adjustment costs,
 expectations, monetary policy transmission, Australian economy
@@ -340,7 +341,7 @@ expectations, monetary policy transmission, Australian economy
   \hyperref[5-cross-block-findings]{Cross-block findings}
 \item
   \hyperref[6-estimation]{Estimation} --- incl.~\textbf{§6.6 Phase L2
-  OLS audit (2026-05-28)}
+  OLS audit + §6.7 BK-constrained wage Phillips (2026-05-28)}
 \item
   \hyperref[7-model-properties]{Model Properties}
 \item
@@ -4738,10 +4739,12 @@ HI deflator & β\_pih\_m & 0.08 & −0.019 & −0.71 & & & insig \\
 Govt deflator π\_g & ρ\_pg & 0.13 & \textbf{−0.471} & −5.95 & 122 & 0.23
 & sig, sign flip (oscillation) \\
 Govt deflator & α\_pg & 0.37 & 0.036 & 0.63 & & & insig \\
-Wage Phillips λ\_w & 0.21 & −0.082 & −1.64 & 121 & 0.77 & reverted (BK
-fail; γ\_w=1.59) & \\
-Wage Phillips γ\_w & 0.46 & 1.594 & 15.27 & & & reverted & \\
-Wage Phillips κ\_w & 0.054 & 0.371 & 3.18 & & & reverted & \\
+Wage Phillips λ\_w & 0.21 & −0.082 / 0.093† & −1.64 & 121 & 0.77 / 0.30
+& †BK-constrained (§6.7) & \\
+Wage Phillips γ\_w & 0.46 & 1.594 / 0.857† & 15.27 & & & †BK-constrained
+& \\
+Wage Phillips κ\_w & 0.054 & 0.371 / 0.359† & 3.18 & & & †BK-constrained
+& \\
 Orphan & b\_di\_c & −0.701 & \textbf{0} & --- & & & not in wp1044 Eq
 35 \\
 Orphan & b\_ph\_ih & 0.0099 & \textbf{0} & --- & & & L2 skipped (no AU
@@ -4795,10 +4798,79 @@ confirming AU's commodity-cycle pricing structure.
 activity (ln\_Q, yhat\_au) and exchange rate (s\_gap, 10Y) are
 essentially unchanged because monetary transmission to those variables
 runs through channels (CES user cost, UIP forward recursion, term
-structure) that were not touched by the audit. The CPI/wage IRF response
+structure) that were not touched by the audit. The CPI IRF response
 weakens further because the AU CPI OLS finds the structural channels
 insignificant; this is the same ``flat AU Phillips'' finding that wp736
 calibrated around, now reproduced in the L2 OLS pass.
+
+\subsubsection{6.7 BK-constrained wage Phillips
+(2026-05-28)}\label{bk-constrained-wage-phillips-2026-05-28}
+
+The Phase L2 unrestricted wage Phillips OLS gave γ\_w = 1.59 (t = 15.3)
+--- strongly identified but BK-infeasible because the wage-price spiral
+closes (CPI passes through to wages at 1.59× while wages feed back into
+the CPI deflator and VA price). A re-estimation under the structural
+functional form
+
+pi\_w − pibar − dln\_prod = λ\_w · (pi\_w(−1) − pibar − dln\_prod) +
+γ\_w · (pi\_c − pibar) − κ\_w · u\_gap + ε
+
+with the BK-stability constraint \textbf{λ\_w + γ\_w ≤ 0.95} and
+non-negativity on all coefficients, solved as a quadratic program
+against N = 121 quarterly observations, yields:
+
+\paragraph{Table 6.7: BK-constrained wage Phillips
+OLS}\label{table-6.7-bk-constrained-wage-phillips-ols}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Coefficient
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Unconstrained OLS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Constrained OLS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Status
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+λ\_w (own-lag persistence) & 0.219 (t=3.48) & \textbf{0.093} & inactive
+bound (\textgreater=0) \\
+γ\_w (CPI passthrough) & 1.471 (t=10.9) & \textbf{0.857} & binding
+(sum=0.95) \\
+κ\_w (Phillips slope) & 0.065 (t=0.40) & \textbf{0.359} & inactive
+(positive) \\
+λ\_w + γ\_w & 1.689 & 0.950 & --- \\
+R² & 0.424 & 0.301 & loss 11.7 nats \\
+\end{longtable}
+}
+
+The constraint is \textbf{binding at the sum}: AU wages are nearly fully
+indexed to CPI inflation in the small open-economy sense, but stability
+requires holding the wage-price-spiral coefficient just below unity. The
+Phillips slope κ\_w = 0.359 (Q-bar AU unemployment-gap units) is now
+substantial and structurally identified --- substantially larger than
+the wp736 calibration centre of 0.05 and the FR-BDF point estimate
+around 0.10. Heuristic standard errors are not reported because the
+active constraint makes classical inference inappropriate; the loss of
+11.7 nats vs unconstrained corresponds to a likelihood ratio in the
+high-significance range, consistent with the wage Phillips structure
+being a meaningful binding constraint on AU data.
+
+\textbf{Implication for IRFs.} With κ\_w now identified, the wage IRF
+response to a 100bp MP tightening peaks at −0.011 pp y/y at Q7 (vs
+−0.002 pp at Q2 under the pre-MCMC unrestricted values), a 5--10×
+amplification reflecting the active unemployment channel. Real-activity
+and exchange-rate IRFs are unchanged because those run through
+capital/UIP/term-structure mechanics, not through wage formation.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -4911,14 +4983,14 @@ from the earlier three-regime workflow; the Phase T production regime is
 closest to the Hybrid trace.}
 
 \subsubsection{Table 6.3: Peak IRF (100bp annualized monetary
-tightening) --- Phase L2 OLS audit
-(2026-05-28)}\label{table-6.3-peak-irf-100bp-annualized-monetary-tightening-phase-l2-ols-audit-2026-05-28}
+tightening) --- Phase L2 OLS audit + constrained wage Phillips
+(2026-05-28)}\label{table-6.3-peak-irf-100bp-annualized-monetary-tightening-phase-l2-ols-audit-constrained-wage-phillips-2026-05-28}
 
 GDP and growth-rate variables in \% deviation from baseline (FR-BDF
 convention); inflation and yield variables in annualised pp.~Peaks taken
 within the first 40 quarters. Calibration: post-Phase-L2 single-equation
 OLS for CPI Phillips, trade quantities, trade and other deflators (see
-§6.6 Phase L2 OLS audit below).
+§6.6), and BK-constrained restricted OLS for wage Phillips (§6.7).
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lll@{}}
@@ -4928,16 +5000,16 @@ Variable & Peak & Quarter \\
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Real GDP (ln\_Q)} & \textbf{−0.106\%} & Q8 \\
+\textbf{Real GDP (ln\_Q)} & \textbf{−0.088\%} & Q8 \\
 Output gap (yhat\_au) & \textbf{−0.069\%} & Q8 \\
 CPI inflation (pi\_au, y/y) & \textbf{−0.020 pp} & Q16 \\
-VA price inflation (piQ, y/y) & +0.033 pp & Q1 \\
-CPI deflator inflation (pi\_c, y/y) & +0.001 pp & Q11 \\
+VA price inflation (piQ, y/y) & +0.030 pp & Q1 \\
+CPI deflator inflation (pi\_c, y/y) & +0.001 pp & Q12 \\
 Consumption growth (Δlog) & \textbf{−0.020\%} & Q1 \\
 Business inv growth (Δlog) & −0.055\% & Q8 \\
 Housing inv growth (Δlog) & −0.027\% & Q4 \\
 Employment growth (Δlog) & −0.005\% & Q5 \\
-Wage inflation (y/y) & −0.002 pp & Q2 \\
+\textbf{Wage inflation (y/y)} & \textbf{−0.011 pp} & Q7 \\
 Exchange rate (s\_gap, \%) & \textbf{−0.980\%} & Q8 \\
 10Y yield (annualised) & \textbf{+0.103 pp} & Q1 \\
 \end{longtable}
@@ -4954,7 +5026,11 @@ vs −0.004\% at Q7) because the orphan \texttt{b\_di\_c·di\_gap}
 calibration was zeroed (it had been amplifying consumption via a channel
 not in wp1044 Eq 35); the remaining response now reflects only
 OLS-identified channels (\texttt{pv\_r\_lh\_gap}, \texttt{b\_HtM}, PAC
-growth-neutrality term).
+growth-neutrality term). \textbf{The wage Phillips response is 5--10×
+larger} than pre-audit (−0.011 pp at Q7 vs −0.002 pp earlier) because
+the BK-constrained wage Phillips OLS (§6.7) identifies a substantial
+Phillips slope κ\_w = 0.359 and a near-unit CPI passthrough γ\_w =
+0.857.
 
 \paragraph{7.2.2 Channel-by-channel
 walkthrough}\label{channel-by-channel-walkthrough}

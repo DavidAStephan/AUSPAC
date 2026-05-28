@@ -709,9 +709,17 @@ alpha_pcom = 0.1;
 // Wage Phillips: AU OLS Phase L2 produced gamma_w=1.59 (>1, creates wage-
 // price spiral) violating BK conditions. Reverted to AU pre-MCMC values.
 // Unconstrained OLS estimates archived in data/pac_blocks/results_wage_phillips.txt.
-lambda_w = 0.2017;   // AU pre-MCMC OLS estimate (Phase B); OLS Phase L2 gave -0.082 but unstable
-kappa_w  = 0.0544;   // AU pre-MCMC OLS estimate; OLS Phase L2 gave +0.371 (stable but combined with gamma_w=1.59 unstable)
-gamma_w  = 0.4579;   // AU pre-MCMC OLS estimate; OLS Phase L2 gave 1.59 (BK fail — wage-price spiral)
+// Wage Phillips: BK-constrained OLS (Phase L2 follow-up 2026-05-28).
+// Restricted-form OLS gives lambda_w+gamma_w=1.69 (over-indexed wages —
+// BK-fails). Imposing lambda_w+gamma_w <= 0.95 + non-negativity via
+// quadprog yields the values below at a binding sum=0.95 constraint.
+// R² loss vs unconstrained: 11.7 nats (0.42 → 0.30).
+// Interpretation: AU wages are nearly fully indexed to CPI (γ_w = 0.86)
+// with weak lag persistence (λ_w = 0.09) and substantial Phillips slope
+// (κ_w = 0.36). See data/pac_blocks/results_wage_phillips_constrained.txt.
+lambda_w = 0.0929;   // constrained OLS (binding sum constraint)
+gamma_w  = 0.8571;   // constrained OLS
+kappa_w  = 0.3592;   // constrained OLS (Phillips slope; not at constraint)
 okun_coeff = -0.13;
 rho_u_gap = 0.946;
 beta_w = 0.98;
