@@ -972,7 +972,9 @@ model;
 	// term tying consumption growth to HP-filtered trend GDP growth (wp1044
 	// Eq 35).  Production-model dy_bar_gap evolves as a RW around 0 (data
 	// path is loaded only by au_pac_bayesian.mod via varobs).
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
+	// wp1044 Eq 35: α₁·PV(r_LH gap) enters the SR PAC equation directly.
+	// pv_r_lh_gap was previously defined but not wired in (orphan bug).
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+alpha_c_r*pv_r_lh_gap+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
