@@ -1038,8 +1038,10 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='di_gap']
 	di_gap =  i_gap - i_gap(-1);
 
-	[blockname='',name='pi_au']
-	pi_au =  pi_au_gap + pibar_au;
+	// Phase L2.A architectural fix (2026-05-28): pi_au is now defined by the
+	// structural aggregator below (food/energy/core); pi_au_gap is definitional.
+	[blockname='',name='pi_au_gap']
+	pi_au_gap = pi_au - pibar_au;
 
 [name='def_pi_w_gap']
 	pi_w_gap = pi_w - pibar_au;
@@ -1066,9 +1068,18 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='i_gap']
 	i_gap =  lambda_i * i_gap(-1) + (1 - lambda_i) * (alpha_i * pi_au_gap(-1) + beta_i * yhat_au(-1)) + eps_i;
 
-	[blockname='',name='pi_au_gap']
-// Phase V: FR-BDF eq (80) ECM rewrite — see PRICE_RESPONSE_DIAGNOSIS.md
-	pi_au_gap =  lambda_pi * pi_au_gap(-1) + kappa_pi * yhat_au(-1) + alpha_pc * (piQ - pibar_au) + alpha_pc_lag * (piQ(-1) - pibar_au(-1)) + beta_pc_m * (pi_m - pibar_au) + gamma_oil * dln_pcom + b_ECM_pc * (p_C_star_level(-1) - p_C_level(-1)) + eps_pi;
+	// Phase L2.A architectural fix (2026-05-28): pi_au is now defined as a
+	// structural aggregate of food/energy/core deflator components per
+	// FR-BDF §4.7 (deflator block). The E-SAT Phillips equation (formerly
+	// here) defined pi_au_gap directly; it has been removed because that
+	// equation belongs in E-SAT as an expectation-formation tool, not as
+	// the defining equation for actual CPI inflation. The L2 OLS estimates
+	// of (lambda_pi, kappa_pi, alpha_pc, alpha_pc_lag, beta_pc_m, b_ECM_pc)
+	// are preserved in data/pac_blocks/results_cpi_phillips.txt and can be
+	// re-attached if E-SAT expectations of pi_au need an explicit equation
+	// for the var_model.
+	[blockname='',name='pi_au']
+	pi_au = w_cpi_food * pi_au_food + w_cpi_energy * pi_au_energy + (1 - w_cpi_food - w_cpi_energy) * pi_au_core;
 
 [blockname='',name='def_p_C_level']
 	p_C_level = p_C_level(-1) + pi_au_gap;
@@ -1527,7 +1538,13 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	pi_au_energy = delta_energy_pm * pi_m + (1 - delta_energy_pm) * pibar_au + delta_energy_pcom * dln_pcom;
 
 	[blockname='',name='pi_au_core']
-	pi_au_core = (pi_au - w_cpi_food * pi_au_food - w_cpi_energy * pi_au_energy) / (1 - w_cpi_food - w_cpi_energy);
+	// Phase L2.A architectural fix (2026-05-28): pi_au_core is now defined
+	// structurally as the consumption-deflator equation pi_c plus a residual
+	// (eps_pi) representing CPI-specific noise vs the broader consumption
+	// deflator basket. Previously this line back-out pi_au_core from
+	// (pi_au − w_food·pi_au_food − w_energy·pi_au_energy), which was
+	// circular under the new aggregator architecture.
+	pi_au_core = pi_c + eps_pi;
 
 	[blockname='',name='pi_au_trad']
 	pi_au_trad = delta_trad_pm * pi_m + (1 - delta_trad_pm) * pibar_au + delta_trad_pcom * dln_pcom + delta_trad_s * s_gap;
