@@ -5,6 +5,9 @@
 # --- Dynare auto-generated output ---
 dynare/+*/
 dynare/au_*/
+dynare/aux/+*/
+dynare/aux/aux_*/
+dynare/aux/*.log
 dynare/*.log
 dynare/*.eps
 dynare/*.json
