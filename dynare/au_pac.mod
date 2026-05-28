@@ -1048,7 +1048,20 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	pi_us =  pi_us_gap + pibar_us;
 
 	[blockname='',name='yhat_au']
-	yhat_au =  delta * yhat_us + lambda_q * yhat_au(-1) - sigma_q * (i_gap(-1) - pi_au_gap(-1)) + lambda_dom * yhat_dom + eps_q;
+	// Phase L2.A architectural fix (2026-05-28):
+	// yhat_au is now defined STRUCTURALLY as the accumulation of the cyclical
+	// component of demand-side GDP growth (yhat_dom), consistent with
+	// FR-BDF wp736 §2.3/§4.3.3:  ŷ_t ≡ Y_t/Y_{N,t} − 1, with Y_t set by the
+	// demand identity and Y_{N,t} = ln_QN by the CES production function.
+	// The previous E-SAT-IS-curve form
+	//   yhat_au = δ*yhat_us + λ_q*yhat_au(−1) − σ_q*(i_gap−pi_au_gap) + λ_dom*yhat_dom + ε_q
+	// has been demoted to an auxiliary forecasting equation for E-SAT (see
+	// the var_model block); it no longer DEFINES yhat_au. Monetary transmission
+	// to yhat_au now flows through the PAC blocks (business inv WACC channel,
+	// housing inv mortgage channel, consumption pv_r_lh_gap channel, trade
+	// real-exchange-rate channel) and aggregates into yhat_dom via the GDP
+	// identity at line ~1428.
+	yhat_au = yhat_au(-1) + yhat_dom + eps_q;
 
 	[blockname='',name='i_gap']
 	i_gap =  lambda_i * i_gap(-1) + (1 - lambda_i) * (alpha_i * pi_au_gap(-1) + beta_i * yhat_au(-1)) + eps_i;
