@@ -972,9 +972,9 @@ model;
 	// term tying consumption growth to HP-filtered trend GDP growth (wp1044
 	// Eq 35).  Production-model dy_bar_gap evolves as a RW around 0 (data
 	// path is loaded only by au_pac_bayesian.mod via varobs).
-	// wp1044 Eq 35: α₁·PV(r_LH gap) enters the SR PAC equation directly.
-	// pv_r_lh_gap was previously defined but not wired in (orphan bug).
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+yhat_au*b3_c+alpha_c_r*pv_r_lh_gap+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
+	// wp1044 Eq 35: α₁·PV(r_LH gap) + b_di_c·di_gap entered the SR PAC equation.
+	// Both pv_r_lh_gap and b_di_c·di_gap were orphan-defined; now wired in.
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+b_di_c*di_gap+yhat_au*b3_c+alpha_c_r*pv_r_lh_gap+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
@@ -998,7 +998,8 @@ model;
 	pac_expectation_pac_ih =  h_pac_ih_constant + h_pac_ih_var_yhat_au_lag_1*yhat_au(-1) + h_pac_ih_var_i_gap_lag_1*i_gap(-1) + h_pac_ih_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_ih_var_u_gap_lag_1*u_gap(-1) + h_pac_ih_var_yhat_us_lag_1*yhat_us(-1) + h_pac_ih_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_ih_var_ibar_lag_1*ibar(-1) + h_pac_ih_var_pibar_au_lag_1*pibar_au(-1) + h_pac_ih_var_pibar_us_lag_1*pibar_us(-1) + h_pac_ih_var_piQ_lag_1*piQ(-1) + h_pac_ih_var_pi_m_lag_1*pi_m(-1) + h_pac_ih_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_ih_var_ih_hat_lag_1*ih_hat(-1);
 
 	[blockname='',name='ln_ih_level']
-	diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-1))+b2_ih*diff(ln_ih_level(-2))+pac_expectation_pac_ih+yhat_au*b3_ih+eps_ih;
+	// b_ph_ih·ph_gap(-1) was orphan-defined; wp1044 §4.6/Eq 67 has Tobin's Q price channel.
+diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-1))+b2_ih*diff(ln_ih_level(-2))+pac_expectation_pac_ih+yhat_au*b3_ih+b_ph_ih*ph_gap(-1)+eps_ih;
 
 	[blockname='',name='ih_hat']
 	ih_hat =  rho_ih_aux*ih_hat(-1)+yhat_au(-1)*a_ih_y+i_gap(-1)*a_ih_i+pi_au_gap(-1)*a_ih_pi+u_gap(-1)*a_ih_u+eps_var_ih;
