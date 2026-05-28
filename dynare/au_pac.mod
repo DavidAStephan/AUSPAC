@@ -1803,36 +1803,39 @@ end;
 
 
 // ===================================================================
-// Phase L2 P1c hybrid MCMC posterior writeback (2026-05-27)
-// Laplace LMD = -696.06, MHM = -697.36 (+88.4 nats vs Round 1.2)
+// Full-structural-model MCMC writeback (2026-05-28)
+// Laplace LMD = -662.27, MHM = -665.51 (+31.9 nats vs pre-fix hybrid)
+// Model: ULC/UCK + deflator ECMs + endogenous spreads + energy split
+//        + corrected K_market data pipeline
 // 25 estimated params (BI calibrated from wp1044 Table 3.5.13)
 // ===================================================================
-b0_pQ       = 0.0098;   // posterior [0.001, 0.022]
-b1_pQ       = 0.1115;   // posterior [0.036, 0.177]
-b2_pQ       = 0.0212;   // posterior [-0.042, 0.099]
-b0_c        = 0.0519;   // posterior [0.022, 0.081]
-b1_c        = 0.0397;   // posterior [0.005, 0.073]
-b2_c        = -0.5796;  // posterior [-0.885, -0.287]
-b3_c        = 0.0285;   // posterior [-0.054, 0.113]
-b0_ib       = 0.0181;   // (Phase V; BI not re-estimated — see line 1766)
-b1_ib       = 0.0809;   // (Phase V; overridden by wp1044 at line 1767)
-b3_ib       = 0.3120;   // (Phase V; overridden by wp1044 at line 1769)
-b0_ih       = 0.0290;   // posterior [0.008, 0.049]
-b1_ih       = 0.1074;   // posterior [0.034, 0.182]
-b3_ih       = 0.2104;   // posterior [0.041, 0.363]
-b0_n        = 0.0537;   // posterior [0.014, 0.088]
-b1_n        = 0.2890;   // posterior [0.118, 0.441]
-b5_n        = -0.0050;  // posterior [-0.089, 0.078]
-lambda_w    = 0.0801;    // hybrid MCMC posterior mean (was 0.2112)
-gamma_w     = 0.8090;    // hybrid MCMC posterior mean (was 0.3476)
-kappa_w     = -0.0622;   // hybrid MCMC posterior mean (was -0.1111)
-// Phase L2 P1c hybrid MCMC writeback (2026-05-27, mcmc_hybrid_r2026a.log):
-alpha_pc     = 0.8558;   // VA -> CPI passthrough; posterior [0.786, 0.933] (was 0.2013; FR-BDF 0.71)
-kappa_pi     = 0.0258;   // Phillips slope; posterior [-0.024, 0.084] (was 0.0057)
-lambda_pi    = 0.5913;   // CPI persistence; posterior [0.470, 0.716] (was 0.1744)
-a_pQ_w       = 0.4310;   // wage -> piQ_hat; posterior [0.091, 0.798] (was 0.4367)
-alpha_pc_lag = -0.0640;  // lagged VA passthrough; posterior [-0.203, 0.071] (was 0.1135; now ≈ 0)
-b_ECM_pc     = 0.0018;   // ECM speed; posterior [0.0004, 0.003] (was 0.0601; now ≈ 0)
+b0_pQ       = 0.0027;   // posterior [0.001, 0.004]
+b1_pQ       = 0.1482;   // posterior [0.060, 0.233]
+b2_pQ       = -0.0331;  // posterior [-0.101, 0.035]
+b0_c        = 0.0537;   // posterior [0.024, 0.082]
+b1_c        = 0.0362;   // posterior [0.004, 0.067]
+b2_c        = -0.5670;  // posterior [-0.918, -0.266]
+b3_c        = 0.0364;   // posterior [-0.056, 0.122]
+b0_ib       = 0.0181;   // (BI not re-estimated — overridden by wp1044 below)
+b1_ib       = 0.0809;
+b3_ib       = 0.3120;
+b0_ih       = 0.0278;   // posterior [0.008, 0.048]
+b1_ih       = 0.1149;   // posterior [0.033, 0.204]
+b3_ih       = 0.2281;   // posterior [0.070, 0.389]
+b0_n        = 0.0618;   // posterior [0.012, 0.109]
+b1_n        = 0.3109;   // posterior [0.136, 0.465]
+b5_n        = 0.0021;   // posterior [-0.072, 0.073]
+lambda_w    = 0.0998;    // posterior [0.040, 0.173]
+gamma_w     = 0.6642;    // posterior [0.503, 0.827]
+kappa_w     = -0.0643;   // posterior [-0.141, 0.009]
+// Phillips / deflator channel posteriors:
+alpha_pc     = 0.6118;   // VA -> CPI passthrough; posterior [0.543, 0.671]
+kappa_pi     = 0.0322;   // Phillips slope; posterior [-0.019, 0.081]
+lambda_pi    = 0.5453;   // CPI persistence; posterior [0.405, 0.691]
+a_pQ_w       = 0.3974;   // wage -> piQ_hat; posterior [0.054, 0.693]
+alpha_pc_lag = -0.0038;  // lagged VA passthrough; posterior [-0.111, 0.097] (≈ 0)
+b_ECM_pc     = 0.0020;   // ECM speed; posterior [0.001, 0.003]
+b_PAC_c      = 0.8526;   // PAC growth-neutrality; posterior [0.377, 1.303]
 
 // ====================================================================
 // Phase W: calibration.inc Bayesian-posterior overrides for the
@@ -1990,23 +1993,23 @@ b3_ib       = 0.69;    // wp1044 Table 3.5.13 (overrides 0.3120; coef on Δdf ga
 // omega_ib already 0.35 (matches wp1044)
 // sigma_ces already 0.5366 (matches wp1044's 0.50 within calibration tolerance)
 
-// Phase L2 P1c hybrid MCMC posterior shock stds (2026-05-27)
+// Full-structural-model MCMC posterior shock stds (2026-05-28)
 shocks;
-    var eps_q;          stderr 0.5397;    // posterior [0.480, 0.597]
-    var eps_i;          stderr 0.0377;    // posterior [0.033, 0.042]
-    var eps_pi;         stderr 0.2195;    // posterior [0.135, 0.305]
+    var eps_q;          stderr 0.5589;    // posterior [0.499, 0.618]
+    var eps_i;          stderr 0.0378;    // posterior [0.032, 0.043]
+    var eps_pi;         stderr 0.1666;    // posterior [0.119, 0.212]
     var eps_q_us;       stderr 1.138;     // (not estimated)
     var eps_pi_us;      stderr 0.319;     // (not estimated)
     var eps_ibar;       stderr 0.01;
     var eps_pibar_au;   stderr 0.01;
     var eps_pibar_us;   stderr 0.01;
     var eps_pQ;         stderr 0.571;     // (not estimated)
-    var eps_w;          stderr 0.7674;    // posterior [0.628, 0.890]
-    var eps_n;          stderr 0.3262;    // posterior [0.119, 0.525]
-    var eps_c;          stderr 2.0145;    // posterior [1.811, 2.252]
-    var eps_ib;         stderr 2.9177;    // posterior [2.611, 3.196]
-    var eps_ih;         stderr 1.8938;    // posterior [0.523, 3.365]
-    var eps_10y;        stderr 0.0745;    // posterior [0.061, 0.088]
+    var eps_w;          stderr 0.8251;    // posterior [0.694, 0.961]
+    var eps_n;          stderr 1.4396;    // posterior [0.130, 3.064]
+    var eps_c;          stderr 1.9894;    // posterior [1.760, 2.199]
+    var eps_ib;         stderr 2.9138;    // posterior [2.604, 3.204]
+    var eps_ih;         stderr 2.1072;    // posterior [0.528, 4.246]
+    var eps_10y;        stderr 0.0752;    // posterior [0.061, 0.090]
     var eps_tp;         stderr 0.05;
     var eps_COE;        stderr 0.1;
     var eps_LB_firms;   stderr 0.1;

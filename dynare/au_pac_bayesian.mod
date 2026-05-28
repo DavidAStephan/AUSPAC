@@ -50,6 +50,20 @@ var
 	i_gap
 	i_lh
 	iad
+	iad_e
+	dln_m_ne
+	dln_m_e
+	ln_m_ne_level
+	ln_m_e_level
+	ln_d_iad_ne
+	ln_d_iad_e
+	ln_m_ne_eq
+	ln_m_e_eq
+	m_ne_gap
+	m_e_gap
+	pi_m_ne
+	pi_m_e
+	p_M_ne_level
 	ib_gap
 	ib_hat
 	ibar
@@ -123,6 +137,10 @@ var
 	p_C_level
 	p_M_level
 	p_C_star_level
+	p_IB_level
+	p_IB_star_level
+	p_IH_level
+	p_IH_star_level
 	pi_x
 	pibar_au
 	pibar_us
@@ -230,6 +248,8 @@ parameters
 	b2_n
 	b2_pQ
 	b2_x
+	gamma_ulc
+	gamma_uck
 	b3_c
 	b3_ib
 	b3_ih
@@ -252,6 +272,38 @@ parameters
 	b_covid_crash_n
 	b_covid_crash_pQ
 	b_ECM_pc
+	b_ECM_pib
+	b_ECM_pih
+	omega_pib
+	omega_pih
+	kappa_spread_LB
+	kappa_spread_BBB
+	w_m_ne
+	w_m_e
+	w_iad_ne_c
+	w_iad_ne_ib
+	w_iad_ne_ih
+	w_iad_ne_g
+	w_iad_ne_x
+	w_iad_e_c
+	w_iad_e_ib
+	w_iad_e_ih
+	w_iad_e_g
+	w_iad_e_x
+	beta_m_ne
+	gamma_m_ne
+	b0_m_ne
+	b1_m_ne
+	beta_m_e
+	gamma_m_e
+	b0_m_e
+	b1_m_e
+	rho_pm_ne
+	alpha_pm_ne
+	beta_pm_ne
+	rho_pm_e
+	alpha_pm_e
+	beta_pm_e_com
 	b_di_c
 	b_ph_ih
 	beta_c
@@ -494,6 +546,12 @@ a_pQ_y = 0.05;
 b0_pQ = 0.0294;
 b1_pQ = 0.2784;
 b2_pQ = 0.0022;
+// CES dual cost-function structural coefficients (§4.3.1):
+//   γ_ULC = (1-α)σ = (1-0.45)*0.5366 = 0.295
+//   γ_UCK = ασ     = 0.45*0.5366      = 0.241
+// These are NOT free parameters — they're pinned by the CES calibration.
+gamma_ulc = 0.2951;   // (1-alpha_k)*sigma_ces: ULC passthrough into VA price
+gamma_uck = 0.2415;   // alpha_k*sigma_ces: user-cost passthrough into VA price
 h_pac_pQ_constant = 0.0005236870666278106;
 h_pac_pQ_var_dln_pcom_lag_1 = 3.553534636190619e-05;
 h_pac_pQ_var_i_gap_lag_1 = -0.001354039809492274;
@@ -710,6 +768,19 @@ b_ECM_pc     = 0.05;   // FR-BDF eq (80) |β3| error-correction speed
 omega_pc     = 0.23;   // FR-BDF eq (79) β0_LR import weight in CPI target
 rho_pib = 0.7;
 alpha_pib = 0.19;
+beta_pib_m = 0.12;   // import-price passthrough into BI deflator
+// Deflator ECM parameters (wp1044 §3.6 structural deflator targets):
+b_ECM_pib    = 0.07;    // ECM speed for BI deflator (wp1044 eq 55: β₃ ≈ -0.13)
+omega_pib    = 0.72;    // VA-price weight in BI deflator LR target (wp1044: d₁=0.72)
+b_ECM_pih    = 0.07;    // ECM speed for housing-inv deflator
+omega_pih    = 0.17;    // VA-price weight in housing-inv deflator LR target (wp1044: d₀=0.17)
+// Endogenous spread widening (wp1044 §3.5.3 Eq 50, simplified):
+//   s_{j,t} responds to the output gap as a proxy for leverage/credit risk.
+//   In wp1044 the channel runs through D/E (debt leverage); here we proxy
+//   with yhat_au since (a) falling output → rising defaults/leverage →
+//   wider spreads, and (b) we don't have the full NFC balance-sheet block.
+kappa_spread_LB  = -0.05;   // BLR spread sensitivity to output gap
+kappa_spread_BBB = -0.03;   // BBB spread sensitivity to output gap
 rho_pih = 0.49;
 alpha_pih = 0.4;
 rho_px = 0.21;
@@ -739,6 +810,40 @@ w_iad_ib = 0.25;
 w_iad_ih = 0.15;
 w_iad_g = 0.08;
 w_iad_x = 0.3;
+// Energy / non-energy import split (wp1044 §3.8.1 Eqs 106-111, §3.6 deflators)
+// AU energy imports ≈ 5% of total imports (ABS 5368); much smaller than France's ~15%.
+w_m_ne     = 0.95;      // non-energy share of total imports (AU)
+w_m_e      = 0.05;      // energy share of total imports
+// Non-energy import IAD weights (wp1044 Eq 106 — AU adaptation)
+w_iad_ne_c  = 0.193;    // wp1044 values scaled to AU (similar structure)
+w_iad_ne_ib = 0.276;
+w_iad_ne_ih = 0.161;
+w_iad_ne_g  = 0.106;
+w_iad_ne_x  = 0.337;
+// Energy import IAD weights (wp1044 Eq 107 — small for AU)
+w_iad_e_c   = 0.027;
+w_iad_e_ib  = 0.007;
+w_iad_e_ih  = 0.001;
+w_iad_e_g   = 0.009;
+w_iad_e_x   = 0.014;
+// Non-energy import ECM parameters
+beta_m_ne  = 1.50;      // LR income elasticity (non-energy) — same as beta_m
+gamma_m_ne = -0.40;     // LR RER elasticity — same as gamma_m
+b0_m_ne    = 0.06;      // ECM speed — same as b0_m
+b1_m_ne    = 0.23;      // AR(1) persistence
+// Energy import ECM parameters
+beta_m_e   = 1.00;      // LR income elasticity (energy) — unit elastic
+gamma_m_e  = -0.19;     // LR RER elasticity (less price-elastic than non-energy)
+b0_m_e     = 0.11;      // ECM speed (faster than non-energy; wp1044: β₂=-0.11)
+b1_m_e     = 0.38;      // AR(1) persistence
+// Non-energy import deflator
+rho_pm_ne  = 0.28;      // same as rho_pm (inherit)
+alpha_pm_ne = 0.38;     // VA-price passthrough
+beta_pm_ne = 0.09;      // exchange-rate passthrough
+// Energy import deflator
+rho_pm_e   = 0.10;      // less persistent (energy prices move fast)
+alpha_pm_e = 0.05;      // small VA-price passthrough (energy is a global price)
+beta_pm_e_com = 0.80;   // strong commodity-price passthrough (dominant driver)
 rho_lh = 0.97;
 spread_lh = 0.4;
 rho_ph = 0.6;
@@ -920,7 +1025,8 @@ varexo
 	eps_ibar
 	eps_ih
 	eps_lh
-	eps_m
+	eps_m_ne
+	eps_m_e
 	eps_n
 	eps_pQ
 	eps_pc
@@ -933,7 +1039,8 @@ varexo
 	eps_pibar_au
 	eps_pibar_us
 	eps_pih
-	eps_pm
+	eps_pm_ne
+	eps_pm_e
 	eps_px
 	eps_q
 	eps_q_us
@@ -974,7 +1081,10 @@ model;
 	pac_expectation_pac_pQ =  h_pac_pQ_constant + h_pac_pQ_var_yhat_au_lag_1*yhat_au(-1) + h_pac_pQ_var_i_gap_lag_1*i_gap(-1) + h_pac_pQ_var_pi_au_gap_lag_1*pi_au_gap(-1) + h_pac_pQ_var_u_gap_lag_1*u_gap(-1) + h_pac_pQ_var_yhat_us_lag_1*yhat_us(-1) + h_pac_pQ_var_pi_us_gap_lag_1*pi_us_gap(-1) + h_pac_pQ_var_ibar_lag_1*ibar(-1) + h_pac_pQ_var_pibar_au_lag_1*pibar_au(-1) + h_pac_pQ_var_pibar_us_lag_1*pibar_us(-1) + h_pac_pQ_var_piQ_lag_1*piQ(-1) + h_pac_pQ_var_pi_m_lag_1*pi_m(-1) + h_pac_pQ_var_dln_pcom_lag_1*dln_pcom(-1) + h_pac_pQ_var_pi_w_gap_lag_1*pi_w_gap(-1) + h_pac_pQ_var_tau_GST_gap_lag_1*tau_GST_gap(-1) + h_pac_pQ_var_piQ_hat_lag_1*piQ_hat(-1);
 
 	[blockname='',name='pQ_level']
-	diff(pQ_level) =  b0_pQ*(piQ_hat(-1)-pQ_level(-1))+b1_pQ*diff(pQ_level(-1))+pac_expectation_pac_pQ+yhat_au*b2_pQ+eps_pQ;
+	// CES dual cost-function channels: γ_ULC·(dln_ulc - π̄) + γ_UCK·dln_uc_k
+	// Gap forms ensure SS neutrality: dln_ulc = π̄ and dln_uc_k = 0 at SS.
+	// wp1044 §4.3.1 factor-price-frontier; γ_ULC=(1-α)σ=0.295, γ_UCK=ασ=0.241.
+	diff(pQ_level) =  b0_pQ*(piQ_hat(-1)-pQ_level(-1))+b1_pQ*diff(pQ_level(-1))+pac_expectation_pac_pQ+yhat_au*b2_pQ+gamma_ulc*(dln_ulc-pibar_au)+gamma_uck*dln_uc_k+eps_pQ;
 
 	[blockname='',name='piQ_hat']
 	piQ_hat =  rho_pQ_aux*piQ_hat(-1)+yhat_au(-1)*a_pQ_y+i_gap(-1)*a_pQ_i+pi_au_gap(-1)*a_pQ_pi+u_gap(-1)*a_pQ_u+pi_w_gap(-1)*a_pQ_w+tau_GST_gap(-1)*a_pQ_GST+eps_var_pQ;
@@ -1060,7 +1170,22 @@ model;
 	p_M_level = p_M_level(-1) + (pi_m - pibar_au);
 
 [blockname='',name='def_p_C_star_level']
-	p_C_star_level = (1 - omega_pc) * pQ_level + omega_pc * p_M_level;
+	// CPI LR target uses non-energy import price (wp1044 Eq 52; energy enters via gamma_oil)
+	p_C_star_level = (1 - omega_pc) * pQ_level + omega_pc * p_M_ne_level;
+
+	// BI deflator level accumulator + LR target (wp1044 §3.6.3 Eq 55)
+	[blockname='',name='def_p_IB_level']
+	p_IB_level = p_IB_level(-1) + (pi_ib - pibar_au);
+
+	[blockname='',name='def_p_IB_star_level']
+	p_IB_star_level = omega_pib * pQ_level + (1 - omega_pib) * p_M_level;
+
+	// Housing-inv deflator level accumulator + LR target (wp1044 §3.6.2 Eq 54)
+	[blockname='',name='def_p_IH_level']
+	p_IH_level = p_IH_level(-1) + (pi_ih - pibar_au);
+
+	[blockname='',name='def_p_IH_star_level']
+	p_IH_star_level = omega_pih * pQ_level + (1 - omega_pih) * p_M_level;
 
 	[blockname='',name='yhat_us']
 	yhat_us =  lambda_q_us * yhat_us(-1) + eps_q_us;
@@ -1258,10 +1383,12 @@ model;
 	s_COE =  (1 - rho_COE) * s_COE_ss + rho_COE * s_COE(-1) + eps_COE;
 
 	[blockname='',name='s_LB_firms']
-	s_LB_firms =  (1 - rho_LB_firms) * s_LB_firms_ss + rho_LB_firms * s_LB_firms(-1) + eps_LB_firms;
+	// wp1044 §3.5.3 Eq 50: spread responds to leverage (proxied by output gap).
+	// Negative kappa_spread: falling output gap → wider spread (higher credit risk).
+	s_LB_firms =  (1 - rho_LB_firms) * s_LB_firms_ss + rho_LB_firms * s_LB_firms(-1) + kappa_spread_LB * yhat_au + eps_LB_firms;
 
 	[blockname='',name='s_BBB']
-	s_BBB =  (1 - rho_BBB) * s_BBB_ss + rho_BBB * s_BBB(-1) + eps_BBB;
+	s_BBB =  (1 - rho_BBB) * s_BBB_ss + rho_BBB * s_BBB(-1) + kappa_spread_BBB * yhat_au + eps_BBB;
 
 	[blockname='',name='i_COE']
 	i_COE =  i_10y + s_COE;
@@ -1306,23 +1433,93 @@ model;
 	m_gap =  ln_m_eq - ln_m_level;
 
 	[blockname='',name='dln_m']
-	dln_m =  b0_m * m_gap(-1) + b1_m * dln_m(-1) + b2_m * iad + b3_m * s_gap + eps_m;
+	// Composite import growth preserved for GDP identity + backward compat.
+	// Now driven by non-energy + energy sub-components.
+	dln_m =  w_m_ne * dln_m_ne + w_m_e * dln_m_e;
+
+	// --- Energy / non-energy import split (wp1044 §3.8.1) ---
+
+	// Non-energy IAD (wp1044 Eq 106)
+	[blockname='',name='iad_ne']
+	iad =  w_iad_ne_c * dln_c + w_iad_ne_ib * dln_ib + w_iad_ne_ih * dln_ih + w_iad_ne_g * dln_g + w_iad_ne_x * dln_x;
+
+	// Energy IAD (wp1044 Eq 107)
+	[blockname='',name='iad_e']
+	iad_e =  w_iad_e_c * dln_c + w_iad_e_ib * dln_ib + w_iad_e_ih * dln_ih + w_iad_e_g * dln_g + w_iad_e_x * dln_x;
+
+	// Non-energy import level accumulator
+	[blockname='',name='ln_m_ne_level']
+	ln_m_ne_level = ln_m_ne_level(-1) + dln_m_ne;
+
+	// Non-energy import IAD accumulator
+	[blockname='',name='ln_d_iad_ne']
+	ln_d_iad_ne = ln_d_iad_ne(-1) + iad;
+
+	// Non-energy import LR target (wp1044 Eq 108)
+	[blockname='',name='ln_m_ne_eq']
+	ln_m_ne_eq = beta_m_ne * ln_d_iad_ne + gamma_m_ne * s_gap;
+
+	// Non-energy import ECM gap
+	[blockname='',name='m_ne_gap']
+	m_ne_gap = ln_m_ne_eq - ln_m_ne_level;
+
+	// Non-energy import SR equation (wp1044 Eq 109)
+	[blockname='',name='dln_m_ne']
+	dln_m_ne = b0_m_ne * m_ne_gap(-1) + b1_m_ne * dln_m_ne(-1) + iad + eps_m_ne;
+
+	// Energy import level accumulator
+	[blockname='',name='ln_m_e_level']
+	ln_m_e_level = ln_m_e_level(-1) + dln_m_e;
+
+	// Energy import IAD accumulator
+	[blockname='',name='ln_d_iad_e']
+	ln_d_iad_e = ln_d_iad_e(-1) + iad_e;
+
+	// Energy import LR target (wp1044 Eq 110)
+	[blockname='',name='ln_m_e_eq']
+	ln_m_e_eq = beta_m_e * ln_d_iad_e + gamma_m_e * s_gap;
+
+	// Energy import ECM gap
+	[blockname='',name='m_e_gap']
+	m_e_gap = ln_m_e_eq - ln_m_e_level;
+
+	// Energy import SR equation (wp1044 Eq 111)
+	[blockname='',name='dln_m_e']
+	dln_m_e = b0_m_e * m_e_gap(-1) + b1_m_e * dln_m_e(-1) + iad_e + eps_m_e;
+
+	// Non-energy import deflator (wp1044 §3.8.2 Eq 115)
+	[blockname='',name='pi_m_ne']
+	pi_m_ne = rho_pm_ne * pi_m_ne(-1) + alpha_pm_ne * piQ + (1 - rho_pm_ne - alpha_pm_ne) * pibar_au + beta_pm_ne * s_gap + eps_pm_ne;
+
+	// Energy import deflator — driven mainly by commodity prices
+	[blockname='',name='pi_m_e']
+	pi_m_e = rho_pm_e * pi_m_e(-1) + alpha_pm_e * piQ + beta_pm_e_com * dln_pcom + (1 - rho_pm_e - alpha_pm_e) * pibar_au + eps_pm_e;
+
+	// Composite import deflator (for backward compat + GDP deflator identity)
+	[blockname='',name='pi_m']
+	pi_m = w_m_ne * pi_m_ne + w_m_e * pi_m_e;
+
+	// Non-energy import price level (for deflator LR targets)
+	[blockname='',name='p_M_ne_level']
+	p_M_ne_level = p_M_ne_level(-1) + (pi_m_ne - pibar_au);
 
 	[blockname='',name='pi_c']
-	// Round 6 (2026-05-20): + alpha_GST · tau_GST_gap — GST passthrough.
-	pi_c =  rho_pc * pi_c(-1) + alpha_pc * piQ + beta_pc_m * pi_m + gamma_oil * dln_pcom + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au + alpha_GST * tau_GST_gap + eps_pc;
+	// wp1044 §3.6.1 Eq 51: consumption deflator uses NON-ENERGY import price
+	// (pi_m_ne) rather than total pi_m.  Energy enters separately via gamma_oil·dln_pcom.
+	pi_c =  rho_pc * pi_c(-1) + alpha_pc * piQ + beta_pc_m * pi_m_ne + gamma_oil * dln_pcom + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au + alpha_GST * tau_GST_gap + eps_pc;
 
 	[blockname='',name='pi_ib']
-	pi_ib =  rho_pib * pi_ib(-1) + alpha_pib * piQ + beta_pib_m * pi_m + (1 - rho_pib - alpha_pib - beta_pib_m) * pibar_au + eps_pib;
+	// wp1044 §3.6.3: BI deflator with ECM term pulling toward LR target p*_IB
+	pi_ib =  rho_pib * pi_ib(-1) + alpha_pib * piQ + beta_pib_m * pi_m + (1 - rho_pib - alpha_pib - beta_pib_m) * pibar_au + b_ECM_pib * (p_IB_star_level(-1) - p_IB_level(-1)) + eps_pib;
 
 	[blockname='',name='pi_ih']
-	pi_ih =  rho_pih * pi_ih(-1) + alpha_pih * piQ + beta_pih_m * pi_m + (1 - rho_pih - alpha_pih - beta_pih_m) * pibar_au + eps_pih;
+	// wp1044 §3.6.2: housing-inv deflator with ECM term pulling toward LR target p*_IH
+	pi_ih =  rho_pih * pi_ih(-1) + alpha_pih * piQ + beta_pih_m * pi_m + (1 - rho_pih - alpha_pih - beta_pih_m) * pibar_au + b_ECM_pih * (p_IH_star_level(-1) - p_IH_level(-1)) + eps_pih;
 
 	[blockname='',name='pi_x']
 	pi_x =  rho_px * pi_x(-1) + alpha_px * piQ + (1 - rho_px - alpha_px) * pibar_au + beta_px * s_gap + alpha_pcom * dln_pcom + eps_px;
 
-	[blockname='',name='pi_m']
-	pi_m =  rho_pm * pi_m(-1) + alpha_pm * piQ + (1 - rho_pm - alpha_pm) * pibar_au + beta_pm * s_gap + beta_pm_com * dln_pcom + eps_pm;
+	// pi_m is now a composite of pi_m_ne + pi_m_e (defined in the energy/non-energy block above)
 
 	[blockname='',name='dln_pcom']
 	dln_pcom =  rho_pcom * dln_pcom(-1) + 0.10 * yhat_us + eps_pcom;
@@ -1339,8 +1536,8 @@ model;
 	[blockname='',name='rw_gap']
 	rw_gap =  pi_w - piQ - dln_prod;
 
-	[blockname='',name='iad']
-	iad =  w_iad_c * dln_c + w_iad_ib * dln_ib + w_iad_ih * dln_ih + w_iad_g * dln_g + w_iad_x * dln_x;
+	// iad is now defined in the energy/non-energy import split block (line ~1440)
+	// as the non-energy IAD: iad = w_iad_ne_c*dln_c + ... (wp1044 Eq 106)
 
 	[blockname='',name='i_lh']
 	i_lh =  rho_lh * i_lh(-1) + (1 - rho_lh) * (i_10y + spread_lh) + eps_lh;
@@ -1639,6 +1836,25 @@ steady_state_model;
     p_C_level       = 0;
     p_M_level       = 0;
     p_C_star_level  = 0;
+    p_IB_level      = 0;
+    p_IB_star_level = 0;
+    p_IH_level      = 0;
+    p_IH_star_level = 0;
+    // Energy / non-energy import split SS
+    dln_m_ne        = 0;
+    dln_m_e         = 0;
+    ln_m_ne_level   = 0;
+    ln_m_e_level    = 0;
+    ln_d_iad_ne     = 0;
+    ln_d_iad_e      = 0;
+    ln_m_ne_eq      = 0;
+    ln_m_e_eq       = 0;
+    m_ne_gap        = 0;
+    m_e_gap         = 0;
+    iad_e           = 0;
+    pi_m_ne         = pi_ss_au;
+    pi_m_e          = pi_ss_au;
+    p_M_ne_level    = 0;
 
     // Consumption PAC TCM + level variables
     c_aux_l        = 0;
@@ -1734,12 +1950,16 @@ shocks;
     var eps_BBB;        stderr 0.1;
     var eps_s;          stderr 0.1;
     var eps_x;          stderr 1.0;
-    var eps_m;          stderr 1.0;
+    // eps_m removed: dln_m is now a composite of dln_m_ne + dln_m_e (no own shock)
+    var eps_m_ne;       stderr 1.0;
+    var eps_m_e;        stderr 3.0;      // energy imports are more volatile
     var eps_pc;         stderr 0.5;
     var eps_pib;        stderr 0.5;
     var eps_pih;        stderr 0.5;
     var eps_px;         stderr 0.5;
-    var eps_pm;         stderr 0.5;
+    // eps_pm removed: pi_m is now a composite of pi_m_ne + pi_m_e (no own shock)
+    var eps_pm_ne;      stderr 0.5;
+    var eps_pm_e;       stderr 2.0;      // energy import prices are volatile
     var eps_g;          stderr 0.3;
     var eps_pg;         stderr 0.5;
     var eps_tfp_LR;     stderr 0.01;
