@@ -123,6 +123,10 @@ var
 	p_C_level
 	p_M_level
 	p_C_star_level
+	p_IB_level
+	p_IB_star_level
+	p_IH_level
+	p_IH_star_level
 	pi_x
 	pibar_au
 	pibar_us
@@ -254,6 +258,12 @@ parameters
 	b_covid_crash_n
 	b_covid_crash_pQ
 	b_ECM_pc
+	b_ECM_pib
+	b_ECM_pih
+	omega_pib
+	omega_pih
+	kappa_spread_LB
+	kappa_spread_BBB
 	b_di_c
 	b_ph_ih
 	beta_c
@@ -718,6 +728,19 @@ b_ECM_pc     = 0.05;   // FR-BDF eq (80) |β3| error-correction speed
 omega_pc     = 0.23;   // FR-BDF eq (79) β0_LR import weight in CPI target
 rho_pib = 0.7;
 alpha_pib = 0.19;
+beta_pib_m = 0.12;   // import-price passthrough into BI deflator
+// Deflator ECM parameters (wp1044 §3.6 structural deflator targets):
+b_ECM_pib    = 0.07;    // ECM speed for BI deflator (wp1044 eq 55: β₃ ≈ -0.13)
+omega_pib    = 0.72;    // VA-price weight in BI deflator LR target (wp1044: d₁=0.72)
+b_ECM_pih    = 0.07;    // ECM speed for housing-inv deflator
+omega_pih    = 0.17;    // VA-price weight in housing-inv deflator LR target (wp1044: d₀=0.17)
+// Endogenous spread widening (wp1044 §3.5.3 Eq 50, simplified):
+//   s_{j,t} responds to the output gap as a proxy for leverage/credit risk.
+//   In wp1044 the channel runs through D/E (debt leverage); here we proxy
+//   with yhat_au since (a) falling output → rising defaults/leverage →
+//   wider spreads, and (b) we don't have the full NFC balance-sheet block.
+kappa_spread_LB  = -0.05;   // BLR spread sensitivity to output gap
+kappa_spread_BBB = -0.03;   // BBB spread sensitivity to output gap
 rho_pih = 0.49;
 alpha_pih = 0.4;
 rho_px = 0.21;
@@ -943,6 +966,20 @@ model;
 [blockname='',name='def_p_C_star_level']
 	p_C_star_level = (1 - omega_pc) * pQ_level + omega_pc * p_M_level;
 
+	// BI deflator level accumulator + LR target (wp1044 §3.6.3 Eq 55)
+	[blockname='',name='def_p_IB_level']
+	p_IB_level = p_IB_level(-1) + (pi_ib - pibar_au);
+
+	[blockname='',name='def_p_IB_star_level']
+	p_IB_star_level = omega_pib * pQ_level + (1 - omega_pib) * p_M_level;
+
+	// Housing-inv deflator level accumulator + LR target (wp1044 §3.6.2 Eq 54)
+	[blockname='',name='def_p_IH_level']
+	p_IH_level = p_IH_level(-1) + (pi_ih - pibar_au);
+
+	[blockname='',name='def_p_IH_star_level']
+	p_IH_star_level = omega_pih * pQ_level + (1 - omega_pih) * p_M_level;
+
 	[blockname='',name='yhat_us']
 	yhat_us =  lambda_q_us * yhat_us(-1) + eps_q_us;
 
@@ -1139,10 +1176,12 @@ model;
 	s_COE =  (1 - rho_COE) * s_COE_ss + rho_COE * s_COE(-1) + eps_COE;
 
 	[blockname='',name='s_LB_firms']
-	s_LB_firms =  (1 - rho_LB_firms) * s_LB_firms_ss + rho_LB_firms * s_LB_firms(-1) + eps_LB_firms;
+	// wp1044 §3.5.3 Eq 50: spread responds to leverage (proxied by output gap).
+	// Negative kappa_spread: falling output gap → wider spread (higher credit risk).
+	s_LB_firms =  (1 - rho_LB_firms) * s_LB_firms_ss + rho_LB_firms * s_LB_firms(-1) + kappa_spread_LB * yhat_au + eps_LB_firms;
 
 	[blockname='',name='s_BBB']
-	s_BBB =  (1 - rho_BBB) * s_BBB_ss + rho_BBB * s_BBB(-1) + eps_BBB;
+	s_BBB =  (1 - rho_BBB) * s_BBB_ss + rho_BBB * s_BBB(-1) + kappa_spread_BBB * yhat_au + eps_BBB;
 
 	[blockname='',name='i_COE']
 	i_COE =  i_10y + s_COE;
@@ -1194,10 +1233,12 @@ model;
 	pi_c =  rho_pc * pi_c(-1) + alpha_pc * piQ + beta_pc_m * pi_m + gamma_oil * dln_pcom + (1 - rho_pc - alpha_pc - beta_pc_m) * pibar_au + alpha_GST * tau_GST_gap + eps_pc;
 
 	[blockname='',name='pi_ib']
-	pi_ib =  rho_pib * pi_ib(-1) + alpha_pib * piQ + beta_pib_m * pi_m + (1 - rho_pib - alpha_pib - beta_pib_m) * pibar_au + eps_pib;
+	// wp1044 §3.6.3: BI deflator with ECM term pulling toward LR target p*_IB
+	pi_ib =  rho_pib * pi_ib(-1) + alpha_pib * piQ + beta_pib_m * pi_m + (1 - rho_pib - alpha_pib - beta_pib_m) * pibar_au + b_ECM_pib * (p_IB_star_level(-1) - p_IB_level(-1)) + eps_pib;
 
 	[blockname='',name='pi_ih']
-	pi_ih =  rho_pih * pi_ih(-1) + alpha_pih * piQ + beta_pih_m * pi_m + (1 - rho_pih - alpha_pih - beta_pih_m) * pibar_au + eps_pih;
+	// wp1044 §3.6.2: housing-inv deflator with ECM term pulling toward LR target p*_IH
+	pi_ih =  rho_pih * pi_ih(-1) + alpha_pih * piQ + beta_pih_m * pi_m + (1 - rho_pih - alpha_pih - beta_pih_m) * pibar_au + b_ECM_pih * (p_IH_star_level(-1) - p_IH_level(-1)) + eps_pih;
 
 	[blockname='',name='pi_x']
 	pi_x =  rho_px * pi_x(-1) + alpha_px * piQ + (1 - rho_px - alpha_px) * pibar_au + beta_px * s_gap + alpha_pcom * dln_pcom + eps_px;
@@ -1521,6 +1562,10 @@ steady_state_model;
     p_C_level       = 0;
     p_M_level       = 0;
     p_C_star_level  = 0;
+    p_IB_level      = 0;
+    p_IB_star_level = 0;
+    p_IH_level      = 0;
+    p_IH_star_level = 0;
 
     // Consumption PAC TCM + level variables
     c_aux_l        = 0;
