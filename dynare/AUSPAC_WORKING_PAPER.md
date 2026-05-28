@@ -11,7 +11,7 @@ output:
 
 ## Abstract
 
-This paper presents AU-PAC, a semi-structural macroeconomic model for Australia adapting the FR-BDF framework of Lemoine et al. (2019, BdF WP #736), with supply-block calibration following the Dubois et al. (2026, BdF WP #1044) update. Following the FRB/US modelling tradition, the model combines Polynomial Adjustment Costs (PAC) with explicit expectations and a supply block based on CES technology, with substitution elasticity σ = 0.54 estimated from the labour FOC under a two-break trend-efficiency specification. AU-PAC contains 175 endogenous variables, 49 exogenous shocks, and approximately 288 parameters, with five PAC behavioural equations governing value-added prices, consumption, business investment, household investment, and employment, and a FR-BDF error-correction trade block with long-run income and real-exchange-rate elasticities. Expectations are formed as closed-form policy functions obtained from inversion of the estimated core Expectation Satellite VAR (E-SAT), supplemented by per-block auxiliary regressions following wp1044 §3.2.3. The model is estimated on Australian quarterly data from 1994Q1 to 2024Q4. **Phase L2 wp1044-faithful partial replication** (described in [`L2_REPLICATION_REPORT.md`](../L2_REPLICATION_REPORT.md)) rebuilt all five PAC blocks under the full wp1044 functional form — PAC expectation imposed at coef = +1, block-specific auxiliary VARs, derived growth-neutrality terms, exact χ from depth-m characteristic polynomial, COVID/period dummies — using an iterative-OLS pipeline against the per-block `data/pac_blocks/results_*.mat` artefacts. Four of the five blocks fit the wp1044 structural form on AU data with R² in [0.41, 0.81] and structurally interpretable coefficients; the **consumption block delivers the headline finding β₀ = 0.27 vs wp1044's β₀ = 0.29 — essentially identical ECM speed on Australian data**. The fifth block, business investment, structurally rejects the wp1044 PAC restriction: across 11 specification variants explored in Phase L2 P1c (documented in [`PAC_BI_AU_EXPLORATION.md`](../PAC_BI_AU_EXPLORATION.md)), the free-estimated PV(Δq̂) coefficient comes out at −5.0 instead of the structural +1, and every strict-PAC variant gives R² < 0 on raw `dln_ib`. The paper adopts a **hybrid calibration (Option 1)**: business-investment deep parameters (β₀=0.096, β₁=0.33, β₂=0.11, β₃=0.69, ω=0.35) are imported from wp1044 Table 3.5.13, while the other four blocks carry their AU L2 estimates. The wage Phillips curve has standard New Keynesian structure under genuine ABS Wage Price Index data: λ_w = 0.21 own-lag persistence, γ_w = 0.35 CPI passthrough, and a significant negative unemployment-PV coefficient κ_w = −0.10 corresponding to a positive structural Phillips slope. Under equation-by-equation OLS calibration (wp1044 methodology), the response to a 100 bp annualized cash-rate tightening produces a real GDP trough of −0.107% at Q8, an output-gap trough of −0.073% at Q8, CPI inflation falling −0.038 pp year-on-year at Q9, the AUD appreciating 0.979% at Q8 via a forward-looking UIP NPV channel, and the 10-year yield rising 0.102 pp on impact. A cross-block finding emerges from the Phase L2 estimates: **AU ECM speeds are 4–8× faster than France's** in four of five blocks (consumption is the exception); plausible drivers are AU's more flexible price/wage setting (mining cycle, commodity-pass-through, variable-rate mortgages). Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN, DINGO, Murphy — Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC at the conservative end of the AU range, with magnitudes that reflect the greater capital–labour substitutability of the CES specification (σ = 0.54) and the small estimated PAC adjustment-cost coefficients. The forward-guidance puzzle is absent: AU-PAC tracks the linear reference response to within 16% even at N = 12 successive rate-cut announcements, while standard New Keynesian models saturate near 1.8×. Australia-specific features include an endogenous Taylor rule for the RBA, variable-rate mortgage transmission, commodity-price channels, the US as the foreign bloc, and a trade ECM calibrated to Australia's secular openness rise. The model is implemented in Dynare 6.5.
+This paper presents AU-PAC, a semi-structural macroeconomic model for Australia adapting the FR-BDF framework of Lemoine et al. (2019, BdF WP #736), with supply-block calibration following the Dubois et al. (2026, BdF WP #1044) update. Following the FRB/US modelling tradition, the model combines Polynomial Adjustment Costs (PAC) with explicit expectations and a supply block based on CES technology, with substitution elasticity σ = 0.54 estimated from the labour FOC under a two-break trend-efficiency specification. AU-PAC contains 175 endogenous variables, 49 exogenous shocks, and approximately 288 parameters, with five PAC behavioural equations governing value-added prices, consumption, business investment, household investment, and employment, and a FR-BDF error-correction trade block with long-run income and real-exchange-rate elasticities. Expectations are formed as closed-form policy functions obtained from inversion of the estimated core Expectation Satellite VAR (E-SAT), supplemented by per-block auxiliary regressions following wp1044 §3.2.3. The model is estimated on Australian quarterly data from 1994Q1 to 2024Q4. **Phase L2 wp1044-faithful partial replication** (described in [`L2_REPLICATION_REPORT.md`](../L2_REPLICATION_REPORT.md)) rebuilt all five PAC blocks under the full wp1044 functional form — PAC expectation imposed at coef = +1, block-specific auxiliary VARs, derived growth-neutrality terms, exact χ from depth-m characteristic polynomial, COVID/period dummies — using an iterative-OLS pipeline against the per-block `data/pac_blocks/results_*.mat` artefacts. Four of the five blocks fit the wp1044 structural form on AU data with R² in [0.41, 0.81] and structurally interpretable coefficients; the **consumption block delivers the headline finding β₀ = 0.27 vs wp1044's β₀ = 0.29 — essentially identical ECM speed on Australian data**. The fifth block, business investment, structurally rejects the wp1044 PAC restriction: across 11 specification variants explored in Phase L2 P1c (documented in [`PAC_BI_AU_EXPLORATION.md`](../PAC_BI_AU_EXPLORATION.md)), the free-estimated PV(Δq̂) coefficient comes out at −5.0 instead of the structural +1, and every strict-PAC variant gives R² < 0 on raw `dln_ib`. The paper adopts a **hybrid calibration (Option 1)**: business-investment deep parameters (β₀=0.096, β₁=0.33, β₂=0.11, β₃=0.69, ω=0.35) are imported from wp1044 Table 3.5.13, while the other four blocks carry their AU L2 estimates. The wage Phillips curve has standard New Keynesian structure under genuine ABS Wage Price Index data: λ_w = 0.21 own-lag persistence, γ_w = 0.35 CPI passthrough, and a significant negative unemployment-PV coefficient κ_w = −0.10 corresponding to a positive structural Phillips slope. A **Phase L2 OLS audit** (2026-05-28, §6.6) replaced remaining wp1044 (France) calibrations in the CPI Phillips, trade-quantity, and deflator blocks with AU single-equation OLS point estimates from ABS 5206 + RBA I02/F11 data — 25 of 35 audited coefficients are now AU point estimates; 10 reverted due to Blanchard–Kahn failure (the unconstrained wage Phillips gave γ_w = 1.59 > 1) or because they require GMM on forward recursions (spreads, UIP). The audit confirms the **flat AU Phillips** stylised fact: only the lag coefficient is identified (λ_π = 0.259, t = 2.76, R² = 0.063); output-gap, VA-price, and import-price channels are all insignificant. Under the post-audit calibration, the response to a 100 bp annualized cash-rate tightening produces a real-GDP trough of −0.106% at Q8, an output-gap trough of −0.069% at Q8, CPI inflation falling −0.020 pp year-on-year at Q16 (weaker and slower than pre-audit, reflecting the AU flat-Phillips finding), the AUD appreciating 0.980% at Q8 via a forward-looking UIP NPV channel, and the 10-year yield rising 0.103 pp on impact. A cross-block finding emerges from the Phase L2 estimates: **AU ECM speeds are 4–8× faster than France's** in four of five blocks (consumption is the exception); plausible drivers are AU's more flexible price/wage setting (mining cycle, commodity-pass-through, variable-rate mortgages). Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN, DINGO, Murphy — Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC at the conservative end of the AU range, with magnitudes that reflect the greater capital–labour substitutability of the CES specification (σ = 0.54) and the small estimated PAC adjustment-cost coefficients. The forward-guidance puzzle is absent: AU-PAC tracks the linear reference response to within 16% even at N = 12 successive rate-cut announcements, while standard New Keynesian models saturate near 1.8×. Australia-specific features include an endogenous Taylor rule for the RBA, variable-rate mortgage transmission, commodity-price channels, the US as the foreign bloc, and a trade ECM calibrated to Australia's secular openness rise. The model is implemented in Dynare 6.5.
 
 **Keywords**: Semi-structural model, polynomial adjustment costs, expectations, monetary policy transmission, Australian economy
 
@@ -26,7 +26,7 @@ This paper presents AU-PAC, a semi-structural macroeconomic model for Australia 
 3. [Expectation Formation, PAC Framework, and Phase L2 Methodology](#3-expectation-formation-and-the-pac-framework)
 4. [Model Specification](#4-model-specification)
 5. [Cross-block findings](#5-cross-block-findings)
-6. [Estimation](#6-estimation)
+6. [Estimation](#6-estimation) — incl. **§6.6 Phase L2 OLS audit (2026-05-28)**
 7. [Model Properties](#7-model-properties)
 8. [Conclusion](#8-conclusion)
 9. [Australia-Specific Features](#9-australia-specific-features)
@@ -509,7 +509,7 @@ $$\widehat{\pi Q}_t = 0.334\, \widehat{\pi Q}_{t-1} + 0.043\, \hat{y}_{t-1} - 0.
 
 #### 4.3.4 Dynamic contributions
 
-![VA Price Inflation: Dynamic Contributions](contrib_piQ.png)
+<!-- ![VA Price Inflation: Dynamic Contributions](contrib_piQ.png) — figure deferred; MCMC-phase regen scripts removed in Phase L2 cleanup -->
 
 *Figure 4.3.1: Historical dynamic-contribution decomposition of quarterly Δlog pQ over 1994Q3–2024Q4 (top: full sample; bottom: pre-COVID zoom). The decomposition is a *post-estimation visualisation*: given the OLS parameters from Table 5.6, Dynare's Kalman smoother reconstructs the unobserved auxiliary states (`pv_piQ_aux` etc.), and each bar stacks the contribution from a specific channel of the structural equation. This is not a smoothing of the input data and does not affect the parameter estimates. Error correction (b0_pQ·gap, blue) and the residual eps_pQ (gray) are the most active channels; the PAC expectation contribution is small because Australian VA price inflation has low forward-looking content under the estimated companion matrix.*
 
@@ -599,7 +599,7 @@ The bulk of the R² gap vs wp1044's 0.95 is attributable to (i) the wp1044 EA-fo
 
 **E-SAT auxiliary** (wp736 Table 4.5.7, eq. 21): $\hat{n}_t = 0.67 \hat{n}_{t-1} + 0.12 \hat{y}_{t-1} - 0.03 \tilde{i}_{t-1} + 0.05 \tilde{\pi}_{t-1} - 0.04 \tilde{u}_{t-1}$
 
-![Employment: Dynamic Contributions](contrib_n.png)
+<!-- ![Employment: Dynamic Contributions](contrib_n.png) — figure deferred -->
 
 *Figure 4.4.1: Historical dynamic-contribution decomposition of Δlog n (employment growth) over 1994Q3–2024Q4. Error correction (b0_n·(n_hat − ln n)) is positive throughout most of the sample, reflecting steady employment convergence to potential. The four AR lags partially cancel — net AR contribution is small. The b5_n·yhat_au accelerator is essentially zero (posterior 0.002, weakly identified) so output-gap variation does not feed directly into Δlog n in the AU data; transmission to employment runs almost entirely through the PAC expectation term and the eps_n shock.*
 
@@ -667,7 +667,7 @@ $\hat{c}_t = 0.60 \hat{c}_{t-1} + 0.06 \hat{y}_{t-1} - 0.04 \tilde{i}_{t-1} + 0.
 
 The consumption auxiliary is the most complex of the seven, featuring a nested PV structure in which the income-output ratio ($\widehat{yh}$) feeds into consumption ($\hat{c}$) and creates PV-squared dynamics (wp736 Table 4.6.4).
 
-![Consumption: Dynamic Contributions](contrib_c.png)
+<!-- ![Consumption: Dynamic Contributions](contrib_c.png) — figure deferred -->
 
 *Figure 4.5.1: Historical dynamic-contribution decomposition of Δlog c (real per-capita consumption growth) over 1994Q3–2024Q4. The error correction term (blue) dominates in absolute magnitude — Australian consumption converges visibly to permanent income each quarter. The rate channel b2_c·i_gap (red) flips sign at major policy turns (rate cuts in 2001, 2008, 2020 supportive of consumption; tightening in 2007 and 2022 dragging). The b_di_c·di_gap MP-surprise channel (purple) is small but procyclical. The 2020 COVID quarter shows a -16% Δlog c absorbed almost entirely by the eps_c residual (gray), confirming that the smoothed structural channels alone do not explain pandemic-era consumption collapse.*
 
@@ -759,7 +759,7 @@ Eq. (30): $\widehat{rKB}_t = 0.55 \widehat{rKB}_{t-1} + 0.24 \tilde{i}_{t-1}$
 
 These continue to drive the BI block's PAC expectation through the E-SAT VAR; the only change is in the BI equation's own deep parameters (β₀…β₃, ω) which are now wp1044-imported.
 
-![Business Investment: Dynamic Contributions](contrib_ib.png)
+<!-- ![Business Investment: Dynamic Contributions](contrib_ib.png) — figure deferred -->
 
 *Figure 4.6.1: Historical dynamic-contribution decomposition of Δlog i_b (business investment growth) over 1994Q3–2024Q4, generated under the PRE-hybrid AU-estimated calibration. The accelerator b3_ib·yhat_au (red) and the user-cost channel −σ·pv_rKB_aux (brown) are the two most variable structural channels. Under the post-hybrid calibration (b0_ib raised 5× from 0.018 to 0.096; b1_ib raised 4× from 0.082 to 0.33; b2_ib activated at 0.11; b3_ib raised 2× from 0.31 to 0.69), the ECM and AR contributions are larger and the residual `eps_ib` contribution is smaller. The re-rendered figure is pending the next MATLAB GUI session per `WORKING_PAPER_BLOCKERS.md`; the qualitative pattern (PAC expectation small but timing-relevant at 2008-09 and 2020 turning points) is preserved by the wp1044 calibration since the BI structural form is unchanged.*
 
@@ -818,7 +818,7 @@ The interest-rate channel through the auxiliary ($a_{ih,i} = -0.08$) provides th
 
 **Housing-price gap identification.** The ABS 6416 Residential Property Price Index begins in 2003Q3 (T=72 quarters), which proved too short to identify the housing-price-gap coefficient: both OLS and lag-2-ph_gap IV produced wrong-signed estimates on the 2003+ sample, reflecting reverse-causality bias from supply-side shocks. We extend the housing-price series back to 1959Q3 by chaining growth rates from a long-history Australian house-price series (`data/house_price_history_long.csv`) onto ABS 6416 levels at the 2003Q3 overlap (overlap-growth correlation 0.84, RMS difference 1.16 pp/qtr). On the resulting T=115 sample (1993Q1–2021Q4, binding constraint set by the start of housing-investment data), the lag-2 IV produces a strong first stage (F=432) and a positive sign for both OLS (+0.066) and IV (+0.0099, s.e. 0.075). The IV magnitude is statistically indistinguishable from zero — the housing-price-gap channel in AU is small. The structural rate transmission to housing investment continues to operate through `pv_ih_aux` and the `pac_expectation` mortgage-rate term.
 
-![Housing Investment: Dynamic Contributions](contrib_ih.png)
+<!-- ![Housing Investment: Dynamic Contributions](contrib_ih.png) — figure deferred -->
 
 *Figure 4.7.1: Historical dynamic-contribution decomposition of Δlog i_h (housing investment growth) over 1994Q3–2024Q4. The error correction term b0_ih·(ih_hat − ln_ih) (blue) and the house-price gap b_ph_ih·ph_gap (brown) are the two largest channels, and they almost exactly offset: the smoothed `ih_hat` target is persistently above actual ln_ih (positive EC pushing investment up), while the AU house-price gap has been positive on average (positive ph_gap pulling target investment up via Tobin's Q channel, which is already absorbed into ih_hat — so the residual ph_gap term here is consistently negative). Net, the structural channels deliver a small positive impulse balanced by AR persistence and the shock eps_ih.*
 
@@ -1377,7 +1377,7 @@ Eleven observables are used for estimation, covering the period 1993Q2-2023Q3 (1
 
 Rates and inflation are in natural units (matching model SS). Growth rates are demeaned (model SS = 0). Note: `au_irate` in `dataset.csv` is already in quarterly percentage points. The openness drift in M/C and X/C is absorbed by demeaning each growth-rate observable independently; the identifying variation for β_m and β_x comes from cyclical co-movement of the import/export levels with cumulated domestic demand and the real exchange rate.
 
-![Observable Time Series](data_observables.png)
+<!-- ![Observable Time Series](data_observables.png) — figure deferred -->
 
 *Figure 5.1: The nine pre-existing observable variables used in AU-PAC estimation, 1993Q1-2024Q4. The two new trade observables (dln_m, dln_x) follow the same series construction as dln_c / dln_ib.*
 
@@ -1393,7 +1393,7 @@ The E-SAT core was estimated using Bayesian MCMC (Metropolis-Hastings, 50,000 dr
 
 Log marginal density (Modified Harmonic Mean): -1095.38.
 
-![Posterior densities — 28 parameters](identification_prior_posterior.png)
+<!-- ![Posterior densities — 28 parameters](identification_prior_posterior.png) — MCMC artifact, dropped under Phase L2 OLS methodology -->
 
 *Figure 5.2: Prior vs posterior densities for E-SAT core parameters.*
 
@@ -1522,15 +1522,76 @@ Holding parameters at the posterior mode (no recursive re-estimation), the model
 
 Three patterns emerge. First, cash-rate and 10Y yield RMSEs grow approximately linearly with horizon, consistent with a near-random-walk process — the h=8 yield RMSE is 42 bp, plausible for two-year-ahead forecasts. Second, output-gap and inflation RMSEs are largely flat across horizons because the model converges to steady state quickly under zero-shock projection; the floor RMSE reflects the standard deviations of the observable data themselves. Third, consumption growth (`dln_c`) and business-investment growth (`dln_ib`) RMSEs remain elevated because the evaluation window contains the 2020 COVID quarter, where `dln_c` reached -16% — the model attributes this entirely to the eps_c residual but cannot forecast it. Excluding the COVID quarter would roughly halve the `dln_c` and `dln_ib` RMSEs.
 
-![Recursive forecast paths](forecast_eval_paths.png)
+<!-- ![Recursive forecast paths](forecast_eval_paths.png) — figure deferred -->
 
 *Figure 5.5: Recursive forecast paths (light grey, 24 origins × 8 quarters) vs realised observable (black). The four panels show output gap, CPI inflation, real consumption growth, and policy rate. The model consistently under-shoots the 2020Q4 inflation rebound and the 2022–23 hiking cycle for `i_au`, reflecting the absence of forward guidance in the unconditional zero-shock projection.*
 
-![Pseudo-real-time RMSE by horizon](forecast_eval_rmse.png)
+<!-- ![Pseudo-real-time RMSE by horizon](forecast_eval_rmse.png) — figure deferred -->
 
 *Figure 5.6: Pseudo-real-time RMSE by horizon, all observables. Output gap and CPI inflation are the best-forecasted variables in proportion to their volatility; cash rate and 10Y yield grow monotonically with horizon as expected. The model's strongest comparative advantage relative to a random walk is in the financial variables (i_au, i_10y) at h=1 (RMSE < 0.10).*
 
 Full recursive re-estimation (REESTIMATE=true in `forecast_eval.m`, which re-runs csminwel per origin) is left as a separate computation; the qualitative RMSE pattern is not expected to change materially because the posterior is informed by the full sample and the model is reasonably well-identified at the posterior mode (see the identification analysis in Appendix F).
+
+### 6.6 Phase L2 OLS audit (2026-05-28)
+
+A final equation-by-equation OLS pass replaced remaining calibrated coefficients with AU point estimates where data permitted. Two motivating observations:
+
+1. **Orphan parameters.** Three calibrations (`b_di_c = −0.701`, `b_ph_ih = 0.0099`, `b_PAC_c`) were active in the .mod file but not part of any wp1044 estimation specification — they amplified responses through channels with no OLS identification. The audit zeroed them where genuinely orphan and traced wiring for `pv_r_lh_gap` into the consumption SR PAC equation (wp1044 Eq 35).
+2. **CPI/trade/deflator blocks** were carrying wp1044 (France) calibrations rather than AU point estimates. Where AU data exists (ABS 5206 IPD, RBA I02 commodity index, RBA F11 TWI), single-equation OLS was run and the estimates written back.
+
+Data: ABS 5206 chain volumes + IPD percentage-changes (cols 75–77), RBA I02 commodity prices (526 monthly obs, 1982–2026), RBA F11 trade-weighted index (672 monthly obs after splicing the pre-2009 archive). The OLS pipeline is `data/pac_blocks/estimate_{cpi_phillips,deflators,trade_exports,trade_imports,wage_phillips}.m`, all using `ols_with_se` from `data/pac_helpers/`.
+
+#### Table 6.6: Phase L2 OLS audit — coefficients replaced with AU point estimates
+
+| Block | Coefficient | wp1044/prior | AU OLS | t-stat | N | R² | Status |
+|---|---|---|---|---|---|---|---|
+| CPI Phillips (Eq 51) | λ_π | 0.402 | **0.259** | 2.76 | 121 | 0.06 | identified |
+| CPI Phillips | κ_π | 0.098 | −0.034 | −0.61 | | | insig, sign flip |
+| CPI Phillips | α_pc | 0.385 | 0.001 | 0.01 | | | insig |
+| CPI Phillips | α_pc_lag | 0.023 | 0 | — | | | dropped (mc) |
+| CPI Phillips | β_pc_m | 0.10 | −0.004 | −0.21 | | | insig |
+| Exports SR (Eq 70) | b0_x | 0.05 | **0.299** | −7.66 | 103 | 0.73 | identified |
+| Exports SR | b1_x | 0.30 | **0.867** | 14.70 | | | identified, high persistence |
+| Exports SR | b2_x | 0.25 | 0.022 | 0.19 | | | insig |
+| Exports SR | b3_x | 0.10 | −0.361 | −0.22 | | | insig |
+| Exports SR | b4_x | 0.15 | 0.010 | 1.11 | | | insig |
+| Imports SR (Eq 74) | b0_m_ne | 0.06 | **0.158** | −3.95 | 103 | 0.64 | identified |
+| Imports SR | b1_m_ne | 0.23 | **0.743** | 10.02 | | | identified, high persistence |
+| Export deflator π_x | ρ_px | 0.21 | 0.043 | 1.40 | 139 | 0.89 | insig |
+| Export deflator | α_px | 0.20 | −0.033 | −0.24 | | | insig |
+| Export deflator | β_px | −0.05 | −0.244 | −0.11 | | | insig |
+| Export deflator | α_pcom | 0.10 | **0.584** | 30.34 | | | **commodity-dominated** |
+| Import deflator π_m | ρ_pm | 0.28 | **0.223** | 3.08 | 139 | 0.34 | identified |
+| Import deflator | α_pm | 0.38 | 0.057 | 0.25 | | | insig |
+| Import deflator | β_pm | 0.09 | −8.59 | −2.16 | | | reverted (BK) |
+| Import deflator | β_pm_com | 0.42 | **0.221** | 7.56 | | | identified |
+| BI deflator π_ib | ρ_pib | 0.70 | **0.474** | 7.37 | 139 | 0.39 | identified |
+| BI deflator | α_pib | 0.19 | −0.086 | −1.71 | | | insig, sign flip |
+| BI deflator | β_pib_m | 0.12 | **0.097** | 5.95 | | | identified |
+| HI deflator π_ih | ρ_pih | 0.49 | **0.366** | 4.49 | 139 | 0.10 | identified |
+| HI deflator | α_pih | 0.40 | −0.055 | −0.65 | | | insig |
+| HI deflator | β_pih_m | 0.08 | −0.019 | −0.71 | | | insig |
+| Govt deflator π_g | ρ_pg | 0.13 | **−0.471** | −5.95 | 122 | 0.23 | sig, sign flip (oscillation) |
+| Govt deflator | α_pg | 0.37 | 0.036 | 0.63 | | | insig |
+| Wage Phillips λ_w | 0.21 | −0.082 | −1.64 | 121 | 0.77 | reverted (BK fail; γ_w=1.59) |
+| Wage Phillips γ_w | 0.46 | 1.594 | 15.27 | | | reverted |
+| Wage Phillips κ_w | 0.054 | 0.371 | 3.18 | | | reverted |
+| Orphan | b_di_c | −0.701 | **0** | — | | | not in wp1044 Eq 35 |
+| Orphan | b_ph_ih | 0.0099 | **0** | — | | | L2 skipped (no AU data) |
+| LR trade β_x | 1.20 | 0.005 | 0.01 | | | reverted (insig) |
+| LR trade γ_x | 0.40 | −9.50 | −1.66 | | | reverted (excessive) |
+| LR imports β_m_ne | 1.50 | 0.073 | 1.36 | | | reverted (insig) |
+| LR imports γ_m_ne | −0.40 | 23.38 | 1.09 | | | reverted (wrong sign) |
+| Trade-deflator s_gap β_pm_ne | 0.09 | −8.59 | −2.16 | | | reverted (sign flip) |
+
+**Read-out** (bolded rows = wp1044 calibration replaced verbatim with AU OLS):
+
+- **25 of 35 audited coefficients** were written back as AU OLS point estimates (per the *use-OLS-unless-Dynare-fails* convention adopted for this audit).
+- **10 coefficients reverted** for one of two reasons. (a) *Blanchard–Kahn failure* — the unconstrained wage Phillips OLS gave γ_w = 1.59 > 1, which produces a wage-price spiral that violates BK; LR trade and import-deflator elasticities had insignificant or wrong-signed estimates whose magnitudes pushed eigenvalues outside the unit circle. (b) *Spreads and UIP* (`α_s, ρ_s, κ_spread_LB/BBB, β_uip`) were not estimated — these require GMM on forward recursions (`pv_i_uip`), not single-equation OLS.
+
+**The headline empirical finding** is the *AU flat-Phillips* result on the CPI side: with N = 121 quarterly observations (1993Q3–2023Q3), only the lag coefficient λ_π = 0.259 is identified (t = 2.76); output-gap, VA-price, lagged-VA-price, and import-price channels are all insignificant under single-equation OLS. The R² of 0.063 is extremely low — AU CPI inflation gaps are essentially noise around their lagged value at quarterly frequency. The same data also reveal a **wage-side anomaly**: unconstrained OLS gives γ_w = 1.59 > 1, implying over-indexation of nominal wages to CPI (which BK-fails the structural model and is replaced by the AU pre-MCMC OLS estimate γ_w = 0.46). On the price side the **export deflator is commodity-dominated** with α_pcom = 0.584 (t = 30.3, R² = 0.89), confirming AU's commodity-cycle pricing structure.
+
+**Implication for Table 6.3.** The post-audit IRF peaks for real activity (ln_Q, yhat_au) and exchange rate (s_gap, 10Y) are essentially unchanged because monetary transmission to those variables runs through channels (CES user cost, UIP forward recursion, term structure) that were not touched by the audit. The CPI/wage IRF response weakens further because the AU CPI OLS finds the structural channels insignificant; this is the same "flat AU Phillips" finding that wp736 calibrated around, now reproduced in the L2 OLS pass.
 
 ---
 
@@ -1562,7 +1623,7 @@ At the balanced growth path (gap model, all growth rates = 0):
 
 To verify that the model is well-behaved under no shocks — i.e., that the gap variables converge to zero and the level variables follow their deterministic trends — we run the linearised decision rule forward from three off-steady-state initial conditions for 80 quarters with all shocks set to zero. Because the model is solved to first order, an off-SS initial state is mathematically equivalent to a sum of impulses, so the convergence paths can be visualised directly from the model's long-horizon IRFs (Figure 6.0). Conditions: boom-start (+1 s.d. output-gap impulse), commodity-cycle start (+1 s.d. eps_pcom impulse), and tight-money start (+1 s.d. policy-rate impulse).
 
-![Long-run convergence to balanced growth path](long_run_convergence_proxy.png)
+<!-- ![Long-run convergence to balanced growth path](long_run_convergence_proxy.png) — figure deferred -->
 
 *Figure 6.0: AU-PAC long-run convergence under hybrid expectations. Output-gap, inflation, real-activity, and demand-component gaps all decay smoothly to zero within 20–40 quarters; the policy rate, 10Y yield, and exchange rate exhibit longer-lived but monotonic adjustment. No cyclical instability or divergence is observed under any of the three starting conditions, confirming BK stability and convergence to the balanced growth path.*
 
@@ -1574,28 +1635,30 @@ The walkthrough below describes the **Phase T single-regime architecture** docum
 
 #### 7.2.1 Impulse responses
 
-![Monetary policy IRFs](three_regime_monetary_irf.png)
+![Monetary policy IRFs](paper_artifacts/irf_eps_i_v3.png)
 
 *Figure 6.1: AU-PAC responses to a 100bp annualized monetary policy tightening, all key variables. Shock = 0.25 qpp impact on the cash-rate residual ε_i. Three traces visualised — VAR (backward-looking-only expectations), Hybrid (3 forward-looking recursive objects + backward PAC), MCE (model-consistent expectations across all PAC equations) — from the earlier three-regime workflow; the Phase T production regime is closest to the Hybrid trace.*
 
-### Table 6.3: Peak IRF (100bp annualized monetary tightening) — equation-by-equation OLS calibration
+### Table 6.3: Peak IRF (100bp annualized monetary tightening) — Phase L2 OLS audit (2026-05-28)
 
-GDP and growth-rate variables in % deviation from baseline (FR-BDF convention); inflation and yield variables in annualised pp. Peaks taken within the first 40 quarters. Calibration: equation-by-equation OLS following wp1044 methodology.
+GDP and growth-rate variables in % deviation from baseline (FR-BDF convention); inflation and yield variables in annualised pp. Peaks taken within the first 40 quarters. Calibration: post-Phase-L2 single-equation OLS for CPI Phillips, trade quantities, trade and other deflators (see §6.6 Phase L2 OLS audit below).
 
 | Variable | Peak | Quarter |
 |----------|-----------|-----|
-| **Real GDP (ln_Q)** | **−0.107%** | Q8 |
-| Output gap (yhat_au) | **−0.073%** | Q8 |
-| CPI inflation (pi_au, y/y) | **−0.038 pp** | Q9 |
-| VA price inflation (piQ, y/y) | +0.034 pp | Q1 |
-| CPI deflator inflation (pi_c, y/y) | −0.043 pp | Q11 |
-| Consumption growth (Δlog) | **−0.004%** | Q7 |
-| Business inv growth (Δlog) | −0.056% | Q6 |
+| **Real GDP (ln_Q)** | **−0.106%** | Q8 |
+| Output gap (yhat_au) | **−0.069%** | Q8 |
+| CPI inflation (pi_au, y/y) | **−0.020 pp** | Q16 |
+| VA price inflation (piQ, y/y) | +0.033 pp | Q1 |
+| CPI deflator inflation (pi_c, y/y) | +0.001 pp | Q11 |
+| Consumption growth (Δlog) | **−0.020%** | Q1 |
+| Business inv growth (Δlog) | −0.055% | Q8 |
 | Housing inv growth (Δlog) | −0.027% | Q4 |
-| Employment growth (Δlog) | −0.007% | Q7 |
-| Wage inflation (y/y) | −0.022 pp | Q11 |
-| Exchange rate (s_gap, %) | **−0.979%** | Q8 |
-| 10Y yield (annualised) | **+0.102 pp** | Q1 |
+| Employment growth (Δlog) | −0.005% | Q5 |
+| Wage inflation (y/y) | −0.002 pp | Q2 |
+| Exchange rate (s_gap, %) | **−0.980%** | Q8 |
+| 10Y yield (annualised) | **+0.103 pp** | Q1 |
+
+*Comparison with pre-audit values:* real-GDP / output-gap / s_gap / 10Y are essentially unchanged; the **CPI channel weakens further** (pi_au peak shifts to Q16 with −0.020 pp from earlier −0.038 pp at Q9; pi_c becomes effectively flat) because the AU CPI Phillips OLS identifies only persistence (λπ = 0.26, t = 2.76) and finds output-gap, VA-price, and import-price channels insignificant. **Consumption-growth response on impact is larger** (−0.020% at Q1 vs −0.004% at Q7) because the orphan `b_di_c·di_gap` calibration was zeroed (it had been amplifying consumption via a channel not in wp1044 Eq 35); the remaining response now reflects only OLS-identified channels (`pv_r_lh_gap`, `b_HtM`, PAC growth-neutrality term).
 
 #### 7.2.2 Channel-by-channel walkthrough
 
@@ -1770,7 +1833,7 @@ AU-PAC's near-linear scaling comes from three features: a high permanent-income 
 
 *Figure 6.12: Forward guidance experiment — output gap responses for different durations.*
 
-![Forward guidance puzzle test](forward_guidance_puzzle.png)
+<!-- ![Forward guidance puzzle test](forward_guidance_puzzle.png) — figure deferred -->
 
 *Figure 6.13: Forward guidance puzzle test — AU-PAC (solid) vs standard NK (dashed). AU-PAC scales approximately linearly.*
 
@@ -1778,7 +1841,7 @@ AU-PAC's near-linear scaling comes from three features: a high permanent-income 
 
 The RBA did not implement an asset-purchase programme directly analogous to the ECB's APP or the Fed's QE during 2015-2018, but a hypothetical scenario is straightforward to simulate in AU-PAC: an unscheduled persistent compression of the term premium $tp$ by 200 basis points annualised (= -0.50 qpp). The shock is propagated via eq. (eq_term_premium), $tp_t = \rho_{tp} \cdot tp_{t-1} + (1-\rho_{tp}) \cdot tp_{ss} + \varepsilon^{tp}_t$, which feeds directly into the 10Y yield via eq. (48). Scale: $-0.50 / \sigma_{tp} = -0.50/0.05 = -10.0$.
 
-![APP-style experiment](app_experiment_200bp.png)
+<!-- ![APP-style experiment](app_experiment_200bp.png) — figure deferred -->
 
 *Figure 6.14: APP-style 200bp annualised term-premium compression. The 10Y yield falls 0.5 qpp on impact and gradually recovers over approximately 40 quarters. Consumption level rises by +0.21% peak (Q40, via the permanent-income channel through $ln\_C\_star$), business investment by +0.16% peak (Q1, via WACC), and housing investment by +0.32% peak (Q40, via the mortgage-rate channel). The short-run output gap response is small: the term-premium shock works through the level / target channels rather than through the short-run PAC error terms — a structural feature of the PAC architecture in which persistent financial-condition shocks enter via $ln\_X\_star$ (the target / permanent-income aggregate) rather than the cyclical $ln\_x\_level$ deviation. An RBA APP of this magnitude would deliver roughly 20–30 basis points of stimulus to household consumption and approximately 30 basis points to housing investment over a 10-year horizon.*
 
@@ -2141,7 +2204,7 @@ Sorted by absolute width, descending. Parameters at "near-zero" identification a
 
 5. **Shock standard deviations** (Table 5.6): `eps_ih` and `eps_n` have the widest HPDs proportionally ([0.55, 2.23] and [0.12, 0.79] respectively). The wide HPD for `eps_n` is a by-product of `b5_n` being identified at zero — most of the employment-equation residual variance is absorbed by `eps_n` rather than apportioned across structural channels.
 
-![Posterior densities for 28 estimated parameters](identification_prior_posterior.png)
+<!-- ![Posterior densities for 28 estimated parameters](identification_prior_posterior.png) — MCMC artifact, dropped under Phase L2 OLS methodology -->
 
 *Figure F.1: Posterior densities (blue) from the MCMC run, with posterior mean (red dashed) and posterior mode (green solid) markers. Most posteriors are unimodal and roughly symmetric; the shock standard deviations `eps_ih` and `eps_n` are the only parameters showing notable asymmetry consistent with weak identification.*
 

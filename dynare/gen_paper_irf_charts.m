@@ -40,7 +40,7 @@ for s = 1:size(shocks, 1)
             xlabel('Q'); ylabel('%');
         end
     end
-    sgtitle(sprintf('AU-PAC IRFs — %s (hybrid writeback + ULC/UCK + energy split)', lbl), 'FontSize', 11);
+    sgtitle(sprintf('AU-PAC IRFs — %s (Phase L2 OLS audit)', lbl), 'FontSize', 11);
     saveas(fh, fullfile(art_dir, sprintf('irf_%s_v3.png', shock)));
     close(fh);
     fprintf('  wrote irf_%s_v3.png\n', shock);
