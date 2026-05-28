@@ -126,17 +126,41 @@ diff(pQ_level) = b0_pQ·(piQ_hat(−1) − pQ_level(−1)) + b1_pQ·diff(pQ_leve
 
 This is the **PAC equation for VA price**. It's a structural behavioural equation, not E-SAT. The `piQ_hat` term is the E-SAT-style aux regression for the LR target (which is fine — that's how PAC equations consume E-SAT forecasts).
 
-**Verdict**: correctly designed. piQ is the model's actual VA-price inflation.
+**Verdict (verified 2026-05-28)**: correctly designed. piQ is the model's actual VA-price inflation, defined by a PAC equation. The PAC equation has three components consistent with FR-BDF §4.4:
 
-#### 4.2 `s_gap` — real exchange rate gap (au_pac.mod:1304)
+1. **ECM toward auxiliary LR target**: `b0_pQ·(piQ_hat(−1) − pQ_level(−1))`. The `piQ_hat` is computed by an E-SAT auxiliary regression (line 977) — this is the FR-BDF design pattern (§3.1.2): agents' subjective forecast of where the LR target is heading, anchored to historical data via the aux regression coefficients. **Not** an E-SAT-shadow error because the variable being forecast is not the actual `piQ` but a forecast object.
+2. **Forward-looking PAC expectations**: `pac_expectation_pac_pQ`, the discounted-sum policy function (FR-BDF eq 44).
+3. **Structural cost-push channels**: `γ_ulc·(dln_ulc − pibar_au) + γ_uck·dln_uc_k` — the CES dual cost-function passthroughs added in Phase L2. These represent the factor price frontier (FR-BDF eq 38) augmenting the auxiliary anchor.
+
+The `b0_pQ` ECM term anchors `pQ_level` to `piQ_hat` (forecast) rather than the model-consistent `p*_Q` (factor price frontier). This is the FR-BDF computational simplification — computing the dynamic factor demand equilibrium inside the simulator is expensive; the aux regression is empirically calibrated to capture the average historical relationship. **No fix needed**.
+
+#### 4.2 `s_gap` — real exchange rate gap (au_pac.mod:1343)
 
 ```
 s_gap = ρ_s·s_gap(−1) − α_s·pv_i_uip + α_s·(pi_au_gap − pi_us_gap) + ε_s
+pv_i_uip = (i_au − ibar) + β_uip·pv_i_uip(+1)
 ```
 
 This is the **UIP equation**. In FR-BDF, UIP is the actual exchange-rate equation (not E-SAT). It uses a forward-NPV `pv_i_uip` that integrates the future interest-rate gap.
 
-**Verdict**: correctly designed. s_gap is the actual real exchange rate gap.
+**Verdict (verified 2026-05-28)**: correctly designed per FR-BDF §4.8.4 (eq 105). The structural decomposition is:
+
+1. **Persistence** `ρ_s·s_gap(−1)`: PAC-style adjustment cost on the exchange-rate gap. wp736 §4.8.4 motivates this with "exchange rates show persistent deviations from purely no-arbitrage levels".
+2. **Forward-NPV interest-rate gap** `−α_s·pv_i_uip`: this is the proper model-consistent UIP forward recursion. `pv_i_uip` integrates the entire expected path of `(i_au − ibar)` discounted at `β_uip = 0.92` per quarter. When the RBA tightens, the discounted future path of the policy-rate gap rises immediately, the AUD appreciates immediately. **This is the active monetary-transmission channel for the exchange rate** and is exactly the FR-BDF design.
+3. **Inflation differential** `+α_s·(pi_au_gap − pi_us_gap)`: real-vs-nominal correction. The `pv_i_uip` uses `(i_au − ibar)` (nominal vs domestic trend) instead of `(i_au − i_us)`; the inflation-gap differential corrects this to recover the real interest rate parity.
+
+The `s_gap` is then the cyclical deviation of the real TWI from its trend. There is no parallel E-SAT equation that could be shadowing this; UIP is *the* structural exchange-rate equation in FR-BDF. **No fix needed**.
+
+### Tier 4 verification summary
+
+Both Tier 4 candidates verified as correctly designed. The audit list is now complete:
+
+- **Tier 1 (RESOLVED)**: `yhat_au`, `pi_au` — structural identities
+- **Tier 2 (RESOLVED)**: `u_gap` — labour-market accounting; `i_gap` (Taylor rule) — OK as-is for AU
+- **Tier 3 (CORRECT)**: `*_hat`, `pac_expectation_*`, `pv_*` recursions
+- **Tier 4 (VERIFIED)**: `piQ` (PAC + ULC/UCK), `s_gap` (UIP with forward-NPV)
+
+No further architectural errors of the "E-SAT VAR shadowing structural identity" pattern are present in the model.
 
 ## Plan to execute the audit
 
