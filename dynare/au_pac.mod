@@ -1803,39 +1803,55 @@ end;
 
 
 // ===================================================================
-// Full-structural-model MCMC writeback (2026-05-28)
-// Laplace LMD = -662.27, MHM = -665.51 (+31.9 nats vs pre-fix hybrid)
-// Model: ULC/UCK + deflator ECMs + endogenous spreads + energy split
-//        + corrected K_market data pipeline
-// 25 estimated params (BI calibrated from wp1044 Table 3.5.13)
+// Equation-by-equation OLS/calibration writeback (2026-05-28)
+// Following wp1044 estimation methodology: no joint MCMC.
+// PAC blocks: Phase L2 iterative-OLS (data/pac_blocks/results_*.mat)
+// Non-PAC: single-equation OLS or wp1044/wp736 calibration
 // ===================================================================
-b0_pQ       = 0.0027;   // posterior [0.001, 0.004]
-b1_pQ       = 0.1482;   // posterior [0.060, 0.233]
-b2_pQ       = -0.0331;  // posterior [-0.101, 0.035]
-b0_c        = 0.0537;   // posterior [0.024, 0.082]
-b1_c        = 0.0362;   // posterior [0.004, 0.067]
-b2_c        = -0.5670;  // posterior [-0.918, -0.266]
-b3_c        = 0.0364;   // posterior [-0.056, 0.122]
-b0_ib       = 0.0181;   // (BI not re-estimated — overridden by wp1044 below)
+
+// --- VA-price PAC (L2 OLS, wp1044 Eq 16, N=108, R²=0.41) ---
+b0_pQ       = 0.2580;   // ECM speed on p*_Q - p_Q (L2 OLS; wp1044: 0.05)
+b1_pQ       = 0.3039;   // piQ lag (L2 OLS; wp1044: 0.20)
+b2_pQ       = -0.0760;  // yhat_au contemp (L2 OLS; wp1044: 0.09; AU wrong-signed, insig)
+
+// --- Consumption PAC (L2 OLS, wp1044 Eq 35, N=102, R²=0.81) ---
+b0_c        = 0.2566;   // ECM speed on c*-c (L2 OLS; wp1044: 0.29 — headline match)
+b1_c        = 0.0100;   // Δc lag (L2 OLS, hit clamp; wp1044: 0.17)
+b2_c        = -0.0030;  // impact Δr_LH (L2 OLS β₃; wp1044: -1.07)
+b3_c        = -0.0175;  // HtM level-diff (L2 OLS β₂; wp1044: 0.32; AU not identified)
+
+// --- BI PAC (wp1044 Table 3.5.13, Option 1 — unchanged) ---
+b0_ib       = 0.0181;   // overridden by wp1044 import below
 b1_ib       = 0.0809;
 b3_ib       = 0.3120;
-b0_ih       = 0.0278;   // posterior [0.008, 0.048]
-b1_ih       = 0.1149;   // posterior [0.033, 0.204]
-b3_ih       = 0.2281;   // posterior [0.070, 0.389]
-b0_n        = 0.0618;   // posterior [0.012, 0.109]
-b1_n        = 0.3109;   // posterior [0.136, 0.465]
-b5_n        = 0.0021;   // posterior [-0.072, 0.073]
-lambda_w    = 0.0998;    // posterior [0.040, 0.173]
-gamma_w     = 0.6642;    // posterior [0.503, 0.827]
-kappa_w     = -0.0643;   // posterior [-0.141, 0.009]
-// Phillips / deflator channel posteriors:
-alpha_pc     = 0.6118;   // VA -> CPI passthrough; posterior [0.543, 0.671]
-kappa_pi     = 0.0322;   // Phillips slope; posterior [-0.019, 0.081]
-lambda_pi    = 0.5453;   // CPI persistence; posterior [0.405, 0.691]
-a_pQ_w       = 0.3974;   // wage -> piQ_hat; posterior [0.054, 0.693]
-alpha_pc_lag = -0.0038;  // lagged VA passthrough; posterior [-0.111, 0.097] (≈ 0)
-b_ECM_pc     = 0.0020;   // ECM speed; posterior [0.001, 0.003]
-b_PAC_c      = 0.8526;   // PAC growth-neutrality; posterior [0.377, 1.303]
+
+// --- Housing inv PAC (L2 OLS, wp1044 Eq 37, N=70, R²=0.43) ---
+b0_ih       = 0.4956;   // ECM speed on I*_H/I_H (L2 OLS; wp1044: 0.12)
+b1_ih       = 0.2934;   // Δlog I_H lag (L2 OLS; wp1044: 0.18)
+b3_ih       = -0.0728;  // contemp Δy-ỹ (L2 OLS; wp1044: 0.50; AU wrong-signed, insig)
+
+// --- Employment PAC (L2 OLS, wp1044 Eq 30, depth 3, N=124, R²=0.81) ---
+b0_n        = 0.3145;   // ECM speed on n*_S-n_S (L2 OLS; wp1044: 0.07)
+b1_n        = 0.2950;   // Δn lag 1 (L2 OLS; wp1044: 0.44)
+b5_n        = -0.0257;  // contemp Δq̂ (L2 OLS; wp1044: 0.13; AU wrong-signed, insig)
+
+// --- Wage Phillips curve (OLS on AU WPI data; wp1044 Eq 24) ---
+// FR-BDF estimates by single-equation OLS. AU estimates from
+// E-SAT OLS (Table 3.1) + calibration from wp736 Table 4.5.7.
+lambda_w    = 0.2500;    // wage persistence (wp736 calibration centre)
+gamma_w     = 0.4500;    // CPI passthrough (wp736 calibration centre)
+kappa_w     = -0.0800;   // unemployment-PV slope (wp736 calibration centre)
+
+// --- CPI Phillips / deflator channel (OLS on AU data; wp1044 Eq 51) ---
+// FR-BDF estimates the consumption deflator by one-step ECM (OLS).
+// AU values calibrated from wp1044 Table 3.6.2 + AU structural adaptation.
+alpha_pc     = 0.3850;   // contemp VA→CPI passthrough (wp1044 β₁=0.385)
+kappa_pi     = 0.0979;   // Phillips slope (wp1044 E-SAT κ_π = 0.098)
+lambda_pi    = 0.4018;   // CPI persistence (wp1044 E-SAT λ_π = 0.402)
+a_pQ_w       = 0.4367;   // wage→piQ_hat aux (AU OLS from Phase U)
+alpha_pc_lag = 0.0230;   // lagged VA passthrough (wp1044 β₀=0.224 × correction)
+b_ECM_pc     = 0.0700;   // ECM speed (wp1044 β₄=-0.072)
+b_PAC_c      = 1.6746;   // PAC growth-neutrality (L2 OLS β_PAC)
 
 // ====================================================================
 // Phase W: calibration.inc Bayesian-posterior overrides for the
@@ -1993,23 +2009,25 @@ b3_ib       = 0.69;    // wp1044 Table 3.5.13 (overrides 0.3120; coef on Δdf ga
 // omega_ib already 0.35 (matches wp1044)
 // sigma_ces already 0.5366 (matches wp1044's 0.50 within calibration tolerance)
 
-// Full-structural-model MCMC posterior shock stds (2026-05-28)
+// Equation-by-equation OLS residual standard deviations (wp1044 methodology)
+// E-SAT: from OLS residuals on AU sample. PAC blocks: from L2 iterative-OLS.
+// Non-PAC: calibrated from wp1044 reference or AU OLS where available.
 shocks;
-    var eps_q;          stderr 0.5589;    // posterior [0.499, 0.618]
-    var eps_i;          stderr 0.0378;    // posterior [0.032, 0.043]
-    var eps_pi;         stderr 0.1666;    // posterior [0.119, 0.212]
+    var eps_q;          stderr 0.5356;    // E-SAT IS curve OLS residual
+    var eps_i;          stderr 0.1105;    // E-SAT Taylor rule OLS residual
+    var eps_pi;         stderr 0.4867;    // E-SAT Phillips OLS residual
     var eps_q_us;       stderr 1.138;     // (not estimated)
     var eps_pi_us;      stderr 0.319;     // (not estimated)
     var eps_ibar;       stderr 0.01;
     var eps_pibar_au;   stderr 0.01;
     var eps_pibar_us;   stderr 0.01;
     var eps_pQ;         stderr 0.571;     // (not estimated)
-    var eps_w;          stderr 0.8251;    // posterior [0.694, 0.961]
-    var eps_n;          stderr 1.4396;    // posterior [0.130, 3.064]
-    var eps_c;          stderr 1.9894;    // posterior [1.760, 2.199]
-    var eps_ib;         stderr 2.9138;    // posterior [2.604, 3.204]
-    var eps_ih;         stderr 2.1072;    // posterior [0.528, 4.246]
-    var eps_10y;        stderr 0.0752;    // posterior [0.061, 0.090]
+    var eps_w;          stderr 0.1397;    // wage Phillips OLS residual (AU WPI)
+    var eps_n;          stderr 0.4852;    // employment L2 OLS residual
+    var eps_c;          stderr 1.8362;    // consumption L2 OLS residual
+    var eps_ib;         stderr 2.7211;    // business inv L2 OLS residual
+    var eps_ih;         stderr 1.3938;    // housing inv L2 OLS residual
+    var eps_10y;        stderr 0.0656;    // term-structure OLS residual
     var eps_tp;         stderr 0.05;
     var eps_COE;        stderr 0.1;
     var eps_LB_firms;   stderr 0.1;
