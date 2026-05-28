@@ -87,6 +87,12 @@ This is **Okun's law** — a reduced-form structural relationship between output
 - Defining `u_gap` from labour-market accounting (preferred for full FR-BDF fidelity)
 - Or by adding a bridge equation that forces consistency
 
+**RESOLVED (2026-05-28, commit f276ebe..NEXT)**: Fixed via structural identity. Per wp736 §4.5.1 and the standard log-linear identity `ln(N) − ln(LF) ≈ −u`, with the assumption of exogenous labour-force trend (no cyclical participation):
+```
+u_gap = -ln_n_level
+```
+where `ln_n_level` is the cyclical employment gap from the PAC employment block (line ~1030). The Okun shortcut at line 1217 had `ρ_u_gap = 0.946` giving a long-run Okun multiplier of `okun_coeff / (1 − ρ_u_gap) = −0.13/0.054 = −2.4`, implausibly large and suffocating the wage Phillips channel because u_gap took dozens of quarters to respond meaningfully. With the structural identity, u_gap inherits the faster PAC-employment dynamics and the wage Phillips response on a 100bp MP shock goes from `pi_w +0.012 pp Q47` (essentially flat, overshoot) to `pi_w −0.021 pp Q2` (immediate, structurally identified). The Okun parameters (`rho_u_gap`, `okun_coeff`) are now unused and could be removed. Per wp736 §4.4 eq (47), the Okun equation is an E-SAT auxiliary equation used for VA-price forecasting — that role is preserved by the var_model machinery.
+
 ### Tier 3: variables that look like E-SAT but are correctly labelled and used
 
 #### 3.1 The `*_hat` auxiliary variables

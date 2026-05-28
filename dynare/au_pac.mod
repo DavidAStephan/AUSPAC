@@ -1214,7 +1214,23 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	pv_ih_aux =  rho_ih_aux * pv_ih_aux(-1) + a_ih_y * yhat_au(-1) + a_ih_i * i_gap(-1) + a_ih_pi * pi_au_gap(-1) + a_ih_u * u_gap(-1);
 
 	[blockname='',name='u_gap']
-	u_gap =  rho_u_gap * u_gap(-1) + okun_coeff * yhat_au;
+	// Phase L2.A architectural fix Tier 2 (2026-05-28):
+	// u_gap is now defined STRUCTURALLY from labour-market accounting per
+	// FR-BDF §4.5.1: the unemployment gap is the negative of the cyclical
+	// employment gap, under the standard assumption of exogenous labour-force
+	// trend (no cyclical participation effect). In log-linear approximation:
+	//   N/LF = 1 - u  ⇒  ln(N) - ln(LF) ≈ -u
+	//   ln_n_level - ln_LF_gap ≈ -u_gap
+	// With ln_LF_gap = 0 (exogenous LF growing at dln_pop_bar trend):
+	//   u_gap = -ln_n_level
+	// The PAC employment block determines ln_n_level; u_gap inherits its
+	// dynamics. The previous Okun-shortcut form
+	//   u_gap = rho_u_gap*u_gap(-1) + okun_coeff*yhat_au
+	// with rho_u_gap=0.946 gave a long-run Okun multiplier of 0.13/0.054=-2.4,
+	// implausibly large. Per wp736 §4.4 eq (47), Okun is an E-SAT auxiliary
+	// equation used only for VA-price forecasting; the actual unemployment
+	// gap comes from labour-market accounting.
+	u_gap = -ln_n_level;
 
 	[blockname='',name='pv_u_gap']
 	pv_u_gap =  (1 - beta_w) * u_gap + beta_w * pv_u_gap(+1);
