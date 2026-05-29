@@ -64,13 +64,17 @@ rho_piQ         = 0.85;         rho_pm          = 0.2230;       rho_pcom        
 // Round 5: demographic trend
 rho_pop         = 0.95;         a_n_pop         = 1.0;
 
-// Employment PAC short-run (L2 OLS — au_pac.mod lines 665-672, 1906-1908)
-b0_n            =  0.3145;      // L2 OLS, was 0.0578
-b1_n            =  0.2950;      // L2 OLS, was 0.3118
-b2_n            = -0.0278;      // L2 OLS Δn lag 2, was 0
-b3_n            =  0.0261;      // L2 OLS Δn lag 3, was 0
-b4_n            =  0;           // wp1044 depth-3 — stays zero
-b5_n            = -0.0257;      // L2 OLS, was -0.0007
+// Employment PAC short-run — wp1044/L2 mixed hybrid (2026-05-29; solution A to oscillation)
+// b0, b1 from wp1044 (slow ECM dampens h-vector amplification of 11Q mode).
+// b5 kept at L2 OLS (-0.026): wp1044's b5 = 0.13 is a contemporaneous yhat_au
+// accelerator; AU L2 OLS rejects it (wrong-signed insig). Adopting -0.026 keeps
+// the contemporaneous yhat_au -> dln_n feedback weak.
+b0_n            =  0.07;        // wp1044 Table 3.5.2 (L2 OLS was 0.3145)
+b1_n            =  0.44;        // wp1044 Table 3.5.2 (L2 OLS was 0.2950)
+b2_n            =  0.0;         // wp1044 depth-1
+b3_n            =  0.0;         // wp1044 depth-1
+b4_n            =  0.0;         // wp1044 depth-1
+b5_n            = -0.0257;      // L2 OLS (wp1044 0.13 reintroduces contemporaneous loop)
 
 beta_pac        = 0.98;
 

@@ -58,11 +58,19 @@ a_ih_pi         = 0.042;        a_ih_u          = 0.004;
 // AR(1) reduced forms
 rho_piQ         = 0.85;         rho_pm          = 0.2230;       rho_pcom        = 0.42;
 
-// Housing-inv PAC short-run (L2 OLS — au_pac.mod lines 1901-1903)
-b0_ih           =  0.4956;      // was 0.0309
-b1_ih           =  0.2934;      // was 0.108
-b2_ih           =  0.0;         // unchanged
-b3_ih           = -0.0728;      // L2 OLS (was 0.2322; wrong-signed insig)
+// Housing-inv PAC short-run — wp1044/L2 mixed hybrid (2026-05-29; solution A to oscillation)
+// b0, b1 from wp1044 (slow ECM dampens h-vector; AU L2 OLS gave 0.50 fast ECM
+// that loaded the 11Q complex mode 5x). b3 kept at L2 OLS (-0.073): the wp1044
+// reference b3_ih = 0.50 is a contemporaneous yhat_au accelerator; coupled with
+// the demand identity it creates an algebraic feedback yhat_au -> dln_ih ->
+// yhat_dom -> yhat_au that amplifies the very same complex mode. AU L2 OLS
+// reports b3_ih = -0.073 wrong-signed and insignificant, i.e. the data identify
+// no AU contemporaneous accelerator. Adopting -0.073 effectively disables the
+// loop in production.
+b0_ih           =  0.12;        // wp1044 Table 3.5.7 (L2 OLS was 0.4956)
+b1_ih           =  0.18;        // wp1044 Table 3.5.7 (L2 OLS was 0.2934)
+b2_ih           =  0.0;         // wp1044 depth-1
+b3_ih           = -0.0728;      // L2 OLS (wp1044 0.50 reintroduces contemporaneous loop)
 
 beta_pac        = 0.98;
 
