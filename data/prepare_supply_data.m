@@ -96,25 +96,26 @@ fprintf('\nReading abs_6202_labour_force.xlsx ... ');
 [d, v, h] = read_abs(fullfile(datadir, 'abs_6202_labour_force.xlsx'));
 fprintf('%d obs, %d series\n', length(d), size(v, 2));
 
-% Find SA Employed total (3rd occurrence of 'Employed total ;  Persons ;')
+% FIX 2026-05-30 (§6.14): the occurrence order in abs_6202_labour_force.xlsx is
+% Trend(1)/Seasonally-Adjusted(2)/Original(3) — so the old emp_cols(3) "3rd = SA"
+% actually picked the ORIGINAL (NSA) series, injecting seasonality into emp/urate/lf
+% and their consumers (wage Phillips u-term, u_gap). Use the robust pick_sa_col
+% helper (reads the Series Type metadata row) as hours/WPI already do.
+lab_file = fullfile(datadir, 'abs_6202_labour_force.xlsx');
 emp_cols = find(contains(h, 'Employed total ;  Persons ;') & ~contains(h, '>'));
-if length(emp_cols) >= 3
-    idx_emp = emp_cols(3);  % 3rd = SA
-else
-    idx_emp = emp_cols(1);  % fallback
-end
+idx_emp  = pick_sa_col(lab_file, emp_cols);
 n_total_raw = align_to_q(d, v(:, idx_emp), dates_q);
 fprintf('  Employed persons SA:     %d valid obs (col %d: %s)\n', sum(~isnan(n_total_raw)), idx_emp, h{idx_emp});
 
-% Unemployment rate SA — col 66
+% Unemployment rate SA
 ur_cols = find(contains(h, 'Unemployment rate ;  Persons ;') & ~contains(h, '>'));
-if length(ur_cols) >= 3, idx_ur = ur_cols(3); else, idx_ur = ur_cols(1); end
+idx_ur  = pick_sa_col(lab_file, ur_cols);
 urate = align_to_q(d, v(:, idx_ur), dates_q);
 fprintf('  Unemployment rate SA:    %d valid obs (col %d: %s)\n', sum(~isnan(urate)), idx_ur, h{idx_ur});
 
 % Labour force SA
 lf_cols = find(contains(h, 'Labour force total ;  Persons ;') & ~contains(h, '>'));
-if length(lf_cols) >= 3, idx_lf = lf_cols(3); else, idx_lf = lf_cols(1); end
+idx_lf  = pick_sa_col(lab_file, lf_cols);
 lf_raw = align_to_q(d, v(:, idx_lf), dates_q);
 fprintf('  Labour force SA:         %d valid obs (col %d: %s)\n', sum(~isnan(lf_raw)), idx_lf, h{idx_lf});
 
