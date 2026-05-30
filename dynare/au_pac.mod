@@ -646,21 +646,21 @@ b0_ih = 0.0309;
 b1_ih = 0.108;
 b2_ih = 0;
 b3_ih = 0.2322;
-// === PAC ih block policy function (regenerated 2026-05-29 from aux/aux_housing_inv.mod at wp1044 b0_ih=0.12) ===
-h_pac_ih_constant = -1.940784178020e-05;
-h_pac_ih_var_dln_pcom_lag_1 = 0.0001107476437823;
-h_pac_ih_var_i_gap_lag_1 = -0.0397434282152289;
+// === PAC ih block policy function (regenerated 2026-05-28 from aux/aux_housing_inv.mod) ===
+h_pac_ih_constant = 2.520789172000e-06;
+h_pac_ih_var_dln_pcom_lag_1 = 0.0003608388338179;
+h_pac_ih_var_i_gap_lag_1 = -0.1027998359550301;
 h_pac_ih_var_ibar_lag_1 = 0;
-h_pac_ih_var_ih_hat_lag_1 = 0.0313831181123641;
-h_pac_ih_var_piQ_lag_1 = 4.950181271900e-06;
-h_pac_ih_var_pi_au_gap_lag_1 = 0.0026585514974577;
-h_pac_ih_var_pi_m_lag_1 = -1.234723905180e-05;
+h_pac_ih_var_ih_hat_lag_1 = 0.2929624107599776;
+h_pac_ih_var_piQ_lag_1 = 6.724243007900e-06;
+h_pac_ih_var_pi_au_gap_lag_1 = 0.0217496570241714;
+h_pac_ih_var_pi_m_lag_1 = -4.943739206470e-05;
 h_pac_ih_var_pi_us_gap_lag_1 = 0;
-h_pac_ih_var_pibar_au_lag_1 = 3.844960462810e-05;
+h_pac_ih_var_pibar_au_lag_1 = 3.867988638150e-05;
 h_pac_ih_var_pibar_us_lag_1 = 0;
-h_pac_ih_var_u_gap_lag_1 = 0.0009247583212247;
-h_pac_ih_var_yhat_au_lag_1 = 0.0103336672512769;
-h_pac_ih_var_yhat_us_lag_1 = 0.0054819498768035;
+h_pac_ih_var_u_gap_lag_1 = 0.0026614020587275;
+h_pac_ih_var_yhat_au_lag_1 = 0.0585992949401254;
+h_pac_ih_var_yhat_us_lag_1 = 0.0048267760163587;
 rho_ih_aux = 0.71;
 a_n_i = -0.03;
 a_n_pi = 0.05;
@@ -673,22 +673,22 @@ b2_n = -0.0278;   // L2 OLS Δn lag 2 (was 0 — orphan; wp1044 depth-3)
 b3_n =  0.0261;   // L2 OLS Δn lag 3 (was 0 — orphan; wp1044 depth-3)
 b4_n =  0;        // wp1044 is depth-3; b4 stays zero
 b5_n = -0.0007;
-// === PAC n block policy function (regenerated 2026-05-29 from aux/aux_employment.mod at wp1044 b0_n=0.07) ===
-h_pac_n_constant = -2.174211845590e-05;
-h_pac_n_var_dln_pcom_lag_1 = 0.0001081290350759;
-h_pac_n_var_dln_pop_bar_lag_1 = 0.1573592422788590;
-h_pac_n_var_i_gap_lag_1 = -0.0075521264314361;
+// === PAC n block policy function (regenerated 2026-05-28 from aux/aux_employment.mod) ===
+h_pac_n_constant = -2.080820899070e-05;
+h_pac_n_var_dln_pcom_lag_1 = 0.0004767772473467;
+h_pac_n_var_dln_pop_bar_lag_1 = 0.5363704552150809;
+h_pac_n_var_i_gap_lag_1 = -0.0196395789761458;
 h_pac_n_var_ibar_lag_1 = 0;
-h_pac_n_var_n_hat_lag_1 = 0.0176453426222520;
-h_pac_n_var_piQ_lag_1 = 5.200255497800e-06;
-h_pac_n_var_pi_au_gap_lag_1 = 0.0023018175365804;
-h_pac_n_var_pi_m_lag_1 = -1.182773527230e-05;
+h_pac_n_var_n_hat_lag_1 = 0.1698161673861557;
+h_pac_n_var_piQ_lag_1 = 1.264732000840e-05;
+h_pac_n_var_pi_au_gap_lag_1 = 0.0177578381125727;
+h_pac_n_var_pi_m_lag_1 = -5.900888048850e-05;
 h_pac_n_var_pi_us_gap_lag_1 = 0;
-h_pac_n_var_pibar_au_lag_1 = 4.141486930390e-05;
+h_pac_n_var_pibar_au_lag_1 = 7.965469486520e-05;
 h_pac_n_var_pibar_us_lag_1 = 0;
-h_pac_n_var_u_gap_lag_1 = -0.0044799769771369;
-h_pac_n_var_yhat_au_lag_1 = 0.0074939229884141;
-h_pac_n_var_yhat_us_lag_1 = 0.0045475553243741;
+h_pac_n_var_u_gap_lag_1 = -0.0154940038706567;
+h_pac_n_var_yhat_au_lag_1 = 0.0402910099354936;
+h_pac_n_var_yhat_us_lag_1 = 0.0082093853561637;
 rho_n_aux = 0.67;
 delta = 0.1989;
 lambda_q = 0.6959;
@@ -725,9 +725,9 @@ alpha_pcom = 0.1;
 // Interpretation: AU wages are nearly fully indexed to CPI (γ_w = 0.86)
 // with weak lag persistence (λ_w = 0.09) and substantial Phillips slope
 // (κ_w = 0.36). See data/pac_blocks/results_wage_phillips_constrained.txt.
-lambda_w = 0.0929;   // constrained OLS (binding sum constraint)
-gamma_w  = 0.8571;   // constrained OLS
-kappa_w  = 0.3592;   // constrained OLS (Phillips slope; not at constraint)
+lambda_w = 0.0872;   // constrained OLS on SA unemployment (§6.14; was 0.0929 on NSA)
+gamma_w  = 0.8628;   // constrained OLS (§6.14; was 0.8571)
+kappa_w  = 0.3432;   // constrained OLS Phillips slope (§6.14 SA u-rate; was 0.3592 — negligible shift)
 okun_coeff = -0.13;
 rho_u_gap = 0.946;
 beta_w = 0.98;
@@ -767,11 +767,16 @@ s_BBB_ss = 0.05;
 rho_s = 0.775;
 alpha_s = 0.15;
 beta_uip = 0.92;
-// --- Trade quantity coefficients (Phase L2 OLS 2026-05-28) ---
-// Exports OLS: N=103, R²=0.73 (sample 1993Q3..2019Q1)
-// One-step ECM on ABS 5206 exports vol + FRED yhat_us + RBA F11 TWI gap + RBA I02 dln_pcom
-b0_x   =  0.2990;   // ECM speed (AU OLS; wp1044 0.05)
-b1_x   =  0.8673;   // dln_x AR(1) (AU OLS; wp1044 0.30)
+// --- Trade quantity coefficients (Phase L2 OLS; re-estimated on SA data §6.13 2026-05-30) ---
+// Exports OLS: N=121, R²=0.20 (sample 1993Q3..2023Q3)
+// One-step ECM on ABS 5206 exports vol (SEASONALLY ADJUSTED) + FRED yhat_us + RBA F11 TWI gap + RBA I02 dln_pcom
+// §6.13 BUG FIX: the prior estimation used the ABS *Trend* (Henderson-smoothed) export
+// volume series, whose mechanical AR(1)=0.74 was spurious and drove the 11Q IRF
+// oscillation (former b1_x=0.87→§6.11 0.30→§6.12 constraint 0.49 were all symptoms).
+// Re-estimated on the Seasonally Adjusted series: b1_x=0.092 (insig), b0_x=0.363.
+// sqrt(b1)=0.30 → naturally damped, no oscillation, no constraint needed.
+b0_x   =  0.3632;   // ECM speed (SA OLS, t=-4.4; was 0.2990 on Trend data)
+b1_x   =  0.0923;   // dln_x AR(1) (SA OLS, t=0.97; was 0.8673 on Trend data — see §6.13)
 b2_x   =  0.0220;   // yhat_us contemp (AU OLS, insig; wp1044 0.25)
 b3_x   = -0.3610;   // s_gap contemp (AU OLS, insig; wp1044 0.10)
 beta_x =  1.2;      // AU OLS gave ~0 (insig) — reverted to wp1044
@@ -856,8 +861,8 @@ w_iad_e_x   = 0.014;
 // Non-energy import ECM parameters (AU OLS Phase L2 2026-05-28; 95% of imports)
 beta_m_ne  =  1.50;     // AU OLS gave 0.073 (income elasticity dead) — reverted to wp1044
 gamma_m_ne = -0.40;     // AU OLS gave +23.4 (wrong sign + insig) — reverted to wp1044
-b0_m_ne    =  0.1580;   // AU OLS ECM speed (was 0.06)
-b1_m_ne    =  0.7427;   // AU OLS AR(1) (was 0.23)
+b0_m_ne    =  0.3090;   // SA OLS ECM speed, t=-4.6 (§6.13; was 0.1580 on Trend data)
+b1_m_ne    =  0.1845;   // dln_m AR(1) (SA OLS, t=1.87; was 0.7427 on Trend data — §6.13 bug fix). sqrt(b1)=0.43 → damped, no constraint needed.
 // Energy import ECM parameters (5% of imports — kept at wp1044 calibration; no AU split)
 beta_m_e   = 1.00;
 gamma_m_e  = -0.19;
@@ -1901,28 +1906,15 @@ b0_ib       = 0.0181;   // overridden by wp1044 import below
 b1_ib       = 0.0809;
 b3_ib       = 0.3120;
 
-// --- Housing inv PAC (wp1044/L2 mixed hybrid 2026-05-29; see §6.10) ---
-// b0_ih, b1_ih: wp1044 reference (slow ECM, smooth AR). L2 OLS b0=0.50 produced
-// the regenerated h_pac_ih_* with a 5x amplification of the 11Q complex-mode
-// loading; reverting to wp1044 shrinks h-vectors back to the smooth regime.
-// b3_ih: kept at L2 OLS (-0.073, wrong-signed insig). wp1044's b3=0.50 reintroduces
-// a contemporaneous yhat_au -> dln_ih -> yhat_dom -> yhat_au algebraic feedback
-// that loads the same complex mode 60% bigger. The AU L2 OLS effectively zero
-// b3 says the data identify no such accelerator on AU; adopting it disables
-// the loop.
-b0_ih       =  0.12;    // wp1044 Table 3.5.7 (L2 OLS was 0.4956)
-b1_ih       =  0.18;    // wp1044 Table 3.5.7 (L2 OLS was 0.2934)
-b3_ih       = -0.0728;  // L2 OLS (wp1044 0.50 reintroduces contemp loop)
+// --- Housing inv PAC (L2 OLS re-run 2026-05-28, wp1044 Eq 37, N=70, R²=0.50) ---
+b0_ih       = 0.4956;   // ECM speed on I*_H/I_H (L2 OLS; wp1044: 0.12)
+b1_ih       = 0.2934;   // Δlog I_H lag (L2 OLS; wp1044: 0.18)
+b3_ih       = -0.0728;  // contemp Δy-ỹ (L2 OLS; wp1044: 0.50; AU wrong-signed, insig)
 
-// --- Employment PAC (wp1044/L2 mixed hybrid 2026-05-29; see §6.10) ---
-// b0_n, b1_n: wp1044 reference. L2 OLS b0=0.31 had the same h-vector amplification
-// pathology as housing.  b5_n kept at L2 OLS (-0.026, wrong-signed insig);
-// wp1044's b5=0.13 reintroduces a contemporaneous accelerator AU data rejects.
-b0_n        =  0.07;    // wp1044 Table 3.5.2 (L2 OLS was 0.3145)
-b1_n        =  0.44;    // wp1044 Table 3.5.2 (L2 OLS was 0.2950)
-b2_n        =  0;       // wp1044 depth-1 (L2 OLS was -0.0278)
-b3_n        =  0;       // wp1044 depth-1 (L2 OLS was 0.0261)
-b5_n        = -0.0257;  // L2 OLS (wp1044 0.13 reintroduces contemp loop)
+// --- Employment PAC (L2 OLS, wp1044 Eq 30, depth 3, N=124, R²=0.81) ---
+b0_n        = 0.3145;   // ECM speed on n*_S-n_S (L2 OLS; wp1044: 0.07)
+b1_n        = 0.2950;   // Δn lag 1 (L2 OLS; wp1044: 0.44)
+b5_n        = -0.0257;  // contemp Δq̂ (L2 OLS; wp1044: 0.13; AU wrong-signed, insig)
 
 // --- Wage Phillips curve (wp1044 Eq 24) ---
 // Phase L2 audit (2026-05-28): removed wp736 calibration override.
