@@ -20,13 +20,16 @@ rho_DSR = b(2); eps_DSR_sd = std(r);
 R2 = 1 - (r'*r)/sum((y-mean(y)).^2);
 
 % alpha_DSR: consumption-growth response to Delta(DSR_gap)
+% Align BY DATE: estimation_data dln_c spans 1994Q3..2024Q4 (122 q); the DSR series runs to
+% 2025Q4, so a positional trailing match would be off by 4 quarters — use the date column.
 E = load(fullfile(root,'dynare','estimation_data.mat')); dln_c = E.dln_c(:);
-% align: DSR series is 1988Q2.., dln_c is the last numel(dln_c) quarters ending 2024Q4
-dg = [NaN; diff(g)];
-% take the trailing overlap
-ND = numel(dln_c); dg_al = dg(end-ND+1:end);
-v = ~isnan(dg_al);
-yc = dln_c(v); Xc = [ones(sum(v),1) dg_al(v)];
+dates = string(D.date);
+i0 = find(dates=="1994Q3",1); i1 = find(dates=="2024Q4",1);
+dg = [NaN; diff(g)];                 % Δ(DSR_gap) on the full series
+dgwin = dg(i0:i1);                   % windowed to the dln_c sample (uses 1994Q2->Q3 for the first diff)
+assert(numel(dgwin)==numel(dln_c), 'DSR/dln_c alignment mismatch');
+v = ~isnan(dgwin);
+yc = dln_c(v); Xc = [ones(sum(v),1) dgwin(v)];
 bc = Xc\yc; rc = yc - Xc*bc; sec = sqrt(diag((rc'*rc/(sum(v)-2))*inv(Xc'*Xc)));
 alpha_DSR = bc(2);     % sign: negative => higher debt-service growth lowers consumption growth
 
