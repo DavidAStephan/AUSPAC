@@ -87,7 +87,11 @@ history = [];
 depth = 3;
 
 for iter = 1:max_iter
-    chi = solve_pac_chi(beta_lags, omega, depth);
+    % FIX 2026-05-31: was solve_pac_chi (approximate depth-1 quadratic on sum-of-betas),
+    % which gave chi=0.21 for this depth-3 block vs the exact root 0.40 — inconsistent
+    % with the abstract's "exact chi from depth-m characteristic polynomial". Use the
+    % exact depth-m solver (as housing/business already do). See verify_pac_chi_pv.m.
+    chi = solve_pac_chi_exact(beta_lags, omega, depth);
 
     PV_gap = compute_pv_term(Phi, chi, idx_n_hat, ZL_full, 1);
     % PV(Delta n_bar*_S) = omega * Delta_n_bar lag (Eq 32, calibrated unit-root)

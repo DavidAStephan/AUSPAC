@@ -675,8 +675,8 @@ a_n_u = -0.04;
 a_n_y = 0.12;
 b0_n = 0.0578;
 b1_n = 0.3118;
-b2_n = -0.0278;   // L2 OLS Δn lag 2 (was 0 — orphan; wp1044 depth-3)
-b3_n =  0.0261;   // L2 OLS Δn lag 3 (was 0 — orphan; wp1044 depth-3)
+b2_n = -0.0048;   // L2 OLS Δn lag 2 (exact depth-3 chi; was -0.0278; wp1044 depth-3)
+b3_n =  0.0201;   // L2 OLS Δn lag 3 (exact depth-3 chi; was 0.0261; wp1044 depth-3)
 b4_n =  0;        // wp1044 is depth-3; b4 stays zero
 b5_n = -0.0007;
 // === PAC n block policy function (regenerated 2026-05-28 from aux/aux_employment.mod) ===
@@ -1950,9 +1950,9 @@ b1_ih       = 0.2934;   // Δlog I_H lag (L2 OLS; wp1044: 0.18)
 b3_ih       = -0.0728;  // contemp Δy-ỹ (L2 OLS; wp1044: 0.50; AU wrong-signed, insig)
 
 // --- Employment PAC (L2 OLS, wp1044 Eq 30, depth 3, N=124, R²=0.81) ---
-b0_n        = 0.3145;   // ECM speed on n*_S-n_S (L2 OLS; wp1044: 0.07)
-b1_n        = 0.2950;   // Δn lag 1 (L2 OLS; wp1044: 0.44)
-b5_n        = -0.0257;  // contemp Δq̂ (L2 OLS; wp1044: 0.13; AU wrong-signed, insig)
+b0_n        = 0.4798;   // ECM speed on n*_S-n_S (L2 OLS, EXACT depth-3 chi=0.368, t=12.8, R2=0.86; was 0.3145 under approx chi=0.21; wp1044: 0.07)
+b1_n        = 0.2506;   // Δn lag 1 (L2 OLS exact chi, t=4.4; was 0.2950; wp1044: 0.44)
+b5_n        = -0.0231;  // contemp Δq̂ (L2 OLS exact chi, insig; was -0.0257; wp1044: 0.13)
 
 // --- Wage Phillips curve (wp1044 Eq 24) ---
 // Phase L2 audit (2026-05-28): removed wp736 calibration override.
