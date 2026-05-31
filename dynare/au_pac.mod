@@ -957,8 +957,6 @@ varexo
 	eps_lh
 	eps_m_ne
 	eps_m_e
-	eps_pm_ne
-	eps_pm_e
 	eps_n
 	eps_pQ
 	eps_pc
@@ -2164,12 +2162,12 @@ shocks;
     var eps_q;          stderr 0.5356;    // E-SAT IS curve OLS residual
     var eps_i;          stderr 0.1105;    // E-SAT Taylor rule OLS residual
     var eps_pi;         stderr 0.4867;    // E-SAT Phillips OLS residual
-    var eps_q_us;       stderr 1.138;     // (not estimated)
-    var eps_pi_us;      stderr 0.319;     // (not estimated)
+    var eps_q_us;       stderr 1.1118;    // US output-gap AR(1) OLS residual (estimate_foreign_block)
+    var eps_pi_us;      stderr 0.2625;    // US inflation-gap OLS residual (estimate_foreign_block)
     var eps_ibar;       stderr 0.01;
     var eps_pibar_au;   stderr 0.01;
     var eps_pibar_us;   stderr 0.01;
-    var eps_pQ;         stderr 0.571;     // (not estimated)
+    var eps_pQ;         stderr 0.6975;    // VA-price PAC L2 iterative-OLS residual (estimate_pac_va_price)
     var eps_w;          stderr 0.1397;    // wage Phillips OLS residual (AU WPI)
     var eps_n;          stderr 0.4852;    // employment L2 OLS residual
     var eps_c;          stderr 1.8362;    // consumption L2 OLS residual
@@ -2215,4 +2213,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;

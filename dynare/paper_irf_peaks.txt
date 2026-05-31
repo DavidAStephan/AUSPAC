@@ -13,7 +13,7 @@
   pi_w          -0.0084%  Q3
   pi_c          +0.0014%  Q12
 
-=== 1pp foreign demand (scale=0.88) ===
+=== 1pp foreign demand (scale=0.90) ===
   ln_Q          +0.1773%  Q4
   yhat_au       +0.1125%  Q4
   pi_au         +0.0069%  Q2
@@ -41,7 +41,7 @@
   pi_w          -0.1469%  Q2
   pi_c          -0.1603%  Q2
 
-=== 1pp cost-push (scale=1.75) ===
+=== 1pp cost-push (scale=1.43) ===
   ln_Q          -0.0020%  Q1
   yhat_au       -0.0013%  Q1
   pi_au         +0.1527%  Q1
