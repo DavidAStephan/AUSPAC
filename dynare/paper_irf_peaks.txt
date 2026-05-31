@@ -16,28 +16,28 @@
 === 1pp foreign demand (scale=0.88) ===
   ln_Q          +0.1740%  Q4
   yhat_au       +0.1104%  Q4
-  pi_au         +0.0068%  Q2
+  pi_au         +0.0069%  Q2
   dln_c         -0.0166%  Q2
   dln_ib        +0.1005%  Q4
   dln_ih        +0.0124%  Q5
   dln_n         +0.0099%  Q5
   s_gap         -0.0162%  Q8
   i_10y         +0.0005%  Q4
-  piQ           -0.0062%  Q3
+  piQ           -0.0057%  Q3
   pi_w          -0.0030%  Q18
   pi_c          -0.0039%  Q4
 
 === 10pct commodity (scale=3.33) ===
   ln_Q          +0.3305%  Q1
   yhat_au       +0.2126%  Q1
-  pi_au         +0.6530%  Q1
+  pi_au         +0.6531%  Q1
   dln_c         -0.1015%  Q1
   dln_ib        +0.1793%  Q2
   dln_ih        +0.0484%  Q3
   dln_n         +0.0452%  Q3
   s_gap         +0.0850%  Q1
   i_10y         +0.0043%  Q2
-  piQ           -0.0847%  Q1
+  piQ           -0.0832%  Q1
   pi_w          -0.1469%  Q2
   pi_c          -0.1603%  Q2
 
@@ -58,14 +58,14 @@
 === 1pp govt (scale=3.33) ===
   ln_Q          +1.5253%  Q11
   yhat_au       +0.8909%  Q10
-  pi_au         -0.0018%  Q2
+  pi_au         -0.0017%  Q2
   dln_c         -0.0669%  Q1
   dln_ib        +0.6018%  Q7
   dln_ih        +0.0538%  Q7
   dln_n         +0.0566%  Q7
-  s_gap         -0.1908%  Q17
+  s_gap         -0.1909%  Q17
   i_10y         +0.0150%  Q10
-  piQ           -0.0151%  Q2
+  piQ           -0.0134%  Q2
   pi_w          +0.0426%  Q6
   pi_c          +0.0003%  Q19
 
@@ -79,6 +79,6 @@
   dln_n         -0.0055%  Q6
   s_gap         +0.0089%  Q12
   i_10y         +0.2496%  Q1
-  piQ           +0.0836%  Q1
+  piQ           +0.0834%  Q1
   pi_w          +0.0030%  Q26
   pi_c          +0.0000%  Q1

@@ -158,6 +158,7 @@ var
 	pv_yh
 	rKB_hat
 	rw_gap
+	lev_nfc_gap
 	s_BBB
 	s_COE
 	s_LB_firms
@@ -279,6 +280,10 @@ parameters
 	omega_pih
 	kappa_spread_LB
 	kappa_spread_BBB
+	kappa_lev_LB
+	kappa_lev_BBB
+	rho_lev
+	alpha_lev_y
 	w_m_ne
 	w_m_e
 	w_iad_ne_c
@@ -828,8 +833,13 @@ alpha_pm  =  0.0568;   // AU OLS, insig (was 0.38)
 beta_pm   = -8.5918;   // AU OLS, t=-2.16 (was 0.09; sign flip)
 // beta_pm_com (OLS 0.2207) assigned at line ~818 (single canonical assignment)
 // Spread widening (calibrated; no spreads OLS yet):
-kappa_spread_LB  = -0.05;
-kappa_spread_BBB = -0.03;
+kappa_spread_LB  = -0.05;   // DEPRECATED (output-gap proxy, AU wrong-signed); superseded by kappa_lev_* below
+kappa_spread_BBB = -0.03;   // DEPRECATED — see leverage-based accelerator
+// NFC financial accelerator — AU-estimated from RBA D2 business credit + F3 spreads (estimate_nfc_accelerator.m)
+kappa_lev_LB     = 0.0115;  // A-rated spread response to leverage gap (t=3.2, RIGHT-signed)
+kappa_lev_BBB    = 0.0191;  // BBB spread response to leverage gap (t=3.0)
+rho_lev          = 0.9340;  // business-credit leverage-gap persistence (t=31)
+alpha_lev_y      = 0.4971;  // leverage gap responds to output gap (t=2.1) — closes the accelerator loop
 // pi_g OLS R²=0.23 (negative rho — AU govt deflator is mean-reverting fast):
 rho_pg    = -0.4711;   // AU OLS, sig (was 0.13)
 alpha_pg  =  0.0355;   // AU OLS, insig (was 0.37)
@@ -937,6 +947,7 @@ varexo
 	eps_BBB
 	eps_COE
 	eps_LB_firms
+	eps_lev
 	eps_c
 	eps_g
 	eps_i
@@ -1361,13 +1372,19 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='s_COE']
 	s_COE =  (1 - rho_COE) * s_COE_ss + rho_COE * s_COE(-1) + eps_COE;
 
+	// NFC financial accelerator (wp1044 §3.5.3 Eq 50), 2026-05-31: spreads respond to the
+	// business-credit LEVERAGE gap, not the output gap. AU corporate spreads (RBA F3) are
+	// PRO-cyclical / uncorrelated with the domestic output gap (kappa_spread wrong-signed,
+	// insig) but respond POSITIVELY to the RBA D2 business-credit leverage gap (kappa_lev>0,
+	// t≈3). This closes the accelerator with the correct sign: output↑→leverage↑→spread↑.
+	[blockname='',name='lev_nfc_gap']
+	lev_nfc_gap = rho_lev * lev_nfc_gap(-1) + alpha_lev_y * yhat_au(-1) + eps_lev;
+
 	[blockname='',name='s_LB_firms']
-	// wp1044 §3.5.3 Eq 50: spread responds to leverage (proxied by output gap).
-	// Negative kappa_spread: falling output gap → wider spread (higher credit risk).
-	s_LB_firms =  (1 - rho_LB_firms) * s_LB_firms_ss + rho_LB_firms * s_LB_firms(-1) + kappa_spread_LB * yhat_au + eps_LB_firms;
+	s_LB_firms =  (1 - rho_LB_firms) * s_LB_firms_ss + rho_LB_firms * s_LB_firms(-1) + kappa_lev_LB * lev_nfc_gap(-1) + eps_LB_firms;
 
 	[blockname='',name='s_BBB']
-	s_BBB =  (1 - rho_BBB) * s_BBB_ss + rho_BBB * s_BBB(-1) + kappa_spread_BBB * yhat_au + eps_BBB;
+	s_BBB =  (1 - rho_BBB) * s_BBB_ss + rho_BBB * s_BBB(-1) + kappa_lev_BBB * lev_nfc_gap(-1) + eps_BBB;
 
 	[blockname='',name='i_COE']
 	i_COE =  i_10y + s_COE;
@@ -1903,6 +1920,7 @@ steady_state_model;
     tau_PAYG_gap   = 0;
     tau_CIT_gap    = 0;
     DSR_gap        = 0;    // credit/DSR block (wp1044 §3.7.2)
+    lev_nfc_gap    = 0;    // NFC leverage gap (wp1044 §3.7.3)
 
     // Round 1.2 (2026-05-22): household wage+transfer income gap, zero at SS
     wt_H_real_gap  = 0;
@@ -2162,6 +2180,7 @@ shocks;
     var eps_COE;        stderr 0.1;
     var eps_LB_firms;   stderr 0.1;
     var eps_BBB;        stderr 0.1;
+    var eps_lev;        stderr 1.403;   // NFC leverage-gap AR(1) residual std (pp), AU OLS
     var eps_s;          stderr 0.1;
     var eps_x;          stderr 1.0;
     // eps_m removed: dln_m is now a composite of dln_m_ne + dln_m_e (no own shock)
@@ -2196,4 +2215,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
