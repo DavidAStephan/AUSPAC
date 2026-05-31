@@ -124,6 +124,13 @@ fprintf('chi (derived from beta_1=%.4f, omega=%.2f) = %.4f\n', beta_1, omega, ch
 fprintf('Derived growth-neutrality coef on pi_Q_bar(-1): (1-b1-omega) = %.4f\n', 1 - beta_1 - omega);
 fprintf('R^2 = %.4f, N = %d, iters = %d\n', R2, n_ols, iter);
 
+% Residual std of the final regression — the eps_pQ shock std writeback
+% (NEXT_STEPS A2). Replicate ols_with_se's internal NaN-drop on [X, LHS].
+valid_rows = ~any(isnan([X, LHS]), 2);
+resid_pQ = LHS(valid_rows) - X(valid_rows, :) * b;
+resid_sd = std(resid_pQ);
+fprintf('Residual std (eps_pQ writeback) = %.4f  (was calibrated 0.571)\n', resid_sd);
+
 fprintf('\n--- Comparison to wp1044 Table 3.3.3 ---\n');
 fprintf('%-12s %12s %12s\n', 'Param', 'AU L2', 'wp1044 FR');
 fprintf('%-12s %12.4f %12s\n', 'beta_0', beta_0, '0.05');
@@ -147,6 +154,7 @@ out.tstat = tstat;
 out.names = {names_free};
 out.R2 = R2;
 out.N = n_ols;
+out.resid_sd = resid_sd;
 out.n_iter = iter;
 out.history = history;
 out.state_names = {state_names};
@@ -168,6 +176,7 @@ end
 fprintf(fid, 'chi = %.4f (derived from beta_1=%.4f, omega=%.2f)\n', chi, beta_1, omega);
 fprintf(fid, 'Derived growth-neutrality coef = (1-b1-omega) = %.4f\n', 1-beta_1-omega);
 fprintf(fid, 'R^2 = %.4f, N = %d\n', R2, n_ols);
+fprintf(fid, 'Residual std (eps_pQ writeback) = %.4f  (was calibrated 0.571)\n', resid_sd);
 fprintf(fid, '\nwp1044 FR Table 3.3.3: b0=0.05, b1=0.20, b2=0.09, omega=0.62, R^2=0.61\n');
 fclose(fid);
 fprintf('Saved results_va_price.txt\n');

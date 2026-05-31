@@ -2,7 +2,7 @@ Table 8 — Cross-block summary: AU L2 vs FR-BDF — beta_0, beta_1, R^2, source
 
 block	beta_0 AU	beta_0 FR	AU/FR	beta_1 AU	beta_1 FR	R^2 AU	R^2 FR	source
 VA-price	0.258	0.050	5.2x	0.304	0.200	0.415	0.610	AU L2
-Employment	0.315	0.070	4.5x	0.295	0.440	0.812	0.950	AU L2
-Consumption	0.266	0.290	0.9x	0.010	0.170	0.806	0.950	AU L2
+Employment	0.480	0.070	6.9x	0.251	0.440	0.859	0.950	AU L2
+Consumption	0.231	0.290	0.8x	0.010	0.170	0.819	0.950	AU L2
 Housing inv	0.600	0.120	5.0x	0.354	0.180	0.502	0.890	AU L2
 Business inv	—	0.096	n/a	—	0.330	—	0.830	wp1044 (Option 1)

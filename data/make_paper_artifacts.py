@@ -194,7 +194,7 @@ def table_5_consumption():
     _write_table(rows,
                  ["coefficient", "wp1044 FR Table 3.5.2", "AU L2 iterative OLS"],
                  "table_5_consumption",
-                 "Table 5 — Consumption PAC (wp1044 Eq 35): AU L2 vs FR-BDF (beta_0 match: 0.27 vs 0.29)")
+                 "Table 5 — Consumption PAC (wp1044 Eq 35): AU L2 vs FR-BDF (beta_0 match: 0.23 vs 0.29, SA layer)")
 
 
 def table_6_housing_inv():
