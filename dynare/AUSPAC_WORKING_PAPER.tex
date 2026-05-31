@@ -100,6 +100,12 @@
 % Set default figure placement to htbp
 \def\fps@figure{htbp}
 \makeatother
+\ifLuaTeX
+  \usepackage{luacolor}
+  \usepackage[soul]{lua-ul}
+\else
+  \usepackage{soul}
+\fi
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -5156,11 +5162,30 @@ pattern.
 
 \textbf{Known caveats}: - The first known caveat --- stale
 \texttt{h\_pac\_*} coefficients --- is \textbf{resolved in §6.9 below}
-(2026-05-28). - The L2 OLS estimates of the PAC equation parameters
+(2026-05-28). - \st{The L2 OLS estimates of the PAC equation parameters
 (b0\_c, b1\_c, b0\_pQ, etc.) were obtained using the OLD
-\texttt{yhat\_au} as a regressor in the iterative-OLS procedure. They
-are not formally re-optimal under the new structural definition. A
-re-fit is left for future work.
+\mbox{\texttt{yhat\_au}} as a regressor in the iterative-OLS procedure.
+They are not formally re-optimal under the new structural definition. A
+re-fit is left for future work.} \textbf{Resolved (2026-05-31):} this
+concern is moot for the single-equation iterative-OLS. The estimators
+use the \emph{observed} output gap (\texttt{au\_ygap} from
+\texttt{dataset.csv}, via \texttt{prepare\_l2\_data.m:151}) as the
+\texttt{yhat\_au} regressor --- not the model's internal
+\texttt{yhat\_au} equation. The §6.8 fix changed the \emph{simulator's}
+\texttt{yhat\_au} definition (E-SAT shadow → structural identity), and
+per the §6.8 logic the E-SAT VAR remains the expectation-forming tool
+for the PV term; neither estimation input is affected. A full re-run of
+the 5-block pipeline (\texttt{data/run\_all\_l2\_ols.m}) confirms this:
+VA-price reproduces \texttt{b0\_pQ\ =\ 0.2581\ /\ b1\_pQ\ =\ 0.3039}
+\emph{exactly} (committed 0.2580 / 0.3039), and employment is within
+rounding. (Two blocks show a modest \emph{estimator-evolution} drift
+unrelated to \texttt{yhat\_au} --- consumption \texttt{b0} 0.27→0.23 and
+housing \texttt{b0} 0.50→0.60, at identical R²/N --- left as a
+deliberate re-estimation item, flagged because the consumption β₀ is a
+headline figure. Separately, the χ verification
+(\texttt{dynare/verify\_pac\_chi\_pv.m}) found the employment block's
+estimation-side χ inconsistent with its own characteristic polynomial;
+the production \texttt{h\_pac\_n} is unaffected.)
 
 \subsubsection{6.9 PAC policy-function regeneration
 (2026-05-28)}\label{pac-policy-function-regeneration-2026-05-28}
