@@ -543,7 +543,7 @@ $$\text{PV}(pac\_X)_t = h^X_0 + \sum_{Y \in \mathcal{S}} h^X_Y \cdot Y_{t-1}$$
 
 where $\mathcal{S}$ is the augmented E-SAT state vector $\{\hat{y}_{au}, \tilde{i}_{gap}, \tilde{\pi}_{au,gap}, \tilde{u}_{gap}, \hat{y}_{us}, \tilde{\pi}_{us,gap}, \bar{i}, \bar{\pi}_{au}, \bar{\pi}_{us}, \pi^Q, \pi^m, \Delta \ln pcom\}$ plus the PAC-specific auxiliary regression target ($\widehat{\pi^Q}$ for the VA-price PAC, $\widehat{n}$ for employment, etc.). The h-coefficients are the discounted-sum entries of the $H^k$ powers of the reduced-form companion $H = A^{-1}B$ of the structural E-SAT VAR $A Z_t = B Z_{t-1} + \varepsilon_t$, computed once at estimation time and held fixed in simulation.
 
-The implementation uses Dynare 6.5's `var_model` + `pac_model` + `pac.print()` + `cherrypick()` + `aggregate()` workflow (Adjemian, Brayton & Zimic, 2024). For each PAC block, an auxiliary `.mod` file declares the structural E-SAT state in pure-VAR(1) form (lagged-only right-hand sides), defines the auxiliary regression that maps the PAC target onto the E-SAT core, declares the PAC equation, and emits the closed-form expectation formula via `pac.print()`. `cherrypick()` then extracts the simulation-ready equations into a per-block .inc bundle. The final simulation model is composed by `aggregate()` from the five cherrypicked bundles plus a normalized identity layer that contains the non-PAC structural equations (deflators, financial block, fiscal rule, GDP identity, sectoral wealth, etc.). Because structural shocks like $\varepsilon^\pi_Q$ enter the structural variable $\pi^Q$ directly and lagged $\pi^Q$ appears in every PAC expectation formula, the cost-push channel propagates into every PAC equation's forward-looking term — closing the wp736 §5.2.6 transmission loop.
+The implementation uses Dynare 7.0's `var_model` + `pac_model` + `pac.print()` + `cherrypick()` + `aggregate()` workflow (Adjemian, Brayton & Zimic, 2024). For each PAC block, an auxiliary `.mod` file declares the structural E-SAT state in pure-VAR(1) form (lagged-only right-hand sides), defines the auxiliary regression that maps the PAC target onto the E-SAT core, declares the PAC equation, and emits the closed-form expectation formula via `pac.print()`. `cherrypick()` then extracts the simulation-ready equations into a per-block .inc bundle. The final simulation model is composed by `aggregate()` from the five cherrypicked bundles plus a normalized identity layer that contains the non-PAC structural equations (deflators, financial block, fiscal rule, GDP identity, sectoral wealth, etc.). Because structural shocks like $\varepsilon^\pi_Q$ enter the structural variable $\pi^Q$ directly and lagged $\pi^Q$ appears in every PAC expectation formula, the cost-push channel propagates into every PAC equation's forward-looking term — closing the wp736 §5.2.6 transmission loop.
 
 #### 4.4.1 Wage Phillips curve (FR-BDF eq 52)
 
@@ -1688,7 +1688,7 @@ The architectural changes are documented in detail in [`ESAT_ARCHITECTURE_AUDIT.
 
 **Known caveats**:
 - The first known caveat — stale `h_pac_*` coefficients — is **resolved in §6.9 below** (2026-05-28).
-- The L2 OLS estimates of the PAC equation parameters (b0_c, b1_c, b0_pQ, etc.) were obtained using the OLD `yhat_au` as a regressor in the iterative-OLS procedure. They are not formally re-optimal under the new structural definition. A re-fit is left for future work.
+- ~~The L2 OLS estimates of the PAC equation parameters (b0_c, b1_c, b0_pQ, etc.) were obtained using the OLD `yhat_au` as a regressor in the iterative-OLS procedure. They are not formally re-optimal under the new structural definition. A re-fit is left for future work.~~ **Resolved (2026-05-31):** this concern is moot for the single-equation iterative-OLS. The estimators use the *observed* output gap (`au_ygap` from `dataset.csv`, via `prepare_l2_data.m:151`) as the `yhat_au` regressor — not the model's internal `yhat_au` equation. The §6.8 fix changed the *simulator's* `yhat_au` definition (E-SAT shadow → structural identity), and per the §6.8 logic the E-SAT VAR remains the expectation-forming tool for the PV term; neither estimation input is affected. A full re-run of the 5-block pipeline (`data/run_all_l2_ols.m`) confirms this: VA-price reproduces `b0_pQ = 0.2581 / b1_pQ = 0.3039` *exactly* (committed 0.2580 / 0.3039), and employment is within rounding. (Two blocks show a modest *estimator-evolution* drift unrelated to `yhat_au` — consumption `b0` 0.27→0.23 and housing `b0` 0.50→0.60, at identical R²/N — left as a deliberate re-estimation item, flagged because the consumption β₀ is a headline figure. Separately, the χ verification (`dynare/verify_pac_chi_pv.m`) found the employment block's estimation-side χ inconsistent with its own characteristic polynomial; the production `h_pac_n` is unaffected.)
 
 ### 6.9 PAC policy-function regeneration (2026-05-28)
 
@@ -2601,7 +2601,7 @@ $\lambda_w + \gamma_w + (1-\lambda_w-\gamma_w) = 0.329 + 0.138 + 0.533 = 1.00$. 
 | Household inv | [163, 164, 165, 166] | 0.569 | 0.141 | 1.90x |
 | Employment | [168, 169, 170, 171] | 0.446 | 0.084 | 1.49x |
 
-Detailed per-state h-vector element weights require extraction from `M_.params` at the h-param indices. The enriched var_model (12x12) produces h-vectors where only the target variable element is non-zero in the current Dynare 6.5 implementation (the companion matrix concentrates weight on the target state). Element-level decomposition is deferred to future work.
+Detailed per-state h-vector element weights require extraction from `M_.params` at the h-param indices. The enriched var_model (12x12) produces h-vectors where only the target variable element is non-zero in the current Dynare 7.0 implementation (the companion matrix concentrates weight on the target state). Element-level decomposition is deferred to future work.
 
 ---
 
@@ -2626,7 +2626,7 @@ Driver: [`identification_analysis.m`](identification_analysis.m). Two approaches
 
 ### F.1 Dynare `identification` command — not run
 
-Dynare 6.5's `identification` command requires analytic derivation of the model, which is **incompatible with `diffuse_filter`** — the filter setting used during estimation to handle the model's unit-root level accumulators (`ln_Q`, `ln_K`, `ln_C`, etc.). Running the command produces:
+Dynare 7.0's `identification` command requires analytic derivation of the model, which is **incompatible with `diffuse_filter`** — the filter setting used during estimation to handle the model's unit-root level accumulators (`ln_Q`, `ln_K`, `ln_C`, etc.). Running the command produces:
 
 > `ERROR: analytic derivation is incompatible with diffuse filter`
 

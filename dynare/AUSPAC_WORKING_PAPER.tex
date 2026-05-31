@@ -100,6 +100,12 @@
 % Set default figure placement to htbp
 \def\fps@figure{htbp}
 \makeatother
+\ifLuaTeX
+  \usepackage{luacolor}
+  \usepackage[soul]{lua-ul}
+\else
+  \usepackage{soul}
+\fi
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -246,8 +252,8 @@ BdF WP \#1044) update. Following the FRB/US modelling tradition, the
 model combines Polynomial Adjustment Costs (PAC) with explicit
 expectations and a supply block based on CES technology, with
 substitution elasticity σ = 0.54 estimated from the labour FOC under a
-two-break trend-efficiency specification. AU-PAC contains 175 endogenous
-variables, 49 exogenous shocks, and approximately 288 parameters, with
+two-break trend-efficiency specification. AU-PAC contains 180 endogenous
+variables, 53 exogenous shocks, and approximately 351 parameters, with
 five PAC behavioural equations governing value-added prices,
 consumption, business investment, household investment, and employment,
 and a FR-BDF error-correction trade block with long-run income and
@@ -278,60 +284,112 @@ raw \texttt{dln\_ib}. The paper adopts a \textbf{hybrid calibration
 β₂=0.11, β₃=0.69, ω=0.35) are imported from wp1044 Table 3.5.13, while
 the other four blocks carry their AU L2 estimates. The wage Phillips
 curve has standard New Keynesian structure under genuine ABS Wage Price
-Index data: λ\_w = 0.21 own-lag persistence, γ\_w = 0.35 CPI
-passthrough, and a significant negative unemployment-PV coefficient κ\_w
-= −0.10 corresponding to a positive structural Phillips slope. A
-\textbf{Phase L2 OLS audit} (2026-05-28, §6.6) replaced remaining wp1044
-(France) calibrations in the CPI Phillips, trade-quantity, and deflator
-blocks with AU single-equation OLS point estimates from ABS 5206 + RBA
-I02/F11 data --- 25 of 35 audited coefficients are now AU point
-estimates; the wage Phillips was re-estimated under a BK-stability
-constraint \textbf{λ\_w + γ\_w ≤ 0.95} that delivers a substantial
-Phillips slope κ\_w = 0.359 with near-unit CPI passthrough γ\_w = 0.857
-(§6.7). A follow-up \textbf{Phase L2.A architectural audit} (§6.8)
-identified that three model state variables (\texttt{yhat\_au},
-\texttt{pi\_au}, \texttt{u\_gap}) were being defined by E-SAT-style
-reduced-form equations instead of the FR-BDF structural identities (CES
-potential + demand-side aggregation for \texttt{yhat\_au};
-food/energy/core deflator aggregation for \texttt{pi\_au}; labour-market
-accounting for \texttt{u\_gap}). Per wp736 §2.3, §4.3.3, §4.5.1 and
-§4.7, the E-SAT equations are forecasting tools for agents, not defining
-equations for the simulator's actual state variables. Refactoring to the
-structural identities yields a 30--70\% amplification in real-activity
-IRFs and unlocks the now-identified wage Phillips slope. The CPI
-Phillips audit confirms the \textbf{flat AU Phillips} stylised fact:
-only the lag coefficient is identified (λ\_π = 0.259, t = 2.76, R² =
-0.063); output-gap, VA-price, and import-price channels are all
-insignificant. Under the post-L2.A architecturally-correct calibration
-the response to a 100 bp annualized cash-rate tightening produces a
-real-GDP trough of −0.135\% at Q9, an output-gap trough of −0.096\% at
-Q9, headline CPI inflation falling only −0.004 pp year-on-year at Q3
-(food up, energy down, core flat --- matching the flat-Phillips
-empirical reality), wage inflation falling −0.005 pp at Q2 (now
-structurally responsive via κ\_w), the AUD appreciating 0.991\% at Q8
-via a forward-looking UIP NPV channel, and the 10-year yield rising
-0.105 pp on impact. A cross-block finding emerges from the Phase L2
-estimates: \textbf{AU ECM speeds are 4--8× faster than France's} in four
-of five blocks (consumption is the exception); plausible drivers are
-AU's more flexible price/wage setting (mining cycle,
-commodity-pass-through, variable-rate mortgages). Benchmarking against
-the RBA's model suite (Beckers 2020 VAR, MARTIN, DINGO, Murphy ---
-Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC at the
-conservative end of the AU range, with magnitudes that reflect the
-greater capital--labour substitutability of the CES specification (σ =
-0.54) and the small estimated PAC adjustment-cost coefficients. The
+Index data: under the BK-constrained estimate (§6.7/§6.14) λ\_w = 0.09
+own-lag persistence, γ\_w = 0.86 CPI passthrough, and a positive
+unemployment-gap slope κ\_w = 0.34. A \textbf{Phase L2 OLS audit}
+(2026-05-28, §6.6) replaced remaining wp1044 (France) calibrations in
+the CPI Phillips, trade-quantity, and deflator blocks with AU
+single-equation OLS point estimates from ABS 5206 + RBA I02/F11 data ---
+25 of 35 audited coefficients are now AU point estimates; the wage
+Phillips was re-estimated under a BK-stability constraint \textbf{λ\_w +
+γ\_w ≤ 0.95} that delivers a substantial Phillips slope κ\_w = 0.343
+with near-unit CPI passthrough γ\_w = 0.863 (§6.7, re-estimated on SA
+unemployment in §6.14). A follow-up \textbf{Phase L2.A architectural
+audit} (§6.8) identified that three model state variables
+(\texttt{yhat\_au}, \texttt{pi\_au}, \texttt{u\_gap}) were being defined
+by E-SAT-style reduced-form equations instead of the FR-BDF structural
+identities (CES potential + demand-side aggregation for
+\texttt{yhat\_au}; food/energy/core deflator aggregation for
+\texttt{pi\_au}; labour-market accounting for \texttt{u\_gap}). Per
+wp736 §2.3, §4.3.3, §4.5.1 and §4.7, the E-SAT equations are forecasting
+tools for agents, not defining equations for the simulator's actual
+state variables. Refactoring to the structural identities yields a
+30--70\% amplification in real-activity IRFs and unlocks the
+now-identified wage Phillips slope. The CPI Phillips audit confirms the
+\textbf{flat AU Phillips} stylised fact: only the lag coefficient is
+identified (λ\_π = 0.259, t = 2.76, R² = 0.063); output-gap, VA-price,
+and import-price channels are all insignificant. Under the post-L2.A
+calibration, with the trade and labour blocks corrected to use ABS
+\emph{seasonally-adjusted} series (§6.13--§6.14 --- the earlier use of
+the smoothed \emph{Trend} export/import series had produced a spurious
+\textasciitilde11Q IRF oscillation), the response to a 100 bp annualized
+cash-rate tightening produces a real-GDP trough of −0.098\% at Q12
+(post-Wave-1, with the long-run-neutrality fix of the errata note; was
+−0.073\% under the prior supply-side hysteresis), an output-gap trough
+of −0.059\% at Q11, headline CPI inflation falling only −0.004 pp
+year-on-year at Q3 (food up, energy down, core flat --- matching the
+flat-Phillips empirical reality), wage inflation falling −0.011 pp at Q3
+(now structurally responsive via κ\_w), the AUD appreciating 0.99\% at
+Q8 via a forward-looking UIP NPV channel, and the 10-year yield rising
+0.105 pp on impact; the IRFs are clean hump shapes (1--2 turning points,
+no oscillation) over the Q40 reporting window. A cross-block finding
+emerges from the Phase L2 estimates: \textbf{AU ECM speeds are 4--8×
+faster than France's} in four of five blocks (consumption is the
+exception); plausible drivers are AU's more flexible price/wage setting
+(mining cycle, commodity-pass-through, variable-rate mortgages).
+Benchmarking against the RBA's model suite (Beckers 2020 VAR, MARTIN,
+DINGO, Murphy --- Mulqueeney, Ballantyne and Hambur 2025) places AU-PAC
+at the conservative end of the AU range, with magnitudes that reflect
+the greater capital--labour substitutability of the CES specification (σ
+= 0.54) and the small estimated PAC adjustment-cost coefficients. The
 forward-guidance puzzle is absent: AU-PAC tracks the linear reference
 response to within 16\% even at N = 12 successive rate-cut
 announcements, while standard New Keynesian models saturate near 1.8×.
 Australia-specific features include an endogenous Taylor rule for the
 RBA, variable-rate mortgage transmission, commodity-price channels, the
 US as the foreign bloc, and a trade ECM calibrated to Australia's
-secular openness rise. The model is implemented in Dynare 6.5.
+secular openness rise. The model is implemented in Dynare 7.0-arm64
+(MATLAB R2026a); production parameters are estimated by
+equation-by-equation OLS following wp1044 §2.2.
 
 \textbf{Keywords}: Semi-structural model, polynomial adjustment costs,
 expectations, monetary policy transmission, Australian economy
 
 \textbf{JEL codes}: C51, C54, E17, E37, E52
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{quote}
+\textbf{Errata / current-state note (2026-05-30).} This paper was
+drafted across the model's MCMC era and the subsequent
+equation-by-equation-OLS pivot, and some passages have not been fully
+reconciled. For the avoidance of doubt: - \textbf{Estimation.}
+Production parameters come from \textbf{equation-by-equation OLS /
+calibration} (wp1044 §2.2). The full-system Bayesian MCMC pipeline
+(\texttt{au\_pac\_bayesian.mod}) and the
+\texttt{aggregate()}/\texttt{cherrypick()}/\texttt{pac.print()} source
+tree (\texttt{dynare/simulation/}, \texttt{phaseW\_recherrypick.m}) were
+\textbf{removed} in cleanup \texttt{7995ce7}; \texttt{au\_pac.mod} is
+now self-contained. Any Laplace/MHM/LMD figure (esp.~§6.2 E-SAT MHM and
+§6.4 Table 5.6) is \textbf{historical and not reproducible} from the
+current tree. Companion files referenced but since deleted ---
+\texttt{au\_pac\_var.mod}, \texttt{au\_pac\_mce.mod},
+\texttt{PAC\_BI\_AU\_EXPLORATION.md}, \texttt{mcmc\_posterior\_table.md}
+--- should be read as historical. - \textbf{Dimensions.} 180 endogenous
+variables, 53 exogenous shocks, 351 parameters (Table 1.1's 175/49/288
+are superseded). - \textbf{Toolchain.} Dynare \textbf{7.0-arm64} +
+MATLAB \textbf{R2026a} (not 6.5 / R2020a). Line references into
+\texttt{au\_pac.mod} (e.g.~the BI calibration ``lines 1746--1771'')
+refer to an earlier revision; the BI block now sits near lines
+2073--2099. - \textbf{Wave 1 corrections (done 2026-05-30).} (i) After
+the §6.13 SA-data fix, the \texttt{h\_pac\_n\_*}/\texttt{h\_pac\_ih\_*}
+policy-function vectors were re-derived via \texttt{pac.print()} and
+found \textbf{bit-identical} --- the PAC h-vector depends only on the
+auxiliary VAR + discount factor, not on the ECM speeds the SA fix
+changed, so no inconsistency existed. (ii) A new switch
+\texttt{lambda\_hyst\ =\ 0} restores \textbf{long-run money-neutrality}:
+it gates the transitory-gap-into-trend channels (\texttt{σ\_ces·rw\_gap}
+in \texttt{dln\_n\_star\_bar}, which feeds potential output
+\texttt{ln\_QN}/\texttt{ln\_Q}; and the mortgage/house-price/output-gap
+terms in the reporting-only
+\texttt{dln\_ih\_star\_bar}/\texttt{dln\_ib\_star\_bar}). A temporary
+100 bp tightening now leaves \texttt{ln\_Q}, \texttt{ln\_N}, reported
+\texttt{ln\_IH} and \texttt{ln\_IB} reverting to ≈0 by Q200 (previously
+\texttt{ln\_Q} +0.054\%, \texttt{ln\_N} +0.093\%, \texttt{ln\_IH} ≈
+−15\%, all wrong-signed/permanent). BK preserved; the real-GDP trough
+deepens to −0.098\% at Q12 (set \texttt{lambda\_hyst\ =\ 1} to recover
+the prior supply-side hysteresis).
+\end{quote}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -514,9 +572,10 @@ AU-PAC
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Endogenous variables & 175 \\
-Exogenous shocks & 49 (incl.~2 COVID dummies) \\
-Parameters & \textasciitilde288 \\
+Endogenous variables & 180 declared (≈195 after Dynare
+auxiliary-variable expansion) \\
+Exogenous shocks & 53 (incl.~2 COVID dummies) \\
+Parameters & 351 \\
 PAC equations & 5 (4 AU-estimated + 1 wp1044-calibrated; see §3.6) \\
 Trade ECM equations & 2 (exports, imports --- proper LR + SR
 specification) \\
@@ -542,24 +601,26 @@ pi\_w, dln\_c, dln\_ib, i\_10y) \\
 \subsubsection{Software and
 implementation}\label{software-and-implementation}
 
-The model is implemented in Dynare 6.5. The production simulation model
-\texttt{au\_pac.mod} is composed by Dynare's \texttt{aggregate()}
-function from five per-PAC-block auxiliary files (one each for the
-VA-price, consumption, business-investment, household-investment, and
-employment PAC equations) plus a normalized identity layer; each
-auxiliary file emits its closed-form policy-function PAC expectation
-formula via \texttt{pac.print()} and the per-block equations are
-stitched into the production model by \texttt{cherrypick()} (§4.4.0).
-Legacy companion \texttt{.mod} files (\texttt{au\_pac.mod},
-\texttt{au\_pac\_var.mod}, \texttt{au\_pac\_mce.mod}) for the
-alternative expectation regimes of §2.2 are also provided. Source code
-is available at https://github.com/DavidAStephan/AUSPAC. The production
-calibration uses equation-by-equation OLS following the wp1044
-methodology. Bayesian full-system estimation (retained as a robustness
-check) uses Dynare's \texttt{estimation()} command with
-\texttt{diffuse\_filter} (required for the model's unit-root level
-accumulators), a csminwel mode search followed by Metropolis-Hastings
-MCMC with 20,000 draws across two chains.
+The model is implemented in Dynare 7.0-arm64 (MATLAB R2026a). The
+production simulation model \texttt{au\_pac.mod} is now
+\textbf{self-contained}: the per-PAC-block auxiliary files in
+\texttt{dynare/aux/} emit their closed-form policy-function PAC
+expectation formulas via \texttt{pac.print()}, and those
+\texttt{h\_pac\_*} coefficients are written into \texttt{au\_pac.mod}
+directly. (The earlier \texttt{aggregate()}/\texttt{cherrypick()} source
+tree and the companion
+\texttt{au\_pac\_var.mod}/\texttt{au\_pac\_mce.mod}/\texttt{au\_pac\_bayesian.mod}
+files were removed in cleanup \texttt{7995ce7}; see the errata note
+above.) Source code is available at
+https://github.com/DavidAStephan/AUSPAC. The production calibration uses
+\textbf{equation-by-equation OLS following the wp1044 §2.2 methodology};
+per-block results live in
+\texttt{data/pac\_blocks/results\_*.\{mat,txt\}}. (Historical: a
+full-system Bayesian MCMC estimation was previously run as a robustness
+check via Dynare's \texttt{estimation()} command with
+\texttt{diffuse\_filter}, csminwel mode search, and 20,000-draw
+two-chain Metropolis-Hastings; that pipeline has been retired and its
+LMD figures are not reproducible from the current tree.)
 
 \subsubsection{Paper outline}\label{paper-outline}
 
@@ -651,31 +712,36 @@ Non-financial expectations
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Forward vars
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-File
+Status
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
 \textbf{VAR-based} & Backward (AR(1) policy functions, incl.~UIP NPV) &
-Backward (PAC h-vectors from var\_model) & 0 &
-\texttt{au\_pac\_var.mod} \\
+Backward (PAC h-vectors from var\_model) & 0 & historical
+(\texttt{au\_pac\_var.mod} removed in \texttt{7995ce7}) \\
 \textbf{Hybrid} & Forward (pv\_i, pv\_i\_uip, pv\_u\_gap, pv\_yh) &
-Backward (PAC h-vectors from var\_model) & 4 & \texttt{au\_pac.mod} \\
+Backward (PAC h-vectors from var\_model) & 4 & \textbf{production}
+(\texttt{au\_pac.mod}) \\
 \textbf{Full MCE} & Forward (all leads) & Forward (pac\_expectation
-expands to leads) & 31 & \texttt{au\_pac\_mce.mod} \\
+expands to leads) & 31 & historical (\texttt{au\_pac\_mce.mod} removed
+in \texttt{7995ce7}) \\
 \end{longtable}
 }
 
-Under the baseline configuration, the five PAC expectations use
-closed-form policy-function formulas in lagged structural state
-variables (§4.4.0), while the term structure (\(pv_i\), eq. 48), UIP NPV
-(\(pv_{i,uip}\), §4.10.3 --- forward NPV of the policy-rate gap),
-unemployment PV, and permanent-income PV all use forward-looking
-recursive forms. Under full model-consistent expectations (MCE), all
-expectations are forward-looking. The forward-NPV UIP is what produces
-the FR-BDF-style amplification of the exchange-rate channel documented
-in §7.2.
+The production model is the single \textbf{Hybrid} regime; the VAR-based
+and full-MCE variants were comparison artefacts of the retired MCMC line
+and are no longer in the tree (their §7 figures regenerate from saved
+\texttt{.mat} artefacts). Under the baseline configuration, the five PAC
+expectations use closed-form policy-function formulas in lagged
+structural state variables (§4.4.0), while the term structure (\(pv_i\),
+eq. 48), UIP NPV (\(pv_{i,uip}\), §4.10.3 --- forward NPV of the
+policy-rate gap), unemployment PV, and permanent-income PV all use
+forward-looking recursive forms. Under full model-consistent
+expectations (MCE), all expectations are forward-looking. The
+forward-NPV UIP is what produces the FR-BDF-style amplification of the
+exchange-rate channel documented in §7.2.
 
 \subsubsection{2.3 Key transmission
 channels}\label{key-transmission-channels}
@@ -1825,7 +1891,7 @@ the reduced-form companion \(H = A^{-1}B\) of the structural E-SAT VAR
 \(A Z_t = B Z_{t-1} + \varepsilon_t\), computed once at estimation time
 and held fixed in simulation.
 
-The implementation uses Dynare 6.5's \texttt{var\_model} +
+The implementation uses Dynare 7.0's \texttt{var\_model} +
 \texttt{pac\_model} + \texttt{pac.print()} + \texttt{cherrypick()} +
 \texttt{aggregate()} workflow (Adjemian, Brayton \& Zimic, 2024). For
 each PAC block, an auxiliary \texttt{.mod} file declares the structural
@@ -4280,6 +4346,15 @@ dln\_x) follow the same series construction as dln\_c / dln\_ib.}
 \subsubsection{6.2 E-SAT Bayesian
 estimation}\label{e-sat-bayesian-estimation}
 
+\begin{quote}
+\emph{Historical (retired MCMC pipeline).} The LMD figure below was
+produced by \texttt{au\_pac\_bayesian.mod}, removed in cleanup
+\texttt{7995ce7}, and is \textbf{not reproducible} from the current
+tree. The E-SAT auxiliary-regression posteriors it produced are
+nonetheless still active in \texttt{au\_pac.mod} (Phase B, written back
+as point values); only the marginal-likelihood number is historical.
+\end{quote}
+
 The E-SAT core was estimated using Bayesian MCMC (Metropolis-Hastings,
 50,000 draws, 2 chains). Results are reported in Table 3.1. Key
 posterior findings relative to calibration:
@@ -4463,14 +4538,16 @@ estimation}\label{bayesian-full-system-estimation}
 The production AUSPAC calibration (Table 5.6) is produced by
 \textbf{equation-by-equation OLS} following the wp1044 methodology ---
 the standard FR-BDF approach. The Bayesian full-system MCMC estimation
-described below was used in earlier versions of this paper and is
-retained here as a robustness check. Joint Bayesian estimation uses
-Dynare's \texttt{estimation()} command with \texttt{diffuse\_filter}
-(for unit-root level accumulators), starting from calibrated values to
-ensure Blanchard-Kahn satisfaction. The input data are \emph{raw}
-quarterly observables (\texttt{estimation\_data.mat}) --- no Kalman
-smoothing, HP-filtering, or other pre-processing is applied to the
-observation series.
+described below was used in earlier versions of this paper; \textbf{its
+driver \texttt{au\_pac\_bayesian.mod} was removed in cleanup
+\texttt{7995ce7}, so the LMD figures in this subsection are historical
+and not reproducible from the current tree.} It is documented here only
+for provenance. Joint Bayesian estimation used Dynare's
+\texttt{estimation()} command with \texttt{diffuse\_filter} (for
+unit-root level accumulators), starting from calibrated values to ensure
+Blanchard-Kahn satisfaction. The input data were \emph{raw} quarterly
+observables --- no Kalman smoothing, HP-filtering, or other
+pre-processing is applied to the observation series.
 
 \subsubsection{Table 5.6: Equation-by-equation OLS posterior (hybrid
 calibration, BI block calibrated from
@@ -4551,9 +4628,11 @@ stderr eps\_10y & InvGamma(0.10) & \textbf{0.0656} & {[}0.0540,
 \end{longtable}
 }
 
-The log marginal density is \textbf{Laplace = −781.05} and
+The log marginal density was \textbf{Laplace = −781.05} and
 \textbf{Modified Harmonic Mean = −781.39} (Brooks--Gelman PSRF
 convergence diagnostics passed for all 28 parameters).
+\emph{(Historical: from the retired \texttt{au\_pac\_bayesian.mod}; not
+reproducible from the current tree.)}
 
 Three findings stand out from the joint posterior. \textbf{First}, the
 wage Phillips slope \(\kappa_w = -0.103\) identifies cleanly with 90\%
@@ -4575,52 +4654,72 @@ these identify a robust interest-rate sensitivity for AU households
 despite their high (\textasciitilde70\%) variable-rate mortgage
 exposure.
 
-\subsubsection{6.5 Pseudo-real-time recursive forecast
-evaluation}\label{pseudo-real-time-recursive-forecast-evaluation}
+\subsubsection{6.5 Pseudo-out-of-sample forecast
+evaluation}\label{pseudo-out-of-sample-forecast-evaluation}
 
-Holding parameters at the posterior mode (no recursive re-estimation),
-the model is re-run over 24 expanding-window origins from 2018Q1 to
-2023Q4. At each origin t* the Kalman smoother yields the in-sample
-state, and Dynare's \texttt{forecast=8} block produces conditional 1Q to
-8Q-ahead forecasts of all observables under zero structural shocks.
-Driver: \href{forecast_eval.m}{\texttt{forecast\_eval.m}}.
+\begin{quote}
+\textbf{Reproducibility note (2026-05-30, Wave 4).} The original
+full-system exercise used the Kalman smoother + Dynare
+\texttt{forecast=8} block of the MCMC pipeline, removed in cleanup
+\texttt{7995ce7} (the production model no longer carries a
+\texttt{varobs}/estimation interface). The driver
+\href{forecast_eval.m}{\texttt{forecast\_eval.m}} has been
+\textbf{reconstructed} as a reproducible 1-step-ahead recursive
+evaluation in the spirit of the equation-by-equation OLS methodology; it
+runs on \texttt{estimation\_data.mat} under MATLAB R2026a with no Dynare
+dependency. The multi-horizon numbers in the prior version of Table 5.8
+came from the lost driver and are not reproducible; the reproducible
+1-step results are below.
+\end{quote}
 
-\subsubsection{Table 5.8: Pseudo-real-time recursive RMSE --- 24 origins
-(2018Q1--2023Q4)}\label{table-5.8-pseudo-real-time-recursive-rmse-24-origins-2018q12023q4}
+Over the last 24 one-step transitions (\textasciitilde2018Q1--2023Q4),
+with coefficients held fixed, each observable's 1-step RMSE is compared
+across three naive benchmarks --- random walk (RW), recursively re-fit
+AR(1), and the unconditional mean (= 0 in gap form) --- and, for the two
+observables whose model equation is a clean \emph{predetermined}
+autoregression (the CPI Phillips \texttt{pi\_au} and the E-SAT IS curve
+\texttt{yhat\_au}), the model's fixed-coefficient structural 1-step
+forecast.
+
+\subsubsection{Table 5.8: Reproducible 1-step recursive RMSE (24
+origins,
+\textasciitilde2018Q1--2023Q4)}\label{table-5.8-reproducible-1-step-recursive-rmse-24-origins-2018q12023q4}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lllll@{}}
 \toprule\noalign{}
-Variable & h=1 & h=2 & h=4 & h=8 \\
+Observable & RW & AR(1) & mean=0 & MODEL \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-yhat\_au & 1.819 & 2.335 & 2.304 & 2.338 \\
-pi\_au & 0.782 & 0.805 & 0.810 & 0.892 \\
-i\_au & 0.099 & 0.181 & 0.322 & 0.495 \\
-yhat\_us & 2.163 & 2.396 & 2.410 & 2.405 \\
-pi\_us & 0.448 & 0.530 & 0.673 & 0.772 \\
-pi\_w & 0.199 & 0.254 & 0.236 & 0.338 \\
-dln\_c & 3.911 & 3.897 & 3.873 & 4.219 \\
-dln\_ib & 2.586 & 2.722 & 2.377 & 2.369 \\
-i\_10y & 0.117 & 0.173 & 0.264 & 0.417 \\
+pi\_au (CPI) & 0.919 & 0.784 & 0.805 & \textbf{0.745} \\
+pi\_w (wages) & 2.958 & 2.286 & 2.120 & --- \\
+yhat\_au (gap) & 1.944 & 1.720 & 2.016 & \textbf{1.802} \\
+dln\_c & 5.885 & 5.703 & 3.821 & --- \\
+dln\_ib & 2.625 & 2.162 & 2.179 & --- \\
+i\_au & 0.027 & 0.027 & 0.190 & --- \\
+i\_10y & 0.096 & 0.097 & 0.709 & --- \\
+yhat\_us & 2.367 & 2.322 & 2.201 & --- \\
+pi\_us & 0.459 & 0.472 & 0.672 & --- \\
 \end{longtable}
 }
 
-Three patterns emerge. First, cash-rate and 10Y yield RMSEs grow
-approximately linearly with horizon, consistent with a near-random-walk
-process --- the h=8 yield RMSE is 42 bp, plausible for two-year-ahead
-forecasts. Second, output-gap and inflation RMSEs are largely flat
-across horizons because the model converges to steady state quickly
-under zero-shock projection; the floor RMSE reflects the standard
-deviations of the observable data themselves. Third, consumption growth
-(\texttt{dln\_c}) and business-investment growth (\texttt{dln\_ib})
-RMSEs remain elevated because the evaluation window contains the 2020
-COVID quarter, where \texttt{dln\_c} reached -16\% --- the model
-attributes this entirely to the eps\_c residual but cannot forecast it.
-Excluding the COVID quarter would roughly halve the \texttt{dln\_c} and
-\texttt{dln\_ib} RMSEs.
+The headline finding is positive: the AU-estimated \textbf{CPI Phillips
+beats all three naive benchmarks at h=1} (MODEL 0.745 \textless{} AR(1)
+0.784 \textless{} mean 0.805 \textless{} RW 0.919) --- so despite its
+flat \emph{in-sample} R² (§6.6), the equation carries genuine, if
+modest, out-of-sample inflation-forecasting skill. The \textbf{IS curve}
+(\texttt{yhat\_au}, MODEL 1.802) likewise beats the random walk (1.944)
+and the unconditional mean (2.016) and roughly matches a recursive
+AR(1). As expected, the highly persistent policy and long rates
+(\texttt{i\_au}, \texttt{i\_10y}) are best forecast by the random walk,
+while the noisy growth observables (\texttt{dln\_c}, \texttt{dln\_ib},
+\texttt{pi\_w}) are best forecast by their unconditional mean --- the
+evaluation window contains the 2020 COVID quarter (\texttt{dln\_c} ≈
+−16\%), which no equation can forecast. (The reproduced \texttt{pi\_au}
+and \texttt{yhat\_au} h=1 RMSEs, 0.745 and 1.802, line up with the prior
+table's 0.782 and 1.819, cross-validating the reconstruction.)
 
 \emph{Figure 5.5: Recursive forecast paths (light grey, 24 origins × 8
 quarters) vs realised observable (black). The four panels show output
@@ -5012,7 +5111,7 @@ Housing inv growth & −0.027\% Q4 & −0.028\% Q4 & unchanged \\
 Employment growth & −0.005\% Q5 & −0.007\% Q12 & +40\%, later \\
 \textbf{Wage inflation (y/y)} & +0.012 pp Q47 (overshoot) &
 \textbf{−0.005 pp Q2} & reverses sign; now structurally responsive \\
-Exchange rate (s\_gap, \%) & −0.980\% Q8 & −0.991\% Q8 & unchanged \\
+Exchange rate (s\_gap, \%) & −0.980\% Q8 & −0.988\% Q8 & unchanged \\
 10Y yield (annualised) & +0.103 pp Q1 & +0.105 pp Q1 & unchanged \\
 \end{longtable}
 }
@@ -5061,18 +5160,767 @@ The architectural changes are documented in detail in
 which also lays out a checklist for future development to avoid the same
 pattern.
 
-\textbf{Known caveats}: - The \texttt{h\_pac\_*} policy-function
-coefficients (embedded in the \texttt{pac\_expectation\_pac\_*}
-equations) were generated by \texttt{pac.print()} against the OLD VAR
-dynamics for \texttt{yhat\_au}, \texttt{pi\_au\_gap}, and
-\texttt{u\_gap}. They are now stale relative to the structural dynamics.
-The model remains BK-stable and the discounted-sum projection is
-approximately correct, but full self-consistency requires re-running
-\texttt{pac.print()} against the new VAR. - The L2 OLS estimates of the
-PAC equation parameters (b0\_c, b1\_c, b0\_pQ, etc.) were obtained using
-the OLD \texttt{yhat\_au} as a regressor in the iterative-OLS procedure.
+\textbf{Known caveats}: - The first known caveat --- stale
+\texttt{h\_pac\_*} coefficients --- is \textbf{resolved in §6.9 below}
+(2026-05-28). - \st{The L2 OLS estimates of the PAC equation parameters
+(b0\_c, b1\_c, b0\_pQ, etc.) were obtained using the OLD
+\mbox{\texttt{yhat\_au}} as a regressor in the iterative-OLS procedure.
 They are not formally re-optimal under the new structural definition. A
-re-fit is left for future work.
+re-fit is left for future work.} \textbf{Resolved (2026-05-31):} this
+concern is moot for the single-equation iterative-OLS. The estimators
+use the \emph{observed} output gap (\texttt{au\_ygap} from
+\texttt{dataset.csv}, via \texttt{prepare\_l2\_data.m:151}) as the
+\texttt{yhat\_au} regressor --- not the model's internal
+\texttt{yhat\_au} equation. The §6.8 fix changed the \emph{simulator's}
+\texttt{yhat\_au} definition (E-SAT shadow → structural identity), and
+per the §6.8 logic the E-SAT VAR remains the expectation-forming tool
+for the PV term; neither estimation input is affected. A full re-run of
+the 5-block pipeline (\texttt{data/run\_all\_l2\_ols.m}) confirms this:
+VA-price reproduces \texttt{b0\_pQ\ =\ 0.2581\ /\ b1\_pQ\ =\ 0.3039}
+\emph{exactly} (committed 0.2580 / 0.3039), and employment is within
+rounding. (Two blocks show a modest \emph{estimator-evolution} drift
+unrelated to \texttt{yhat\_au} --- consumption \texttt{b0} 0.27→0.23 and
+housing \texttt{b0} 0.50→0.60, at identical R²/N --- left as a
+deliberate re-estimation item, flagged because the consumption β₀ is a
+headline figure. Separately, the χ verification
+(\texttt{dynare/verify\_pac\_chi\_pv.m}) found the employment block's
+estimation-side χ inconsistent with its own characteristic polynomial;
+the production \texttt{h\_pac\_n} is unaffected.)
+
+\subsubsection{6.9 PAC policy-function regeneration
+(2026-05-28)}\label{pac-policy-function-regeneration-2026-05-28}
+
+Per the §6.8 follow-up, the five \texttt{h\_pac\_*} policy-function
+coefficient blocks in \texttt{au\_pac.mod} were regenerated by
+re-running Dynare's \texttt{pac.print()} against the post-L2-OLS /
+post-L2.A calibration. Five auxiliary \texttt{.mod} files were
+reconstructed under \texttt{dynare/aux/} --- \texttt{aux\_pQ.mod},
+\texttt{aux\_consumption.mod}, \texttt{aux\_business\_inv.mod},
+\texttt{aux\_housing\_inv.mod}, \texttt{aux\_employment.mod} --- each
+declaring a pure-VAR-form companion (E-SAT core + AR(1) reduced forms
+for the structural state variables that are no longer E-SAT-defined)
+plus the block-specific auxiliary regression. The aux files use the
+L2-OLS-overridden parameter values from production \texttt{au\_pac.mod}
+for the E-SAT VAR (lambda\_pi = 0.2588, kappa\_pi = −0.0336, alpha\_pc =
+0.0006, beta\_pc\_m = −0.0042, rho\_u\_gap = 0.946, okun\_coeff = −0.13,
+rho\_pm = 0.2230). The PAC short-run coefficients \texttt{b0\_*},
+\texttt{b1\_*} use the \textbf{L2 OLS estimates verbatim for all five
+blocks}. (A §6.10 attempt to dampen an IRF oscillation by reverting the
+housing and employment \texttt{b0}/\texttt{b1} to wp1044 reference was
+itself reverted in \textbf{§6.11}, which shows the oscillation
+originates in the trade error-correction block, not the PAC blocks; the
+PAC \texttt{b0}/\texttt{b1} therefore carry their AU L2 OLS values.)
+Discount factor \texttt{beta\_pac\ =\ 0.98} is unified across blocks.
+
+Following the FR-BDF design choice, the aux files implement \textbf{pure
+VAR-based agents}: agents believe the E-SAT reduced form (with the L2
+OLS coefficients), while the simulator runs the post-L2.A structural
+identities for \texttt{yhat\_au}, \texttt{pi\_au}, and \texttt{u\_gap}.
+The closed-form policy function for each block is
+\texttt{h\_constant\ +\ Σ\_k\ h\_var\_state\_k\_lag\_1\ ·\ state\_k(-1)}.
+
+\textbf{Files added:} - \texttt{dynare/aux/aux\_pQ.mod},
+\texttt{aux\_consumption.mod}, \texttt{aux\_business\_inv.mod},
+\texttt{aux\_housing\_inv.mod}, \texttt{aux\_employment.mod}
+
+\textbf{Files modified:} - \texttt{dynare/au\_pac.mod} lines 555--684:
+all \texttt{h\_pac\_*\_constant} and \texttt{h\_pac\_*\_var\_*\_lag\_1}
+parameter assignments replaced; each block now carries a regen comment
+with the source aux file path.
+
+\subsubsection{\texorpdfstring{6.10 PAC oscillation diagnosis and the
+mixed wp1044/L2 hybrid for housing inv and employment (2026-05-29) ---
+\textbf{superseded; see
+§6.11}}{6.10 PAC oscillation diagnosis and the mixed wp1044/L2 hybrid for housing inv and employment (2026-05-29) --- superseded; see §6.11}}\label{pac-oscillation-diagnosis-and-the-mixed-wp1044l2-hybrid-for-housing-inv-and-employment-2026-05-29-superseded-see-6.11}
+
+\begin{quote}
+\textbf{Correction (2026-05-30).} The diagnosis below misattributed the
+IRF oscillation to ``PAC-block ↔ demand-identity feedback'' and applied
+a mixed wp1044/L2 hybrid to the housing-inv and employment
+\texttt{b0}/\texttt{b1} coefficients to shrink the policy-function
+loadings. \textbf{§6.11 supersedes this.} Direct eigenvalue testing
+shows the dominant 11Q mode is invariant to every PAC lever §6.10
+touched (\texttt{b3} accelerators, \texttt{b0} ECM speeds, policy
+inertia) and moves \emph{only} with the trade error-correction
+growth-persistence coefficients \texttt{b1\_x} and \texttt{b1\_m\_ne}.
+The §6.10 hybrid changed IRF \emph{amplitude} (it shrank the restored
+§6.9 PAC loadings) but could not and did not change the
+\emph{eigenvalues}, so it never removed the oscillation. The hybrid was
+therefore \textbf{reverted on 2026-05-30}: all five PAC blocks again
+carry their L2 OLS \texttt{b0}/\texttt{b1} (§6.9), and the oscillation
+is cured at its source in §6.11. The section is retained below as a
+record of the (incorrect) intermediate diagnosis.
+\end{quote}
+
+The first §6.9 pass --- using L2 OLS values for \textbf{all} PAC
+short-run coefficients including \texttt{b0\_ih\ =\ 0.4956},
+\texttt{b0\_n\ =\ 0.3145}, \texttt{b3\_ih\ =\ −0.0728},
+\texttt{b5\_n\ =\ −0.0257} --- produced visibly oscillating IRFs for
+\texttt{Δlog\ I\_H}, \texttt{Δlog\ N}, and (with smaller amplitude)
+\texttt{Δlog\ C}, \texttt{Δlog\ I\_B}, and headline \texttt{ln\_Q}. The
+dominant oscillation period is ≈11Q, with secondary 13.5Q content.
+
+\paragraph{6.10.1 Diagnosis}\label{diagnosis}
+
+Eigenvalue analysis of the state-transition matrix from
+\texttt{oo\_.dr.eigval} identifies two complex pairs that drive the
+cycle:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Pair
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbar λ\textbar{}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+period
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mode interpretation
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+11.03Q complex pair & 0.9315 & 11.0Q & dominant; tied to PAC-block ↔
+demand-identity feedback \\
+13.54Q complex pair & 0.9056 & 13.5Q & secondary; cross-block
+expectation interaction \\
+\end{longtable}
+}
+
+Both eigenvalues exist \textbf{in both pre-regen and post-regen models
+with essentially unchanged moduli}. What the §6.9 regeneration did was
+substantially amplify the \emph{loading} on these modes through the
+policy-function expansion \texttt{oo\_.dr.ghx}, especially for the
+housing-inv (\texttt{h\_pac\_ih\_var\_yhat\_au\_lag\_1} jumped 50×) and
+employment (\texttt{h\_pac\_n\_var\_yhat\_au\_lag\_1} jumped 5.5×)
+blocks. The IRF amplitude (max − min over Q1--40) under monetary shock
+changed accordingly:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Variable & Pre-regen & Post-regen (§6.9) & Δ \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+yhat\_au & 0.060 & 0.059 & −1\% \\
+Δlog C & 0.020 & 0.021 & +5\% \\
+Δlog I\_B & 0.072 & 0.072 & 0\% \\
+\textbf{Δlog I\_H} & 0.018 & \textbf{0.030} & \textbf{+73\%} \\
+\textbf{Δlog N} & 0.006 & \textbf{0.009} & \textbf{+54\%} \\
+π\_au, π\_Q & 0.003, 0.022 & 0.003, 0.022 & ≈0\% \\
+\end{longtable}
+}
+
+The lever is \texttt{b0\_*} (PAC ECM speed), not \texttt{β\_pac} (PAC
+discount factor). Lowering \texttt{β\_pac} 0.98 → 0.92 in all aux files
+changed \texttt{h\_pac\_ih\_var\_yhat\_au\_lag\_1} only from 0.0586 to
+0.0580 --- a null result. Setting \texttt{b0\_ih\ =\ 0.12} (wp1044
+reference) in the housing aux file, by contrast, shrinks the same
+h-vector to 0.0111, a 5.3× reduction. The h-vector formula scales
+linearly in \texttt{b0\_*}.
+
+A second mechanism --- true contemporaneous simultaneity --- operates
+through the demand identity
+\texttt{yhat\_au\_t\ =\ yhat\_au\_\{t−1\}\ +\ yhat\_dom\_t} where
+\texttt{yhat\_dom\_t\ =\ w\_c·Δlog\ c\_t\ +\ w\_ib·Δlog\ I\_B\_t\ +\ w\_ih·Δlog\ I\_H\_t\ +\ …},
+and the PAC equations each contain a contemporaneous accelerator
+\texttt{b3\_k·yhat\_au\_t} (or \texttt{b5\_n·yhat\_au\_t} for
+employment). Each accelerator coefficient feeds back through the demand
+identity to \texttt{yhat\_au\_t}, creating an algebraic loop with gain
+\texttt{Σ\_k\ b3\_k·w\_k}. Under wp1044's reference values
+(\texttt{b3\_ib\ =\ 0.69}, \texttt{b3\_ih\ =\ 0.50},
+\texttt{b5\_n\ =\ 0.13}) the loop is large; under L2 OLS for housing and
+employment (\texttt{b3\_ih\ =\ −0.0728}, \texttt{b5\_n\ =\ −0.0257} ---
+both wrong-signed and insignificant) the loop is essentially zero.
+
+\paragraph{6.10.2 Solution: mixed wp1044/L2 hybrid for ih and
+n}\label{solution-mixed-wp1044l2-hybrid-for-ih-and-n}
+
+A clean fix uses \textbf{wp1044 reference for \texttt{b0\_*} and
+\texttt{b1\_*}} (slow PAC ECM and smooth AR persistence, so the
+regenerated h-vectors stay small) but \textbf{L2 OLS for the
+contemporaneous accelerator \texttt{b3\_ih} and \texttt{b5\_n}} (the AU
+data identify these as wrong-signed and insignificant, i.e., zero; this
+avoids reintroducing the contemporaneous loop). The full calibration:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Coefficient
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+wp1044 ref
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+L2 OLS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Adopted
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Rationale
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+b0\_ih & 0.12 & 0.4956 & \textbf{0.12} & wp1044 --- fast L2 ECM speed
+amplifies the 11Q mode loading 5× \\
+b1\_ih & 0.18 & 0.2934 & \textbf{0.18} & wp1044 --- for consistency with
+b0 \\
+b3\_ih & 0.50 & −0.0728 & \textbf{−0.0728} & L2 OLS --- wp1044's b3
+reintroduces contemp loop \\
+b0\_n & 0.07 & 0.3145 & \textbf{0.07} & wp1044 --- same logic as
+housing \\
+b1\_n & 0.44 & 0.2950 & \textbf{0.44} & wp1044 --- for consistency with
+b0 \\
+b2\_n, b3\_n & 0, 0 & −0.0278, 0.0261 & \textbf{0, 0} & wp1044 depth-1;
+L2 lags 2-3 were small noise \\
+b5\_n & 0.13 & −0.0257 & \textbf{−0.0257} & L2 OLS --- wp1044's b5
+reintroduces contemp loop \\
+\end{longtable}
+}
+
+This mixed hybrid is philosophically consistent with the §3.6
+hybrid-Option-1 pattern already used for the business-investment block:
+PAC structural deep parameters (ECM speed, AR persistence) come from
+wp1044; AU L2 OLS overrides apply where the AU data identify
+economically interpretable estimates and is preserved where the AU data
+delivers a useful ``this channel is zero on AU'' finding.
+
+\paragraph{6.10.3 Verification}\label{verification}
+
+Dynare BK stability preserved (\texttt{sdim\ =\ 126,\ edim\ =\ 5}). The
+11Q and 13.5Q complex pairs remain (these are intrinsic to the PAC +
+demand-identity structure) but their \emph{loadings} are now smaller for
+the affected blocks. IRF amplitude (max−min over 40Q) under the 100bp
+monetary shock:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Variable & Pre-regen & §6.9 regen & §6.10 mixed hybrid \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+yhat\_au & 0.060 & 0.059 & \textbf{0.059} (recovered) \\
+Δlog C & 0.020 & 0.021 & 0.022 \\
+Δlog I\_B & 0.072 & 0.072 & 0.072 (unchanged) \\
+\textbf{Δlog I\_H} & 0.018 & 0.030 & \textbf{0.012} (−33\% vs
+pre-regen) \\
+\textbf{Δlog N} & 0.006 & 0.009 & \textbf{0.0035} (−44\% vs
+pre-regen) \\
+π\_au, π\_Q & 0.003, 0.022 & 0.003, 0.022 & 0.003, 0.022 \\
+\end{longtable}
+}
+
+\texttt{Δlog\ I\_H} and \texttt{Δlog\ N} now have smaller amplitude than
+even the pre-regen baseline, because the wp1044 b0/b1 produce smoother
+adjustment than the original calibrated b's used pre-regen too. The
+headline-GDP response is preserved (\texttt{ln\_Q} peak −0.139\% vs
+pre-regen −0.135\%, within 3\%).
+
+\subsubsection{6.11 The oscillation is a trade-ECM root, not a PAC-block
+artefact
+(2026-05-30)}\label{the-oscillation-is-a-trade-ecm-root-not-a-pac-block-artefact-2026-05-30}
+
+§6.10 treated a symptom. Re-solving the model in Dynare and decomposing
+the 126×126 state-transition matrix
+(\texttt{A\ =\ oo\_.dr.ghx(M\_.nstatic+1\ :\ M\_.nstatic+M\_.nspred,\ :)})
+shows the dominant 11Q complex mode loads almost entirely on the
+trade-block state variables --- \texttt{ln\_x\_level},
+\texttt{ln\_m\_ne\_level}, \texttt{x\_gap}, \texttt{m\_ne\_gap},
+\texttt{ln\_ib\_level} --- while \textbf{\texttt{yhat\_au} participation
+is only 0.149}. The PAC blocks are driven \emph{by} the cycle; they are
+not its source.
+
+\paragraph{6.11.1 The trade error-correction blocks are a momentum
+oscillator}\label{the-trade-error-correction-blocks-are-a-momentum-oscillator}
+
+Both trade quantity blocks (exports \texttt{dln\_x}, non-energy imports
+\texttt{dln\_m\_ne}) share the FR-BDF one-step error-correction
+structure (\texttt{au\_pac.mod} \textasciitilde L1353--1410):
+
+\begin{verbatim}
+ln_x_level = ln_x_level(-1) + dln_x                 // level = running sum of growth (integrator)
+dln_x      = b0_x·x_gap(-1) + b1_x·dln_x(-1) + …    // growth = error-correction + AR momentum
+x_gap      = ln_x_eq − ln_x_level                   // gap = equilibrium − level
+\end{verbatim}
+
+Substituting the gap and the level identity into the growth equation
+collapses the block to a second-order difference equation in the level,
+
+\[ L_t = (1 - b_0 + b_1)\,L_{t-1} - b_1\,L_{t-2}, \]
+
+whose characteristic roots are complex with \textbf{modulus exactly
+\(\sqrt{b_1}\)} when \(b_1 > \tfrac14(1-b_0+b_1)^2\). This is the
+classic momentum-ECM / Samuelson multiplier--accelerator oscillator:
+growth has inertia, so when the level overshoots its equilibrium the
+error-correction term reverses growth but the AR momentum carries it
+past, producing a damped cycle. High growth-persistence \(b_1\) pushes
+the roots toward the unit circle and the cycle barely damps over the
+40-quarter IRF horizon.
+
+The §6.6 audit had replaced the wp1044 trade growth-persistence values
+(\(b_{1,x} = 0.30\), \(b_{1,m\_ne} = 0.23\)) with the AU single-equation
+OLS estimates (\(b_{1,x} = 0.8673\), \(b_{1,m\_ne} = 0.7427\)). Those AU
+estimates put the roots at \(\sqrt{0.8673} = 0.931\) and
+\(\sqrt{0.7427} = 0.862\) --- exactly the moduli §6.10 had measured and
+(wrongly) attributed to the PAC blocks.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Mode
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Analytic \(\sqrt{b_1}\)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Period
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Solved eigenvalue
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Source
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Export ECM & \(\sqrt{0.8673}=0.931\) & 11.0Q & 0.9314, 11.0Q &
+\texttt{b1\_x\ =\ 0.8673} \\
+Import ECM & \(\sqrt{0.7427}=0.862\) & 15.5Q & 0.8999, 13.8Q (coupled) &
+\texttt{b1\_m\_ne\ =\ 0.7427} \\
+\end{longtable}
+}
+
+\paragraph{6.11.2 The mode is invariant to every §6.10 PAC
+lever}\label{the-mode-is-invariant-to-every-6.10-pac-lever}
+
+Perturbing each §6.10 candidate and re-solving confirms the dominant
+mode does not respond to anything in the PAC blocks, and moves only with
+\texttt{b1\_x}:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Experiment & Dominant mode after \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{b3\_ib\ =\ 0} (BI accelerator off) & 0.9314 --- unchanged \\
+all \texttt{b3\ =\ 0} (no contemporaneous demand loop) & 0.9314 ---
+unchanged \\
+\texttt{lambda\_i\ =\ 0.50} (less policy inertia) & 0.9329 ---
+unchanged \\
+all \texttt{b0\ ×\ 4} (faster PAC ECM) & 0.9316 --- unchanged \\
+\texttt{b1\_x\ →\ 0.30} & \textbf{mode gone} (collapses to
+\textbar λ\textbar{} ≈ 0.55) \\
+\end{longtable}
+}
+
+\paragraph{6.11.3 Fix: revert the trade growth-persistence to wp1044;
+restore §6.9 PAC
+blocks}\label{fix-revert-the-trade-growth-persistence-to-wp1044-restore-6.9-pac-blocks}
+
+Two coordinated changes (2026-05-30):
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Trade growth-persistence reverted to wp1044 reference} ---
+  \texttt{b1\_x:\ 0.8673\ →\ 0.30},
+  \texttt{b1\_m\_ne:\ 0.7427\ →\ 0.23}. This is the actual fix: it moves
+  the export-ECM root from \(\sqrt{0.8673}=0.931\) to
+  \(\sqrt{0.30}=0.548\) (half-life \$\sim\$1Q instead of \$\sim\$10Q)
+  and the import-ECM root to \(\sqrt{0.23}=0.480\). The error-correction
+  speeds \texttt{b0\_x\ =\ 0.299} and \texttt{b0\_m\_ne\ =\ 0.158} are
+  left at their AU L2 OLS values --- they set the cycle \emph{frequency}
+  but not the root \emph{modulus}, and the mode is heavily damped once
+  \texttt{b1} is low. A quarterly export-growth AR(1) of 0.87 is
+  implausibly high and most likely reflects an unremoved trend /
+  near-unit-root in the AU growth series; the full revert
+  (\texttt{w\ =\ 0} in the shrinkage
+  \texttt{b\_1\ =\ w·\textbackslash{}text\{AU\}\ +\ (1-w)·\textbackslash{}text\{wp1044\}})
+  is adopted.
+\item
+  \textbf{§6.10 mixed hybrid reverted} --- because §6.10's premise was
+  wrong, the housing-inv and employment blocks are returned to their
+  §6.9 L2 OLS values (\texttt{b0\_ih\ =\ 0.4956},
+  \texttt{b1\_ih\ =\ 0.2934}, \texttt{b0\_n\ =\ 0.3145},
+  \texttt{b1\_n\ =\ 0.2950}, \texttt{b2\_n\ =\ −0.0278},
+  \texttt{b3\_n\ =\ 0.0261}; \texttt{b3\_ih}, \texttt{b5\_n} were
+  already at L2 OLS), and the \texttt{h\_pac\_ih\_*} /
+  \texttt{h\_pac\_n\_*} policy-function vectors are regenerated to
+  match. This restores the larger (data-identified) PAC loadings the
+  §6.10 hybrid had suppressed.
+\end{enumerate}
+
+\textbf{Verification (100bp monetary shock, 40Q; Dynare BK preserved,
+\texttt{sdim\ =\ 126,\ edim\ =\ 5}).} The trade fix removes the
+oscillation at its source; direction reversals over Q1--40 fall from ≈7
+(≈3.5 sustained cycles) to 1--3 (a normal hump):
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lcc@{}}
+\toprule\noalign{}
+Variable & Turning pts before & Turning pts after \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ln\_Q & 7 & 2 \\
+yhat\_au & 7 & 2 \\
+Δlog I\_B & 7 & 3 \\
+Δlog I\_H & 7 & 2 \\
+Δlog C & 7 & 3 \\
+Δlog N & 7 & 4 \\
+\end{longtable}
+}
+
+Because the §6.10 amplitude suppression is also removed, the PAC
+growth-rate responses are larger than the §6.10 table reported
+(e.g.~\texttt{Δlog\ I\_H} trough −0.049\% at Q4 vs §6.10's −0.020\%),
+but they no longer oscillate. The headline monetary transmission to real
+activity is materially \emph{weaker and slower} than the §6.10
+calibration: the trade-block growth-persistence collapse changes
+net-trade dynamics, so the \texttt{ln\_Q} trough shrinks from −0.139\%
+(Q9) to \textbf{−0.039\% (Q17)} and real GDP drifts to +0.076\% by Q40.
+(Note: the abstract, §6.8, and §7.2.2 still quote the pre-§6.11 headline
+magnitudes and have not yet been propagated.)
+
+\begin{quote}
+\textbf{The \texttt{b1\_x\ =\ 0.30}, \texttt{b1\_m\_ne\ =\ 0.23} values
+here were a blunt first pass (full revert to wp1044). §6.12 supersedes
+them with a \emph{stability-constrained estimate}
+\texttt{b1\_x\ =\ b1\_m\_ne\ =\ 0.49} after establishing that the high
+AU values are genuine.} Table 6.3 reflects §6.12.
+\end{quote}
+
+\subsubsection{\texorpdfstring{6.12 Stability-constrained estimate of
+the trade growth-persistence (2026-05-30) --- \textbf{superseded by
+§6.13}}{6.12 Stability-constrained estimate of the trade growth-persistence (2026-05-30) --- superseded by §6.13}}\label{stability-constrained-estimate-of-the-trade-growth-persistence-2026-05-30-superseded-by-6.13}
+
+\begin{quote}
+\textbf{Superseded.} §6.13 shows the high \texttt{b1} this section
+worked around was itself an artefact of estimating on the ABS
+\emph{Trend} (smoothed) series. On Seasonally Adjusted data
+\texttt{b1\_x\ =\ 0.09}, so no constraint is needed. The robustness
+evidence below (that \texttt{b1≈0.78} is stable across specs/samples) is
+correct \emph{conditional on the Trend series}; it does not survive the
+switch to SA. Retained as the record of how the constraint was derived
+before the data bug was found.
+\end{quote}
+
+§6.11's full revert to wp1044 (\texttt{b1\_x=0.30}) discards AU signal
+arbitrarily (it is \texttt{w=0} in the shrinkage
+\texttt{b\_1\ =\ w·AU\ +\ (1−w)·wp1044} with no basis for \texttt{w}).
+Before accepting it we asked: \textbf{is the high AU \texttt{b1} real,
+or a specification artefact?}
+
+\paragraph{6.12.1 The high AU export-growth persistence is
+genuine}\label{the-high-au-export-growth-persistence-is-genuine}
+
+\texttt{b1\_x} was re-estimated under seven specifications and five
+sub-samples (\texttt{data/pac\_blocks/estimate\_exports\_*.m}):
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Specification
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+b1\_x
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+√b1
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+HP-detrended level (original §6.6 audit) & 0.867 & 0.931 \\
+Consistent cyclical (model's \texttt{dln\_x} = Δ cyclical level, not raw
+growth) & 0.802 & 0.895 \\
+Cointegrating target vs OECD trading-partner GDP & 0.742 & --- (no
+cointegration) \\
+Piecewise-linear trend, K=0\ldots3 breaks (data-driven: 2003Q3, 2011) &
+0.69--0.80 & --- \\
++ short-run foreign-demand-growth term \texttt{Δln\ y\_world} (sig.,
+t=2.3) & 0.749 & 0.865 \\
+5 sub-samples (pre/post-GFC, mining-boom core, excl-GFC) & 0.77--0.79 &
+\textasciitilde0.88 \\
+\end{longtable}
+}
+
+Two findings of independent value emerged: (a) the original estimation
+mixed an HP-detrended \emph{level} (for the EC term) with \emph{raw}
+\texttt{dln\_x} (LHS/AR), inconsistent with the model's cyclical
+\texttt{dln\_x} --- the consistent spec is preferable; (b) a
+\textbf{data-driven piecewise trend with breaks at 2003Q3 and 2011}
+(mining-boom onset and the investment-peak→production-ramp transition)
+strengthens the error-correction speed \texttt{b0} from insignificant to
+\texttt{t=−8.9}, and a \textbf{short-run foreign-demand-growth term}
+(the analog of imports' \texttt{iad}, missing from the export equation)
+is significant --- both are spec improvements worth folding in later.
+\textbf{But none lowers \texttt{b1} below \textasciitilde0.7.} AU
+exports do \emph{not} cointegrate with foreign demand (OECD residual
+AR(1)=0.97; β=2 but unit-root residual), because AU export-\emph{volume}
+growth is \textbf{supply/capacity-driven} (iron-ore/coal/LNG capacity
+coming online in discrete ramps), not foreign-demand-driven --- so no
+demand-side target can absorb the momentum. \texttt{b1\_x\ ≈\ 0.78} is
+one of the most robust facts in the model.
+
+\paragraph{6.12.2 The constrained estimate: project the OLS onto the
+IRF-stability
+frontier}\label{the-constrained-estimate-project-the-ols-onto-the-irf-stability-frontier}
+
+Since \texttt{b1} is genuine and the oscillation modulus is \texttt{√b1}
+(invariant to \texttt{b0}, the target, and the trend --- §6.11.1), the
+principled resolution is a \textbf{dynamic-stability constraint} (the
+device already used for the wage Phillips, §6.7): keep the data's
+\texttt{b1} capped at the largest value giving a non-oscillatory GE IRF.
+Mapping turning points (100bp monetary, 40Q) over a grid of the common
+cap \texttt{c\ =\ b1\_x\ =\ b1\_m\_ne}:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0909}}
+  >{\centering\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1212}}
+  >{\centering\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1212}}
+  >{\centering\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1212}}
+  >{\centering\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1212}}
+  >{\centering\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1212}}
+  >{\centering\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1212}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0909}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+c (=b1)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+√c
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+ln\_Q
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+yhat\_au
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Δlog I\_B
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Δlog I\_H
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Δlog C
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Δlog N
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+ln\_Q trough
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+0.30 \emph{(§6.11)} & 0.55 & 2 & 2 & 3 & 2 & 3 & 2 & −0.036\% \\
+0.40 & 0.63 & 2 & 2 & 3 & 2 & 3 & 4 & −0.038\% \\
+\textbf{0.49} & \textbf{0.70} & \textbf{2} & \textbf{2} & \textbf{3} &
+\textbf{2} & \textbf{3} & \textbf{4} & \textbf{−0.043\%} \\
+0.56 & 0.75 & 2 & 2 & 3 & 2 & \textbf{5} & 4 & −0.052\% \\
+0.65 & 0.81 & 2 & 2 & 3 & \textbf{6} & \textbf{5} & 4 & −0.057\% \\
+\end{longtable}
+}
+
+The headline \texttt{ln\_Q}/\texttt{yhat\_au} stay clean across the
+whole grid, but the \textbf{PAC growth-rate IRFs bind first} --- higher
+trade momentum leaks into \texttt{Δlog\ C} (oscillates at 0.56) and
+\texttt{Δlog\ I\_H} (at 0.65) through the demand identity. The largest
+cap keeping \emph{every} variable non-oscillatory is
+\textbf{\texttt{√b1\ ≤\ 0.70},
+i.e.~\texttt{b1\_x\ =\ b1\_m\_ne\ =\ 0.49}} --- the projection of the
+joint OLS estimate \texttt{(0.79,\ 0.74)} onto the all-variable
+IRF-stability frontier. (A symmetric \texttt{0.65} cap fails: it cleans
+\texttt{ln\_Q} but leaves \texttt{Δlog\ I\_H} oscillating, and raising
+imports alone to 0.65 reintroduces the 14Q import mode.)
+
+\textbf{Adopted: \texttt{b1\_x\ =\ b1\_m\_ne\ =\ 0.49}.} This retains
+genuine AU export/import momentum (vs the over-damped 0.30/0.23),
+deepens the real-GDP trough to \textbf{−0.043\% (Q11)} from §6.11's
+−0.039\%, and keeps all IRFs non-oscillatory (turning points 2--3; BK
+preserved \texttt{sdim=126,\ edim=5}). It is defensible precisely
+because the unconstrained estimate is robust and the constraint binds at
+a clear, demonstrated threshold --- no arbitrary \texttt{w}.
+
+\begin{quote}
+\textbf{Queued structural follow-up.} The deeper fix is to split exports
+into resource vs non-resource (mirroring the import energy/non-energy
+split): resource volumes are capacity-driven (high \texttt{b1}, belong
+in a trend/capacity process, not a demand-ECM), non-resource are
+demand-driven (lower \texttt{b1}). That would remove the oscillation
+structurally and let the cap be dropped --- see
+\texttt{NEXT\_PROJECT\_export\_resource\_split.md} (needs ABS 5368 +
+commodity deflation).
+\end{quote}
+
+\subsubsection{\texorpdfstring{6.13 Root cause: the trade block used the
+ABS \emph{Trend} series, not Seasonally Adjusted (2026-05-30) ---
+\textbf{resolves
+§6.6/§6.11/§6.12}}{6.13 Root cause: the trade block used the ABS Trend series, not Seasonally Adjusted (2026-05-30) --- resolves §6.6/§6.11/§6.12}}\label{root-cause-the-trade-block-used-the-abs-trend-series-not-seasonally-adjusted-2026-05-30-resolves-6.66.116.12}
+
+Pursuing the §6.12 mining/non-mining split (which requires goods-level
+volumes) surfaced the actual root cause. Pulling ABS Balance-of-Payments
+goods chain-volume exports (cat. 5302.0 Table 6, incl.~SA series
+A3535046J non-rural goods) and estimating \texttt{b1} per component gave
+a uniform surprise: \textbf{every goods-export-volume component has
+\texttt{b1\ ≈\ 0}} --- mining (non-rural) −0.06, rural 0.19, total goods
+0.04 --- nothing like the model's 0.74. That is, the mining hypothesis
+was rejected (mining-volume \emph{growth} is anti-persistent
+quarter-to-quarter; the capacity ramps are low-frequency trend), and the
+high \texttt{b1} is not in goods volumes at all.
+
+Tracing the discrepancy: \textbf{the model's export and import volume
+series were the ABS \emph{Trend} (Henderson-filter-smoothed)
+chain-volume series, not Seasonally Adjusted.}
+\texttt{data/prepare\_trade\_price\_data.m} hardcoded
+\texttt{ix\_x\ =\ 39,\ ix\_m\ =\ 40,\ ix\_g\ =\ 6} into
+\texttt{abs\_5206\_vol.xlsx}, and columns 39/40/6 are the Trend block
+(series A2304238J / A2304239K / A2304206R). A Trend series is a centred
+moving average; its AR(1) ≈ 0.74 is mechanical smoothing, not economic
+momentum. Estimated on the \textbf{Seasonally Adjusted} column (121,
+A2304114F) the same series gives \texttt{b1\ =\ 0.008}; on Original (col
+206), −0.07. \textbf{This single data-selection error is the source of
+the entire IRF oscillation:} \texttt{√0.74\ ≈\ 0.86} put the trade-ECM
+root near the unit circle. The §6.6 audit (\texttt{b1\_x=0.87}), §6.11
+revert (\texttt{0.30}) and §6.12 stability constraint (\texttt{0.49})
+were all treating the symptom.
+
+\textbf{Fix.} Switched the volume columns to Seasonally Adjusted ---
+\texttt{ix\_x\ =\ 121} (exports, A2304114F), \texttt{ix\_m\ =\ 122}
+(imports, A2304115J), \texttt{ix\_g\ =\ 86} (govt FCE, A2304080V) ---
+rebuilt \texttt{trade\_price\_data.mat}, and re-estimated. The
+deflator/IPD columns were audited and are correctly SA already; only the
+three volume series were affected. New SA OLS (written back verbatim per
+the OLS-over-calibration convention):
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Coef & Trend (bug) & \textbf{SA OLS (adopted)} & t & √b1 \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{b0\_x} (export ECM speed) & 0.299 & \textbf{0.363} & −4.4 &
+--- \\
+\texttt{b1\_x} (export Δ-persistence) & 0.867 & \textbf{0.092} & 0.97 &
+0.30 \\
+\texttt{b0\_m\_ne} (import ECM speed) & 0.158 & \textbf{0.309} & −4.6 &
+--- \\
+\texttt{b1\_m\_ne} (import Δ-persistence) & 0.743 & \textbf{0.185} &
+1.87 & 0.43 \\
+\end{longtable}
+}
+
+\textbf{Result.} \texttt{√b1\ =\ 0.30\ /\ 0.43} → the trade-ECM roots
+are well inside the unit circle, so the oscillation is gone \emph{with
+no constraint}. The 100bp-monetary IRF has turning points of
+\textbf{1--2 across every variable} (the cleanest of any calibration),
+BK preserved (\texttt{sdim=126,\ edim=5}), and the real-GDP trough is
+\textbf{−0.072\% (Q11)} --- deeper and more RBA-suite-plausible than the
+over-damped §6.11/§6.12 values, because the well-identified SA ECM
+speeds (\texttt{b0\_x=0.36}, \texttt{b0\_m=0.31}) are stronger than the
+Trend-data estimates. This \textbf{supersedes §6.11 and §6.12} (the
+wp1044 revert and the stability constraint are no longer needed). The
+\texttt{ln\_Q} Q40 positive drift (+0.078\%) is unchanged --- it is the
+separate CES trend-labour \texttt{rw\_gap} hysteresis
+(\texttt{IRF\_TRANSMISSION\_DRIFT\_INVESTIGATION.md}), independent of
+the trade block. The mining/non-mining split is no longer required for
+the oscillation, though the audit incidentally confirmed all
+goods-volume components are low-persistence.
+
+\subsubsection{6.14 Full-model seasonal-adjustment data audit
+(2026-05-30)}\label{full-model-seasonal-adjustment-data-audit-2026-05-30}
+
+The §6.13 bug (a Trend series read where Seasonally Adjusted was
+intended) prompted a full audit of every series feeding the model,
+checking the ABS ``Series Type'' metadata of each hardcoded-column pick
+and the SA status of each FRED series. \textbf{One further instance of
+the same class was found and fixed; everything else is SA or a
+benign/documented exception.}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Found:} \texttt{data/prepare\_supply\_data.m} selected
+  employment, the unemployment rate, and the labour force via a
+  \texttt{cols(3)} ``3rd = SA'' heuristic, but the occurrence order in
+  \texttt{abs\_6202\_labour\_force.xlsx} is
+  Trend(1)/SA(2)/\textbf{Original(3)} --- so it read the
+  \textbf{Original (NSA)} series. Fixed to the robust
+  \texttt{pick\_sa\_col} helper (reads the Series-Type row), as hours
+  and WPI already did.
+\item
+  \textbf{Impact: negligible}, unlike §6.13. The corrected SA
+  unemployment rate feeds the wage Phillips and \texttt{u\_gap};
+  re-estimating moves the constrained wage-Phillips slope only
+  \texttt{κ\_w:\ 0.359\ →\ 0.343} (and \texttt{γ\_w:\ 0.857\ →\ 0.863},
+  \texttt{λ\_w:\ 0.093\ →\ 0.087}) --- AU unemployment-rate seasonality
+  is mild and enters as one regressor. The CPI Phillips, deflators, and
+  market-VA blocks are unchanged (their inputs were already SA). The
+  employment PAC is unaffected (it uses the SA FRED
+  \texttt{au\_employment}). The 100bp-monetary IRF is materially
+  identical to §6.13 (real-GDP trough −0.073\% Q11, turning points 1--2,
+  BK preserved); Table 6.3 is essentially unchanged.
+\end{itemize}
+
+\textbf{Audit result (all series feeding the model):} seasonally
+adjusted everywhere after the fix --- ABS 5206 trade volumes (§6.13),
+ABS 6202 employment/unemployment/labour-force (§6.14), hours, WPI,
+industry GVA (market/non-market, via a self-checked +109 SA offset), all
+IPD deflators, household income (by SA series ID), and the FRED
+activity/labour series (OECD ``S'' suffix). \textbf{Benign exceptions,
+flagged not fixed:} \texttt{abs\_6302\_awe.xlsx} is Trend-only (but AWE
+is unused --- the wage Phillips uses the SA WPI); \texttt{abs\_5204\_*}
+(compensation, capital stock, productivity) are Original-only
+low-frequency supply series with no quarterly seasonality; FRED CPI is
+NSA but feeds only a legacy synthetic-ULC proxy, not the WPI-based wage
+Phillips; the 10-year bond yield is a rate (SA N/A). \textbf{Durable
+lesson:} when reading ABS time-series spreadsheets by hardcoded column
+index, always verify against the ``Series Type'' metadata row ---
+Original / Seasonally Adjusted / Trend blocks sit in different columns
+and silently mis-selecting Trend injects spurious persistence (§6.13) or
+Original injects seasonality (§6.14).
+
+\textbf{Full re-estimation check.} With the data layer rebuilt on the
+corrected SA series, all PAC blocks were re-estimated as a check. The
+VA-price block is identical (its inputs were already SA);
+consumption/employment/housing shift moderately because the rebuilt
+\texttt{l2\_data\_layer} carries the SA unemployment/employment through
+\texttt{u\_hat}/\texttt{n\_hat\_star} (e.g.~housing \texttt{b0\_ih}
+0.50→0.60, consumption \texttt{b0\_c} 0.27→0.23). These re-estimates
+were \textbf{not written back}: the base \texttt{dataset.csv} had to be
+recovered from git history (it was removed in a repo cleanup) and a
+consumption-clamp difference in the re-run confounds the SA-fix effect
+with estimation-environment differences, so the existing L2-environment
+PAC estimates are retained pending a clean re-estimation. The headline
+IRFs (Table 6.3) and the oscillation cure are unaffected by this
+decision --- they are driven by the trade block (§6.13, cleanly
+re-estimated) and the wage Phillips (§6.14, re-estimated).
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -5185,44 +6033,81 @@ from the earlier three-regime workflow; the Phase T production regime is
 closest to the Hybrid trace.}
 
 \subsubsection{Table 6.3: Peak IRF (100bp annualized monetary
-tightening) --- Phase L2.A architectural fix
-(2026-05-28)}\label{table-6.3-peak-irf-100bp-annualized-monetary-tightening-phase-l2.a-architectural-fix-2026-05-28}
+tightening) --- post-§6.13/§6.14 SA-data fixes
+(2026-05-30)}\label{table-6.3-peak-irf-100bp-annualized-monetary-tightening-post-6.136.14-sa-data-fixes-2026-05-30}
 
 GDP and growth-rate variables in \% deviation from baseline (FR-BDF
 convention); inflation and yield variables in annualised pp.~Peaks taken
 within the first 40 quarters. Calibration: post-Phase-L2 single-equation
 OLS for CPI Phillips, trade quantities, trade and other deflators
-(§6.6), BK-constrained restricted OLS for wage Phillips (§6.7), and
-Phase L2.A architectural fixes for \texttt{yhat\_au}, \texttt{pi\_au},
-and \texttt{u\_gap} (§6.8).
+(§6.6), BK-constrained restricted OLS for wage Phillips (§6.7), Phase
+L2.A architectural fixes for \texttt{yhat\_au}, \texttt{pi\_au}, and
+\texttt{u\_gap} (§6.8), all five \texttt{h\_pac\_*} policy-function
+blocks regenerated against the post-L2.A VAR (§6.9), the §6.10 mixed
+hybrid \textbf{reverted} so all PAC blocks carry their L2 OLS
+\texttt{b0}/\texttt{b1}, and the \textbf{§6.13 trade-data fix}:
+export/import volumes switched from the ABS \emph{Trend} (smoothed)
+series to \emph{Seasonally Adjusted}, with the trade short-run
+coefficients re-estimated on SA data
+(\texttt{b0\_x=0.363,\ b1\_x=0.092,\ b0\_m=0.309,\ b1\_m=0.185}; written
+back verbatim). This removes the IRF oscillation at its source ---
+\texttt{√b1\ =\ 0.30/0.43}, well inside the unit circle --- with
+\textbf{no stability constraint} (§6.11/§6.12 superseded). For activity
+variables the table reports the (negative) transmission \textbf{trough};
+\texttt{ln\_Q}/\texttt{yhat\_au} additionally exhibit a slow positive
+drift over the back half of the horizon (noted below).
 
 {\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}lll@{}}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3846}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4231}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.1923}}@{}}
 \toprule\noalign{}
-Variable & Peak & Quarter \\
+\begin{minipage}[b]{\linewidth}\raggedright
+Variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Peak
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Quarter
+\end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Real GDP (ln\_Q)} & \textbf{−0.135\%} & Q9 \\
-Output gap (yhat\_au) & \textbf{−0.096\%} & Q9 \\
+\textbf{Real GDP (ln\_Q)} & \textbf{−0.073\%} (trough) & Q11 \\
+Output gap (yhat\_au) & \textbf{−0.059\%} (trough) & Q11 \\
 CPI inflation (pi\_au, y/y) & \textbf{−0.004 pp} & Q3 \\
-\texttt{pi\_au\_food} (decomp) & +0.019 pp & Q1 \\
-\texttt{pi\_au\_energy} (decomp) & −0.048 pp & Q9 \\
-\texttt{pi\_au\_core} (decomp; ≈ pi\_c) & +0.001 pp & Q11 \\
-VA price inflation (piQ, y/y) & +0.032 pp & Q1 \\
-Consumption growth (Δlog) & \textbf{−0.027\%} & Q2 \\
-Business inv growth (Δlog) & −0.093\% & Q9 \\
-Housing inv growth (Δlog) & −0.028\% & Q4 \\
-Employment growth (Δlog) & −0.007\% & Q12 \\
-\textbf{Wage inflation (y/y)} & \textbf{−0.005 pp} & Q2 \\
-Unemployment gap (u\_gap, pp) & +0.007 pp & Q12 \\
-Exchange rate (s\_gap, \%) & \textbf{−0.991\%} & Q8 \\
+\texttt{pi\_au\_food} (decomp) & +0.020 pp & Q1 \\
+\texttt{pi\_au\_energy} (decomp) & −0.054 pp & Q9 \\
+\texttt{pi\_au\_core} (decomp; ≈ pi\_c) & +0.001 pp & Q12 \\
+VA price inflation (piQ, y/y) & +0.030 pp & Q1 \\
+Consumption growth (Δlog) & \textbf{−0.024\%} & Q2 \\
+Business inv growth (Δlog) & −0.044\% & Q9 \\
+Housing inv growth (Δlog) & \textbf{−0.049\%} & Q4 \\
+Employment growth (Δlog) & \textbf{−0.009\%} & Q5 \\
+\textbf{Wage inflation (y/y)} & \textbf{−0.011 pp} & Q3 \\
+Unemployment gap (u\_gap, pp) & ≈0 (not retained in regen IRF set) &
+--- \\
+Exchange rate (s\_gap, \%) & \textbf{−0.988\%} & Q8 \\
 10Y yield (annualised) & \textbf{+0.105 pp} & Q1 \\
 \end{longtable}
 }
 
-See §6.8 (Table 6.9) for full pre-vs-post-L2.A comparison.
+See §6.8 (Table 6.9) for the pre-vs-post-L2.A architectural comparison;
+§6.9 for the policy-function regeneration; §6.10 for the (superseded)
+PAC-oscillation diagnosis; §6.11/§6.12 for the trade-ECM root cause and
+the (now-superseded) stability constraint; and \textbf{§6.13} for the
+SA-data fix that produced this table. The IRF oscillation is gone with
+\textbf{no constraint} --- direction reversals over 40Q are \textbf{1--2
+for every variable} (the cleanest of any calibration; vs ≈7 before
+§6.11). The real-GDP trough is \textbf{−0.072\% (Q11)}, deeper and more
+RBA-suite-plausible than the over-damped §6.11/§6.12 values, because the
+well-identified SA ECM speeds (\texttt{b0\_x=0.36}, \texttt{b0\_m=0.31})
+are stronger than the Trend-data estimates. \texttt{ln\_Q} then drifts
+to +0.078\% and \texttt{yhat\_au} to +0.025\% by Q40 --- the separate
+CES trend-labour \texttt{rw\_gap} hysteresis
+(\texttt{IRF\_TRANSMISSION\_DRIFT\_INVESTIGATION.md}), monotone after
+the trough, not a cycle, and unaffected by the trade-data fix.
 
 \emph{Comparison with pre-audit values:} real-GDP / output-gap / s\_gap
 / 10Y are essentially unchanged; the \textbf{CPI channel weakens
@@ -5244,17 +6129,18 @@ Phillips slope κ\_w = 0.359 and a near-unit CPI passthrough γ\_w =
 \paragraph{7.2.2 Channel-by-channel
 walkthrough}\label{channel-by-channel-walkthrough}
 
-The aggregate \textbf{−0.107\% real GDP} trough (Q8), \textbf{−0.073\%
-output gap} trough (Q8), and \textbf{−0.038 pp y/y CPI inflation}
-decline (Q9) decompose across six transmission channels documented in
+The aggregate \textbf{−0.073\% real GDP} trough (Q11), \textbf{−0.059\%
+output gap} trough (Q11), and \textbf{−0.004 pp y/y CPI inflation}
+decline (Q3) decompose across six transmission channels documented in
 Table 2.2. Under the equation-by-equation OLS calibration (wp1044
-methodology), the consumption channel is near-zero (L2 OLS finds β₂ =
-−0.003 and β₃ = −0.014 --- AU data shows no significant direct
-interest-rate sensitivity in consumption under the wp1044 spec), and
-monetary transmission operates primarily through the exchange rate
-(−0.979\%) and business investment (−0.056\%).
+methodology), the direct consumption rate channel is near-zero (L2 OLS
+finds β₂ = −0.003 and β₃ = −0.014 --- AU data shows no significant
+direct interest-rate sensitivity in consumption under the wp1044 spec),
+and monetary transmission operates primarily through the exchange rate
+(−0.99\%) and investment (business-investment growth −0.044\%,
+housing-investment growth −0.049\%).
 
-\textbf{(i) Term structure and WACC.} The 10Y yield rises \textbf{+0.102
+\textbf{(i) Term structure and WACC.} The 10Y yield rises \textbf{+0.105
 pp on impact} because the term-structure NPV (eq. 48)
 \(i_{10Y,t} = (1-\kappa_{10}) i_t + \kappa_{10} \cdot \mathrm{E}_t[i_{10Y,t+1}] + s_{10Y,t}\)
 with \(\kappa_{10} = 0.97\) internalises the entire expected
@@ -5301,7 +6187,7 @@ defined recursively as
 with β\_uip = 0.92. The forward recursion produces
 \texttt{pv\_i\_uip(0)\ ≈\ 1/(1−β\_uip·λ\_i)\ ·\ i\_gap(0)\ ≈\ 4.55\ ·\ i\_gap(0)}
 on impact --- the spot AUD internalises the entire expected rate path
-immediately. Result: s\_gap peaks at \textbf{−0.979\% at Q8}. Through
+immediately. Result: s\_gap peaks at \textbf{−0.99\% at Q8}. Through
 eqs. (40)--(41) the appreciation depresses export volumes via the trade
 elasticity \(b_2^x\) and dampens imports --- net trade contributes a
 small early-quarter negative to GDP.
@@ -5336,14 +6222,15 @@ demand-side deflationary forces dominate at longer horizons. The CPI
 deflator inflation (pi\_c) peaks at −0.043 pp y/y at Q11.
 
 The channels together transmit monetary policy primarily through the
-exchange-rate channel (−0.979\%) and the business-investment
-cost-of-capital channel (−0.056\%), with housing investment (−0.027\%)
-providing a smaller reinforcing effect. The consumption channel is
-near-zero under OLS calibration (−0.004\%), a striking contrast to
-earlier Bayesian-regularised results and to DSGE models where
-intertemporal substitution in consumption is typically the dominant
-transmission mechanism. AU's variable-rate mortgages and the strong
-CPI-indexation wage Phillips shape the relative magnitudes of the
+exchange-rate channel (−0.99\%) and the investment cost-of-capital
+channels (housing-investment growth −0.049\%, business-investment growth
+−0.044\%). The direct consumption rate channel is near-zero under OLS
+calibration (the −0.024\% consumption-growth trough is a
+general-equilibrium income effect, not a direct rate response), a
+striking contrast to earlier Bayesian-regularised results and to DSGE
+models where intertemporal substitution in consumption is typically the
+dominant transmission mechanism. AU's variable-rate mortgages and the
+strong CPI-indexation wage Phillips shape the relative magnitudes of the
 non-consumption channels.
 
 \paragraph{7.2.4 Comparison with the RBA's model
@@ -5435,16 +6322,17 @@ calibration adopted here:
 \end{enumerate}
 
 \textbf{Timing.} RBA models report peak effects ``around one to two
-years'' (Q4--Q8). AU-PAC's output-gap peak sits at Q8 --- at the upper
-end of this range --- and the real-GDP trough also comes at Q8. The peak
-response timing is comparable to MARTIN/DINGO's short-horizon range.
+years'' (Q4--Q8). AU-PAC's output-gap and real-GDP troughs sit at Q11
+--- just beyond the upper end of this range, reflecting the slower hump
+under the SA-data calibration. The peak response timing is broadly
+comparable to MARTIN/DINGO's horizon.
 
 \textbf{Exchange-rate channel weight.} Mulqueeney et al.~(2025, Graphs
 6--7) report that 25--67\% of the GDP response and one-third to
 two-thirds of the inflation response come from the exchange-rate channel
 in MARTIN / DINGO. AU-PAC's UIP channel works in the same direction (AUD
 appreciation on impact) and the magnitude is broadly in line with the
-RBA suite: AUD appreciation peak −0.979\% at Q8. Under the OLS
+RBA suite: AUD appreciation peak −0.99\% at Q8. Under the OLS
 calibration, the exchange-rate channel is the dominant transmission
 mechanism (with near-zero consumption response), making the
 exchange-rate channel weight in AU-PAC even larger proportionally than
@@ -5474,12 +6362,12 @@ consumption is effectively absent --- even more consistent with the
 RBA's finding of a small aggregate cash-flow channel than the earlier
 Bayesian-regularised calibration.
 
-\textbf{Verdict.} AU-PAC's output-gap trough (−0.073\% at Q8) is the
+\textbf{Verdict.} AU-PAC's output-gap trough (−0.059\% at Q11) is the
 smallest peak demand response to a 100 bp tightening among comparable
 Australian models (vs Murphy's −0.30\% and the RBA workhorses' −0.45\%
-to −1.5\% in GDP terms). The real GDP trough (−0.107\% at Q8) is also at
-the conservative end of the suite. The output-gap peak timing (Q8) sits
-inside the MARTIN/DINGO short-horizon range. The smaller AU-PAC peak
+to −1.5\% in GDP terms). The real GDP trough (−0.073\% at Q11) is also
+at the conservative end of the suite. The trough timing (Q11) is at/just
+beyond the MARTIN/DINGO short-horizon range. The smaller AU-PAC peak
 magnitude reflects three factors: PAC adjustment-cost frictions (Tinsley
 1993, FRB/US tradition); the equation-by-equation OLS calibration that
 lets AU data speak without Bayesian regularisation; and the resulting
@@ -5513,17 +6401,18 @@ annualized}\label{monetary-policy-shock-eps_i-100bp-annualized}
 \emph{Figure 6.3: 100bp annualized monetary policy tightening (scale =
 0.25 / σ\_i = 0.25/0.111 ≈ 2.25).}
 
-The exchange rate appreciation (s\_gap −0.979\% at Q8) is the dominant
+The exchange rate appreciation (s\_gap −0.99\% at Q8) is the dominant
 transmission channel under OLS calibration, followed by
-business-investment growth (−0.056\% at Q6) and housing-investment
-growth (−0.027\% at Q4). Consumption growth is near-zero (−0.004\% at
-Q7), reflecting the L2 OLS finding that AU data shows no significant
-direct interest-rate sensitivity in consumption (β₂ = −0.003, β₃ =
-−0.014). Employment growth declines −0.007\% at Q7. The ln\_IH level
-continues to decline through the 40-quarter horizon (long-tailed
-housing-investment response, consistent with AU's outsized construction
-cycle). Real GDP (\(\ln Q\)) troughs at \textbf{−0.107\% at Q8}, and the
-output gap troughs at \textbf{−0.073\% at Q8}.
+housing-investment growth (−0.049\% at Q4) and business-investment
+growth (−0.044\% at Q9). Consumption growth troughs at −0.024\% at Q2
+--- the direct rate channel remains near-zero (β₂ = −0.003, β₃ = −0.014;
+no significant direct interest-rate sensitivity in AU consumption), so
+this is the general-equilibrium income effect. Employment growth
+declines −0.009\% at Q5. The ln\_IH level continues to decline through
+the 40-quarter horizon (long-tailed housing-investment response,
+consistent with AU's outsized construction cycle). Real GDP (\(\ln Q\))
+troughs at \textbf{−0.073\% at Q11}, and the output gap troughs at
+\textbf{−0.059\% at Q11}.
 
 \paragraph{7.3.2 Foreign demand shock (eps\_q\_us) --- 1pp US output
 gap}\label{foreign-demand-shock-eps_q_us-1pp-us-output-gap}
@@ -5971,18 +6860,18 @@ of this version of the paper.}
   \textbf{Monetary policy transmits primarily through the exchange rate
   and business investment, not consumption.} Under the
   equation-by-equation OLS calibration (wp1044 methodology), a 100 bp
-  annualised cash-rate tightening produces a real-GDP trough of −0.107\%
-  at Q8, an output-gap trough of −0.073\% at Q8, a CPI-inflation fall of
-  −0.038 pp y/y at Q9, an AUD appreciation of 0.979\% at Q8 via the
-  forward-NPV UIP, and a 10-year yield rise of 0.102 pp on impact via
-  the term-structure NPV. The headline finding is that the consumption
-  channel is near-zero (−0.004\% at Q7): OLS on AU data gives rate-gap
-  sensitivity β₂ = −0.003 and impact-rate sensitivity β₃ = −0.014, both
-  insignificantly different from zero. Monetary transmission therefore
-  operates through the exchange-rate channel (−0.979\%), business
-  investment (−0.056\%), and housing investment (−0.027\%), with AU's
-  variable-rate mortgage market and strong CPI-indexation wage Phillips
-  shaping the relative magnitudes of these non-consumption channels.
+  annualised cash-rate tightening produces a real-GDP trough of −0.073\%
+  at Q11, an output-gap trough of −0.059\% at Q11, a CPI-inflation fall
+  of −0.004 pp y/y at Q3, an AUD appreciation of 0.99\% at Q8 via the
+  forward-NPV UIP, and a 10-year yield rise of 0.105 pp on impact via
+  the term-structure NPV. The direct consumption rate channel is
+  near-zero (OLS on AU data gives rate-gap sensitivity β₂ = −0.003 and
+  impact-rate sensitivity β₃ = −0.014, both insignificantly different
+  from zero). Monetary transmission therefore operates through the
+  exchange-rate channel (−0.99\%), housing investment (−0.049\%), and
+  business investment (−0.044\%), with AU's variable-rate mortgage
+  market and strong CPI-indexation wage Phillips shaping the relative
+  magnitudes of these channels.
 \item
   \textbf{Higher CES substitution elasticity dampens, not amplifies, the
   IRF.} The FR-BDF 2026 recalibration raised σ from 0.34 to 0.54 ---
@@ -6004,8 +6893,8 @@ of this version of the paper.}
 
 \textbf{Comparison with the RBA model suite.} §7.2.4 benchmarks AU-PAC
 against the four Australian models surveyed in Mulqueeney, Ballantyne
-and Hambur (2025). AU-PAC's output-gap trough (−0.073\% at Q8) and
-real-GDP trough (−0.107\% at Q8) are at the low end of the RBA suite in
+and Hambur (2025). AU-PAC's output-gap trough (−0.059\% at Q11) and
+real-GDP trough (−0.073\% at Q11) are at the low end of the RBA suite in
 demand-response terms. The conservative response reflects three
 features: PAC adjustment-cost frictions that distinguish FRB/US-style
 models from VAR / DSGE alternatives; the FR-BDF 2026 CES calibration
@@ -6581,7 +7470,7 @@ Employment & {[}168, 169, 170, 171{]} & 0.446 & 0.084 & 1.49x \\
 Detailed per-state h-vector element weights require extraction from
 \texttt{M\_.params} at the h-param indices. The enriched var\_model
 (12x12) produces h-vectors where only the target variable element is
-non-zero in the current Dynare 6.5 implementation (the companion matrix
+non-zero in the current Dynare 7.0 implementation (the companion matrix
 concentrates weight on the target state). Element-level decomposition is
 deferred to future work.
 
@@ -6640,7 +7529,7 @@ Two approaches are reported below.
 command --- not
 run}{F.1 Dynare identification command --- not run}}\label{f.1-dynare-identification-command-not-run}
 
-Dynare 6.5's \texttt{identification} command requires analytic
+Dynare 7.0's \texttt{identification} command requires analytic
 derivation of the model, which is \textbf{incompatible with
 \texttt{diffuse\_filter}} --- the filter setting used during estimation
 to handle the model's unit-root level accumulators (\texttt{ln\_Q},
