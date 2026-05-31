@@ -894,7 +894,7 @@ beta_pm_ne =  0.09;     // AU OLS gave -8.59 (wrong sign) — reverted to wp1044
 rho_pm_e   = 0.10;      // less persistent (energy prices move fast)
 alpha_pm_e = 0.05;      // small VA-price passthrough (energy is a global price)
 beta_pm_e_com = 0.80;   // strong commodity-price passthrough (dominant driver)
-rho_lh = 0.97;
+rho_lh = 0.9133;   // Wave 2/3 AU OLS: mortgage-rate smoothing, constrained model form (i_lh-i10)=rho*(i_lh(-1)-i10)+c on RBA F5 FILRHLBVS, N=127, t=34.9, R2=0.91 (was 0.97 cal; implied spread_lh 0.517 vs 0.4). See data/au_mortgage_rate_q.csv, estimate_financial_persistence.m
 spread_lh = 0.4;
 rho_ph = 0.6;
 alpha_ph_y = 0.15;

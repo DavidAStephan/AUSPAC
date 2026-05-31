@@ -47,5 +47,25 @@ w('  resid_sd    = %.4f    R2 = %.3f\n', resid_sd, R2);
 w('\nWRITEBACK: rho_tp = %.4f (dynamic coef, AU-identified). tp_ss LEFT calibrated\n', rho_tp);
 w('  (the term premium is latent vs the observable spread; the sample-mean spread\n');
 w('   %.3f is recorded for a future steady-state recalibration of tp_ss).\n', tp_ss_implied);
+
+%% [rho_lh] mortgage-rate smoothing  i_lh = rho_lh*i_lh(-1) + (1-rho_lh)*(i_10y + spread_lh) + eps_lh
+% AU mortgage rate: RBA F5 series FILRHLBVS (Housing loans; Banks; Variable; Standard),
+% monthly -> quarterly mean, prebuilt in data/au_mortgage_rate_q.csv (annual %).
+% Estimated in the constrained model form: (i_lh - i10)_t = rho_lh*(i_lh_{t-1} - i10_t) + c.
+MR = readtable(fullfile(root,'data','au_mortgage_rate_q.csv'));
+ilh = MR.mortgage_rate_ann_pct/4;                          % -> quarterly model units
+i10q = ext.au_i10/4;                                       % 10y annual% -> quarterly
+nlh = min(numel(ilh), numel(i10q)); ilh = ilh(end-nlh+1:end); i10q = i10q(end-nlh+1:end);
+yL = ilh(2:end) - i10q(2:end);  xL = ilh(1:end-1) - i10q(2:end);
+XL = [ones(numel(yL),1) xL]; bL = XL\yL; rL = yL-XL*bL; nL=numel(yL);
+seL = sqrt(diag((rL'*rL/(nL-2))*inv(XL'*XL)));
+rho_lh = bL(2); spread_lh_impl = bL(1)/(1-rho_lh);
+R2L = 1-(rL'*rL)/sum((yL-mean(yL)).^2);
+w('\n[i_lh] mortgage-rate smoothing  (constrained model form)\n');
+w('  rho_lh      = %.4f   (se %.4f, t=%.1f)   [model calibrated: 0.97]\n', rho_lh, seL(2), rho_lh/seL(2));
+w('  spread_lh(impl) = %.4f q  (model calibrated: 0.40)\n', spread_lh_impl);
+w('  R2 = %.3f, N = %d\n', R2L, nL);
+w('WRITEBACK: rho_lh = %.4f (dynamic coef). spread_lh LEFT calibrated (SS level).\n', rho_lh);
+
 fclose(fid);
-fprintf('Wrote results_financial.txt: rho_tp = %.4f (t=%.1f, R2=%.3f, N=%d)\n', rho_tp, tstat, R2, n);
+fprintf('Wrote results_financial.txt: rho_tp = %.4f, rho_lh = %.4f\n', rho_tp, rho_lh);
