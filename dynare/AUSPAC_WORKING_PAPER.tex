@@ -271,11 +271,14 @@ polynomial, COVID/period dummies --- using an iterative-OLS pipeline
 against the per-block \texttt{data/pac\_blocks/results\_*.mat}
 artefacts. Four of the five blocks fit the wp1044 structural form on AU
 data with R² in {[}0.41, 0.81{]} and structurally interpretable
-coefficients; the \textbf{consumption block delivers the headline
-finding β₀ = 0.27 vs wp1044's β₀ = 0.29 --- essentially identical ECM
-speed on Australian data}. The fifth block, business investment,
-structurally rejects the wp1044 PAC restriction: across 11 specification
-variants explored in Phase L2 P1c (documented in
+coefficients; the \textbf{consumption block's β₀ = 0.23 is the closest
+of any block to wp1044's β₀ = 0.29 --- the one block where AU's ECM
+speed is comparable to France's rather than several times faster}
+(re-estimated 2026-05-31 on the deterministically-reproducible
+SA-corrected data layer, §6.14; was 0.27 on the pre-SA layer). The fifth
+block, business investment, structurally rejects the wp1044 PAC
+restriction: across 11 specification variants explored in Phase L2 P1c
+(documented in
 \href{../PAC_BI_AU_EXPLORATION.md}{\texttt{PAC\_BI\_AU\_EXPLORATION.md}}),
 the free-estimated PV(Δq̂) coefficient comes out at −5.0 instead of the
 structural +1, and every strict-PAC variant gives R² \textless{} 0 on
@@ -520,18 +523,19 @@ for business inv), and the exact χ from the depth-m characteristic
 polynomial.
 
 Four of five blocks fit the wp1044 structural form on AU data (R² in
-{[}0.41, 0.81{]}), with the \textbf{consumption block's β₀ = 0.27 ≈
-wp1044's 0.29 the single closest cross-country agreement among all 22
-coefficients estimated}. The exception is business investment: across 11
-specification variants tested in Phase L2 P1c (baseline strict PAC; AU
-dummies; pre-residualised dummies; PV regressors free; combined PV at
-coef=+1; terms-of-trade + piecewise trends; commodity-augmented target;
-wp736 2019 simpler form; depth-2 PAC with simplified regressors; etc.
---- full table in Appendix G), every strict-PAC variant produces R²
-\textless{} 0 on raw \texttt{dln\_ib}, and when PV terms are
-free-estimated the PV(Δq̂) coefficient comes out at −5.03 instead of the
-structural +1. \textbf{AU business investment data structurally rejects
-the wp1044 PAC restriction.}
+{[}0.41, 0.81{]}), with the \textbf{consumption block's β₀ = 0.23 the
+closest to wp1044's 0.29 of any block --- the only one where AU's ECM
+speed is comparable to France's rather than 4--8× faster} (§6.14
+re-estimate on the SA-corrected layer; 0.27 pre-SA). The exception is
+business investment: across 11 specification variants tested in Phase L2
+P1c (baseline strict PAC; AU dummies; pre-residualised dummies; PV
+regressors free; combined PV at coef=+1; terms-of-trade + piecewise
+trends; commodity-augmented target; wp736 2019 simpler form; depth-2 PAC
+with simplified regressors; etc. --- full table in Appendix G), every
+strict-PAC variant produces R² \textless{} 0 on raw \texttt{dln\_ib},
+and when PV terms are free-estimated the PV(Δq̂) coefficient comes out at
+−5.03 instead of the structural +1. \textbf{AU business investment data
+structurally rejects the wp1044 PAC restriction.}
 
 \subsubsection{The hybrid calibration in one
 paragraph}\label{the-hybrid-calibration-in-one-paragraph}
@@ -2165,11 +2169,15 @@ anchor.
 Phase L2 wp1044-faithful iterative OLS vs
 FR-BDF}\label{table-4.5.2-consumption-short-run-pac-coefficients-phase-l2-wp1044-faithful-iterative-ols-vs-fr-bdf}
 
-\textbf{Headline finding}: AU's consumption-block ECM speed β₀ = 0.266
-is essentially identical to FR-BDF's β₀ = 0.29 --- the single closest
-cross-country agreement among all 22 PAC coefficients tested in Phase
-L2. Consumption is also the only block where AU's ECM speed is
-\textbf{not} 4--8× faster than France's (cf.~§5.1).
+\textbf{Headline finding}: AU's consumption-block ECM speed β₀ = 0.23 is
+broadly in line with FR-BDF's β₀ = 0.29 --- the closest of any block to
+its French counterpart, and the only block where AU's ECM speed is
+\textbf{not} 4--8× faster than France's (cf.~§5.1). (β₀ = 0.23 is the
+2026-05-31 re-estimate on the SA-corrected,
+deterministically-reproducible data layer; the pre-SA layer gave 0.266.
+The Δc-lag coefficient is clamped at its lower bound in both, a
+pre-existing specification feature, so the shift reflects the SA-data
+correction, not the clamp.)
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -2195,8 +2203,9 @@ Bayesian posterior mean (hybrid MCMC, 20k×2)
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-β₀ (EC speed on \texttt{c*\ −\ c}) & \textbf{0.29} & \textbf{0.266} (SE
-0.079, t=3.27) & \textbf{0.0519} & {[}0.0215, 0.0805{]} \\
+β₀ (EC speed on \texttt{c*\ −\ c}) & \textbf{0.29} & \textbf{0.2307} (SE
+0.078, t=2.98) --- SA re-estimate; was 0.266 pre-SA & \textbf{0.0519} &
+{[}0.0215, 0.0805{]} \\
 β₁ (Δc lag 1) & 0.17 & −0.159 (SE 0.087, t=−1.83) hit clamp &
 \textbf{0.0397} & {[}0.0051, 0.0731{]} \\
 β₂ (rate gap) & --- & --- & \textbf{−0.5796} & {[}−0.8848, −0.2866{]} \\
@@ -2224,17 +2233,21 @@ Significant COVID dummies & --- & d\_20Q2=−13.6 (t=−13.7), d\_20Q4=+2.81
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{β₀ match is exact.} AU consumption mean-reverts to its
-  permanent-income target at essentially the same speed as France (β₀ =
-  0.266 vs 0.29 --- within 8\% of each other). This is the single
-  strongest cross-country empirical agreement in the Phase L2
-  replication, and it validates the wp1044 PAC framework specifically
-  for the consumption block on Australian data. The structural mechanism
-  --- agents minimising a quadratic cost function around a
-  permanent-income target plus polynomial adjustment costs --- fits AU
-  data at the same speed it fits French data. The consumption channel is
-  therefore the cleanest cross-country empirical validation of the
-  wp1044 framework in this replication.
+  \textbf{β₀ is comparable across AU and France.} AU consumption
+  mean-reverts to its permanent-income target at a broadly similar speed
+  to France (β₀ = 0.23 vs 0.29 on the SA-corrected layer; was 0.266
+  pre-SA --- both within \textasciitilde0.06 of the French value). Of
+  the five PAC blocks this is the closest cross-country agreement and
+  the only block where AU's ECM speed is \textbf{not} several times
+  faster than France's, validating the wp1044 PAC framework for the
+  consumption block specifically. The structural mechanism --- agents
+  minimising a quadratic cost function around a permanent-income target
+  plus polynomial adjustment costs --- fits AU data at a comparable
+  speed to French data. \emph{(The other entries in the table above are
+  from the pre-SA estimation snapshot and the hybrid-MCMC posterior;
+  only β₀ has been refreshed to the SA re-estimate --- a full
+  re-tabulation of the consumption sub-coefficients on the SA layer is
+  pending.)}
 \item
   \textbf{α₁ rescaled match (second-best agreement).} The wp1044
   reduced-form forward-real-rate effect is α₁·χ. On wp1044's FR estimate
@@ -4006,7 +4019,7 @@ The PAC error-correction coefficient β₀ governs how fast each variable
 mean-reverts to its long-run target. The Phase L2 estimates show a
 striking cross-block pattern on AU data: \textbf{β₀ is 4--8× wp1044's
 French value in four of five blocks}, with the consumption block (β₀ AU
-= 0.27 vs FR = 0.29) as the sole exception.
+= 0.23 vs FR = 0.29) as the sole exception.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -4033,8 +4046,8 @@ Notes
 \endlastfoot
 VA-price (§4.3.2) & 0.258 & 0.05 & \textbf{5.2×} & Eq 16 \\
 Employment (§4.4.4) & 0.314 & 0.07 & \textbf{4.5×} & Eq 30, depth 3 \\
-Consumption (§4.5.2) & 0.266 & 0.29 & 0.92× & \textbf{Exception ---
-wp1044 match} \\
+Consumption (§4.5.2) & 0.23 & 0.29 & 0.79× & \textbf{Exception ---
+comparable to wp1044} \\
 Housing inv (§4.7) & 0.496 & 0.12 & \textbf{4.1×} & Eq 37 \\
 Business inv (§4.6.2) & (wp1044 imported) & 0.096 & n/a & Option 1
 hybrid \\
@@ -5178,14 +5191,16 @@ for the PV term; neither estimation input is affected. A full re-run of
 the 5-block pipeline (\texttt{data/run\_all\_l2\_ols.m}) confirms this:
 VA-price reproduces \texttt{b0\_pQ\ =\ 0.2581\ /\ b1\_pQ\ =\ 0.3039}
 \emph{exactly} (committed 0.2580 / 0.3039), and employment is within
-rounding. (Two blocks show a modest \emph{estimator-evolution} drift
-unrelated to \texttt{yhat\_au} --- consumption \texttt{b0} 0.27→0.23 and
-housing \texttt{b0} 0.50→0.60, at identical R²/N --- left as a
-deliberate re-estimation item, flagged because the consumption β₀ is a
-headline figure. Separately, the χ verification
-(\texttt{dynare/verify\_pac\_chi\_pv.m}) found the employment block's
-estimation-side χ inconsistent with its own characteristic polynomial;
-the production \texttt{h\_pac\_n} is unaffected.)
+rounding. (Two blocks show a drift unrelated to \texttt{yhat\_au} ---
+consumption \texttt{b0} 0.27→0.23 and housing \texttt{b0} 0.50→0.60, at
+identical R²/N. This is the SA-data re-estimation documented in §6.14's
+``Full re-estimation check''; it was \textbf{written back 2026-05-31}
+after confirming the data layer regenerates deterministically.
+Separately, the χ verification (\texttt{dynare/verify\_pac\_chi\_pv.m})
+found the employment block's estimation-side χ was computed by an
+\emph{approximate} depth-1 solver; fixing it to the exact depth-m solver
+(§6.9) raised R² 0.82→0.86 and moved \texttt{b0\_n} 0.31→0.48, also
+written back.)
 
 \subsubsection{6.9 PAC policy-function regeneration
 (2026-05-28)}\label{pac-policy-function-regeneration-2026-05-28}
@@ -5906,21 +5921,28 @@ Original / Seasonally Adjusted / Trend blocks sit in different columns
 and silently mis-selecting Trend injects spurious persistence (§6.13) or
 Original injects seasonality (§6.14).
 
-\textbf{Full re-estimation check.} With the data layer rebuilt on the
-corrected SA series, all PAC blocks were re-estimated as a check. The
-VA-price block is identical (its inputs were already SA);
-consumption/employment/housing shift moderately because the rebuilt
-\texttt{l2\_data\_layer} carries the SA unemployment/employment through
-\texttt{u\_hat}/\texttt{n\_hat\_star} (e.g.~housing \texttt{b0\_ih}
-0.50→0.60, consumption \texttt{b0\_c} 0.27→0.23). These re-estimates
-were \textbf{not written back}: the base \texttt{dataset.csv} had to be
-recovered from git history (it was removed in a repo cleanup) and a
-consumption-clamp difference in the re-run confounds the SA-fix effect
-with estimation-environment differences, so the existing L2-environment
-PAC estimates are retained pending a clean re-estimation. The headline
-IRFs (Table 6.3) and the oscillation cure are unaffected by this
-decision --- they are driven by the trade block (§6.13, cleanly
-re-estimated) and the wage Phillips (§6.14, re-estimated).
+\textbf{Full re-estimation check (resolved, written back 2026-05-31).}
+With the data layer rebuilt on the corrected SA series, all PAC blocks
+were re-estimated. The VA-price block is identical (its inputs were
+already SA, reproducing \texttt{b0\_pQ\ =\ 0.2581} to 4 d.p.);
+consumption, employment, and housing shift moderately because the
+rebuilt \texttt{l2\_data\_layer} carries the SA unemployment/employment
+through \texttt{u\_hat}/\texttt{n\_hat\_star} (housing \texttt{b0\_ih}
+0.50→0.60, consumption \texttt{b0\_c} 0.27→0.23, employment
+\texttt{b0\_n} 0.31→0.48 --- the latter also reflecting the exact-χ fix
+of §6.9). These re-estimates were \textbf{initially deferred} (the base
+\texttt{dataset.csv} had been recovered from git history, and a
+consumption Δc-lag clamp seemed to confound the SA effect). The deferral
+was \textbf{reversed} after (i) confirming the data layer regenerates
+\textbf{deterministically} from \texttt{dataset.csv} (max-diff 0 across
+\texttt{c\_star}/\texttt{piQ}/\texttt{n\_hat\_star\_S}), which resolves
+the provenance concern, and (ii) recognising that the Δc-lag clamp is
+constant across the pre-SA and SA runs, so the shift reflects the
+SA-data correction rather than the clamp. The SA-corrected estimates are
+now the production values, consistent with the rest of the model using
+SA data. The headline IRFs (Table 6.3) deepen slightly (real-GDP trough
+to ≈ −0.14\% from the faster housing/employment ECM speeds) and remain
+clean hump shapes reverting at Q200.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -6789,19 +6811,20 @@ of this version of the paper.}
   assumption that Australia and France share a common agent-objective
   architecture for those four blocks.
 \item
-  \textbf{Consumption ECM speed is essentially identical across AU and
-  France} (β₀ AU = 0.27 vs FR = 0.29 --- within 8\%). Among the 22
-  coefficients estimated in Phase L2, this is the single closest
-  cross-country agreement. The match is structurally meaningful:
-  consumption is the block where wp1044's permanent-income/PAC framework
-  most directly applies (homogeneous-agent forward-looking consumers
-  facing similar financial structure), and the AU L2 implementation
-  builds the long-run target \texttt{c*} from the same Eq 33
-  specification wp1044 uses on French data. The agreement validates the
-  FR-BDF permanent-income channel for Australian consumption
-  specifically (§4.5.2, §5.2). For comparison, AU's ECM speeds in the
-  other four blocks are 4--8× wp1044's French values (§5.1) --- the
-  consumption block is the exception that proves the rule.
+  \textbf{Consumption ECM speed is comparable across AU and France} (β₀
+  AU = 0.23 vs FR = 0.29 --- within \textasciitilde0.06). Of the blocks
+  estimated in Phase L2, this is the closest cross-country agreement and
+  the only block where AU's ECM speed is not several times faster than
+  France's. The match is structurally meaningful: consumption is the
+  block where wp1044's permanent-income/PAC framework most directly
+  applies (homogeneous-agent forward-looking consumers facing similar
+  financial structure), and the AU L2 implementation builds the long-run
+  target \texttt{c*} from the same Eq 33 specification wp1044 uses on
+  French data. The agreement validates the FR-BDF permanent-income
+  channel for Australian consumption specifically (§4.5.2, §5.2). For
+  comparison, AU's ECM speeds in the other four blocks are 4--8×
+  wp1044's French values (§5.1) --- the consumption block is the
+  exception that proves the rule.
 \item
   \textbf{AU business investment structurally rejects the wp1044 PAC
   restriction; the paper adopts the Option 1 hybrid calibration}. Eleven

@@ -1952,10 +1952,10 @@ b1_pQ       = 0.3039;   // piQ lag (L2 OLS; wp1044: 0.20)
 b2_pQ       = -0.0760;  // yhat_au contemp (L2 OLS; wp1044: 0.09; AU wrong-signed, insig)
 
 // --- Consumption PAC (L2 OLS re-run 2026-05-28, wp1044 Eq 35, N=103, R²=0.81) ---
-b0_c        = 0.2661;   // ECM speed on c*-c (L2 OLS; wp1044: 0.29 — headline match)
-b1_c        = 0.0100;   // Δc lag (L2 OLS, hit clamp; wp1044: 0.17)
-b2_c        = -0.0137;  // impact Δr_LH (L2 OLS β₃; wp1044: -1.07)
-b3_c        = -0.0005;  // HtM level-diff (L2 OLS β₂; wp1044: 0.32; AU not identified)
+b0_c        = 0.2307;   // ECM speed on c*-c (L2 OLS reproducible re-run 2026-05-31; was 0.2661 pre-SA-data-layer; wp1044: 0.29 — still broadly in line)
+b1_c        = 0.0100;   // Δc lag (L2 OLS, hit clamp; wp1044: 0.17) — unchanged
+b2_c        = -0.0071;  // impact Δr_LH (L2 OLS β₃; was -0.0137; wp1044: -1.07)
+b3_c        =  0.0265;  // HtM level-diff (L2 OLS β₂; was -0.0005; wp1044: 0.32; AU not identified)
 
 // --- BI PAC (wp1044 Table 3.5.13, Option 1 — unchanged) ---
 b0_ib       = 0.0181;   // overridden by wp1044 import below
@@ -1963,9 +1963,9 @@ b1_ib       = 0.0809;
 b3_ib       = 0.3120;
 
 // --- Housing inv PAC (L2 OLS re-run 2026-05-28, wp1044 Eq 37, N=70, R²=0.50) ---
-b0_ih       = 0.4956;   // ECM speed on I*_H/I_H (L2 OLS; wp1044: 0.12)
-b1_ih       = 0.2934;   // Δlog I_H lag (L2 OLS; wp1044: 0.18)
-b3_ih       = -0.0728;  // contemp Δy-ỹ (L2 OLS; wp1044: 0.50; AU wrong-signed, insig)
+b0_ih       = 0.5996;   // ECM speed on I*_H/I_H (L2 OLS reproducible re-run 2026-05-31; was 0.4956 pre-rebuild; wp1044: 0.12)
+b1_ih       = 0.3539;   // Δlog I_H lag (L2 OLS; was 0.2934; wp1044: 0.18)
+b3_ih       = -0.0723;  // contemp Δy-ỹ (L2 OLS; was -0.0728; wp1044: 0.50; AU wrong-signed, insig)
 
 // --- Employment PAC (L2 OLS, wp1044 Eq 30, depth 3, N=124, R²=0.81) ---
 b0_n        = 0.4798;   // ECM speed on n*_S-n_S (L2 OLS, EXACT depth-3 chi=0.368, t=12.8, R2=0.86; was 0.3145 under approx chi=0.21; wp1044: 0.07)
