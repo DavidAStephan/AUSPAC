@@ -74,6 +74,20 @@ end
 fprintf('Import IPD: %d obs loaded, %d valid, std=%.3f\n', ...
         numel(pi_m_full), sum(~isnan(pi_m_aligned)), std(pi_m_aligned,'omitnan'));
 
+%% Load AU commodity-price change (RBA I02) for the oil/commodity passthrough channel
+% Wave 2: dln_pcom IS available in trade_price_data.mat (built from RBA I02), so the
+% gamma_oil channel can now be AU-estimated rather than left at the wp1044 calibration.
+TP = load(fullfile(projectdir,'data','trade_price_data.mat'));
+dln_pcom_full = TP.dln_pcom(:);
+dln_pcom_full = dln_pcom_full(~isnan(dln_pcom_full));
+if numel(dln_pcom_full) >= T_est
+    dln_pcom_aligned = dln_pcom_full(end-T_est+1:end);   % end-align to sample end (as for pi_m)
+else
+    dln_pcom_aligned = [NaN(T_est-numel(dln_pcom_full),1); dln_pcom_full];
+end
+fprintf('dln_pcom (RBA I02): %d obs, aligned %d, std=%.3f\n', ...
+        numel(dln_pcom_full), sum(~isnan(dln_pcom_aligned)), std(dln_pcom_aligned,'omitnan'));
+
 %% Construct regressors
 pi_au_gap     = pi_au_gap_E;           % already gap form
 piQ_gap       = piQ - pibar_au;        % VA-price inflation minus CPI trend
@@ -87,11 +101,12 @@ piQ_gap_lag   = [NaN; piQ_gap(1:end-1)];
 % LHS
 y = pi_au_gap;
 
-% RHS matrix: [const, pi_au_gap(-1), yhat_au(-1), piQ_gap, pi_m_gap]
+% RHS matrix: [const, pi_au_gap(-1), yhat_au(-1), piQ_gap, pi_m_gap, dln_pcom]
 % Note: alpha_pc_lag dropped due to severe multicollinearity with pi_m_gap
 % (corr > 0.99). wp1044 alpha_pc_lag = 0.023 is tiny relative to alpha_pc=0.385,
 % so dropping is a minor specification choice; alpha_pc_lag will be set to 0.
-X = [ones(T_est,1), pi_au_gap_lag, yhat_au_lag, piQ_gap, pi_m_gap];
+% Wave 2: dln_pcom (contemporaneous commodity-price change) added to estimate gamma_oil.
+X = [ones(T_est,1), pi_au_gap_lag, yhat_au_lag, piQ_gap, pi_m_gap, dln_pcom_aligned];
 
 % Drop NaNs
 valid = ~any(isnan([X, y]), 2);
@@ -101,7 +116,8 @@ fprintf('CPI Phillips OLS: %d obs valid out of %d\n', sum(valid), T_est);
 [b, se, tstat, R2, rss, N] = ols_with_se(X(valid,:), y(valid));
 
 names = {'(intercept)', 'lambda_pi (pi_au_gap lag)', 'kappa_pi (yhat_au lag)', ...
-         'alpha_pc (piQ_gap contemp)', 'beta_pc_m (pi_m_gap contemp)'};
+         'alpha_pc (piQ_gap contemp)', 'beta_pc_m (pi_m_gap contemp)', ...
+         'gamma_oil (dln_pcom contemp)'};
 
 fprintf('\nCPI Phillips single-equation OLS (wp1044 Eq 51 / FR-BDF Eq 80)\n');
 fprintf('Generated %s\n\n', datetime('now'));
@@ -115,8 +131,8 @@ fprintf('  lambda_pi    = 0.4018 (wp1044 E-SAT)\n');
 fprintf('  kappa_pi     = 0.0979 (wp1044 E-SAT)\n');
 fprintf('  alpha_pc     = 0.3850 (wp1044 beta_1)\n');
 fprintf('  alpha_pc_lag = 0.0230 (wp1044 beta_0 * correction)\n');
-fprintf('\nNote: beta_pc_m, gamma_oil, b_ECM_pc remain wp1044-calibrated\n');
-fprintf('      (no AU import-deflator / commodity / p_C_star series in pipeline).\n');
+fprintf('\nNote: gamma_oil now AU-estimated (dln_pcom). b_ECM_pc remains wp1044-calibrated\n');
+fprintf('      (still no AU p_C_star series for the import-price ECM term).\n');
 
 %% Save .mat + .txt
 out.b     = b;
@@ -137,9 +153,9 @@ for k = 1:numel(names)
     fprintf(fid, '%-32s  %10.4f  %10.4f  %8.2f\n', names{k}, b(k), se(k), tstat(k));
 end
 fprintf(fid, '\nR^2 = %.4f, N = %d\n', R2, N);
-fprintf(fid, '\nMethodology: 4-coef single-equation OLS.\n');
+fprintf(fid, '\nMethodology: single-equation OLS with AU commodity channel (Wave 2).\n');
 fprintf(fid, 'Sample: estimation_data.mat (1993Q3 onward, 122 obs).\n');
-fprintf(fid, 'beta_pc_m, gamma_oil, b_ECM_pc kept at wp1044 calibration.\n');
+fprintf(fid, 'gamma_oil now AU-estimated (dln_pcom, RBA I02). b_ECM_pc kept at wp1044 calibration.\n');
 fclose(fid);
 
 fprintf('\nWrote results_cpi_phillips.mat + .txt\n');

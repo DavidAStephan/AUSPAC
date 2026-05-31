@@ -2,6 +2,11 @@
 
 Documented as part of the Phase L2-A data layer survey (2026-05-26).
 
+> **UPDATE (2026-05-30, Wave 2): two of the gaps below were already closed in `l2_data_layer_v2.mat` — the caveats are stale.**
+> - **BI exports**: `l2_data_layer_v2.mat` contains `exports`, `df_full` (= c + ih + exports), and a wacc-based `r_KB`. The BI estimator uses `df_full`. Re-tested with the complete `df` + wacc `r_KB`, AU business investment **still rejects** the PAC restriction (R²≈0.09, β₃ insignificant, no valid χ root) — so the rejection is robust and the wp1044 Option-1 calibration is justified, **not** a missing-data artifact.
+> - **Housing price-spread**: `l2_data_layer_v2.mat` contains `p_SH` (ABS 6416 RPPI) and `p_IH` (ABS 5206 IPD). The housing estimator **does** build and estimate the `(p_SH − p_IH)` spread term; it is insignificant/wrong-signed on AU data (β₃ ≈ −2.8, t<1), consistent with the production model's `b_ph_ih = 0`.
+> - **Commodity→CPI**: `dln_pcom` (RBA I02) is in `trade_price_data.mat`; the CPI Phillips now estimates `gamma_oil` = −0.0147 (insig, wrong-signed) — the flat-AU-Phillips finding is robust to the commodity channel.
+
 ## Missing AU observables
 
 ### Exports / Imports

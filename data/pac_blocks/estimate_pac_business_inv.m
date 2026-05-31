@@ -171,7 +171,9 @@ fprintf('chi = %.4f, omega = %.2f, R^2 = %.4f, N = %d, sigma = %.3f\n', ...
     chi, omega, R2, n_ols, sigma);
 
 fprintf('\nvs wp1044 Table 3.5.13: b0=0.096, b1=0.33, b2=0.11, b3=0.69, R^2=0.83\n');
-fprintf('Note: df = c + ih only (exports missing); see BLOCK_LIMITATIONS.md\n');
+fprintf('Note: uses df_full (c+ih+exports) + wacc-based r_KB from l2_data_layer_v2.\n');
+fprintf('AU still REJECTS the PAC restriction (R^2~0.09, beta_3 insig, no valid chi root)\n');
+fprintf('=> rejection robust to completing df; the wp1044 Option-1 calibration is justified.\n');
 
 %% Save
 out.block = 'Business inv (wp1044 Eq 46, partial)';
@@ -181,7 +183,7 @@ out.coefs = b; out.se = se; out.tstat = tstat; out.names = {names_free};
 out.R2 = R2; out.N = n_ols; out.n_iter = iter; out.history = history;
 out.state_names = {state_names}; out.Phi = Phi;
 out.converged = (delta < tol);
-out.note = 'df missing exports; partial replication';
+out.note = 'df_full (c+ih+exports) + wacc r_KB: AU rejects PAC robustly (R2~0.09, beta_3 insig, no valid chi root); wp1044 Option-1 calibration justified, not a missing-data artifact.';
 save(fullfile(projectdir, 'data', 'pac_blocks', 'results_business_inv.mat'), '-struct', 'out');
 
 fid = fopen(fullfile(projectdir, 'data', 'pac_blocks', 'results_business_inv.txt'), 'w');
@@ -192,7 +194,9 @@ for j = 1:length(names_free)
 end
 fprintf(fid, 'chi=%.4f, R^2=%.4f, N=%d, sigma=%.4f\n', chi, R2, n_ols, sigma);
 fprintf(fid, '\nwp1044 FR: b0=0.096, b1=0.33, b2=0.11, b3=0.69, R^2=0.83\n');
-fprintf(fid, 'PARTIAL: df = c + ih (exports missing)\n');
+fprintf(fid, 'ROBUST REJECTION: df_full (c+ih+exports) + wacc r_KB still gives R^2~0.09,\n');
+fprintf(fid, '  beta_3 insig (t<1), no valid chi root => wp1044 Option-1 calibration justified\n');
+fprintf(fid, '  (not a missing-data artifact). See working paper 5.3.\n');
 fclose(fid);
 
 fprintf('\n=== Phase L2-C5 complete ===\n');

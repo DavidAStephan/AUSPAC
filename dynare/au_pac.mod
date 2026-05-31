@@ -1964,7 +1964,7 @@ a_pQ_w       =  0.4367;  // wage→piQ_hat aux (AU OLS from Phase U) — unchang
 alpha_pc_lag =  0;       // dropped: corr(piQ_gap_lag, pi_m_gap) = 0.9998 (was 0.023)
 beta_pc_m    = -0.0042;  // import→CPI passthrough (AU OLS; was wp1044 0.10)
 b_ECM_pc     =  0.0700;  // ECM speed (wp1044; no AU p_C_star series yet)
-gamma_oil    =  0.03;    // (wp1044; no AU dln_pcom regressor in this OLS) — unchanged
+gamma_oil    = -0.0147;  // commodity→CPI (AU OLS: dln_pcom in CPI Phillips, t=-1.61 insig + wrong-signed; was wp1044 0.03). Flat-AU-Phillips robust to commodity passthrough. See results_cpi_phillips.txt
 b_PAC_c      =  1.4663;  // PAC growth-neutrality (L2 OLS re-run β_PAC)
 
 // ====================================================================

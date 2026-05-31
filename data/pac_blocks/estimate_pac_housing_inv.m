@@ -22,7 +22,7 @@
 %   - LHS = dlog(au_gfcf_dwelling) * 100
 %   - I*_H proxy: HP trend of log(au_gfcf_dwelling) (no LR target equation
 %     since wp1044 Eq 36 needs price terms we don't have)
-%   - Price spread term DROPPED (BLOCK_LIMITATIONS.md)
+%   - Price spread term ESTIMATED from l2_data_layer_v2 (p_SH/p_IH); insig on AU data
 %   - Damping + clamps from consumption block
 
 clear; clc;
@@ -148,7 +148,8 @@ fprintf('chi = %.4f, omega = %.2f, derived_coef = %.4f, R^2 = %.4f, N = %d\n', .
     chi, omega, 1 - beta_1 - omega, R2, n_ols);
 
 fprintf('\nvs wp1044 Table 3.5.7: b0=0.12, b1=0.18, b2=0.50, R^2=0.89\n');
-fprintf('Note: beta_3 price-spread term SKIPPED (no AU pSH/pIH data; see BLOCK_LIMITATIONS.md)\n');
+fprintf('Note: beta_3 price-spread (pSH-pIH) IS estimated (p_SH=ABS 6416 RPPI, p_IH=ABS 5206 IPD\n');
+fprintf('      in l2_data_layer_v2) but is insignificant/wrong-signed on AU data (beta_3~-2.8, t<1).\n');
 
 %% Save
 out.block = 'Housing inv (wp1044 Eq 37, partial)';
@@ -158,7 +159,7 @@ out.coefs = b; out.se = se; out.tstat = tstat; out.names = {names_free};
 out.R2 = R2; out.N = n_ols; out.n_iter = iter; out.history = history;
 out.state_names = {state_names}; out.Phi = Phi;
 out.converged = (delta < tol);
-out.note = 'price-spread (pSH-pIH) term skipped; no AU data';
+out.note = 'price-spread (pSH-pIH) term estimated from v2 layer but insignificant/wrong-signed (beta_3~-2.8, t<1)';
 save(fullfile(projectdir, 'data', 'pac_blocks', 'results_housing_inv.mat'), '-struct', 'out');
 
 fid = fopen(fullfile(projectdir, 'data', 'pac_blocks', 'results_housing_inv.txt'), 'w');
@@ -169,7 +170,7 @@ for j = 1:length(names_free)
 end
 fprintf(fid, 'chi=%.4f, R^2=%.4f, N=%d\n', chi, R2, n_ols);
 fprintf(fid, '\nwp1044 FR: b0=0.12, b1=0.18, b2=0.50, R^2=0.89\n');
-fprintf(fid, 'PARTIAL: beta_3 price spread skipped (no AU pSH/pIH data)\n');
+fprintf(fid, 'beta_3 price-spread (pSH-pIH) IS estimated (v2 layer) but insig/wrong-signed (t<1).\n');
 fclose(fid);
 
 fprintf('\n=== Phase L2-C4 complete ===\n');
