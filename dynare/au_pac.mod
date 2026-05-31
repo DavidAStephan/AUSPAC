@@ -839,13 +839,16 @@ w_g = 0.24;
 w_x = 0.25;
 w_m = 0.23;
 sigma_ces = 0.5366;
-// lambda_hyst: loading on the CES trend-labour real-wage-gap term in eq dln_n_star_bar.
-// = 0 restores long-run money-neutrality (a temporary nominal shock leaves no permanent
-//   shift in potential output ln_QN); = 1 recovers the prior FR-BDF-style supply-side
-//   hysteresis. Set to 0 on 2026-05-30 after the Q200 IRF showed a temporary 100bp
-//   tightening permanently RAISING ln_Q/ln_N (wrong-signed) via cumulative rw_gap.
-//   Decoupled from the VA-price ULC passthrough (gamma_ulc/gamma_uck, eq pQ) — that
-//   channel is unchanged. See IRF_TRANSMISSION_DRIFT_INVESTIGATION.md.
+// lambda_hyst: long-run-neutrality switch on every "transitory gap integrated into a
+//   trend/level accumulator" channel. = 0 makes a temporary nominal shock leave NO
+//   permanent level shift; = 1 recovers the prior FR-BDF-style hysteresis. It gates:
+//     (1) dln_n_star_bar: -lambda_hyst*sigma_ces*rw_gap  -> potential output ln_QN/ln_Q (FEEDS dynamics)
+//     (2) dln_ih_star_bar: mortgage-gap + house-price-gap -> reported ln_IH (reporting-only)
+//     (3) dln_ib_star_bar: kappa_ib_y*yhat_au             -> reported ln_IB (reporting-only)
+//   Set to 0 on 2026-05-30: the Q200 IRF showed a temporary 100bp tightening permanently
+//   RAISING ln_Q/ln_N (wrong-signed) and driving reported ln_IH to ~-15%. Decoupled from
+//   the VA-price ULC passthrough (gamma_ulc/gamma_uck, eq pQ) — unchanged. The neutral
+//   difference-form drivers (Δpv_yh, dln_uc_k) are NOT gated. See IRF_TRANSMISSION_DRIFT_INVESTIGATION.md.
 lambda_hyst = 0;
 // beta_pc_m and gamma_oil moved to CPI Phillips OLS block (line ~1862) where
 // AU single-equation OLS values are assigned. Keeping the duplicate here
@@ -1312,7 +1315,10 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	dln_uc_k =  uc_k - uc_k(-1);
 
 	[blockname='',name='dln_ib_star_bar']
-	dln_ib_star_bar =  kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
+	// lambda_hyst gates the transitory output-gap term (same reporting-trend neutrality as ln_IH):
+	// integrating kappa_ib_y*yhat_au into ln_IB_star permanently shifted reported ln_IB after a
+	// temporary shock. With lambda_hyst=0 only the neutral user-cost difference remains; ln_IB reverts.
+	dln_ib_star_bar =  lambda_hyst * kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
 
 	[blockname='',name='ib_gap']
 	ib_gap =  ib_gap(-1) + dln_ib_star - dln_ib;
@@ -1324,7 +1330,11 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	dln_ih_star =  rho_ih_star * dln_ih_star(-1) + (1 - rho_ih_star) * dln_ih_star_bar;
 
 	[blockname='',name='dln_ih_star_bar']
-	dln_ih_star_bar =  kappa_ih_inc * (pv_yh - pv_yh(-1)) - kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh)) + kappa_ph * ph_gap(-1);
+	// lambda_hyst gates the transitory level-gap terms (mortgage-rate gap, house-price gap):
+	// integrating them into the ln_IH_star trend made a temporary shock shift reported ln_IH
+	// permanently (~-15% at Q200). With lambda_hyst=0 the trend carries only the neutral income
+	// difference term, so ln_IH reverts. This block is reporting-only (ln_IH feeds no dynamics).
+	dln_ih_star_bar =  kappa_ih_inc * (pv_yh - pv_yh(-1)) - lambda_hyst * kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh)) + lambda_hyst * kappa_ph * ph_gap(-1);
 
 	[blockname='',name='ih_gap']
 	ih_gap =  ih_gap(-1) + dln_ih_star - dln_ih;

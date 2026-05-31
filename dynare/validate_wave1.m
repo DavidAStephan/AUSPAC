@@ -14,7 +14,7 @@ solved = isfield(oo_,'dr') && isfield(oo_.dr,'ghx') && ~isempty(oo_.dr.ghx) && a
 idx   = find(strcmp(M_.exo_names, 'eps_i'));
 scale = 0.25 / sqrt(M_.Sigma_e(idx, idx));
 
-vars = {'ln_Q','yhat_au','ln_N','ln_IH','dln_ih','pi_au','pi_w','i_10y','s_gap'};
+vars = {'ln_Q','yhat_au','ln_N','ln_IH','dln_ih','ln_IB','dln_ib','pi_au','pi_w','i_10y','s_gap'};
 H    = numel(oo_.irfs.([vars{1} '_eps_i']));
 
 fid = fopen('validate_wave1_report.txt','w');
