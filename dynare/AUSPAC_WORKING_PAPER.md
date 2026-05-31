@@ -1207,7 +1207,7 @@ This subsection documents the modelling choices that shape AU-PAC. The headline 
 
 ### 4.13 AU adaptations vs FR-BDF design
 
-This subsection collects, in one place, the principal departures of AU-PAC from the FR-BDF wp736 design. The departures are organised by the *kind* of adaptation: empirical findings revealed by AU data, intentional structural simplifications, adaptations to local market structure, calibration imports from wp736, fiscal-block differences, and methodological choices. Research extensions deferred for future work are summarised in [`STATUS.md`](../STATUS.md) under "Open items".
+This subsection collects, in one place, the principal departures of AU-PAC from the FR-BDF wp736 design. The departures are organised by the *kind* of adaptation: empirical findings revealed by AU data, intentional structural simplifications, adaptations to local market structure, calibration imports from wp736, fiscal-block differences, and methodological choices. Research extensions deferred for future work are summarised in [`next_session.md`](../next_session.md) under "Remaining work".
 
 #### 4.13.1 AU empirical findings
 
@@ -1261,7 +1261,7 @@ In each case the imported parameter is held fixed during estimation; the equatio
 
 #### 4.13.5 AU government / fiscal differences
 
-**No tax-rate × tax-base decomposition**. The AU fiscal block treats government revenue as a single endogenous variable `tau_G_gap` rather than wp736's decomposition into separate effective tax rates and tax bases for GST, PAYG, and company tax. ABS publishes aggregate Commonwealth revenue (Cat. 5512) but quarterly tax-rate-by-instrument series with consistent methodology back to 1994 are not available. Consequently AU-PAC cannot simulate tax-policy changes endogenously; users wishing to study tax-policy experiments can shock `tau_G_gap` directly with appropriate magnitudes drawn from ABS revenue data. A formal tax-instrument decomposition is on the research extension list (STATUS.md).
+**No tax-rate × tax-base decomposition**. The AU fiscal block treats government revenue as a single endogenous variable `tau_G_gap` rather than wp736's decomposition into separate effective tax rates and tax bases for GST, PAYG, and company tax. ABS publishes aggregate Commonwealth revenue (Cat. 5512) but quarterly tax-rate-by-instrument series with consistent methodology back to 1994 are not available. Consequently AU-PAC cannot simulate tax-policy changes endogenously; users wishing to study tax-policy experiments can shock `tau_G_gap` directly with appropriate magnitudes drawn from ABS revenue data. A formal tax-instrument decomposition is on the research extension list (next_session.md).
 
 **Countercyclical fiscal rule**. The AU fiscal rule `eq_tau_G_gap` responds to the output gap ($+0.05 \cdot \hat{y}_{au}$) rather than to the sectoral asset ratio that wp736 eq 125 uses for France. This change is driven by the institutional reality that Commonwealth-budget cycles in Australia are described as countercyclical with respect to output (Treasury PEFOs / MYEFOs explicitly target a deficit-tax-revenue elasticity), not net-asset-ratio-targeting in the FR-BDF style.
 
