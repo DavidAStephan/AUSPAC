@@ -141,13 +141,13 @@ The model can be solved under three expectation regimes (following wp736 Section
 
 ### Table 2.1: Three expectation regimes
 
-| Regime | Financial expectations | Non-financial expectations | Forward vars | File |
+| Regime | Financial expectations | Non-financial expectations | Forward vars | Status |
 |--------|----------------------|--------------------------|-------------|------|
-| **VAR-based** | Backward (AR(1) policy functions, incl. UIP NPV) | Backward (PAC h-vectors from var_model) | 0 | `au_pac_var.mod` |
-| **Hybrid** | Forward (pv_i, pv_i_uip, pv_u_gap, pv_yh) | Backward (PAC h-vectors from var_model) | 4 | `au_pac.mod` |
-| **Full MCE** | Forward (all leads) | Forward (pac_expectation expands to leads) | 31 | `au_pac_mce.mod` |
+| **VAR-based** | Backward (AR(1) policy functions, incl. UIP NPV) | Backward (PAC h-vectors from var_model) | 0 | historical (`au_pac_var.mod` removed in `7995ce7`) |
+| **Hybrid** | Forward (pv_i, pv_i_uip, pv_u_gap, pv_yh) | Backward (PAC h-vectors from var_model) | 4 | **production** (`au_pac.mod`) |
+| **Full MCE** | Forward (all leads) | Forward (pac_expectation expands to leads) | 31 | historical (`au_pac_mce.mod` removed in `7995ce7`) |
 
-Under the baseline configuration, the five PAC expectations use closed-form policy-function formulas in lagged structural state variables (§4.4.0), while the term structure ($pv_i$, eq. 48), UIP NPV ($pv_{i,uip}$, §4.10.3 — forward NPV of the policy-rate gap), unemployment PV, and permanent-income PV all use forward-looking recursive forms. Under full model-consistent expectations (MCE), all expectations are forward-looking. The forward-NPV UIP is what produces the FR-BDF-style amplification of the exchange-rate channel documented in §7.2.
+The production model is the single **Hybrid** regime; the VAR-based and full-MCE variants were comparison artefacts of the retired MCMC line and are no longer in the tree (their §7 figures regenerate from saved `.mat` artefacts). Under the baseline configuration, the five PAC expectations use closed-form policy-function formulas in lagged structural state variables (§4.4.0), while the term structure ($pv_i$, eq. 48), UIP NPV ($pv_{i,uip}$, §4.10.3 — forward NPV of the policy-rate gap), unemployment PV, and permanent-income PV all use forward-looking recursive forms. Under full model-consistent expectations (MCE), all expectations are forward-looking. The forward-NPV UIP is what produces the FR-BDF-style amplification of the exchange-rate channel documented in §7.2.
 
 ### 2.3 Key transmission channels
 
