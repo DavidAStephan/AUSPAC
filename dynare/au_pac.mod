@@ -119,6 +119,7 @@ var
 	tau_GST_gap
 	tau_PAYG_gap
 	tau_CIT_gap
+	DSR_gap
 	wt_H_real_gap
 	yhat_market
 	yhat_nonmarket
@@ -524,6 +525,8 @@ parameters
 	alpha_GST
 	alpha_PAYG
 	alpha_CIT
+	rho_DSR
+	alpha_DSR
 	w_market
 	rho_nonmarket
 	gamma_nonmarket
@@ -980,6 +983,7 @@ varexo
 	eps_tau_GST
 	eps_tau_PAYG
 	eps_tau_CIT
+	eps_DSR
 	eps_BLR
 	eps_MAPI
 	eps_MAPU
@@ -1299,7 +1303,10 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 
 	[blockname='',name='dln_c_star_bar']
 	// Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — income-tax drag.
-	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
+	// Credit/DSR block (2026-05-31, wp1044 §3.7.2): + alpha_DSR · Δ(DSR_gap) — debt-service drag.
+	//   alpha_DSR = -0.10 (AU OLS, Δ form, t=-0.4 insig but right-signed; written back verbatim).
+	//   Δ form keeps long-run neutrality (a temporary DSR change has only a transitory growth effect).
+	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1)) + alpha_DSR * (DSR_gap - DSR_gap(-1));
 
 	[blockname='',name='c_gap']
 	c_gap =  c_gap(-1) + dln_c_star - dln_c;
@@ -1628,6 +1635,11 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='tau_PAYG_gap']
 	tau_PAYG_gap = rho_tau_PAYG * tau_PAYG_gap(-1) + eps_tau_PAYG;
 
+	[blockname='',name='DSR_gap']
+	// Household debt-service ratio gap (wp1044 §3.7.2). AR(1) on the AU DSR gap
+	// (RBA E2 debt-to-income × RBA F5 mortgage rate, HP-gap). Feeds dln_c_star_bar.
+	DSR_gap = rho_DSR * DSR_gap(-1) + eps_DSR;
+
 	[blockname='',name='tau_CIT_gap']
 	tau_CIT_gap = rho_tau_CIT * tau_CIT_gap(-1) + eps_tau_CIT;
 
@@ -1890,6 +1902,7 @@ steady_state_model;
     tau_GST_gap    = 0;
     tau_PAYG_gap   = 0;
     tau_CIT_gap    = 0;
+    DSR_gap        = 0;    // credit/DSR block (wp1044 §3.7.2)
 
     // Round 1.2 (2026-05-22): household wage+transfer income gap, zero at SS
     wt_H_real_gap  = 0;
@@ -2075,6 +2088,9 @@ rho_tau_CIT       = 0.94;
 alpha_GST         = 0.05;
 alpha_PAYG        = 0.10;
 alpha_CIT         = 0.02;
+// Credit/DSR block (wp1044 §3.7.2) — AU-estimated (data/au_household_dsr_q.csv; estimate_credit_dsr.m)
+rho_DSR           = 0.8639;  // DSR-gap persistence (AU OLS, t=21.0, N=150)
+alpha_DSR         = -0.10;   // Δ(DSR_gap)→dln_c (AU OLS, t=-0.4 insig, right-signed; verbatim)
 w_market          = 0.85;    // Round 7
 rho_nonmarket     = 0.90;
 gamma_nonmarket   = 0.30;
@@ -2171,6 +2187,7 @@ shocks;
     var eps_tau_GST;    stderr 0.10;
     var eps_tau_PAYG;   stderr 0.20;
     var eps_tau_CIT;    stderr 0.30;
+    var eps_DSR;        stderr 0.5745;   // DSR-gap AR(1) residual std (pp), AU OLS
     var eps_BLR;        stderr 0.05;
     var eps_MAPI;       stderr 0.50;
     var eps_MAPU;       stderr 0.30;
@@ -2179,4 +2196,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap;
