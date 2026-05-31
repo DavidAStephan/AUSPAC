@@ -160,8 +160,14 @@ fprintf('  ABS 5206 IPD: %d quarterly obs from %s to %s\n', numel(pi_x_full), ..
 fprintf('Loading ABS 5206 chain volumes (xlsx) ...\n');
 T_vol = readtable(fullfile(projectdir,'data','abs_rba','abs_5206_vol.xlsx'), ...
                   'Sheet','Data1','VariableNamingRule','preserve');
-% Confirmed cols: 39 Exports, 40 Imports, 6 General govt final consumption
-ix_x = 39; ix_m = 40; ix_g = 6;
+% FIX 2026-05-30: cols 39/40/6 are the ABS TREND (Henderson-smoothed) block, NOT
+% seasonally adjusted. Estimating short-run trade dynamics on the Trend series gave
+% a spurious AR(1)=0.74 (mechanical smoothing), which drove the 11Q/14Q IRF
+% oscillation (former §6.6 b1_x=0.87 -> §6.11 0.30 -> §6.12 constraint were all
+% symptom-treatment). Switched to the SEASONALLY ADJUSTED chain-volume columns:
+%   121 Exports (A2304114F), 122 Imports (A2304115J), 86 Govt FCE (A2304080V).
+% SA export-growth AR(1) ~ 0.0 -> no oscillation. See working paper §6.13.
+ix_x = 121; ix_m = 122; ix_g = 86;
 fprintf('  Cols: X=%d M=%d G=%d\n', ix_x, ix_m, ix_g);
 x_vol_full = cell_to_num(T_vol{:,ix_x});
 m_vol_full = cell_to_num(T_vol{:,ix_m});

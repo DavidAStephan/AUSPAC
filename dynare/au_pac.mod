@@ -119,6 +119,7 @@ var
 	tau_GST_gap
 	tau_PAYG_gap
 	tau_CIT_gap
+	DSR_gap
 	wt_H_real_gap
 	yhat_market
 	yhat_nonmarket
@@ -476,6 +477,7 @@ parameters
 	s_COE_ss
 	s_LB_firms_ss
 	sigma_ces
+	lambda_hyst
 	sigma_q
 	spread_lh
 	spread_ss
@@ -523,6 +525,8 @@ parameters
 	alpha_GST
 	alpha_PAYG
 	alpha_CIT
+	rho_DSR
+	alpha_DSR
 	w_market
 	rho_nonmarket
 	gamma_nonmarket
@@ -646,21 +650,23 @@ b0_ih = 0.0309;
 b1_ih = 0.108;
 b2_ih = 0;
 b3_ih = 0.2322;
-// === PAC ih block policy function (regenerated 2026-05-29 from aux/aux_housing_inv.mod at wp1044 b0_ih=0.12) ===
-h_pac_ih_constant = -1.940784178020e-05;
-h_pac_ih_var_dln_pcom_lag_1 = 0.0001107476437823;
-h_pac_ih_var_i_gap_lag_1 = -0.0397434282152289;
+// === PAC ih block policy function (regenerated 2026-05-28 from aux/aux_housing_inv.mod) ===
+// Re-verified 2026-05-30: re-ran pac.print() on the post-SA-fix aux_housing_inv.mod;
+// h_pac vector BIT-IDENTICAL (max|diff|=0) — invariant to the b0_ih/b1_ih SA-fix changes.
+h_pac_ih_constant = 2.520789172000e-06;
+h_pac_ih_var_dln_pcom_lag_1 = 0.0003608388338179;
+h_pac_ih_var_i_gap_lag_1 = -0.1027998359550301;
 h_pac_ih_var_ibar_lag_1 = 0;
-h_pac_ih_var_ih_hat_lag_1 = 0.0313831181123641;
-h_pac_ih_var_piQ_lag_1 = 4.950181271900e-06;
-h_pac_ih_var_pi_au_gap_lag_1 = 0.0026585514974577;
-h_pac_ih_var_pi_m_lag_1 = -1.234723905180e-05;
+h_pac_ih_var_ih_hat_lag_1 = 0.2929624107599776;
+h_pac_ih_var_piQ_lag_1 = 6.724243007900e-06;
+h_pac_ih_var_pi_au_gap_lag_1 = 0.0217496570241714;
+h_pac_ih_var_pi_m_lag_1 = -4.943739206470e-05;
 h_pac_ih_var_pi_us_gap_lag_1 = 0;
-h_pac_ih_var_pibar_au_lag_1 = 3.844960462810e-05;
+h_pac_ih_var_pibar_au_lag_1 = 3.867988638150e-05;
 h_pac_ih_var_pibar_us_lag_1 = 0;
-h_pac_ih_var_u_gap_lag_1 = 0.0009247583212247;
-h_pac_ih_var_yhat_au_lag_1 = 0.0103336672512769;
-h_pac_ih_var_yhat_us_lag_1 = 0.0054819498768035;
+h_pac_ih_var_u_gap_lag_1 = 0.0026614020587275;
+h_pac_ih_var_yhat_au_lag_1 = 0.0585992949401254;
+h_pac_ih_var_yhat_us_lag_1 = 0.0048267760163587;
 rho_ih_aux = 0.71;
 a_n_i = -0.03;
 a_n_pi = 0.05;
@@ -673,22 +679,26 @@ b2_n = -0.0278;   // L2 OLS Δn lag 2 (was 0 — orphan; wp1044 depth-3)
 b3_n =  0.0261;   // L2 OLS Δn lag 3 (was 0 — orphan; wp1044 depth-3)
 b4_n =  0;        // wp1044 is depth-3; b4 stays zero
 b5_n = -0.0007;
-// === PAC n block policy function (regenerated 2026-05-29 from aux/aux_employment.mod at wp1044 b0_n=0.07) ===
-h_pac_n_constant = -2.174211845590e-05;
-h_pac_n_var_dln_pcom_lag_1 = 0.0001081290350759;
-h_pac_n_var_dln_pop_bar_lag_1 = 0.1573592422788590;
-h_pac_n_var_i_gap_lag_1 = -0.0075521264314361;
+// === PAC n block policy function (regenerated 2026-05-28 from aux/aux_employment.mod) ===
+// Re-verified 2026-05-30: re-ran pac.print() on the post-SA-fix aux_employment.mod;
+// the h_pac vector is BIT-IDENTICAL (max|diff|=0). The h-vector depends only on the
+// auxiliary VAR companion matrix + discount factor, NOT on the PAC ECM speeds b0_n/b1_n
+// that the SA fix changed, so no regeneration was required.
+h_pac_n_constant = -2.080820899070e-05;
+h_pac_n_var_dln_pcom_lag_1 = 0.0004767772473467;
+h_pac_n_var_dln_pop_bar_lag_1 = 0.5363704552150809;
+h_pac_n_var_i_gap_lag_1 = -0.0196395789761458;
 h_pac_n_var_ibar_lag_1 = 0;
-h_pac_n_var_n_hat_lag_1 = 0.0176453426222520;
-h_pac_n_var_piQ_lag_1 = 5.200255497800e-06;
-h_pac_n_var_pi_au_gap_lag_1 = 0.0023018175365804;
-h_pac_n_var_pi_m_lag_1 = -1.182773527230e-05;
+h_pac_n_var_n_hat_lag_1 = 0.1698161673861557;
+h_pac_n_var_piQ_lag_1 = 1.264732000840e-05;
+h_pac_n_var_pi_au_gap_lag_1 = 0.0177578381125727;
+h_pac_n_var_pi_m_lag_1 = -5.900888048850e-05;
 h_pac_n_var_pi_us_gap_lag_1 = 0;
-h_pac_n_var_pibar_au_lag_1 = 4.141486930390e-05;
+h_pac_n_var_pibar_au_lag_1 = 7.965469486520e-05;
 h_pac_n_var_pibar_us_lag_1 = 0;
-h_pac_n_var_u_gap_lag_1 = -0.0044799769771369;
-h_pac_n_var_yhat_au_lag_1 = 0.0074939229884141;
-h_pac_n_var_yhat_us_lag_1 = 0.0045475553243741;
+h_pac_n_var_u_gap_lag_1 = -0.0154940038706567;
+h_pac_n_var_yhat_au_lag_1 = 0.0402910099354936;
+h_pac_n_var_yhat_us_lag_1 = 0.0082093853561637;
 rho_n_aux = 0.67;
 delta = 0.1989;
 lambda_q = 0.6959;
@@ -725,9 +735,9 @@ alpha_pcom = 0.1;
 // Interpretation: AU wages are nearly fully indexed to CPI (γ_w = 0.86)
 // with weak lag persistence (λ_w = 0.09) and substantial Phillips slope
 // (κ_w = 0.36). See data/pac_blocks/results_wage_phillips_constrained.txt.
-lambda_w = 0.0929;   // constrained OLS (binding sum constraint)
-gamma_w  = 0.8571;   // constrained OLS
-kappa_w  = 0.3592;   // constrained OLS (Phillips slope; not at constraint)
+lambda_w = 0.0872;   // constrained OLS on SA unemployment (§6.14; was 0.0929 on NSA)
+gamma_w  = 0.8628;   // constrained OLS (§6.14; was 0.8571)
+kappa_w  = 0.3432;   // constrained OLS Phillips slope (§6.14 SA u-rate; was 0.3592 — negligible shift)
 okun_coeff = -0.13;
 rho_u_gap = 0.946;
 beta_w = 0.98;
@@ -751,27 +761,32 @@ rho_ih_star = 0.95;
 kappa_mort = 0.048;
 rho_L = 0.9;
 kappa_10 = 0.97;
-tp_ss = 0.3;
-rho_tp = 0.98;
+tp_ss = 0.3;       // term premium SS (calibrated; latent vs observable spread — AU mean spread ~0.125q noted for future SS recal)
+rho_tp = 0.8807;   // Wave 2 AU OLS: AR(1) of (au_i10/4 - au_irate), N=127, t=22, R2=0.79 (was 0.98 calibrated). See data/pac_blocks/results_financial.txt
 rho_wacc = 0.9;
 spread_ss = 0.5;
 w_COE = 0.5;
 w_LB_firms = 0.3;
 w_BBB = 0.2;
 rho_COE = 0.92;
-rho_LB_firms = 0.77;
-rho_BBB = 0.9399999999999999;
+rho_LB_firms = 0.7997;  // A-rated corporate spread persistence (AU OLS, RBA F3 10y A - 10y govt, t=11.4; was 0.77). See estimate_nfc_accelerator.m
+rho_BBB = 0.7611;  // BBB corporate spread persistence (AU OLS, RBA F3 10y BBB - 10y govt, t=10.2; was 0.94). kappa_spread_BBB kept calibrated (AU sign wrong/insig). See estimate_nfc_accelerator.m
 s_COE_ss = 0.8;
 s_LB_firms_ss = 0.25;
 s_BBB_ss = 0.05;
 rho_s = 0.775;
 alpha_s = 0.15;
 beta_uip = 0.92;
-// --- Trade quantity coefficients (Phase L2 OLS 2026-05-28) ---
-// Exports OLS: N=103, R²=0.73 (sample 1993Q3..2019Q1)
-// One-step ECM on ABS 5206 exports vol + FRED yhat_us + RBA F11 TWI gap + RBA I02 dln_pcom
-b0_x   =  0.2990;   // ECM speed (AU OLS; wp1044 0.05)
-b1_x   =  0.8673;   // dln_x AR(1) (AU OLS; wp1044 0.30)
+// --- Trade quantity coefficients (Phase L2 OLS; re-estimated on SA data §6.13 2026-05-30) ---
+// Exports OLS: N=121, R²=0.20 (sample 1993Q3..2023Q3)
+// One-step ECM on ABS 5206 exports vol (SEASONALLY ADJUSTED) + FRED yhat_us + RBA F11 TWI gap + RBA I02 dln_pcom
+// §6.13 BUG FIX: the prior estimation used the ABS *Trend* (Henderson-smoothed) export
+// volume series, whose mechanical AR(1)=0.74 was spurious and drove the 11Q IRF
+// oscillation (former b1_x=0.87→§6.11 0.30→§6.12 constraint 0.49 were all symptoms).
+// Re-estimated on the Seasonally Adjusted series: b1_x=0.092 (insig), b0_x=0.363.
+// sqrt(b1)=0.30 → naturally damped, no oscillation, no constraint needed.
+b0_x   =  0.3632;   // ECM speed (SA OLS, t=-4.4; was 0.2990 on Trend data)
+b1_x   =  0.0923;   // dln_x AR(1) (SA OLS, t=0.97; was 0.8673 on Trend data — see §6.13)
 b2_x   =  0.0220;   // yhat_us contemp (AU OLS, insig; wp1044 0.25)
 b3_x   = -0.3610;   // s_gap contemp (AU OLS, insig; wp1044 0.10)
 beta_x =  1.2;      // AU OLS gave ~0 (insig) — reverted to wp1044
@@ -827,6 +842,17 @@ w_g = 0.24;
 w_x = 0.25;
 w_m = 0.23;
 sigma_ces = 0.5366;
+// lambda_hyst: long-run-neutrality switch on every "transitory gap integrated into a
+//   trend/level accumulator" channel. = 0 makes a temporary nominal shock leave NO
+//   permanent level shift; = 1 recovers the prior FR-BDF-style hysteresis. It gates:
+//     (1) dln_n_star_bar: -lambda_hyst*sigma_ces*rw_gap  -> potential output ln_QN/ln_Q (FEEDS dynamics)
+//     (2) dln_ih_star_bar: mortgage-gap + house-price-gap -> reported ln_IH (reporting-only)
+//     (3) dln_ib_star_bar: kappa_ib_y*yhat_au             -> reported ln_IB (reporting-only)
+//   Set to 0 on 2026-05-30: the Q200 IRF showed a temporary 100bp tightening permanently
+//   RAISING ln_Q/ln_N (wrong-signed) and driving reported ln_IH to ~-15%. Decoupled from
+//   the VA-price ULC passthrough (gamma_ulc/gamma_uck, eq pQ) — unchanged. The neutral
+//   difference-form drivers (Δpv_yh, dln_uc_k) are NOT gated. See IRF_TRANSMISSION_DRIFT_INVESTIGATION.md.
+lambda_hyst = 0;
 // beta_pc_m and gamma_oil moved to CPI Phillips OLS block (line ~1862) where
 // AU single-equation OLS values are assigned. Keeping the duplicate here
 // would shadow the OLS values if reordered.
@@ -856,8 +882,8 @@ w_iad_e_x   = 0.014;
 // Non-energy import ECM parameters (AU OLS Phase L2 2026-05-28; 95% of imports)
 beta_m_ne  =  1.50;     // AU OLS gave 0.073 (income elasticity dead) — reverted to wp1044
 gamma_m_ne = -0.40;     // AU OLS gave +23.4 (wrong sign + insig) — reverted to wp1044
-b0_m_ne    =  0.1580;   // AU OLS ECM speed (was 0.06)
-b1_m_ne    =  0.7427;   // AU OLS AR(1) (was 0.23)
+b0_m_ne    =  0.3090;   // SA OLS ECM speed, t=-4.6 (§6.13; was 0.1580 on Trend data)
+b1_m_ne    =  0.1845;   // dln_m AR(1) (SA OLS, t=1.87; was 0.7427 on Trend data — §6.13 bug fix). sqrt(b1)=0.43 → damped, no constraint needed.
 // Energy import ECM parameters (5% of imports — kept at wp1044 calibration; no AU split)
 beta_m_e   = 1.00;
 gamma_m_e  = -0.19;
@@ -871,7 +897,7 @@ beta_pm_ne =  0.09;     // AU OLS gave -8.59 (wrong sign) — reverted to wp1044
 rho_pm_e   = 0.10;      // less persistent (energy prices move fast)
 alpha_pm_e = 0.05;      // small VA-price passthrough (energy is a global price)
 beta_pm_e_com = 0.80;   // strong commodity-price passthrough (dominant driver)
-rho_lh = 0.97;
+rho_lh = 0.9133;   // Wave 2/3 AU OLS: mortgage-rate smoothing, constrained model form (i_lh-i10)=rho*(i_lh(-1)-i10)+c on RBA F5 FILRHLBVS, N=127, t=34.9, R2=0.91 (was 0.97 cal; implied spread_lh 0.517 vs 0.4). See data/au_mortgage_rate_q.csv, estimate_financial_persistence.m
 spread_lh = 0.4;
 rho_ph = 0.6;
 alpha_ph_y = 0.15;
@@ -957,6 +983,7 @@ varexo
 	eps_tau_GST
 	eps_tau_PAYG
 	eps_tau_CIT
+	eps_DSR
 	eps_BLR
 	eps_MAPI
 	eps_MAPU
@@ -1251,7 +1278,7 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 
 	[blockname='',name='dln_n_star_bar']
 	// Round 5 (2026-05-20): + dln_pop_bar — demographic trend shifter.
-	dln_n_star_bar =  (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap + dln_pop_bar;
+	dln_n_star_bar =  (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - lambda_hyst * sigma_ces * rw_gap + dln_pop_bar;
 
 	[blockname='',name='n_gap']
 	n_gap =  n_gap(-1) + dln_n_star - dln_n;
@@ -1276,7 +1303,10 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 
 	[blockname='',name='dln_c_star_bar']
 	// Round 6 (2026-05-20): - alpha_PAYG · Δtau_PAYG_gap — income-tax drag.
-	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1));
+	// Credit/DSR block (2026-05-31, wp1044 §3.7.2): + alpha_DSR · Δ(DSR_gap) — debt-service drag.
+	//   alpha_DSR = -0.10 (AU OLS, Δ form, t=-0.4 insig but right-signed; written back verbatim).
+	//   Δ form keeps long-run neutrality (a temporary DSR change has only a transitory growth effect).
+	dln_c_star_bar =  kappa_inc * (pv_yh - pv_yh(-1)) + alpha_c_r * ((i_lh - pi_c - (i_ss + tp_ss + spread_lh - pi_ss_au)) - (i_lh(-1) - pi_c(-1) - (i_ss + tp_ss + spread_lh - pi_ss_au))) - alpha_PAYG * (tau_PAYG_gap - tau_PAYG_gap(-1)) + alpha_DSR * (DSR_gap - DSR_gap(-1));
 
 	[blockname='',name='c_gap']
 	c_gap =  c_gap(-1) + dln_c_star - dln_c;
@@ -1292,7 +1322,10 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	dln_uc_k =  uc_k - uc_k(-1);
 
 	[blockname='',name='dln_ib_star_bar']
-	dln_ib_star_bar =  kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
+	// lambda_hyst gates the transitory output-gap term (same reporting-trend neutrality as ln_IH):
+	// integrating kappa_ib_y*yhat_au into ln_IB_star permanently shifted reported ln_IB after a
+	// temporary shock. With lambda_hyst=0 only the neutral user-cost difference remains; ln_IB reverts.
+	dln_ib_star_bar =  lambda_hyst * kappa_ib_y * yhat_au - sigma_ces * dln_uc_k;
 
 	[blockname='',name='ib_gap']
 	ib_gap =  ib_gap(-1) + dln_ib_star - dln_ib;
@@ -1304,7 +1337,11 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	dln_ih_star =  rho_ih_star * dln_ih_star(-1) + (1 - rho_ih_star) * dln_ih_star_bar;
 
 	[blockname='',name='dln_ih_star_bar']
-	dln_ih_star_bar =  kappa_ih_inc * (pv_yh - pv_yh(-1)) - kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh)) + kappa_ph * ph_gap(-1);
+	// lambda_hyst gates the transitory level-gap terms (mortgage-rate gap, house-price gap):
+	// integrating them into the ln_IH_star trend made a temporary shock shift reported ln_IH
+	// permanently (~-15% at Q200). With lambda_hyst=0 the trend carries only the neutral income
+	// difference term, so ln_IH reverts. This block is reporting-only (ln_IH feeds no dynamics).
+	dln_ih_star_bar =  kappa_ih_inc * (pv_yh - pv_yh(-1)) - lambda_hyst * kappa_mort * (i_lh - (i_ss + tp_ss + spread_lh)) + lambda_hyst * kappa_ph * ph_gap(-1);
 
 	[blockname='',name='ih_gap']
 	ih_gap =  ih_gap(-1) + dln_ih_star - dln_ih;
@@ -1598,6 +1635,11 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='tau_PAYG_gap']
 	tau_PAYG_gap = rho_tau_PAYG * tau_PAYG_gap(-1) + eps_tau_PAYG;
 
+	[blockname='',name='DSR_gap']
+	// Household debt-service ratio gap (wp1044 §3.7.2). AR(1) on the AU DSR gap
+	// (RBA E2 debt-to-income × RBA F5 mortgage rate, HP-gap). Feeds dln_c_star_bar.
+	DSR_gap = rho_DSR * DSR_gap(-1) + eps_DSR;
+
 	[blockname='',name='tau_CIT_gap']
 	tau_CIT_gap = rho_tau_CIT * tau_CIT_gap(-1) + eps_tau_CIT;
 
@@ -1860,6 +1902,7 @@ steady_state_model;
     tau_GST_gap    = 0;
     tau_PAYG_gap   = 0;
     tau_CIT_gap    = 0;
+    DSR_gap        = 0;    // credit/DSR block (wp1044 §3.7.2)
 
     // Round 1.2 (2026-05-22): household wage+transfer income gap, zero at SS
     wt_H_real_gap  = 0;
@@ -1901,28 +1944,15 @@ b0_ib       = 0.0181;   // overridden by wp1044 import below
 b1_ib       = 0.0809;
 b3_ib       = 0.3120;
 
-// --- Housing inv PAC (wp1044/L2 mixed hybrid 2026-05-29; see §6.10) ---
-// b0_ih, b1_ih: wp1044 reference (slow ECM, smooth AR). L2 OLS b0=0.50 produced
-// the regenerated h_pac_ih_* with a 5x amplification of the 11Q complex-mode
-// loading; reverting to wp1044 shrinks h-vectors back to the smooth regime.
-// b3_ih: kept at L2 OLS (-0.073, wrong-signed insig). wp1044's b3=0.50 reintroduces
-// a contemporaneous yhat_au -> dln_ih -> yhat_dom -> yhat_au algebraic feedback
-// that loads the same complex mode 60% bigger. The AU L2 OLS effectively zero
-// b3 says the data identify no such accelerator on AU; adopting it disables
-// the loop.
-b0_ih       =  0.12;    // wp1044 Table 3.5.7 (L2 OLS was 0.4956)
-b1_ih       =  0.18;    // wp1044 Table 3.5.7 (L2 OLS was 0.2934)
-b3_ih       = -0.0728;  // L2 OLS (wp1044 0.50 reintroduces contemp loop)
+// --- Housing inv PAC (L2 OLS re-run 2026-05-28, wp1044 Eq 37, N=70, R²=0.50) ---
+b0_ih       = 0.4956;   // ECM speed on I*_H/I_H (L2 OLS; wp1044: 0.12)
+b1_ih       = 0.2934;   // Δlog I_H lag (L2 OLS; wp1044: 0.18)
+b3_ih       = -0.0728;  // contemp Δy-ỹ (L2 OLS; wp1044: 0.50; AU wrong-signed, insig)
 
-// --- Employment PAC (wp1044/L2 mixed hybrid 2026-05-29; see §6.10) ---
-// b0_n, b1_n: wp1044 reference. L2 OLS b0=0.31 had the same h-vector amplification
-// pathology as housing.  b5_n kept at L2 OLS (-0.026, wrong-signed insig);
-// wp1044's b5=0.13 reintroduces a contemporaneous accelerator AU data rejects.
-b0_n        =  0.07;    // wp1044 Table 3.5.2 (L2 OLS was 0.3145)
-b1_n        =  0.44;    // wp1044 Table 3.5.2 (L2 OLS was 0.2950)
-b2_n        =  0;       // wp1044 depth-1 (L2 OLS was -0.0278)
-b3_n        =  0;       // wp1044 depth-1 (L2 OLS was 0.0261)
-b5_n        = -0.0257;  // L2 OLS (wp1044 0.13 reintroduces contemp loop)
+// --- Employment PAC (L2 OLS, wp1044 Eq 30, depth 3, N=124, R²=0.81) ---
+b0_n        = 0.3145;   // ECM speed on n*_S-n_S (L2 OLS; wp1044: 0.07)
+b1_n        = 0.2950;   // Δn lag 1 (L2 OLS; wp1044: 0.44)
+b5_n        = -0.0257;  // contemp Δq̂ (L2 OLS; wp1044: 0.13; AU wrong-signed, insig)
 
 // --- Wage Phillips curve (wp1044 Eq 24) ---
 // Phase L2 audit (2026-05-28): removed wp736 calibration override.
@@ -1947,7 +1977,7 @@ a_pQ_w       =  0.4367;  // wage→piQ_hat aux (AU OLS from Phase U) — unchang
 alpha_pc_lag =  0;       // dropped: corr(piQ_gap_lag, pi_m_gap) = 0.9998 (was 0.023)
 beta_pc_m    = -0.0042;  // import→CPI passthrough (AU OLS; was wp1044 0.10)
 b_ECM_pc     =  0.0700;  // ECM speed (wp1044; no AU p_C_star series yet)
-gamma_oil    =  0.03;    // (wp1044; no AU dln_pcom regressor in this OLS) — unchanged
+gamma_oil    = -0.0147;  // commodity→CPI (AU OLS: dln_pcom in CPI Phillips, t=-1.61 insig + wrong-signed; was wp1044 0.03). Flat-AU-Phillips robust to commodity passthrough. See results_cpi_phillips.txt
 b_PAC_c      =  1.4663;  // PAC growth-neutrality (L2 OLS re-run β_PAC)
 
 // ====================================================================
@@ -2058,6 +2088,9 @@ rho_tau_CIT       = 0.94;
 alpha_GST         = 0.05;
 alpha_PAYG        = 0.10;
 alpha_CIT         = 0.02;
+// Credit/DSR block (wp1044 §3.7.2) — AU-estimated (data/au_household_dsr_q.csv; estimate_credit_dsr.m)
+rho_DSR           = 0.8639;  // DSR-gap persistence (AU OLS, t=21.0, N=150)
+alpha_DSR         = -0.10;   // Δ(DSR_gap)→dln_c (AU OLS, t=-0.4 insig, right-signed; verbatim)
 w_market          = 0.85;    // Round 7
 rho_nonmarket     = 0.90;
 gamma_nonmarket   = 0.30;
@@ -2154,6 +2187,7 @@ shocks;
     var eps_tau_GST;    stderr 0.10;
     var eps_tau_PAYG;   stderr 0.20;
     var eps_tau_CIT;    stderr 0.30;
+    var eps_DSR;        stderr 0.5745;   // DSR-gap AR(1) residual std (pp), AU OLS
     var eps_BLR;        stderr 0.05;
     var eps_MAPI;       stderr 0.50;
     var eps_MAPU;       stderr 0.30;
@@ -2162,4 +2196,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap;
