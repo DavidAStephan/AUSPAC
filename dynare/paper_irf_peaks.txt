@@ -1,6 +1,6 @@
 
 === 100bp monetary (scale=2.26) ===
-  ln_Q          +0.0745%  Q40
+  ln_Q          -0.0979%  Q12
   yhat_au       -0.0588%  Q11
   pi_au         -0.0040%  Q3
   dln_c         -0.0242%  Q2
@@ -14,7 +14,7 @@
   pi_c          +0.0014%  Q12
 
 === 1pp foreign demand (scale=0.88) ===
-  ln_Q          +0.1714%  Q4
+  ln_Q          +0.1809%  Q4
   yhat_au       +0.1148%  Q4
   pi_au         +0.0143%  Q3
   dln_c         +0.0145%  Q6
@@ -28,7 +28,7 @@
   pi_c          +0.0079%  Q4
 
 === 10pct commodity (scale=3.33) ===
-  ln_Q          -0.5777%  Q17
+  ln_Q          +0.4209%  Q2
   yhat_au       +0.2693%  Q2
   pi_au         +1.0102%  Q1
   dln_c         +0.0476%  Q3
@@ -42,7 +42,7 @@
   pi_c          +0.3270%  Q2
 
 === 1pp cost-push (scale=1.75) ===
-  ln_Q          +0.3974%  Q1
+  ln_Q          -0.0019%  Q1
   yhat_au       -0.0012%  Q1
   pi_au         +0.1527%  Q1
   dln_c         -0.0007%  Q4
@@ -56,7 +56,7 @@
   pi_c          +0.0005%  Q1
 
 === 1pp govt (scale=3.33) ===
-  ln_Q          +1.3620%  Q11
+  ln_Q          +1.5334%  Q11
   yhat_au       +0.8966%  Q10
   pi_au         -0.0016%  Q2
   dln_c         -0.0646%  Q1
@@ -70,7 +70,7 @@
   pi_c          +0.0003%  Q19
 
 === 100bp term premium (scale=5.00) ===
-  ln_Q          -0.1817%  Q10
+  ln_Q          -0.1995%  Q11
   yhat_au       -0.1170%  Q9
   pi_au         +0.0093%  Q1
   dln_c         -0.0560%  Q1

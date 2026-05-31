@@ -476,6 +476,7 @@ parameters
 	s_COE_ss
 	s_LB_firms_ss
 	sigma_ces
+	lambda_hyst
 	sigma_q
 	spread_lh
 	spread_ss
@@ -647,6 +648,8 @@ b1_ih = 0.108;
 b2_ih = 0;
 b3_ih = 0.2322;
 // === PAC ih block policy function (regenerated 2026-05-28 from aux/aux_housing_inv.mod) ===
+// Re-verified 2026-05-30: re-ran pac.print() on the post-SA-fix aux_housing_inv.mod;
+// h_pac vector BIT-IDENTICAL (max|diff|=0) — invariant to the b0_ih/b1_ih SA-fix changes.
 h_pac_ih_constant = 2.520789172000e-06;
 h_pac_ih_var_dln_pcom_lag_1 = 0.0003608388338179;
 h_pac_ih_var_i_gap_lag_1 = -0.1027998359550301;
@@ -674,6 +677,10 @@ b3_n =  0.0261;   // L2 OLS Δn lag 3 (was 0 — orphan; wp1044 depth-3)
 b4_n =  0;        // wp1044 is depth-3; b4 stays zero
 b5_n = -0.0007;
 // === PAC n block policy function (regenerated 2026-05-28 from aux/aux_employment.mod) ===
+// Re-verified 2026-05-30: re-ran pac.print() on the post-SA-fix aux_employment.mod;
+// the h_pac vector is BIT-IDENTICAL (max|diff|=0). The h-vector depends only on the
+// auxiliary VAR companion matrix + discount factor, NOT on the PAC ECM speeds b0_n/b1_n
+// that the SA fix changed, so no regeneration was required.
 h_pac_n_constant = -2.080820899070e-05;
 h_pac_n_var_dln_pcom_lag_1 = 0.0004767772473467;
 h_pac_n_var_dln_pop_bar_lag_1 = 0.5363704552150809;
@@ -832,6 +839,14 @@ w_g = 0.24;
 w_x = 0.25;
 w_m = 0.23;
 sigma_ces = 0.5366;
+// lambda_hyst: loading on the CES trend-labour real-wage-gap term in eq dln_n_star_bar.
+// = 0 restores long-run money-neutrality (a temporary nominal shock leaves no permanent
+//   shift in potential output ln_QN); = 1 recovers the prior FR-BDF-style supply-side
+//   hysteresis. Set to 0 on 2026-05-30 after the Q200 IRF showed a temporary 100bp
+//   tightening permanently RAISING ln_Q/ln_N (wrong-signed) via cumulative rw_gap.
+//   Decoupled from the VA-price ULC passthrough (gamma_ulc/gamma_uck, eq pQ) — that
+//   channel is unchanged. See IRF_TRANSMISSION_DRIFT_INVESTIGATION.md.
+lambda_hyst = 0;
 // beta_pc_m and gamma_oil moved to CPI Phillips OLS block (line ~1862) where
 // AU single-equation OLS values are assigned. Keeping the duplicate here
 // would shadow the OLS values if reordered.
@@ -1256,7 +1271,7 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 
 	[blockname='',name='dln_n_star_bar']
 	// Round 5 (2026-05-20): + dln_pop_bar — demographic trend shifter.
-	dln_n_star_bar =  (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - sigma_ces * rw_gap + dln_pop_bar;
+	dln_n_star_bar =  (yhat_au - yhat_au(-1)) - dln_tfp / (1 - alpha_k) - lambda_hyst * sigma_ces * rw_gap + dln_pop_bar;
 
 	[blockname='',name='n_gap']
 	n_gap =  n_gap(-1) + dln_n_star - dln_n;
