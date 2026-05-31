@@ -1,11 +1,27 @@
 # WAVE3_ROADMAP.md — new-scope blocks vs the updated (wp1044) goal
 
-Status as of 2026-05-30. Waves 0/1/2/4 are largely executed (see git log on
-`review/wave0-1-doc-truthup-and-hysteresis` and STATUS.md). Wave 3 adds the blocks that
-are **new in wp1044 relative to wp736** plus the quasi-endogenous-anchor refinement. These
-are deferred here (not implemented) for one of two honest reasons: (a) they need AU data
-series not in the repo, or (b) they are research-grade structural changes that should not
-be implemented blind against BK. Each item below is specified enough to execute directly.
+Status as of 2026-05-31. Waves 0/1/2/4 executed; Wave 3 partially executed after RBA data
+became downloadable (RBA CSV `tables/csv/<t>-data.csv` pattern works; ABS landing pages do not).
+
+**DONE (2026-05-31, this branch):**
+- **§3.2 Household credit/DSR block — IMPLEMENTED.** DSR built from RBA E2 (BHFDDIT) × RBA F5
+  mortgage rate; new `DSR_gap` AR(1) state + Δ-form drag into `eq_dln_c_star_bar`. rho_DSR=0.864
+  (t=21), alpha_DSR=−0.10 (insig, right-signed). BK-stable. (commit "wave3: ... DSR block")
+- **§3.3 NFC accelerator — spread persistences estimated.** rho_LB_firms=0.80, rho_BBB=0.76 from
+  RBA F3 corporate spreads, written back. kappa_spread NOT written (AU sign wrong/insig — spreads
+  globally driven; documented). Leverage-based version still the follow-up below.
+- **Deferred §rho_lh — DONE.** 0.97→0.9133 from RBA F5 FILRHLBVS (constrained model form).
+
+**REMAINING (genuinely blocked):**
+- **§3.4 energy split / §3.5 HICP behavioural** — blocked on an AU oil/gas price series: RBA I02 has
+  only rural/non-rural/base-metals (no energy sub-index) and ABS 6457 needs a fragile versioned xlsx
+  URL (the landing page returns HTML). Path: ABS 6457 petroleum sub-index, or Brent-in-AUD (global
+  oil × RBA F11 USD). No energy-split import volume/price data to estimate the block either.
+- **§3.1 quasi-endogenous anchors** — research-grade structural change that alters the VAR companion
+  matrix (hence `h_pac`); must not be implemented blind against BK. Needs the precise wp1044 §3.4.3/
+  §3.5.3 spec + careful h_pac regen + BK validation.
+
+The items below are specified enough to execute directly.
 
 ---
 
