@@ -769,8 +769,8 @@ w_COE = 0.5;
 w_LB_firms = 0.3;
 w_BBB = 0.2;
 rho_COE = 0.92;
-rho_LB_firms = 0.77;
-rho_BBB = 0.9399999999999999;
+rho_LB_firms = 0.7997;  // A-rated corporate spread persistence (AU OLS, RBA F3 10y A - 10y govt, t=11.4; was 0.77). See estimate_nfc_accelerator.m
+rho_BBB = 0.7611;  // BBB corporate spread persistence (AU OLS, RBA F3 10y BBB - 10y govt, t=10.2; was 0.94). kappa_spread_BBB kept calibrated (AU sign wrong/insig). See estimate_nfc_accelerator.m
 s_COE_ss = 0.8;
 s_LB_firms_ss = 0.25;
 s_BBB_ss = 0.05;
