@@ -1512,25 +1512,27 @@ The log marginal density was **Laplace = −781.05** and **Modified Harmonic Mea
 
 Three findings stand out from the joint posterior. **First**, the wage Phillips slope $\kappa_w = -0.103$ identifies cleanly with 90% HPD entirely negative; under the FR-BDF eq. (52) sign convention `... − κ_w · pv_u_gap` this corresponds to a *positive* structural Phillips slope (higher unemployment → lower wage growth), consistent with both the wp736 specification and the post-2015 RBA literature on AU wage non-responsiveness to slack (Cassidy and Doyle 2018; Bishop and Cassidy 2017). **Second**, CPI indexation $\gamma_w = 0.354$ is large and sharply identified, consistent with the substantial fraction of the AU wage bill anchored to Fair Work Commission CPI-indexed award-rate decisions plus flow-on effects to enterprise bargaining. **Third**, the consumption-block rate channel $b^c_2 = -0.328$ is significantly negative (90% HPD [−0.636, −0.049]), and the consumption error-correction speed $b^c_0 = 0.056$ is moderate; together with the forward-NPV real-lending-rate channel ($\alpha_{c,r} \cdot pv_{r,lh,gap}$, eq. 24) these identify a robust interest-rate sensitivity for AU households despite their high (~70%) variable-rate mortgage exposure.
 
-### 6.5 Pseudo-real-time recursive forecast evaluation
+### 6.5 Pseudo-out-of-sample forecast evaluation
 
-Holding parameters at the posterior mode (no recursive re-estimation), the model is re-run over 24 expanding-window origins from 2018Q1 to 2023Q4. At each origin t* the Kalman smoother yields the in-sample state, and Dynare's `forecast=8` block produces conditional 1Q to 8Q-ahead forecasts of all observables under zero structural shocks. Driver: [`forecast_eval.m`](forecast_eval.m).
+> **Reproducibility note (2026-05-30, Wave 4).** The original full-system exercise used the Kalman smoother + Dynare `forecast=8` block of the MCMC pipeline, removed in cleanup `7995ce7` (the production model no longer carries a `varobs`/estimation interface). The driver [`forecast_eval.m`](forecast_eval.m) has been **reconstructed** as a reproducible 1-step-ahead recursive evaluation in the spirit of the equation-by-equation OLS methodology; it runs on `estimation_data.mat` under MATLAB R2026a with no Dynare dependency. The multi-horizon numbers in the prior version of Table 5.8 came from the lost driver and are not reproducible; the reproducible 1-step results are below.
 
-### Table 5.8: Pseudo-real-time recursive RMSE — 24 origins (2018Q1–2023Q4)
+Over the last 24 one-step transitions (~2018Q1–2023Q4), with coefficients held fixed, each observable's 1-step RMSE is compared across three naive benchmarks — random walk (RW), recursively re-fit AR(1), and the unconditional mean (= 0 in gap form) — and, for the two observables whose model equation is a clean *predetermined* autoregression (the CPI Phillips `pi_au` and the E-SAT IS curve `yhat_au`), the model's fixed-coefficient structural 1-step forecast.
 
-| Variable     | h=1   | h=2   | h=4   | h=8   |
-|--------------|-------|-------|-------|-------|
-| yhat_au      | 1.819 | 2.335 | 2.304 | 2.338 |
-| pi_au        | 0.782 | 0.805 | 0.810 | 0.892 |
-| i_au         | 0.099 | 0.181 | 0.322 | 0.495 |
-| yhat_us      | 2.163 | 2.396 | 2.410 | 2.405 |
-| pi_us        | 0.448 | 0.530 | 0.673 | 0.772 |
-| pi_w         | 0.199 | 0.254 | 0.236 | 0.338 |
-| dln_c        | 3.911 | 3.897 | 3.873 | 4.219 |
-| dln_ib       | 2.586 | 2.722 | 2.377 | 2.369 |
-| i_10y        | 0.117 | 0.173 | 0.264 | 0.417 |
+### Table 5.8: Reproducible 1-step recursive RMSE (24 origins, ~2018Q1–2023Q4)
 
-Three patterns emerge. First, cash-rate and 10Y yield RMSEs grow approximately linearly with horizon, consistent with a near-random-walk process — the h=8 yield RMSE is 42 bp, plausible for two-year-ahead forecasts. Second, output-gap and inflation RMSEs are largely flat across horizons because the model converges to steady state quickly under zero-shock projection; the floor RMSE reflects the standard deviations of the observable data themselves. Third, consumption growth (`dln_c`) and business-investment growth (`dln_ib`) RMSEs remain elevated because the evaluation window contains the 2020 COVID quarter, where `dln_c` reached -16% — the model attributes this entirely to the eps_c residual but cannot forecast it. Excluding the COVID quarter would roughly halve the `dln_c` and `dln_ib` RMSEs.
+| Observable | RW | AR(1) | mean=0 | MODEL |
+|---|---|---|---|---|
+| pi_au (CPI) | 0.919 | 0.784 | 0.805 | **0.745** |
+| pi_w (wages) | 2.958 | 2.286 | 2.120 | — |
+| yhat_au (gap) | 1.944 | 1.720 | 2.016 | **1.802** |
+| dln_c | 5.885 | 5.703 | 3.821 | — |
+| dln_ib | 2.625 | 2.162 | 2.179 | — |
+| i_au | 0.027 | 0.027 | 0.190 | — |
+| i_10y | 0.096 | 0.097 | 0.709 | — |
+| yhat_us | 2.367 | 2.322 | 2.201 | — |
+| pi_us | 0.459 | 0.472 | 0.672 | — |
+
+The headline finding is positive: the AU-estimated **CPI Phillips beats all three naive benchmarks at h=1** (MODEL 0.745 < AR(1) 0.784 < mean 0.805 < RW 0.919) — so despite its flat *in-sample* R² (§6.6), the equation carries genuine, if modest, out-of-sample inflation-forecasting skill. The **IS curve** (`yhat_au`, MODEL 1.802) likewise beats the random walk (1.944) and the unconditional mean (2.016) and roughly matches a recursive AR(1). As expected, the highly persistent policy and long rates (`i_au`, `i_10y`) are best forecast by the random walk, while the noisy growth observables (`dln_c`, `dln_ib`, `pi_w`) are best forecast by their unconditional mean — the evaluation window contains the 2020 COVID quarter (`dln_c` ≈ −16%), which no equation can forecast. (The reproduced `pi_au` and `yhat_au` h=1 RMSEs, 0.745 and 1.802, line up with the prior table's 0.782 and 1.819, cross-validating the reconstruction.)
 
 <!-- ![Recursive forecast paths](forecast_eval_paths.png) — figure deferred -->
 

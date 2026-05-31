@@ -33,6 +33,13 @@ Reviewed 2026-05-30. Honest accounting: **~35–45 % of behavioural parameters a
 | HICP decomposition | calibrated | identity-only reporting block |
 | Credit / financial-accelerator (wp1044 §3.7) | **missing** | not implemented |
 
+**Fidelity rubric** (one legend, applied consistently across this table and the docs):
+- **AU-estimated** — every behavioural coefficient is an AU OLS/iterative-OLS point estimate (incl. estimates that came out insignificant or wrong-signed and were written back verbatim per the OLS-over-calibration convention).
+- **AU-estimated (short-run)** — short-run/dynamic coefficients AU-estimated; the long-run target uses an HP-trend or constructed proxy rather than a wp1044 FOC object.
+- **calibrated from wp1044** — deep parameters imported from FR-BDF because AU data structurally rejects the restriction (BI) or doesn't identify it; documented, not a silent carryover.
+- **calibrated (legit)** — theoretical / steady-state quantities FR-BDF itself calibrates (CES α/σ, GDP shares).
+- **missing** — block not yet implemented.
+
 Full block-by-block detail is in [`L2_REPLICATION_REPORT.md`](L2_REPLICATION_REPORT.md), [`PAC_EQUATIONS_AUDIT.md`](PAC_EQUATIONS_AUDIT.md), and the working paper §4–§5.
 
 ---
