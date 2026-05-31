@@ -758,8 +758,8 @@ rho_ih_star = 0.95;
 kappa_mort = 0.048;
 rho_L = 0.9;
 kappa_10 = 0.97;
-tp_ss = 0.3;
-rho_tp = 0.98;
+tp_ss = 0.3;       // term premium SS (calibrated; latent vs observable spread — AU mean spread ~0.125q noted for future SS recal)
+rho_tp = 0.8807;   // Wave 2 AU OLS: AR(1) of (au_i10/4 - au_irate), N=127, t=22, R2=0.79 (was 0.98 calibrated). See data/pac_blocks/results_financial.txt
 rho_wacc = 0.9;
 spread_ss = 0.5;
 w_COE = 0.5;

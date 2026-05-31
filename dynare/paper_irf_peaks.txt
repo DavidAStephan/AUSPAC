@@ -70,15 +70,15 @@
   pi_c          +0.0003%  Q19
 
 === 100bp term premium (scale=5.00) ===
-  ln_Q          -0.1995%  Q11
-  yhat_au       -0.1170%  Q9
+  ln_Q          -0.0747%  Q9
+  yhat_au       -0.0447%  Q8
   pi_au         +0.0093%  Q1
-  dln_c         -0.0560%  Q1
-  dln_ib        -0.0815%  Q6
-  dln_ih        -0.0079%  Q6
-  dln_n         -0.0086%  Q8
-  s_gap         +0.0249%  Q17
-  i_10y         +0.2485%  Q1
-  piQ           +0.0826%  Q1
-  pi_w          -0.0055%  Q6
-  pi_c          -0.0000%  Q19
+  dln_c         -0.0237%  Q1
+  dln_ib        -0.0328%  Q6
+  dln_ih        -0.0034%  Q6
+  dln_n         -0.0035%  Q7
+  s_gap         +0.0072%  Q14
+  i_10y         +0.2496%  Q1
+  piQ           +0.0825%  Q1
+  pi_w          +0.0022%  Q31
+  pi_c          +0.0000%  Q1
