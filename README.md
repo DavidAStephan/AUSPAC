@@ -15,8 +15,9 @@ Status: **v4.0 — equation-by-equation OLS production line.** Production
 parameters are estimated **block-by-block by OLS / calibration following
 FR-BDF wp1044 §2.2** (no joint MCMC). The model is Blanchard-Kahn stable
 (`edim=5`, `max|eig|≈1.087`) and reproduces its headline monetary-transmission
-IRFs. Full status, the estimated-vs-calibrated scorecard, and open items are in
-[`STATUS.md`](STATUS.md); the working paper is in
+IRFs. Full status, the estimated-vs-calibrated scorecard, the remaining-work
+backlog, and how to reproduce are all in
+[`next_session.md`](next_session.md); the working paper is in
 [`dynare/AUSPAC_WORKING_PAPER.md`](dynare/AUSPAC_WORKING_PAPER.md).
 
 > **Note:** the earlier full-system Bayesian MCMC pipeline (`au_pac_bayesian.mod`
@@ -53,7 +54,7 @@ cd data; run('run_all_l2_ols.m');     % refresh the 5 core PAC blocks -> data/pa
 AUSPAC/
 ├── README.md                          (you are here)
 ├── RUNNING.md                         step-by-step MATLAB run instructions
-├── STATUS.md                          status + estimated-vs-calibrated scorecard + open items
+├── next_session.md                    ★ status + scorecard + remaining-work backlog + new-scope specs
 ├── L2_REPLICATION_REPORT.md           per-block wp1044-vs-AU comparison
 ├── PAC_EQUATIONS_AUDIT.md             equation-by-equation fidelity audit
 ├── BLOCK_LIMITATIONS.md               AU data gaps per block
@@ -95,7 +96,7 @@ The PAC-block coefficient tables (§4) come from `data/pac_blocks/results_*.txt`
 
 > Historical caveat: §6.2 / §6.4 of the working paper still print Bayesian-era
 > LMD numbers from the retired `au_pac_bayesian.mod`; those are not reproducible
-> from the current tree (see [`STATUS.md`](STATUS.md)).
+> from the current tree (see [`next_session.md`](next_session.md)).
 
 ---
 
