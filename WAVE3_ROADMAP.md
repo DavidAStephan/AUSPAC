@@ -7,10 +7,14 @@ became downloadable (RBA CSV `tables/csv/<t>-data.csv` pattern works; ABS landin
 - **§3.2 Household credit/DSR block — IMPLEMENTED.** DSR built from RBA E2 (BHFDDIT) × RBA F5
   mortgage rate; new `DSR_gap` AR(1) state + Δ-form drag into `eq_dln_c_star_bar`. rho_DSR=0.864
   (t=21), alpha_DSR=−0.10 (insig, right-signed). BK-stable. (commit "wave3: ... DSR block")
-- **§3.3 NFC accelerator — spread persistences estimated.** rho_LB_firms=0.80, rho_BBB=0.76 from
-  RBA F3 corporate spreads, written back. kappa_spread NOT written (AU sign wrong/insig — spreads
-  globally driven; documented). Leverage-based version still the follow-up below.
-- **Deferred §rho_lh — DONE.** 0.97→0.9133 from RBA F5 FILRHLBVS (constrained model form).
+- **§3.3 NFC accelerator — DONE (leverage-based, PR #13).** Spread persistences estimated
+  (rho_LB_firms=0.80, rho_BBB=0.76, RBA F3). The wrong-signed output-gap proxy was replaced with a
+  **leverage channel** (RBA D2 business credit): new `lev_nfc_gap` (rho_lev=0.93, responds to activity)
+  feeding the spreads (kappa_lev_BBB=0.019, t=3.0). Finding: AU spreads are pro-cyclical via the credit
+  cycle (opposite of Bernanke-Gertler). See `data/pac_blocks/estimate_nfc_leverage.m`. *Remaining sub-item:*
+  make `lev_nfc` an endogenous debt stock (NEXT_STEPS C2).
+- **§rho_lh — DONE.** 0.97→0.9133 from RBA F5 FILRHLBVS (constrained model form).
+- **Employment-χ — FIXED.** exact depth-m solver (R² 0.82→0.86); consumption/housing SA re-estimates written back.
 
 **REMAINING (genuinely blocked):**
 - **§3.4 energy split / §3.5 HICP behavioural** — blocked on an AU oil/gas price series: RBA I02 has
@@ -52,7 +56,11 @@ b0/b1 ECM speeds, which Wave 1 proved leave `h_pac` invariant). Validate BK + IR
 
 ---
 
-## 3.2 Household credit + Debt-Service-Ratio block (wp1044 §3.7.2) — NEW vs wp736
+## 3.2 Household credit + Debt-Service-Ratio block (wp1044 §3.7.2) — ✅ DONE (PR #13)
+
+> Implemented as an exogenous AR(1) `DSR_gap` (RBA E2 × F5 mortgage rate) feeding consumption
+> (rho_DSR=0.864, alpha_DSR=−0.10). Remaining: make debt an endogenous stock + aux-VAR/h_pac
+> consistency — see NEXT_STEPS C2. The original spec is kept below for that follow-up.
 
 **Why.** The largest omission vs the *updated* goal: AUSPAC has no household-credit stock,
 no DSR, and no credit→consumption/housing channel. This is the macro-financial core of the
@@ -76,7 +84,11 @@ housing-investment PAC equations as an additional drag.
 
 ---
 
-## 3.3 NFC financial accelerator (wp1044 §3.7.3) — PARTIALLY present
+## 3.3 NFC financial accelerator (wp1044 §3.7.3) — ✅ DONE (PR #13; leverage-based)
+
+> The leverage channel is implemented (`lev_nfc_gap` from RBA D2, feeding the spreads with the
+> AU-estimated `kappa_lev`). The only remaining sub-item is making `lev_nfc` an endogenous debt
+> stock (NEXT_STEPS C2). Original spec kept below.
 
 **Why.** Firm leverage → credit spread → user cost → investment. wp1044 makes the corporate
 spread respond to leverage.
@@ -125,8 +137,7 @@ behaviourally (food → ag prices; energy → the energy index above).
 
 ## Deferred Wave-2 items (data-blocked single parameters)
 
-- **`rho_lh`** (mortgage smoothing): needs an AU housing-lending-rate series (RBA F6; the repo's
-  F16 is stale govt-bond mid-rates). Then AR(1) on `i_lh = ρ_lh·i_lh(−1) + (1−ρ_lh)·(i_10y+spread)`.
+- ~~**`rho_lh`** (mortgage smoothing)~~ — **DONE** (0.9133 from RBA F5 FILRHLBVS).
 - **`rho_s`** (real-exchange-rate gap): the `s_gap` equation has a forward UIP term (`pv_i_uip`),
   so a bare AR(1) is misspecified; needs joint/IV estimation. TWI is available (RBA F11).
 - **Trade long-run elasticities** (`beta_x/gamma_x/beta_m_ne/...`): AU OLS gives wrong-signed /

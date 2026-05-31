@@ -44,19 +44,20 @@ Full block-by-block detail is in [`L2_REPLICATION_REPORT.md`](L2_REPLICATION_REP
 
 ---
 
-## Open items (2026-05-30 review)
+## Open items
 
-**Active / Wave 1 (correctness):**
-1. **PAC `h_pac` self-consistency** — the 2026-05-30 SA-data fix re-parameterised `aux/aux_employment.mod` and `aux/aux_housing_inv.mod`, but `pac.print()` was not re-run, so the live `h_pac_n_*` / `h_pac_ih_*` policy-function vectors (stamped 2026-05-28) no longer match the structural ECM speeds. *Fix: re-run `pac.print()` for those two blocks, write back, re-solve.*
-2. **Potential-output hysteresis** — the `sigma_ces·rw_gap` term in `dln_n_star_bar` ([au_pac.mod:1259](dynare/au_pac.mod#L1259)) makes a *temporary* nominal shock permanently shift potential output `ln_QN`; extended to Q200 the sign is economically backwards (a tightening leaves output/employment permanently higher). *Decision: fix toward long-run neutrality (damp/gap the term).*
+**The authoritative, current backlog is [`NEXT_STEPS.md`](NEXT_STEPS.md)** — read that first.
 
-**Backlog (closeable calibration gaps):** business-investment identification (complete `df` with AU exports, build full AU WACC, re-test strict PAC); trade long-run elasticities; financial/WACC persistences (AR(1) OLS); shock std devs (OLS residuals); energy split; flat-Phillips drivers (import-price ECM `p_C*`, commodity passthrough `dln_pcom`).
-
-**Scope (new wp1044 blocks):** household credit + DSR and NFC financial-accelerator (§3.7); quasi-endogenous employment/investment anchors (fixes Round 4–8 rational consistency); HtM + PV² consumption; HICP behavioural components.
-
-**Validation:** reconstruct `forecast_eval.m` so the §6.5 pseudo-real-time RMSEs are reproducible; one shared fidelity rubric (full/partial/proxy/imported) across all docs.
-
-**Latent defects:** duplicate `eps_pm_ne`/`eps_pm_e` `varexo` declarations ([au_pac.mod:942-943](dynare/au_pac.mod#L942)); stale wage-Phillips provenance comment (lines 1919-1927).
+Most of the 2026-05-30 review backlog is now **done** (PRs #11–#14, 2026-05-30/31): the Wave-1
+correctness items (potential-output hysteresis, `ln_IH`/`ln_IB` trends, `h_pac` re-verification),
+the closeable calibration gaps (`rho_tp`, `rho_lh`, commodity→CPI, financial persistences,
+BI-rejection confirmed robust), the two new wp1044 blocks (household credit/DSR + leverage-based
+NFC accelerator), the validation items (reproducible `forecast_eval.m`, fidelity rubric), and the
+PAC χ/PV-operator verification (with the employment-χ bug fixed). What remains — energy split,
+HICP behavioural, `rho_s`, trade LR elasticities, quasi-endogenous anchors, DSR rational
+consistency, HtM/PV², plus minor cleanups — is laid out and prioritised in
+[`NEXT_STEPS.md`](NEXT_STEPS.md); detailed implementation specs for the new-scope blocks are in
+[`WAVE3_ROADMAP.md`](WAVE3_ROADMAP.md).
 
 ---
 
@@ -65,6 +66,8 @@ Full block-by-block detail is in [`L2_REPLICATION_REPORT.md`](L2_REPLICATION_REP
 ```
 AUSPAC/
 ├── README.md / RUNNING.md / STATUS.md         entry / run / status docs
+├── NEXT_STEPS.md                              ★ authoritative remaining-work backlog
+├── WAVE3_ROADMAP.md                           new-scope (wp1044) block specs
 ├── L2_REPLICATION_REPORT.md                   per-block wp1044-vs-AU comparison
 ├── PAC_EQUATIONS_AUDIT.md                      equation-by-equation fidelity audit
 ├── BLOCK_LIMITATIONS.md                        AU data gaps per block
