@@ -110,8 +110,60 @@ cd ../dynare; matlab -batch "regen_all_artifacts"
 > DEFERRED to Phase 3:** both feed the demand/import identities, where avoiding the mining DOUBLE-COUNT requires the I-O
 > demand bridge's export/import routing (narrow `yhat_dom`→non-resource exports; net the `iad` import channel). Params are
 > estimated & ready: `omega_m_imp=0.174`, `w_ib_m=0.169` (C2); `w_x_res=0.513`, `eta_xm=1.13`, `b_xres=0` (C3); the
-> resource-export link `dln_x_res = eta_xm·dln_Q_m` wires in once the bridge narrows `yhat_dom`. **NEXT: Phase 3** —
-> non-mining PAC clones + the I-O demand bridge (which lands C2 & C3) + the belief-VAR/h_pac rewrite.
+> resource-export link `dln_x_res = eta_xm·dln_Q_m` wires in once the bridge narrows `yhat_dom`. **NEXT: Phase 3** — see
+> the sequenced roadmap below.
+
+## Phase 3 — sequenced roadmap (scoped 2026-06-02, `wf_1cab9456`)
+
+The high-risk phase: give the **non-mining** block its own **demand** (the I-O bridge `yhat_dom_nm`) and own **factor
+demand** (3 `_nm` PAC clones), landing the deferred couplings C2/C3, and rewrite the belief-VAR + regenerate all 8
+`h_pac` families. Three strands: (i) non-mining PAC clones + mining-capital double-count cleanup; (ii) the I-O demand
+bridge (lands C2+C3); (iii) the belief-VAR/`h_pac` rewrite (the central risk: once `yhat_nm`'s driver narrows, the frozen
+`h_pac` vectors — computed under the belief `yhat_au ~ AR(λ_q=0.6959)` — become inconsistent and **all 8 families must be
+regenerated**).
+
+**Governing rule (resolves all ordering):** *a sub-phase may change realized DYNAMICS only when the agents' frozen belief
+still matches the realized law (so `h_pac` stays consistent), OR in the same atomic commit that re-derives the belief.* So
+inert cleanups/refactors go first (bit-identical), C2/C3 are bounded-but-belief-consistent (because `yhat_dom` still feeds
+`yhat_nm` unchanged), and the single divergence trigger (bridge narrowing) is **fused** with the belief rewrite.
+
+| Sub-phase | Does | Gate | IRFs change? |
+|---|---|---|---|
+| **P3.0** dead-channel cleanup | retire `b4_x` (`:772`), dead import ECM (`:1582-88`), Round-7 non-market reduced form | bit-identical (`<1e-6`); `n_exp=5` | no |
+| **P3.1** E1 overlap refactor | demote/alias `yhat_au→yhat_b` in the 5 belief-VARs (the `pac.print` state-on-RHS fix; **not** the rename trick) | `pac.print` runs; h-vectors match frozen to machine precision; `n_exp=5` | no (inert relabel) |
+| **P3.2** capital double-count + trends | `dln_y_star_nm = α_nm·dln_k_nm + …` with `dln_k_nm=(dln_k−w_k_m·dln_k_m)/(1−w_k_m)` (B1 residual); own trends for nmk/dw | bounded shift; reconciliation `<1e-10`; Q200 neutral | yes (bias correction) |
+| **P3.3** C3 resource-export split | `dln_x_res=η_xm·dln_Q_m` (`b_xres=0`), `dln_x` composite; **`yhat_dom` still sees total `dln_x`** | GATE-2 invariants hold; `var(sd_gap)` bounded; SA resource `b1∈[0.1,0.3]` | marginal |
+| **P3.4** create 3 `_nm` PAC clones | clone `pac_{pQ,n,ib}` equations; CES re-slice on `pac_pQ_nm` only; **driver still `yhat_b`** | fragment h-vector machine-precision; re-solve χ (don't inherit the employment 0.21-vs-0.40 bug); `n_exp=5` | no |
+| **P3.5** C2 capex import nexus | `+0.0294·dln_ib_m` to `dln_m_ne`; **switch `iad` business-inv arg `dln_ib→dln_ib_nm`** (de-double-counts the France `0.276`) | `eps_ib_m`→imports not pure GDP; `var(sd_gap)` bounded; 5 h-vectors still match | yes (re-routing) |
+| **P3.6** ⚠ DIVERGENCE COMMIT (atomic) | narrow `yhat_dom→yhat_dom_nm` (G→non-market) **+** rewrite all 8 belief-VARs to carry `yhat_nm`+`q_m_gap` **+** regen 8 `h_pac` **+** re-point the 5 forward `pv_*` recursions | **triple gate** (below) | yes — the intended divergence |
+
+**P3.6 triple gate:** (1) **BK** — all `pac.print` succeed (`χ·max|eig(Φ)|<1`, business_inv binds 0.554), `check_bk` `n_exp==5`
+EXACTLY, max|eig|=1.08707; (2) **Neutrality** — `validate_wave1` Q200 levels ≈0 (the ONLY test that catches a BK-passing
+but `h`-corrupted IRF); (3) **Named-scalar** — non-mining `ln_Q` peak to 100bp within 15% of the old `−0.14420 @Q11`;
+`var(sd_gap)` in the ABS GDP-P/GDP-E discrepancy band. **De-risk handle:** first re-print the 5 EXISTING families under
+the rewritten belief with the bridge collapsed (`yhat_dom_nm:=yhat_dom`) and prove they reproduce the frozen vectors to
+machine precision — that round-trips the *machinery* before flipping on the new economics.
+
+**Two findings that shape the plan:**
+- **The clones are ~95% ceremony.** Per GATE-1a, `σ_nm=0.5366` collapsed to *exactly* the aggregate; the only genuine
+  mover is `α_nm=0.35` (re-slices `pac_pQ_nm` pass-through to `γ_ulc_nm=0.349`/`γ_uck_nm=0.188`, total unchanged); `pac_n`/
+  `pac_ib` have no CES pass-through. Non-mining doesn't cointegrate (DW=0.32). **So: clone the equations structurally (so
+  they can key off `yhat_nm`) but INHERIT aggregate ECM speeds; CES re-slice on `pac_pQ_nm` only; do NOT re-estimate.** A
+  corollary: this makes the 15% named-scalar gate easy.
+- **Phantom `w_qn_dw=0.0928`.** It's a hand-split of the CSV's `w_qn_nmk=0.2813` with no ABS 5209 source, yet it's
+  load-bearing in `ln_QN_recon`/`dln_y_star` (`:1342/:1384`). Keep the four-way form (Phase-1b committed to it) but
+  **calibrate `var(eps_q_dw)≈0`** (dwellings is a smooth trend) and source/document the split — don't ship an unanchored
+  `yhat_dw_gap` random walk (it would fail `var(sd_gap)` for a non-double-count reason).
+
+**Risk register (top):** [blocking] silent `h_pac` corruption (BK-blind — caught only by the Q200 neutrality test + the
+round-trip oracle; this is why P3.6 fuses narrowing+regen); [blocking] R3 6th explosive root from the forward PV recursions
+(`pv_yh :1467`, `dln_n_star_bar :1449` discount `yhat_au` directly — re-point them; fallback: keep `pv_yh` on `yhat_nm`);
+[major] phantom `w_qn_dw`; [major] C2 needs `dln_ib_nm` (order P3.4→P3.5 adjacent); [major] accidental `(+1)` lead shifts
+`n_exp`; [major] tooling fragility (cherrypick→fragments only, `pac.estimate` as χ cross-check). **Defer/reject:** B2 own-PIM
+capital (use B1 residual); re-estimating `pac_n_nm`/`pac_ib_nm` speeds (no cointegration); Phase-3b (re-pointing single
+`pac_c`/`pac_ih` targets — only if the named-scalar fails); Option A (re-print without rewrite); the rename trick; whole-
+model bit-identity as a P3.4/P3.6 gate. **Effort: 8–10 sessions** (P3.0–P3.5 small individually-gated commits ≈5–7; P3.6
+alone 2–4). Full per-edit detail + file:lines in the `wf_1cab9456` workflow transcript.
 
 ---
 
