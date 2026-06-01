@@ -95,6 +95,14 @@ var
 	q_m_gap
 	yhat_nmk_gap
 	yhat_dw_gap
+	pcom_gap
+	tot_gap
+	ib_m_hat
+	dln_ib_m
+	ln_ib_m_level
+	dln_k_m
+	ln_K_m
+	ln_Q_m
 	ln_c_level
 	ln_d_iad
 	ln_ib_level
@@ -235,6 +243,16 @@ parameters
 	w_qn_nm
 	w_qn_nmk
 	w_qn_dw
+	rho_qm
+	psi_qm
+	rho_pcomgap
+	theta_ibm
+	sigma_ibm
+	b0_ibm
+	b1_ibm
+	b3_ibm
+	delta_k_m
+	kappa_qk_m
 	alpha_pc
 	alpha_pc_lag
 	alpha_pcom
@@ -879,6 +897,17 @@ w_qn_m   = 0.1180;   // mining (supply block)
 w_qn_nm  = 0.6043;   // non-mining market (CES + FOC + PAC core)
 w_qn_nmk = 0.1849;   // non-market public services (pubadm + edu + health)
 w_qn_dw  = 0.0928;   // ownership of dwellings (separate statistical trend)
+// PHASE 2 mining supply block (data/pac_blocks/estimate_mining_supply.py + spec calibration):
+rho_qm      = 0.6274;   // mining utilisation-gap AR persistence (AU OLS, t=10.5)
+psi_qm      = 0.0199;   // utilisation response to the commodity/ToT gap (AU OLS, t=0.94 insig; verbatim)
+rho_pcomgap = 0.92;     // commodity-price (terms-of-trade) gap persistence (calibrated)
+theta_ibm   = 1.873;    // mining-investment target loading on the commodity gap (b0_ibm*theta = AU 0.187)
+sigma_ibm   = 0.05;     // mining-investment response to the domestic rate gap i_gap (small => near rate-insensitive)
+b0_ibm      = 0.10;     // mining-investment ECM speed toward the commodity-driven target (calibrated; lumpy, R2~0.08)
+b1_ibm      = 0.1321;   // mining-investment growth persistence (AU OLS)
+b3_ibm      = 0.3561;   // mining-investment response to commodity-price growth dln_pcom (AU OLS, t=3.0)
+delta_k_m   = 0.0154;   // mining depreciation (PIM ~6%/yr; vs aggregate delta_k=0.0134)
+kappa_qk_m  = 1.0;      // capacity ratchet: constant returns to mining capital (theoretical restriction)
 // lambda_hyst: long-run-neutrality switch on every "transitory gap integrated into a
 //   trend/level accumulator" channel. = 0 makes a temporary nominal shock leave NO
 //   permanent level shift; = 1 recovers the prior FR-BDF-style hysteresis. It gates:
@@ -988,6 +1017,8 @@ varexo
 	eps_pQ
 	eps_pc
 	eps_pcom
+	eps_q_m
+	eps_ib_m
 	eps_pg
 	eps_ph
 	eps_pi
@@ -1148,8 +1179,12 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	// I-O-bridge yhat_dom_nm. (The L2.A comment above describes yhat_nm's role, not yhat_au's.)
 	[blockname='',name='yhat_nm']
 	yhat_nm = yhat_nm(-1) + yhat_dom + eps_q;
+	// PHASE 2: mining utilisation gap is SUPPLY-driven — persistent AR(1) around capacity with a
+	// small (insignificant) commodity/ToT response. AU OLS (estimate_mining_supply.py): rho_qm=0.627
+	// (t=10.5), psi_qm=0.020 (t=0.94 insig => mining VA ~ capacity; written back verbatim). Feeds
+	// yhat_au via the weighted sector-gap identity above; pcom_gap is the stationary commodity gap.
 	[blockname='',name='q_m_gap']
-	q_m_gap = yhat_nm;
+	q_m_gap = rho_qm * q_m_gap(-1) + psi_qm * pcom_gap + eps_q_m;
 	[blockname='',name='yhat_nmk_gap']
 	yhat_nmk_gap = yhat_nm;
 	[blockname='',name='yhat_dw_gap']
@@ -1231,22 +1266,48 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='ln_QN']
 	ln_QN =  ln_QN(-1) + dln_y_star;
 
-	// === PHASE 1a (industry split): three-way sector potential-output reporting aggregates ===
-	// Pure REPORTING / scaffolding — nothing in this block feeds back into ln_QN, yhat_au, or
-	// any dynamic/forward equation, so Blanchard-Kahn is unchanged (n_exp stays 5) and every
-	// economic IRF stays bit-identical. The sector potential-growth drivers are PLACEHOLDERS
-	// equal to the aggregate dln_y_star; Phase 2 replaces them with the mining capacity ratchet
-	// (dln_y_star_m), the non-mining CES trend (dln_y_star_nm), and the non-market trend
-	// (dln_y_star_nmk). The reconciliation identity ln_QN_recon (= weighted sum) must then
-	// continue to equal ln_QN — that equality is the Phase-2 integration test.
+	// === PHASE 2 (industry split): sector potential-output growth + the MINING supply block ===
+	// Mining is a thin SUPPLY block: a commodity-price (ToT) gap drives lumpy mining investment ->
+	// mining capital -> a capacity RATCHET for mining potential (long capital lag h_m=4). It carries
+	// NO PAC, NO factor-cost FOC, NO hysteresis. Non-mining-market / non-market / dwellings still use
+	// the OLD aggregate CES potential as a PLACEHOLDER (Phase 3 gives non-mining its own CES clone).
+	// The aggregate dln_y_star (below) is now the VA-weighted sum of the four sector growths, so
+	// ln_QN_recon == ln_QN holds by construction. NB small documented mining-capital double-count
+	// (the non-mining CES placeholder still uses aggregate dln_k); cleaned when Phase 3 splits capital.
+
+	// -- commodity-price (terms-of-trade) gap: stationary level-gap accumulator of dln_pcom --
+	[blockname='',name='pcom_gap']
+	pcom_gap = rho_pcomgap * pcom_gap(-1) + dln_pcom;
+	[blockname='',name='tot_gap']
+	tot_gap = pcom_gap;     // mining terms-of-trade proxy = commodity-price gap (reporting alias)
+
+	// -- mining investment: ECM toward a commodity-price/Tobin's-q target; tiny domestic-rate channel --
+	[blockname='',name='ib_m_hat']
+	ib_m_hat = theta_ibm * pcom_gap - sigma_ibm * i_gap;
+	[blockname='',name='dln_ib_m']
+	dln_ib_m = b0_ibm * (ib_m_hat(-1) - ln_ib_m_level(-1)) + b1_ibm * dln_ib_m(-1) + b3_ibm * dln_pcom + eps_ib_m;
+	[blockname='',name='ln_ib_m_level']
+	ln_ib_m_level = ln_ib_m_level(-1) + dln_ib_m;
+
+	// -- mining capital (perpetual inventory, mining depreciation delta_k_m) --
+	[blockname='',name='dln_k_m']
+	dln_k_m = (1 - delta_k_m) * dln_k_m(-1) + delta_k_m * dln_ib_m;
+	[blockname='',name='ln_K_m']
+	ln_K_m = ln_K_m(-1) + dln_k_m;
+
+	// -- mining capacity ratchet: potential grows with lagged mining capital (kappa_qk_m=1, h_m=4) --
 	[blockname='',name='dln_y_star_m']
-	dln_y_star_m   = dln_y_star;
+	dln_y_star_m   = kappa_qk_m * dln_k_m(-4);
+	// non-mining / non-market / dwellings potential = OLD aggregate CES (placeholder; Phase 3 -> own CES)
 	[blockname='',name='dln_y_star_nm']
-	dln_y_star_nm  = dln_y_star;
+	dln_y_star_nm  = alpha_k * dln_k + (1 - alpha_k) * dln_n_star_bar + dln_tfp;
 	[blockname='',name='dln_y_star_nmk']
-	dln_y_star_nmk = dln_y_star;
+	dln_y_star_nmk = dln_y_star_nm;
 	[blockname='',name='dln_y_star_dw']
-	dln_y_star_dw  = dln_y_star;
+	dln_y_star_dw  = dln_y_star_nm;
+	// mining VA (reporting) = mining potential + utilisation gap
+	[blockname='',name='ln_Q_m']
+	ln_Q_m = ln_QN_m + q_m_gap;
 	[blockname='',name='ln_QN_m']
 	ln_QN_m   = ln_QN_m(-1)   + dln_y_star_m;
 	[blockname='',name='ln_QN_nm']
@@ -1295,7 +1356,10 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	ln_P =  ln_P_star + pQ_level;
 
 	[blockname='',name='dln_y_star']
-	dln_y_star =  alpha_k * dln_k + (1 - alpha_k) * dln_n_star_bar + dln_tfp;
+	// PHASE 2: aggregate potential growth = VA-weighted sum of the four sector potentials (mining
+	// capacity ratchet + non-mining/non-market/dwellings CES placeholder). The single-sector CES
+	// alpha_k*dln_k + (1-alpha_k)*dln_n_star_bar + dln_tfp is now carried by dln_y_star_nm above.
+	dln_y_star =  w_qn_m * dln_y_star_m + w_qn_nm * dln_y_star_nm + w_qn_nmk * dln_y_star_nmk + w_qn_dw * dln_y_star_dw;
 
 	[blockname='',name='ln_tfp_LR']
 	ln_tfp_LR =  ln_tfp_LR(-1) + eps_tfp_LR;
@@ -1972,6 +2036,14 @@ steady_state_model;
     q_m_gap        = 0;
     yhat_nmk_gap   = 0;
     yhat_dw_gap    = 0;
+    pcom_gap       = 0;
+    tot_gap        = 0;
+    ib_m_hat       = 0;
+    dln_ib_m       = 0;
+    ln_ib_m_level  = 0;
+    dln_k_m        = 0;
+    ln_K_m         = 0;
+    ln_Q_m         = 0;
     ln_C_star      = 0;
     ln_C           = 0;
     ln_IB_star     = 0;
@@ -2282,6 +2354,8 @@ shocks;
     var eps_pg;         stderr 0.5;
     var eps_tfp_LR;     stderr 0.01;
     var eps_pcom;       stderr 3.0;
+    var eps_q_m;        stderr 0.03;     // mining utilisation-gap shock (calibrated; refine to OLS resid std)
+    var eps_ib_m;       stderr 0.08;     // mining-investment shock (calibrated; mining capex is volatile)
     var eps_lh;         stderr 0.1;
     var eps_ph;         stderr 0.5;
     // Round 4-8 (2026-05-20):
@@ -2300,4 +2374,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_dw ln_QN_recon yhat_nm q_m_gap pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_dw ln_QN_recon yhat_nm q_m_gap ln_Q_m ln_K_m ln_ib_m_level dln_ib_m pcom_gap pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
