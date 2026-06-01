@@ -84,6 +84,22 @@ cd ../dynare; matlab -batch "regen_all_artifacts"
 
 > **PHASE 1b DONE (2026-06-01).** Refactored the partition to **four-way** (dwellings split out as its own statistical trend per the user's decision: `w_qn_m/nm/nmk/dw = 0.1180/0.6043/0.1849/0.0928`), then **redefined `yhat_au` from a backward accumulator to a contemporaneous weighted identity** `yhat_au = w_qn_m·q_m_gap + w_qn_nm·yhat_nm + w_qn_nmk·yhat_nmk_gap + w_qn_dw·yhat_dw_gap`. The new accumulator `yhat_nm = yhat_nm(-1) + yhat_dom + eps_q` inherits the old aggregate law; the mining/non-market-public/dwellings gaps are Phase-2 PLACEHOLDERS = `yhat_nm`. **GATE 1b = PASS** (`verify_phase1a.m`): `n_exp=5`/max|eig| unchanged; **`yhat_au ≡ yhat_nm` to 1.4e-15**; four-way reconciliation to 1.0e-13; all economic IRFs bit-identical (≤5e-6). **Key confirmation of R1/R3:** the redefinition did NOT corrupt the `h_pac`/belief-VAR — because `yhat_au`'s dynamics are unchanged in this aggregation-only step, the belief-VAR rewrite is genuinely **deferred to Phase 3** (when `yhat_nm` diverges via `yhat_dom→yhat_dom_nm` and the sector gaps get real laws). **NEXT: Phase 2** — replace the placeholder `dln_y_star_m`/`q_m_gap` with the mining capacity ratchet + world-price block, and `dln_y_star_nmk`/`dln_y_star_dw` with trends; unify the resource-export split. Sequential, not swarm.
 
+> **PHASE 2 SUPPLY CORE DONE (2026-06-02).** Mining supply block in; **GATE 2 = PASS** (`verify_phase2.m`). Thin,
+> supply-driven, **no-PAC** block: `pcom_gap` (stationary commodity/ToT gap) → `ib_m_hat` commodity/Tobin's-q target
+> (tiny rate channel `sigma_ibm=0.05`) → mining-investment ECM `dln_ib_m` (AU OLS `b1_ibm=0.132`, `b3_ibm=0.356`;
+> `b0_ibm=0.10`/`theta_ibm=1.873` calibrated) → mining capital `dln_k_m`/`ln_K_m` (`delta_k_m=0.0154`) → **capacity
+> ratchet** `dln_y_star_m = kappa_qk_m·dln_k_m(-4)` (`kappa_qk_m=1`,`h_m=4`) → `ln_QN_m`. Utilisation gap
+> `q_m_gap = rho_qm·q_m_gap(-1)+psi_qm·pcom_gap+eps_q_m` (AU OLS `rho_qm=0.627`, `psi_qm=0.020` insig). Aggregate
+> potential rewired: `dln_y_star = Σ w_qn·dln_y_star_sector` (non-mining/non-market/dwellings = OLD CES placeholder, so
+> `ln_QN_recon ≡ ln_QN` by construction). Params: `data/pac_blocks/estimate_mining_supply.py`. **Results:** BK preserved
+> (`n_exp=5`, max|eig|=1.08707; endo 210→221, exo 55→57); reconciliation 1.3e-13; commodity `eps_pcom` ratchets `ln_QN_m`
+> +1.40% (+0.14% @Q200) while 100bp `eps_i` leaves it −0.0024% (**564× contrast**); **aggregate `ln_Q` monetary trough
+> dampens −0.144%→−0.123%** (~15% ≈ mining weight — the falsifiable prediction). Shock stds `eps_q_m=0.03`/`eps_ib_m=0.08`
+> calibrated (refine to OLS resid). **Known approximation:** small mining-capital double-count (non-mining CES placeholder
+> still uses aggregate `dln_k`) — cleaned in Phase 3 when non-mining gets its own capital. **NEXT (Phase-2 couplings):**
+> resource-export unification (`dln_x_res ≈ 1.13·dln_Q_m`), mining-capex import nexus, ToT income effect on consumption
+> (`λ_toti·tot_gap`), mining VA deflator/employment; then Phase 3 (non-mining PAC clones + belief-VAR rewrite).
+
 ---
 
 ## 1. Executive summary and core modelling thesis
