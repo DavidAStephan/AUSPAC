@@ -50,6 +50,7 @@ cd data; matlab -batch "run('run_all_l2_ols.m')"
 # 2. Industry-split data foundation (Phase 0):
 python3 data/build_market_sector_capital.py     # mining/non-mining GVA + capital splits (asserts units)
 python3 data/build_io_bridge.py                  # I-O VA bridge -> io_bridge_coefficients.csv, closure_shares.csv
+python3 data/build_mining_investment_quarterly.py # quarterly mining GFCF (Denton: 5204 T64 benchmark x 5625 T7 indicator)
 matlab -batch "cd data; prepare_supply_data_sector; sector='nonmining'; estimate_ces_2026_sector"
 # 3. Write coefficients into dynare/au_pac.mod (per-block writeback), then solve + regenerate:
 cd ../dynare; matlab -batch "regen_all_artifacts"
@@ -268,7 +269,7 @@ This composite is **report-only** — it feeds the GDP deflator so a ToT boom ra
 | `Q_mining`, sub-industries, `Q_total`, non-market cols (SA, quarterly) | **EXISTS** (raw) | `data/abs_rba/abs_5206_industry_gva.xlsx` Data1 SA \$M levels: mining col **119**; total **161**; pubadm **155**, edu **156**, health **157**, dwellings **160** |
 | `market_sector_gva_splits.csv` | **BUG — fix FIRST** | mixes levels and growth across columns; `q_nonmining_market = −73,879` (level minus growth). Fix `build_market_sector_capital.py` (~1 hr, unblocks CES regardless of harder downloads) |
 | Commodity price driver | **EXISTS** | `data/abs_rba/rba_i02_commodity.xlsx`, `rba_g02_commodity.csv` → maps to `dln_pcom` |
-| Mining capex (for ramps/`theta_ibm`) | **EXISTS but raw** | `data/abs_rba/abs_5625_19_*_mining_*_capex.xlsx` (current-price, ORIGINAL, by state/asset — must sum states, X-13 SA, deflate) |
+| **Quarterly mining investment (GFCF, CVM)** for the mining ECM | **BUILT 2026-06-02** | `data/mining_investment_quarterly_cvm.csv` (1987Q3–2025Q4) — Denton-PFD disaggregation of the NA annual benchmark **ABS 5204 Table 64** (`Mining ; GFCF: chain volume`, `abs_5204_gfcf_by_industry.xlsx` col 12) using the **ABS 5625 Table 7** quarterly Mining-total CVM-SA capex (`abs_5625_07...` col 40, id A3515959C) as the movement indicator. Built by `data/build_mining_investment_quarterly.py`. Validated: annual sums match the benchmark to 1e-16; indicator→benchmark OLS R²=0.993; growth corr 0.984; boom peak 2012Q4. (Supersedes the old "sum-states/X-13/deflate the 5625-19 current-price subdivisions" plan — cleaner and NA-consistent.) |
 | I-O tables | **EXISTS** | `data/io_tables_australia.xlsx` (Table 2 USE, Table 7 Leontief ÷100, Table 17 VA/import content; mining = IOIG codes 601/701/801/802/901/1001) |
 | **Mining + non-mining employment `N`** (SA, quarterly) | **MUST DOWNLOAD** | ABS 6291.0.55.003 EQ06 (employed by industry division, Mining=B); SDMX API |
 | **Hours `H`** | **MUST DOWNLOAD** | ABS 6291.0.55.003 EQ09 |
