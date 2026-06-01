@@ -571,6 +571,12 @@ hand-added channels per PAC equation; and `pac.estimate` cannot parse those chan
 Phase 3, not to migrate the working monolith. Full detail: `project_dynare_pac_upgrades` memory + the `wf_1cf09af6`
 workflow transcript.
 
+**Design rationale — gap-form vs levels+`growth=`.** Why AU-PAC writes PAC in stationary-gap space (no `growth=`) rather
+than the FR-BDF/ECB-BASE trending-levels + `growth=` form — including the consumption (aligned) vs housing-investment
+(a real departure) decomposition, where the trend/forward-growth anticipation actually lives (`pv_yh`), the `kind='ll'`
+vs `'dl'` distinction, and the cost of the gap simplification — is documented in
+[`archive/PAC_GAP_VS_GROWTH_DESIGN.md`](archive/PAC_GAP_VS_GROWTH_DESIGN.md).
+
 ## Archive index (root decluttered 2026-06-01 → [`archive/`](archive/))
 The detailed analyses below were moved to `archive/` to leave this file as the single root entry point. They remain
 in the tree (and in git history). Recover the pre-move version of any file with `git show 45d94e3:<name> > <name>`.
