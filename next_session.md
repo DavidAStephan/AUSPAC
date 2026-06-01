@@ -1,6 +1,6 @@
 # next_session.md — AUSPAC single entry point (authoritative)
 
-**As of 2026-06-01 (`main`; branch `industry-split-phase0` merged).** This is the ONE file to read first next
+**As of 2026-06-02 (`main` @ `f7033ec`).** This is the ONE file to read first next
 session. The repo was consolidated on 2026-06-01: every standalone status/design/audit markdown was folded into this
 file or moved to [`archive/`](archive/) (recover any of it via git — see the Archive index near the end). Everything
 you need — current state, how to run, the active multi-industry project (full design + phase status), the base-model
@@ -14,20 +14,32 @@ cleanup `7995ce7`; any LMD / Laplace number in old text is **historical**.
 
 ---
 
-## 0. Current state (2026-06-01)
+## 0. Current state (2026-06-02) — ⏯ RESUME AT PHASE 3, sub-phase **P3.1**
 
 **Model:** [`dynare/au_pac.mod`](dynare/au_pac.mod) — self-contained, BK-stable: **`n_exp=5` explosive eigenvalues,
-max|eig|=1.08707**, all level accumulators revert to ≈0 at Q200 (long-run money-neutral, `lambda_hyst=0`). After the
-industry-split Phase-1a/1b scaffolding it declares **~210 endogenous / 55 shocks**. The 100bp monetary (`eps_i`)
-trough is `ln_Q` −0.144% @Q11 / output-gap −0.086%.
+max|eig|=1.08707**, long-run money-neutral (`lambda_hyst=0`, Q200 levels ≈0). Declares **~219 endogenous / 57 shocks**
+(after the industry split through Phase 2 + P3.0). The 100bp monetary (`eps_i`) trough is now `ln_Q` **−0.123%** @Q11
+(dampened from the single-sector −0.144% by the ~12% near-rate-insensitive mining sector — the project's headline result).
 
 **Toolchain:** Dynare **7.0-arm64** (`~/Applications/Dynare/7.0-arm64`) + MATLAB **R2026a**
 (`/Applications/MATLAB_R2026a.app/bin/matlab` — full path, NOT on PATH). No `timeout` command on this shell.
 
-**Active project = the multi-industry (mining vs non-mining) split.** Phases **0, 1a, 1b are DONE, verified, and on
-`main`**; the full design + phase-by-phase status is in the ACTIVE PROJECT section below. **Next step = Phase 2** (the
-mining supply block — capacity ratchet + world-price deflator; first phase whose IRFs are intentionally NOT
-bit-identical).
+**Active project = the multi-industry (mining vs non-mining) split.**
+**DONE & on `main` (@`f7033ec`):** Phase 0 (data + two CES calibrations) · Phase 1a/1b (sector-potential scaffolding +
+`yhat_au` redefined to a weighted sector-gap identity) · Phase 2 (mining SUPPLY CORE — capacity ratchet + utilisation
+gap, GATE 2 PASS) + couplings **C1** (ToT income on consumption) & **C4** (mining employment/deflator) · **P3.0**
+(dead-channel cleanup — bit-identical).
+
+**▶ RESUME AT P3.1** — the **E1 overlap demote/alias** (`yhat_au → yhat_b` in the 5 belief-VARs) so `pac.print()` runs
+without the state-on-RHS crash; the belief LAW is unchanged so it's **bit-identical** (gate: regenerated h-vectors match
+the frozen `:610–748` to machine precision; `n_exp=5`; `verify_phase1a` trough `<1e-6`). Then **P3.2…P3.6** per the
+**"Phase 3 — sequenced roadmap"** section below — READ IT FIRST: the governing rule, the **atomic P3.6 divergence commit**
+(bridge narrowing + 8-family `h_pac` regen) with its triple gate + round-trip oracle, the "clones are ~95% ceremony"
+finding (inherit aggregate ECM speeds), and the phantom-`w_qn_dw` issue. **Deferred into Phase 3:** `b4_x`→P3.3; C2/C3→the
+I-O demand bridge (P3.3/P3.5/P3.6). **Verify scripts** (from `dynare/`): `verify_phase2.m` (GATE 2 — BK + commodity
+ratchet + monetary dampening), `verify_phase1a.m`, `validate_wave1.m` (Q200 neutrality), `verify_pac_chi_pv.m`,
+`check_bk.m`. **Cross-session detail:** memories `project_industry_split` + `project_dynare_pac_upgrades`; design docs
+`archive/PAC_GAP_VS_GROWTH_DESIGN.md` + `archive/ESAT_ARCHITECTURE_AUDIT.md` (Hybrid addendum).
 
 ### How to run / diagnose (from `dynare/`, full MATLAB path)
 | Task | Command |
