@@ -24,7 +24,7 @@
 % unit-root form).
 %
 % Estimation:
-%   chi for PV(gap) = solve_pac_chi([b1, b2, b3], omega, 3)
+%   chi for PV(gap) = solve_pac_chi_exact([b1, b2, b3], omega, 3)
 %   PV(gap)_t = e_{n_hat}' · (I - chi*Phi)^{-1} chi*Phi · z_{t-1}
 %   PV(trend)_t = omega · Delta_n_bar_S(t-1)
 %   LHS_adj = Delta n_S - PV(gap) - PV(trend) - derived_coef * Delta_n_bar_S(t-1)

@@ -539,6 +539,38 @@ theoretical/SS quantities FR-BDF itself calibrates. ~40–45% of behavioural par
 - **D2. Two flagged model properties to review** — (a) the **large fiscal multiplier** (1%-of-GDP `eps_g` → output-gap
   +0.91%); (b) the **degenerate TFP→output transmission** (`eps_tfp_LR` σ=0.01 → ≈0 output at 1 s.d.).
 
+## PAC-tooling roadmap (Dynare semi-structural techniques — scoped 2026-06-01)
+
+Scoping verdict on adopting techniques from Srecko Zimic's `SemiStructDynareBasics` + the Dynare forum thread
+(Brayton/Pfeifer/Adjemian), verified against the **local Dynare 7.0 source**. **Bottom line: mostly *validates* AU-PAC's
+existing design** — the all-gaps formulation and monolithic `.mod` are deliberate correct responses to AU's
+level-cointegration wall and a Dynare parse limitation, not debt to pay down. One safe win is done; the legitimate
+remainder folds into split **Phase 3** (it all touches the belief-VAR Phase 3 rewrites anyway). Two myths corrected: the
+"χ=0.21 bug" is **already fixed** in production (employment χ=0.368); AU's blocks are `kind='ll'` (stationary), so the
+growth-neutrality term does not exist for them — and one must **never pass `kind=dd`** on them (it would silently corrupt
+the h-vectors).
+
+| Item | Verdict | When |
+|---|---|---|
+| Retire fragile depth-1 `solve_pac_chi.m` → `solve_pac_chi_exact.m` | **DONE 2026-06-01** — χ-preserving (depth-1 grid maxdiff 2e-16; `verify_pac_chi_pv` gate passes) | — |
+| `yhat_au` var-model-overlap → **structural** demote/alias (NOT Srecko's rename trick) | ADOPT | Phase 3.1 |
+| `pac.estimate.nls` as a χ/h **cross-check** on the channel-stripped canonical core | ADOPT-WITH-CARE | Phase 3.2 |
+| `cherrypick`/`aggregate` to **generate** the `_nm`/`_m`/`_dw` sector PAC fragments (gate = h-vectors match `pac.print` to machine precision, **NOT** whole-model bit-identity) | ADOPT-WITH-CARE | Phase 3.3 |
+| levels+`growth=` for the 5 existing blocks | **REJECT** (`kind='ll'`, no benefit) | — |
+| levels+`growth=` for **mining** | **REJECT** — keep the no-PAC backward capacity identity | — |
+| levels+`growth=` for **housing** | **DEFER** — synthetic-data pilot only, never the live block | post-Phase-3 |
+| `simul_backward_model` / `solve_algo=14` / full-model residual inversion | **REJECT** — hard-errors on the 5 forward `pv_*` jumpers | — |
+| Srecko's `rename=` trick as the overlap fix | **REJECT** — solves a different problem (target naming, not the var_model self-reference) | — |
+| `transform_unary_ops` | **DEFER** — renumbers the state vector; only in a clean re-derive | — |
+
+**Why mostly no:** (1) AU's level-cointegration wall (labour FOC DW=0.32; business-inv R²=0.09 robust rejection; mining
+DOLS DW=0.062 spurious) defeats *any* levels target equation — the gap form is the *response* to it. (2) `cherrypick`
+cannot reproduce the monolith — it omits the 5 forward leads, the `yhat_au` identity, the trade block, and the 4–5
+hand-added channels per PAC equation; and `pac.estimate` cannot parse those channels (only `additive`/`optim_additive`/
+`non_optimizing_behaviour` are recognised). So `cherrypick` is scoped narrowly to *generate the new sector clones* in
+Phase 3, not to migrate the working monolith. Full detail: `project_dynare_pac_upgrades` memory + the `wf_1cf09af6`
+workflow transcript.
+
 ## Archive index (root decluttered 2026-06-01 → [`archive/`](archive/))
 The detailed analyses below were moved to `archive/` to leave this file as the single root entry point. They remain
 in the tree (and in git history). Recover the pre-move version of any file with `git show 45d94e3:<name> > <name>`.
