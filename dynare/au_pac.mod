@@ -37,6 +37,9 @@ var
 	dln_ulc
 	dln_x
 	dln_y_star
+	dln_y_star_m
+	dln_y_star_nm
+	dln_y_star_nmk
 	dy_bar_gap
 	i_10y
 	i_BBB
@@ -82,6 +85,10 @@ var
 	ln_P_star
 	ln_Q
 	ln_QN
+	ln_QN_m
+	ln_QN_nm
+	ln_QN_nmk
+	ln_QN_recon
 	ln_c_level
 	ln_d_iad
 	ln_ib_level
@@ -218,6 +225,9 @@ parameters
 	alpha_c_r
 	alpha_i
 	alpha_k
+	w_qn_m
+	w_qn_nm
+	w_qn_nmk
 	alpha_pc
 	alpha_pc_lag
 	alpha_pcom
@@ -852,6 +862,13 @@ w_g = 0.24;
 w_x = 0.25;
 w_m = 0.23;
 sigma_ces = 0.5366;
+// PHASE 1a (industry split) — three-way GVA potential-output weights (chain-volume
+// FY2022-23 shares from data/market_sector_gva_splits.csv; sum to 1.0; reporting-only
+// here, inherited by Phase 2). mining / non-mining-market / non-market = 0.1180 / 0.6043
+// / 0.2777. Cross-check: data/io_bridge_coefficients.csv (nominal basis 0.1166/0.6022/0.2813).
+w_qn_m   = 0.1180;
+w_qn_nm  = 0.6043;
+w_qn_nmk = 0.2777;
 // lambda_hyst: long-run-neutrality switch on every "transitory gap integrated into a
 //   trend/level accumulator" channel. = 0 makes a temporary nominal shock leave NO
 //   permanent level shift; = 1 recovers the prior FR-BDF-style hysteresis. It gates:
@@ -1184,6 +1201,29 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 
 	[blockname='',name='ln_QN']
 	ln_QN =  ln_QN(-1) + dln_y_star;
+
+	// === PHASE 1a (industry split): three-way sector potential-output reporting aggregates ===
+	// Pure REPORTING / scaffolding — nothing in this block feeds back into ln_QN, yhat_au, or
+	// any dynamic/forward equation, so Blanchard-Kahn is unchanged (n_exp stays 5) and every
+	// economic IRF stays bit-identical. The sector potential-growth drivers are PLACEHOLDERS
+	// equal to the aggregate dln_y_star; Phase 2 replaces them with the mining capacity ratchet
+	// (dln_y_star_m), the non-mining CES trend (dln_y_star_nm), and the non-market trend
+	// (dln_y_star_nmk). The reconciliation identity ln_QN_recon (= weighted sum) must then
+	// continue to equal ln_QN — that equality is the Phase-2 integration test.
+	[blockname='',name='dln_y_star_m']
+	dln_y_star_m   = dln_y_star;
+	[blockname='',name='dln_y_star_nm']
+	dln_y_star_nm  = dln_y_star;
+	[blockname='',name='dln_y_star_nmk']
+	dln_y_star_nmk = dln_y_star;
+	[blockname='',name='ln_QN_m']
+	ln_QN_m   = ln_QN_m(-1)   + dln_y_star_m;
+	[blockname='',name='ln_QN_nm']
+	ln_QN_nm  = ln_QN_nm(-1)  + dln_y_star_nm;
+	[blockname='',name='ln_QN_nmk']
+	ln_QN_nmk = ln_QN_nmk(-1) + dln_y_star_nmk;
+	[blockname='',name='ln_QN_recon']
+	ln_QN_recon = w_qn_m * ln_QN_m + w_qn_nm * ln_QN_nm + w_qn_nmk * ln_QN_nmk;
 
 	[blockname='',name='ln_Q']
 	ln_Q =  ln_QN + yhat_au;
@@ -1885,6 +1925,14 @@ steady_state_model;
     // Trend level accumulators (all zero at SS)
     ln_QN          = 0;
     ln_Q           = 0;
+    // PHASE 1a sector potential-output reporting aggregates (gap model, all SS=0)
+    dln_y_star_m   = 0;
+    dln_y_star_nm  = 0;
+    dln_y_star_nmk = 0;
+    ln_QN_m        = 0;
+    ln_QN_nm       = 0;
+    ln_QN_nmk      = 0;
+    ln_QN_recon    = 0;
     ln_C_star      = 0;
     ln_C           = 0;
     ln_IB_star     = 0;
@@ -2213,4 +2261,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_recon pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
