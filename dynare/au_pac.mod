@@ -107,17 +107,14 @@ var
 	ln_N_m
 	pi_Q_m
 	ln_c_level
-	ln_d_iad
 	ln_ib_level
 	ln_ih_level
-	ln_m_eq
 	ln_m_level
 	ln_n_level
 	ln_tfp
 	ln_tfp_LR
 	ln_x_eq
 	ln_x_level
-	m_gap
 	n_gap
 	n_hat
 	pQ_level
@@ -145,8 +142,6 @@ var
 	tau_CIT_gap
 	DSR_gap
 	wt_H_real_gap
-	yhat_market
-	yhat_nonmarket
 	BLR_hat
 	MAPI_hat
 	MAPU_hat
@@ -356,7 +351,6 @@ parameters
 	b_ph_ih
 	beta_c
 	beta_i
-	beta_m
 	beta_pac
 	beta_pc_m
 	beta_pib_m
@@ -370,7 +364,6 @@ parameters
 	delta
 	delta_k
 	g_nom
-	gamma_m
 	gamma_oil
 	gamma_reval
 	gamma_w
@@ -574,9 +567,6 @@ parameters
 	alpha_CIT
 	rho_DSR
 	alpha_DSR
-	w_market
-	rho_nonmarket
-	gamma_nonmarket
 	rho_BLR
 	rho_MAPI
 	rho_MAPU
@@ -843,8 +833,6 @@ b0_m   =  0.1580;   // ECM speed (AU OLS; wp1044 0.06) — kept for legacy uses
 b1_m   =  0.7427;   // AR(1) (AU OLS; wp1044 0.23)
 b2_m   =  0.3591;   // unused in current model (energy/non-energy split)
 b3_m   = -0.08;     // unused in current model
-beta_m =  0.0727;   // LR income elasticity (AU OLS; wp1044 1.5)
-gamma_m = 23.3798;  // LR RER elasticity (AU OLS, insig; wp1044 -0.4)
 rho_pc = 0.67;
 alpha_pc = 0.17;     // overridden in CPI Phillips OLS block below
 // Phase V: FR-BDF eq (80) ECM-style additions to eq_au_phillips
@@ -1567,9 +1555,6 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='ln_m_level']
 	ln_m_level =  ln_m_level(-1) + dln_m;
 
-	[blockname='',name='ln_d_iad']
-	ln_d_iad =  ln_d_iad(-1) + iad;
-
 	[blockname='',name='ln_x_eq']
 	ln_x_eq =  beta_x * yhat_us + gamma_x * s_gap;
 
@@ -1578,12 +1563,6 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 
 	[blockname='',name='dln_x']
 	dln_x =  b0_x * x_gap(-1) + b1_x * dln_x(-1) + b2_x * yhat_us + b3_x * s_gap + b4_x * dln_pcom + eps_x;
-
-	[blockname='',name='ln_m_eq']
-	ln_m_eq =  beta_m * ln_d_iad + gamma_m * s_gap;
-
-	[blockname='',name='m_gap']
-	m_gap =  ln_m_eq - ln_m_level;
 
 	[blockname='',name='dln_m']
 	// Composite import growth preserved for GDP identity + backward compat.
@@ -1823,12 +1802,6 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	[blockname='',name='wt_H_real_gap']
 	wt_H_real_gap = rho_wtH * wt_H_real_gap(-1) + alpha_wtH_y * yhat_au(-1) + alpha_wtH_u * u_gap(-1) + alpha_wtH_tau * tau_PAYG_gap(-1) + eps_wtH;
 
-	[blockname='',name='yhat_nonmarket']
-	yhat_nonmarket = rho_nonmarket * yhat_nonmarket(-1) + (1 - rho_nonmarket) * gamma_nonmarket * yhat_au;
-
-	[blockname='',name='yhat_market']
-	yhat_market = (yhat_au - (1 - w_market) * yhat_nonmarket) / w_market;
-
 	[blockname='',name='BLR_hat']
 	BLR_hat = rho_BLR * BLR_hat(-1) + (1 - rho_BLR) * (i_lh - i_ss - tp_ss - spread_lh) + eps_BLR;
 
@@ -1940,9 +1913,6 @@ steady_state_model;
     x_gap          = 0;
     dln_m          = 0;       // zero import growth in stationary model
     ln_m_level     = 0;
-    ln_m_eq        = 0;       // = beta_m*0 + gamma_m*0 = 0
-    m_gap          = 0;
-    ln_d_iad       = 0;       // cumulated iad = 0 at SS (iad SS = 0)
 
     // Demand deflators: all converge to pi_ss_au at SS
     pi_c           = pi_ss_au;
@@ -2108,8 +2078,6 @@ steady_state_model;
     wt_H_real_gap  = 0;
 
     // Round 7 (branch decomposition, both = 0 at SS)
-    yhat_market    = 0;
-    yhat_nonmarket = 0;
 
     // Round 8 (auxiliary forecasters, zero at SS)
     BLR_hat        = 0;
@@ -2291,9 +2259,6 @@ alpha_CIT         = 0.02;
 // Credit/DSR block (wp1044 §3.7.2) — AU-estimated (data/au_household_dsr_q.csv; estimate_credit_dsr.m)
 rho_DSR           = 0.8639;  // DSR-gap persistence (AU OLS, t=21.0, N=150)
 alpha_DSR         = -0.10;   // Δ(DSR_gap)→dln_c (AU OLS, t=-0.4 insig, right-signed; verbatim)
-w_market          = 0.85;    // Round 7
-rho_nonmarket     = 0.90;
-gamma_nonmarket   = 0.30;
 rho_BLR           = 0.90;    // Round 8
 rho_MAPI          = 0.85;
 rho_MAPU          = 0.80;
@@ -2399,4 +2364,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_dw ln_QN_recon yhat_nm q_m_gap ln_Q_m ln_K_m ln_ib_m_level dln_ib_m pcom_gap dln_Q_m ln_N_m pi_Q_m pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_dw ln_QN_recon yhat_nm q_m_gap ln_Q_m ln_K_m ln_ib_m_level dln_ib_m pcom_gap dln_Q_m ln_N_m pi_Q_m pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;

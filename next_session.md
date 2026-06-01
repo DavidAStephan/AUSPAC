@@ -129,7 +129,7 @@ inert cleanups/refactors go first (bit-identical), C2/C3 are bounded-but-belief-
 
 | Sub-phase | Does | Gate | IRFs change? |
 |---|---|---|---|
-| **P3.0** dead-channel cleanup | retire `b4_x` (`:772`), dead import ECM (`:1582-88`), Round-7 non-market reduced form | bit-identical (`<1e-6`); `n_exp=5` | no |
+| **P3.0** dead-channel cleanup ✅ DONE 2026-06-02 | retired the dead aggregate import ECM (`ln_d_iad`/`ln_m_eq`/`m_gap`/`beta_m`/`gamma_m`) + the Round-7 non-market reduced form (`yhat_market`/`yhat_nonmarket`/`w_market`/`rho_nonmarket`/`gamma_nonmarket`); 26 items, endo 224→219. **`b4_x` DEFERRED to P3.3** (it's a *live* commodity→export coef, not dead — retired atomically when C3's `dln_x_res←dln_Q_m` replaces it) | PASSED bit-identical for ALL shocks (`verify_phase2` numbers unchanged; `n_exp=5`, max\|eig\|=1.08707) | no |
 | **P3.1** E1 overlap refactor | demote/alias `yhat_au→yhat_b` in the 5 belief-VARs (the `pac.print` state-on-RHS fix; **not** the rename trick) | `pac.print` runs; h-vectors match frozen to machine precision; `n_exp=5` | no (inert relabel) |
 | **P3.2** capital double-count + trends | `dln_y_star_nm = α_nm·dln_k_nm + …` with `dln_k_nm=(dln_k−w_k_m·dln_k_m)/(1−w_k_m)` (B1 residual); own trends for nmk/dw | bounded shift; reconciliation `<1e-10`; Q200 neutral | yes (bias correction) |
 | **P3.3** C3 resource-export split | `dln_x_res=η_xm·dln_Q_m` (`b_xres=0`), `dln_x` composite; **`yhat_dom` still sees total `dln_x`** | GATE-2 invariants hold; `var(sd_gap)` bounded; SA resource `b1∈[0.1,0.3]` | marginal |
