@@ -1,0 +1,20 @@
+quantity,value,unit,note
+gva,2511352.0,AUD_million,GVA (V1) basic prices ABS 5209 2021-22
+gdp_e,2531630.3,AUD_million,GDP expenditure = total FD - imports (basic prices)
+tax_wedge,20278.3,AUD_million,GDP-E minus GVA = taxes-on-products wedge (basic-price basis)
+tax_wedge_pct,0.008010,fraction,tax wedge as fraction of GDP-E (~0.8%, NOT 6.29%)
+mining_va,292712.0,AUD_million,mining gross value added
+mining_va_share,0.116556,fraction,mining VA / GVA (nominal)
+mining_gross_output,455366.0,AUD_million,mining product gross output (total use col125)
+mining_va_to_output,0.642806,fraction,mining VA / gross output
+resource_exports,330588.4,AUD_million,mining product exports (col123)
+total_exports,644384.9,AUD_million,total exports (col123 all products)
+mining_export_share_gross,0.513029,fraction,mining share of total exports by gross value
+mining_va_share_of_export_va,0.495623,fraction,mining within-VA share of export-induced VA
+eta_xm,1.129398,ratio,resource-export / mining-VA elasticity (~1.13)
+nonmarket_va,706356.0,AUD_million,non-market (govt/edu/health/dwellings) VA
+w_qn_m,0.116556,fraction,three-way partition mining weight
+w_qn_nm,0.602179,fraction,three-way partition non-mining-market weight
+w_qn_nmk,0.281265,fraction,three-way partition non-market weight
+imports_total,603645.0,AUD_million,total imports P6
+total_final_demand,3135275.3,AUD_million,C+G+I+INV+X at basic prices

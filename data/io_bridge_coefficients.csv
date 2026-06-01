@@ -1,0 +1,15 @@
+coefficient,value,basis,description
+w_nm_c,0.816817,nominal_basic_price,non-mining-market VA content per $ of consumption
+w_nm_ib,0.692919,nominal_basic_price,non-mining-market VA content per $ of business investment (GFCF)
+w_nm_ih,0.692919,nominal_basic_price,non-mining-market VA content per $ of housing investment (=GFCF content)
+w_nm_g,0.886118,nominal_basic_price,VA content per $ of government spend - ROUTE TO NON-MARKET branch (yhat_nonmarket)
+w_nm_xnr,0.679932,nominal_basic_price,non-mining-market VA content per $ of NON-RESOURCE exports
+w_nm_m,0.171851,nominal_basic_price,import+tax leakage per $ of consumption (m_nm subtraction weight)
+w_x_res,0.513029,gross_value,resource (mining) share of total exports - composite-export weight
+w_qn_m,0.116556,nominal_va_share,mining VA share of GVA (NOMINAL - use chain-volume share for ln_QN/yhat_au)
+w_qn_nm,0.602179,nominal_va_share,non-mining-market VA share of GVA (residual)
+w_qn_nmk,0.281265,nominal_va_share,non-market VA share of GVA
+w_pq_m,0.116556,nominal_va_share,mining weight in composite VA deflator piQ
+w_pq_nm,0.602179,nominal_va_share,non-mining-market weight in composite VA deflator piQ
+w_pq_nmk,0.281265,nominal_va_share,non-market weight in composite VA deflator piQ
+eta_xm,1.129398,va_to_export,resource-export VA-to-export elasticity (mining exports / mining VA)
