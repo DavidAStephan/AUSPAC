@@ -103,7 +103,7 @@ damping = 0.5;       % avg new + old beta to prevent oscillation (wp736 recipe)
 chi_max = 0.85;      % safety clamp to keep I - chi*Phi well-conditioned
 
 for iter = 1:max_iter
-    chi = solve_pac_chi([beta_1], omega_c, depth);
+    chi = solve_pac_chi_exact([beta_1], omega_c, depth);
     chi = min(chi, chi_max);
     chi = max(chi, 0);
 

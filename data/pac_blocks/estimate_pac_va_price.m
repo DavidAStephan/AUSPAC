@@ -80,7 +80,7 @@ tol = 1e-4;
 history = [];
 
 for iter = 1:max_iter
-    chi = solve_pac_chi([beta_1], omega, 1);
+    chi = solve_pac_chi_exact([beta_1], omega, 1);
 
     % PV(pi*_Q) -- proxy uses pi_Q_bar from state (the trend, closest to wp1044
     % target pi*_Q).  This is an AU adaptation since constructing a separate
