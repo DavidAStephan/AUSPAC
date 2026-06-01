@@ -40,6 +40,7 @@ var
 	dln_y_star_m
 	dln_y_star_nm
 	dln_y_star_nmk
+	dln_y_star_dw
 	dy_bar_gap
 	i_10y
 	i_BBB
@@ -88,7 +89,12 @@ var
 	ln_QN_m
 	ln_QN_nm
 	ln_QN_nmk
+	ln_QN_dw
 	ln_QN_recon
+	yhat_nm
+	q_m_gap
+	yhat_nmk_gap
+	yhat_dw_gap
 	ln_c_level
 	ln_d_iad
 	ln_ib_level
@@ -228,6 +234,7 @@ parameters
 	w_qn_m
 	w_qn_nm
 	w_qn_nmk
+	w_qn_dw
 	alpha_pc
 	alpha_pc_lag
 	alpha_pcom
@@ -862,13 +869,16 @@ w_g = 0.24;
 w_x = 0.25;
 w_m = 0.23;
 sigma_ces = 0.5366;
-// PHASE 1a (industry split) — three-way GVA potential-output weights (chain-volume
-// FY2022-23 shares from data/market_sector_gva_splits.csv; sum to 1.0; reporting-only
-// here, inherited by Phase 2). mining / non-mining-market / non-market = 0.1180 / 0.6043
-// / 0.2777. Cross-check: data/io_bridge_coefficients.csv (nominal basis 0.1166/0.6022/0.2813).
-w_qn_m   = 0.1180;
-w_qn_nm  = 0.6043;
-w_qn_nmk = 0.2777;
+// PHASE 1a/1b (industry split) — FOUR-way GVA potential-output partition (chain-volume
+// FY2022-23 shares from data/market_sector_gva_splits.csv; sum to 1.0). Ownership of
+// dwellings is a SEPARATE statistical-trend branch (FR-BDF convention), distinct from the
+// non-market public-services branch (public admin + education + health).
+//   mining / non-mining-market / non-market-public / dwellings = 0.1180 / 0.6043 / 0.1849 / 0.0928
+// Cross-check: data/io_bridge_coefficients.csv (nominal mining/nm 0.1166/0.6022).
+w_qn_m   = 0.1180;   // mining (supply block)
+w_qn_nm  = 0.6043;   // non-mining market (CES + FOC + PAC core)
+w_qn_nmk = 0.1849;   // non-market public services (pubadm + edu + health)
+w_qn_dw  = 0.0928;   // ownership of dwellings (separate statistical trend)
 // lambda_hyst: long-run-neutrality switch on every "transitory gap integrated into a
 //   trend/level accumulator" channel. = 0 makes a temporary nominal shock leave NO
 //   permanent level shift; = 1 recovers the prior FR-BDF-style hysteresis. It gates:
@@ -1112,7 +1122,9 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 
 	[blockname='',name='yhat_au']
 	// Phase L2.A architectural fix (2026-05-28):
-	// yhat_au is now defined STRUCTURALLY as the accumulation of the cyclical
+	// [PHASE 1b SUPERSEDED: the accumulator role described here now belongs to yhat_nm; yhat_au
+	//  is a weighted identity of the four sector gaps — see the equation and note below.] yhat_nm
+	// (formerly yhat_au) is defined STRUCTURALLY as the accumulation of the cyclical
 	// component of demand-side GDP growth (yhat_dom), consistent with
 	// FR-BDF wp736 §2.3/§4.3.3:  ŷ_t ≡ Y_t/Y_{N,t} − 1, with Y_t set by the
 	// demand identity and Y_{N,t} = ln_QN by the CES production function.
@@ -1124,7 +1136,24 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	// housing inv mortgage channel, consumption pv_r_lh_gap channel, trade
 	// real-exchange-rate channel) and aggregates into yhat_dom via the GDP
 	// identity at line ~1428.
-	yhat_au = yhat_au(-1) + yhat_dom + eps_q;
+	yhat_au = w_qn_m * q_m_gap + w_qn_nm * yhat_nm + w_qn_nmk * yhat_nmk_gap + w_qn_dw * yhat_dw_gap;
+
+	// PHASE 1b (industry split): yhat_au is REDEFINED above from a backward accumulator to a
+	// contemporaneous FOUR-way weighted identity of the sector output gaps. The non-mining
+	// MARKET gap yhat_nm now carries the OLD aggregate law (full yhat_dom + eps_q); the mining,
+	// non-market-public and dwellings gaps are Phase-1b PLACEHOLDERS equal to yhat_nm, so
+	// yhat_au == yhat_nm == the old aggregate gap (bit-identical). Phase 2 replaces q_m_gap with
+	// the supply-driven mining law (rho_qm*q_m_gap(-1) + psi_qm*tot_gap) and yhat_nmk_gap /
+	// yhat_dw_gap with trend processes; Phase 3 narrows yhat_nm's driver from yhat_dom to the
+	// I-O-bridge yhat_dom_nm. (The L2.A comment above describes yhat_nm's role, not yhat_au's.)
+	[blockname='',name='yhat_nm']
+	yhat_nm = yhat_nm(-1) + yhat_dom + eps_q;
+	[blockname='',name='q_m_gap']
+	q_m_gap = yhat_nm;
+	[blockname='',name='yhat_nmk_gap']
+	yhat_nmk_gap = yhat_nm;
+	[blockname='',name='yhat_dw_gap']
+	yhat_dw_gap = yhat_nm;
 
 	[blockname='',name='i_gap']
 	i_gap =  lambda_i * i_gap(-1) + (1 - lambda_i) * (alpha_i * pi_au_gap(-1) + beta_i * yhat_au(-1)) + eps_i;
@@ -1216,14 +1245,18 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	dln_y_star_nm  = dln_y_star;
 	[blockname='',name='dln_y_star_nmk']
 	dln_y_star_nmk = dln_y_star;
+	[blockname='',name='dln_y_star_dw']
+	dln_y_star_dw  = dln_y_star;
 	[blockname='',name='ln_QN_m']
 	ln_QN_m   = ln_QN_m(-1)   + dln_y_star_m;
 	[blockname='',name='ln_QN_nm']
 	ln_QN_nm  = ln_QN_nm(-1)  + dln_y_star_nm;
 	[blockname='',name='ln_QN_nmk']
 	ln_QN_nmk = ln_QN_nmk(-1) + dln_y_star_nmk;
+	[blockname='',name='ln_QN_dw']
+	ln_QN_dw  = ln_QN_dw(-1)  + dln_y_star_dw;
 	[blockname='',name='ln_QN_recon']
-	ln_QN_recon = w_qn_m * ln_QN_m + w_qn_nm * ln_QN_nm + w_qn_nmk * ln_QN_nmk;
+	ln_QN_recon = w_qn_m * ln_QN_m + w_qn_nm * ln_QN_nm + w_qn_nmk * ln_QN_nmk + w_qn_dw * ln_QN_dw;
 
 	[blockname='',name='ln_Q']
 	ln_Q =  ln_QN + yhat_au;
@@ -1929,10 +1962,16 @@ steady_state_model;
     dln_y_star_m   = 0;
     dln_y_star_nm  = 0;
     dln_y_star_nmk = 0;
+    dln_y_star_dw  = 0;
     ln_QN_m        = 0;
     ln_QN_nm       = 0;
     ln_QN_nmk      = 0;
+    ln_QN_dw       = 0;
     ln_QN_recon    = 0;
+    yhat_nm        = 0;
+    q_m_gap        = 0;
+    yhat_nmk_gap   = 0;
+    yhat_dw_gap    = 0;
     ln_C_star      = 0;
     ln_C           = 0;
     ln_IB_star     = 0;
@@ -2261,4 +2300,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_recon pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_dw ln_QN_recon yhat_nm q_m_gap pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
