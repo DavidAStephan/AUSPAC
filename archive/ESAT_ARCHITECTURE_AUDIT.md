@@ -266,3 +266,38 @@ When adding a new model state variable `x_t`, ask before writing its defining eq
 4. **None of the above?** Then x_t may need a reduced-form equation — but verify it's not shadowing a structural identity that exists elsewhere.
 
 If the candidate defining equation looks like an E-SAT IS curve, Phillips curve, or Taylor rule, the variable should usually be named `x_esat_aux` or `x_hat`, not `x_au` or `x_gap`. E-SAT equations are **forecasting tools for agents**, not **defining equations for the simulator**.
+
+---
+
+## Addendum (2026-06-01): expectations regime — AU-PAC is FR-BDF's *Hybrid* — and the solve concept
+
+Established during the Srecko-Zimic / Dynare-forum scoping (see `../next_session.md` "PAC-tooling roadmap",
+`archive/PAC_GAP_VS_GROWTH_DESIGN.md`, and the `project_dynare_pac_upgrades` memory). Verified against wp736 and the
+live model.
+
+**AU-PAC mixes two expectation mechanisms — this is FR-BDF's "Hybrid" configuration (wp736 Table 6.2.1), not an accident.**
+- **VAR-based (E-SAT) expectations** for the PAC blocks: the frozen `h_pac_*` vectors are the closed-form
+  `(I−χΦ)⁻¹χΦ` projection onto the stationary belief-`var_model` (§3.2/§3.3 above). Backward-looking.
+- **Model-consistent expectations (MCE)** for the **five forward present-value recursions** — `pv_i`, `pv_i_uip`,
+  `pv_yh`, `pv_u_gap`, `pv_r_lh_gap` (§3.3). These are the model's 5 genuine `(+1)` leads = the 5 explosive
+  Blanchard-Kahn eigenvalues (max|eig|=1.08707).
+
+**The five `pv_*` recursions are verbatim FR-BDF MCE present-value equations**, with matching discount factors:
+`pv_i` (wp736 eq 132, 0.97), `pv_i_uip` (eq 133, non-discounted), `pv_yh` (eq 136, β_c=0.95), `pv_u_gap` (eq 137,
+β_w=0.98). **No double-counting:** the h_pac VAR-sums discount the PAC *target gaps* (`c_hat`/`n_hat`/`ib_hat`/`ih_hat`/
+`piQ_hat`); the `pv_*` MCE-sums discount *different* objects (short rate, UIP differential, permanent income, real
+lending rate, unemployment gap). Disjoint sets.
+
+**One faithfulness nuance:** FR-BDF's *strict* hybrid keeps only the **three financial** PVs forward-looking and treats
+income (`pv_yh`) and unemployment (`pv_u_gap`) as VAR-based. AU-PAC makes those two forward-looking as well, so it sits
+**slightly more toward full MCE** than the textbook hybrid. Defensible (every recursion is a verbatim FR-BDF PV with
+FR-BDF's discounts), but it should be *labelled* as such, and whether it materially moves IRFs vs the strict hybrid is
+untested.
+
+**Solve concept.** `simul_backward_model` is **inapplicable** (it errors on `M_.maximum_lead>0`, and we have 5 leads), so
+the model is — correctly — solved by `stoch_simul(order=1)` (perturbation / Blanchard-Kahn). **Open methodological
+question (unresolved):** FR-BDF solves its MCE/Hybrid variant by **stacked-time perfect-foresight inversion**
+(wp736 §6.1.2), not perturbation. For a *log-linear* model the two should coincide (certainty equivalence at order 1) and
+the frozen-h + MCE-lead mix should be internally consistent — but this was reasoned, not confirmed by a Dynare authority.
+If ever in doubt, cross-check a `perfect_foresight`/`extended_path` solve against the `stoch_simul` IRFs. This and the
+income/unemployment-forward-terms nuance above are the two genuinely-open items from the scoping (the rest were resolved).

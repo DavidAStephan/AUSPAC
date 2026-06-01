@@ -577,6 +577,19 @@ than the FR-BDF/ECB-BASE trending-levels + `growth=` form — including the cons
 vs `'dl'` distinction, and the cost of the gap simplification — is documented in
 [`archive/PAC_GAP_VS_GROWTH_DESIGN.md`](archive/PAC_GAP_VS_GROWTH_DESIGN.md).
 
+**Expectations regime — AU-PAC is FR-BDF's *Hybrid*.** VAR-based (E-SAT) expectations for the PAC blocks (the frozen
+`h_pac_*` vectors) + model-consistent expectations for the 5 forward `pv_*` recursions (`pv_i`/`pv_i_uip`/`pv_yh`/
+`pv_u_gap`/`pv_r_lh_gap` = the 5 BK jumpers = verbatim FR-BDF MCE eqs 132/133/136/137). No double-counting;
+`simul_backward_model` is inapplicable (we have leads), so `stoch_simul(order=1)` is the (forced, correct) solver.
+Full write-up: [`archive/ESAT_ARCHITECTURE_AUDIT.md`](archive/ESAT_ARCHITECTURE_AUDIT.md) addendum (2026-06-01).
+
+**Two genuinely-open methodological questions** (everything else from the scoping was resolved; neither is blocking):
+1. **Solve coherence** — FR-BDF solves its MCE/Hybrid by stacked-time perfect-foresight inversion (wp736 §6.1.2), not
+   perturbation; for a log-linear model these should coincide, but the frozen-h + MCE-lead mix under `stoch_simul` was
+   reasoned, not authority-confirmed. Cross-check a `perfect_foresight`/`extended_path` solve if ever in doubt.
+2. **Forward-terms variant** — AU-PAC makes `pv_yh` (income) and `pv_u_gap` (unemployment) forward-looking, beyond
+   FR-BDF's *strict* hybrid (financial PVs only); whether that materially moves IRFs vs the strict hybrid is untested.
+
 ## Archive index (root decluttered 2026-06-01 → [`archive/`](archive/))
 The detailed analyses below were moved to `archive/` to leave this file as the single root entry point. They remain
 in the tree (and in git history). Recover the pre-move version of any file with `git show 45d94e3:<name> > <name>`.
