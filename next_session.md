@@ -96,9 +96,22 @@ cd ../dynare; matlab -batch "regen_all_artifacts"
 > +1.40% (+0.14% @Q200) while 100bp `eps_i` leaves it −0.0024% (**564× contrast**); **aggregate `ln_Q` monetary trough
 > dampens −0.144%→−0.123%** (~15% ≈ mining weight — the falsifiable prediction). Shock stds `eps_q_m=0.03`/`eps_ib_m=0.08`
 > calibrated (refine to OLS resid). **Known approximation:** small mining-capital double-count (non-mining CES placeholder
-> still uses aggregate `dln_k`) — cleaned in Phase 3 when non-mining gets its own capital. **NEXT (Phase-2 couplings):**
-> resource-export unification (`dln_x_res ≈ 1.13·dln_Q_m`), mining-capex import nexus, ToT income effect on consumption
-> (`λ_toti·tot_gap`), mining VA deflator/employment; then Phase 3 (non-mining PAC clones + belief-VAR rewrite).
+> still uses aggregate `dln_k`) — cleaned in Phase 3 when non-mining gets its own capital.
+
+> **PHASE 2 COUPLINGS (2026-06-02): supply-side couplings 1 & 4 DONE; demand-side 2 & 3 deferred to the Phase-3 bridge.**
+> Params from the `wf_580af369` workflow (`data/pac_blocks/estimate_mining_supply.py` + ad-hoc regressions). GATE 2 still
+> PASS (`verify_phase2.m`: BK `n_exp=5`, ratchet, 564× contrast, monetary dampening −0.123% all unchanged; endo 221→224).
+> **C1 ToT income effect on consumption — IMPLEMENTED:** `+ lambda_toti·tot_gap` in the consumption SR PAC
+> (`lambda_toti=0.00957`, AU OLS t=1.23 insig, written back verbatim). Verified: a commodity boom raises consumption
+> (`dln_c` +0.030) and inflation (`pi_au` +0.196) → policy leans against (small GE net on aggregate `ln_Q`). **C4 mining
+> employment + VA deflator — IMPLEMENTED (reporting):** `ln_N_m = ln_N_m(-1) + n_q_m·dln_Q_m` (`n_q_m=0.2241`, AU OLS
+> t=1.70; `dln_prod_m` dropped to keep SS=0); `pi_Q_m = α_pQm·dln_pcom` (world-price taker, `α_pQm=1`,`ρ_pQm=0`
+> calibrated). Added `dln_Q_m` (mining VA growth). **C2 mining-capex import nexus & C3 resource-export unification —
+> DEFERRED to Phase 3:** both feed the demand/import identities, where avoiding the mining DOUBLE-COUNT requires the I-O
+> demand bridge's export/import routing (narrow `yhat_dom`→non-resource exports; net the `iad` import channel). Params are
+> estimated & ready: `omega_m_imp=0.174`, `w_ib_m=0.169` (C2); `w_x_res=0.513`, `eta_xm=1.13`, `b_xres=0` (C3); the
+> resource-export link `dln_x_res = eta_xm·dln_Q_m` wires in once the bridge narrows `yhat_dom`. **NEXT: Phase 3** —
+> non-mining PAC clones + the I-O demand bridge (which lands C2 & C3) + the belief-VAR/h_pac rewrite.
 
 ---
 

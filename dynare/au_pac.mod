@@ -103,6 +103,9 @@ var
 	dln_k_m
 	ln_K_m
 	ln_Q_m
+	dln_Q_m
+	ln_N_m
+	pi_Q_m
 	ln_c_level
 	ln_d_iad
 	ln_ib_level
@@ -253,6 +256,10 @@ parameters
 	b3_ibm
 	delta_k_m
 	kappa_qk_m
+	lambda_toti
+	n_q_m
+	alpha_pQm
+	rho_pQm
 	alpha_pc
 	alpha_pc_lag
 	alpha_pcom
@@ -908,6 +915,11 @@ b1_ibm      = 0.1321;   // mining-investment growth persistence (AU OLS)
 b3_ibm      = 0.3561;   // mining-investment response to commodity-price growth dln_pcom (AU OLS, t=3.0)
 delta_k_m   = 0.0154;   // mining depreciation (PIM ~6%/yr; vs aggregate delta_k=0.0134)
 kappa_qk_m  = 1.0;      // capacity ratchet: constant returns to mining capital (theoretical restriction)
+// PHASE 2 couplings (data/pac_blocks workflow estimates):
+lambda_toti = 0.00957;  // ToT income effect on consumption (AU OLS, t=1.23 insig; verbatim — c-gap vs ToT gap)
+n_q_m       = 0.2241;   // mining employment elasticity to mining VA (AU OLS, t=1.70; written back verbatim)
+alpha_pQm   = 1.0;      // mining VA deflator: full commodity pass-through (calibrated — world-price taker)
+rho_pQm     = 0.0;      // mining VA deflator persistence (calibrated 0 => pi_Q_m = dln_pcom, no domestic anchor)
 // lambda_hyst: long-run-neutrality switch on every "transitory gap integrated into a
 //   trend/level accumulator" channel. = 0 makes a temporary nominal shock leave NO
 //   permanent level shift; = 1 recovers the prior FR-BDF-style hysteresis. It gates:
@@ -1095,7 +1107,7 @@ model;
 	// path is loaded only by au_pac_bayesian.mod via varobs).
 	// wp1044 Eq 35: α₁·PV(r_LH gap) + b_di_c·di_gap entered the SR PAC equation.
 	// Both pv_r_lh_gap and b_di_c·di_gap were orphan-defined; now wired in.
-	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+b_di_c*di_gap+yhat_au*b3_c+alpha_c_r*pv_r_lh_gap+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+eps_c;
+	diff(ln_c_level) =  b0_c*(c_hat(-1)-ln_c_level(-1))+b1_c*diff(ln_c_level(-1))+pac_expectation_pac_c+i_gap(-1)*b2_c+b_di_c*di_gap+yhat_au*b3_c+alpha_c_r*pv_r_lh_gap+b_HtM*(wt_H_real_gap-yhat_au)+b_PAC_c*dy_bar_gap(-1)+lambda_toti*tot_gap+eps_c;   // PHASE 2 coupling 1: terms-of-trade income effect (AU OLS lambda_toti=0.00957, t=1.23 insig; verbatim)
 
 	[blockname='',name='yh_ratio_hat']
 	yh_ratio_hat =  rho_yh_aux*yh_ratio_hat(-1)+yhat_au(-1)*a_yh_y+u_gap(-1)*a_yh_u+eps_var_yh;
@@ -1308,6 +1320,16 @@ diff(ln_ih_level) =  b0_ih*(ih_hat(-1)-ln_ih_level(-1))+b1_ih*diff(ln_ih_level(-
 	// mining VA (reporting) = mining potential + utilisation gap
 	[blockname='',name='ln_Q_m']
 	ln_Q_m = ln_QN_m + q_m_gap;
+	// PHASE 2 couplings 3/4: mining VA growth (feeds employment now; the resource-export link
+	// dln_x_res = eta_xm*dln_Q_m is wired in Phase 3 with the I-O demand bridge to avoid the
+	// resource-export double-count), thin output-derived mining employment (NO PAC), and the
+	// world-price-taker mining VA deflator (full commodity pass-through, no domestic anchor).
+	[blockname='',name='dln_Q_m']
+	dln_Q_m = ln_Q_m - ln_Q_m(-1);
+	[blockname='',name='ln_N_m']
+	ln_N_m = ln_N_m(-1) + n_q_m * dln_Q_m;
+	[blockname='',name='pi_Q_m']
+	pi_Q_m = rho_pQm * pi_Q_m(-1) + alpha_pQm * dln_pcom + (1 - rho_pQm - alpha_pQm) * pibar_au;
 	[blockname='',name='ln_QN_m']
 	ln_QN_m   = ln_QN_m(-1)   + dln_y_star_m;
 	[blockname='',name='ln_QN_nm']
@@ -2044,6 +2066,9 @@ steady_state_model;
     dln_k_m        = 0;
     ln_K_m         = 0;
     ln_Q_m         = 0;
+    dln_Q_m        = 0;
+    ln_N_m         = 0;
+    pi_Q_m         = 0;
     ln_C_star      = 0;
     ln_C           = 0;
     ln_IB_star     = 0;
@@ -2374,4 +2399,4 @@ shocks;
     var eps_dy_bar;     stderr 0.05;
 end;
 
-stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_dw ln_QN_recon yhat_nm q_m_gap ln_Q_m ln_K_m ln_ib_m_level dln_ib_m pcom_gap pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
+stoch_simul(order=1, irf=200, nograph, noprint) yhat_au pi_au i_au piQ dln_c dln_ib dln_ih dln_n dln_x dln_m pi_w s_gap i_10y ln_Q ln_C ln_IB ln_IH ln_N ln_QN ln_QN_m ln_QN_nm ln_QN_nmk ln_QN_dw ln_QN_recon yhat_nm q_m_gap ln_Q_m ln_K_m ln_ib_m_level dln_ib_m pcom_gap dln_Q_m ln_N_m pi_Q_m pi_au_food pi_au_energy pi_au_core pi_au_trad pi_au_nontrad pi_au_trim dln_pop_bar i_us ibar_us tau_GST_gap tau_PAYG_gap tau_CIT_gap yhat_market yhat_nonmarket BLR_hat MAPI_hat MAPU_hat uc_k pi_c wt_H_real_gap DSR_gap lev_nfc_gap;
