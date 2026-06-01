@@ -1,0 +1,52 @@
+% verify_phase1a.m — confirm the Phase-1a sector potential-output reporting
+% aggregates are (a) BK-neutral, (b) reconcile to ln_QN, and (c) leave every
+% economic IRF bit-identical to the pre-edit single-sector baseline.
+addpath('/Users/davidstephan/Applications/Dynare/7.0-arm64/matlab');
+dynare au_pac.mod
+
+ev = oo_.dr.eigval; n_exp = sum(abs(ev) > 1 + 1e-9);
+fprintf('\n===== PHASE 1a VERIFICATION =====\n');
+fprintf('BK: n_exp=%d (want 5)  max|eig|=%.5f (want 1.08707)\n', n_exp, max(abs(ev)));
+fprintf('dimensions: endo=%d (was 182)  exo=%d (was 55)\n', M_.endo_nbr, M_.exo_nbr);
+
+% --- reconciliation + placeholder checks across ALL shocks (Phase 1a + 1b) ---
+shocks = M_.exo_names; maxrec=0; maxm=0; maxnm=0; maxnmk=0; maxdw=0;
+maxyau=0; maxqm=0; maxnmkg=0; maxdwg=0; nchk=0;
+for i = 1:numel(shocks)
+    s = shocks{i};
+    fr=['ln_QN_recon_' s]; fq=['ln_QN_' s];
+    if isfield(oo_.irfs,fr) && isfield(oo_.irfs,fq)
+        g = @(v) oo_.irfs.([v '_' s]);
+        maxrec = max(maxrec, max(abs(g('ln_QN_recon')-g('ln_QN'))));
+        maxm   = max(maxm,   max(abs(g('ln_QN_m')  -g('ln_QN'))));
+        maxnm  = max(maxnm,  max(abs(g('ln_QN_nm') -g('ln_QN'))));
+        maxnmk = max(maxnmk, max(abs(g('ln_QN_nmk')-g('ln_QN'))));
+        maxdw  = max(maxdw,  max(abs(g('ln_QN_dw') -g('ln_QN'))));
+        % Phase 1b: yhat_au is now a weighted identity; placeholders => yhat_au == yhat_nm
+        maxyau = max(maxyau, max(abs(g('yhat_au')-g('yhat_nm'))));
+        maxqm  = max(maxqm,  max(abs(g('q_m_gap')-g('yhat_nm'))));
+        nchk = nchk + 1;
+    end
+end
+fprintf('reconciliation over %d shocks:\n', nchk);
+fprintf('  max|ln_QN_recon - ln_QN| = %.3e  (want ~0; 4-way partition closes)\n', maxrec);
+fprintf('  max|ln_QN_{m,nm,nmk,dw} - ln_QN| = %.3e %.3e %.3e %.3e  (placeholders => 0)\n', maxm,maxnm,maxnmk,maxdw);
+fprintf('  PHASE 1b: max|yhat_au - yhat_nm| = %.3e  | max|q_m_gap - yhat_nm| = %.3e  (want ~0)\n', maxyau, maxqm);
+
+% --- economic IRFs unchanged vs the saved baseline (validate_wave1_report.txt) ---
+idx = find(strcmp(M_.exo_names,'eps_i')); scale = 0.25/sqrt(M_.Sigma_e(idx,idx));
+base = struct('ln_Q',-0.14420,'yhat_au',-0.08595,'ln_N',-0.16525,'ln_IB',-0.57205,'s_gap',-0.98500);
+bq   = struct('ln_Q',11,'yhat_au',11,'ln_N',12,'ln_IB',15,'s_gap',8);
+fn = fieldnames(base); maxdiff = 0;
+fprintf('100bp eps_i trough vs pre-edit baseline:\n');
+for k=1:numel(fn)
+    v=fn{k}; x=oo_.irfs.([v '_eps_i'])*scale; w=x(1:40);
+    [mn,qi]=min(w);[mx,qm]=max(w); if abs(mn)>=abs(mx),pk=mn;q=qi;else,pk=mx;q=qm;end
+    d=abs(pk-base.(v)); maxdiff=max(maxdiff,d);
+    fprintf('  %-8s %+.5f @Q%d  (baseline %+.5f @Q%d)  diff=%.2e\n', v, pk, q, base.(v), bq.(v), d);
+end
+fprintf('max|trough diff vs baseline| = %.2e (want ~0 => bit-identical)\n', maxdiff);
+
+pass = (n_exp==5) && (maxrec<1e-10) && (maxm<1e-10) && (maxyau<1e-10) && (maxdiff<1e-4);
+fprintf('\nGATE 1a/1b (model-side): %s\n', string(pass));
+fprintf('=================================\n');
